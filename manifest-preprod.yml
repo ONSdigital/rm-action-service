@@ -4,7 +4,7 @@ applications:
   instances: 1
   host: actionsvc-preprod
   memory: 1024M
-  path: actionsvc/target/actionsvc.jar
+  path: target/actionsvc.jar
   timeout: 180
   services:
     - rm-action-db
@@ -12,11 +12,11 @@ applications:
     - rm-rabbitmq
   env:
     partySvc_connectionConfig_host: ras-party-service-preprod.apps.prod.cf5.onsclofo.uk
-    partySvc_connectionConfig_port: "80"
+    partySvc_connectionConfig_port: "443"
     partySvc_connectionConfig_scheme: https
     collectionExerciseSvc_connectionConfig_host: collectionexercisesvc-preprod.apps.prod.cf5.onsclofo.uk
-    collectionExerciseSvc_connectionConfig_port: "80"
+    collectionExerciseSvc_connectionConfig_port: "443"
     collectionExerciseSvc_connectionConfig_scheme: https
     caseSvc_connectionConfig_host: casesvc-preprod.apps.prod.cf5.onsclofo.uk
-    caseSvc_connectionConfig_port: "80"
+    caseSvc_connectionConfig_port: "443"
     caseSvc_connectionConfig_scheme: https
