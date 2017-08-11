@@ -4,7 +4,7 @@ applications:
   instances: 1
   host: actionsvc-sit
   memory: 1024M
-  path: actionsvc/target/actionsvc.jar
+  path: target/actionsvc.jar
   timeout: 180
   services:
     - rm-pg-db
