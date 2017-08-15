@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import uk.gov.ons.ctp.response.party.representation.Party;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 import java.util.UUID;
@@ -18,6 +19,6 @@ public interface PartySvcClientService {
    * @param sampleUnitType type of sample unit
    * @return the Party we fetched!
    */
-  PartyDTO getParty(String sampleUnitType, UUID partyId);
+  Party getParty(String sampleUnitType, UUID partyId);
 
 }
