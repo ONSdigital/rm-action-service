@@ -345,14 +345,12 @@ public class ActionDistributor {
     UUID collectionId = caseDTO.getCaseGroup().getCollectionExerciseId();
     CollectionExerciseDTO collectionExe =  collectionExerciseClientService.getCollectionExercise(collectionId);
     actionRequest.setExerciseRef(collectionExe.getExerciseRef());
-    
-    Map<String, String> partyMap = partyDTO.getAttributes();
 
     ActionContact actionContact = new ActionContact();
     //actionContact.setTitle(partyMap.get("title")); //TODO Not in Party Swagger Spec.
-    actionContact.setForename(partyMap.get("surname"));
-    actionContact.setPhoneNumber(partyMap.get("phonenumber"));
-    actionContact.setEmailAddress(partyMap.get("emailAddress"));
+    actionContact.setForename(""); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setPhoneNumber(""); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setEmailAddress(""); //TODO Not needed for BRES, needs to be reimplemented for Census
     actionRequest.setContact(actionContact);
 
     ActionEvent actionEvent = new ActionEvent();

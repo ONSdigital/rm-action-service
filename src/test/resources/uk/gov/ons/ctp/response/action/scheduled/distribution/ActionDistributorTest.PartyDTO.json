@@ -4,9 +4,9 @@
     "sampleUnitType":"H",
     "sampleUnitRef": "222",
     "attributes": {
-      "surname": "bob",
-      "phonenumber": "07235235235235235",
-      "emailAddress": "test@test.com"
+      "entref": "bob",
+      "entname1": "07235235235235235",
+      "entname2": "test@test.com"
     }
   }
 ]
