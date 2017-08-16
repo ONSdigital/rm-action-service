@@ -349,9 +349,9 @@ public class ActionDistributor {
 
     ActionContact actionContact = new ActionContact();
     //actionContact.setTitle(partyMap.get("title")); //TODO Not in Party Swagger Spec.
-    actionContact.setForename(""); //TODO Not needed for BRES, needs to be reimplemented for Census
-    actionContact.setPhoneNumber(""); //TODO Not needed for BRES, needs to be reimplemented for Census
-    actionContact.setEmailAddress(""); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setForename(null); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setPhoneNumber(null); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setEmailAddress(null); //TODO Not needed for BRES, needs to be reimplemented for Census
     actionRequest.setContact(actionContact);
 
     ActionEvent actionEvent = new ActionEvent();
