@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.common.rest.RestClient;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.party.representation.Party;
 
 import java.util.UUID;
 
@@ -26,10 +26,10 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
   private RestClient partySvcClient;
 
   @Override
-  public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    PartyDTO partyDTO = partySvcClient.getResource(appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-            PartyDTO.class, sampleUnitType, partyId);
-    log.debug("PARTY GOTTEN: " + partyDTO.toString());
-    return partyDTO;
+  public Party getParty(final String sampleUnitType, final UUID partyId) {
+    Party party = partySvcClient.getResource(appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
+            Party.class, sampleUnitType, partyId);
+    log.debug("PARTY GOTTEN: " + party.toString());
+    return party;
   }
 }

@@ -33,7 +33,7 @@ import uk.gov.ons.ctp.response.action.service.impl.PartySvcClientServiceImpl;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.party.representation.Party;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -74,7 +74,7 @@ public class ActionDistributorTest {
   private List<Action> householdInitialContactActions;
   private List<Action> householdUploadIACActions;
   private List<CaseDetailsDTO> caseDetailsDTOs;
-  private List<PartyDTO> partyDTOs;
+  private List<Party> partys;
   private List<CollectionExerciseDTO> collectionExerciseDTOs;
 
   @Spy
@@ -137,7 +137,7 @@ public class ActionDistributorTest {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     householdInitialContactActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
     householdUploadIACActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_UPLOAD_IAC);
-    partyDTOs = FixtureHelper.loadClassFixtures(PartyDTO[].class);
+    partys = FixtureHelper.loadClassFixtures(Party[].class);
     caseDetailsDTOs = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
     collectionExerciseDTOs = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
 
@@ -245,7 +245,7 @@ public class ActionDistributorTest {
     Mockito.when(actionSvcStateTransitionManager.transition(ActionState.CANCEL_SUBMITTED,
         ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)).thenReturn(ActionState.CANCEL_PENDING);
     Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(any(UUID.class))).thenReturn(caseDetailsDTOs.get(0));
-    Mockito.when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partyDTOs.get(0));
+    Mockito.when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
     Mockito.when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
             thenReturn(collectionExerciseDTOs.get(0));
 
@@ -322,7 +322,7 @@ public class ActionDistributorTest {
     Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2_ISSUE_WITH_CASESVC))
         .thenThrow(new RuntimeException(CONNECTIVITY_ISSUE));
 
-    Mockito.when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partyDTOs.get(0));
+    Mockito.when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
     Mockito.when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
         thenReturn(collectionExerciseDTOs.get(0));
 

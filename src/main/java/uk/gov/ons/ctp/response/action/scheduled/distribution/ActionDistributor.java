@@ -48,6 +48,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Party;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 /**
@@ -289,14 +290,14 @@ public class ActionDistributor {
         : actionPlanRepo.findOne(action.getActionPlanFK());
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
 
-    PartyDTO partyDTO = partySvcClientService.getParty(caseDTO.getSampleUnitType(), caseDTO.getPartyId());
-    log.debug("PARTYDTO: " + partyDTO.toString());
+    Party party = partySvcClientService.getParty(caseDTO.getSampleUnitType(), caseDTO.getPartyId());
+    log.debug("PARTYDTO: " + party.toString());
 
     //List<CaseEventDTO> caseEventDTOs = caseSvcClientService.getCaseEvents(action.getCaseId());
     List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
 
 
-    return createActionRequest(action, actionPlan, caseDTO, partyDTO, caseEventDTOs);
+    return createActionRequest(action, actionPlan, caseDTO, party, caseEventDTOs);
   }
 
   /**
@@ -330,7 +331,7 @@ public class ActionDistributor {
    */
   private ActionRequest createActionRequest(final Action action, final ActionPlan actionPlan,
       final CaseDetailsDTO caseDTO,
-      final PartyDTO partyDTO,
+      final Party party,
       final List<CaseEventDTO> caseEventDTOs) {
     ActionRequest actionRequest = new ActionRequest();
     // populate the request
@@ -348,9 +349,9 @@ public class ActionDistributor {
 
     ActionContact actionContact = new ActionContact();
     //actionContact.setTitle(partyMap.get("title")); //TODO Not in Party Swagger Spec.
-    actionContact.setForename(""); //TODO Not needed for BRES, needs to be reimplemented for Census
-    actionContact.setPhoneNumber(""); //TODO Not needed for BRES, needs to be reimplemented for Census
-    actionContact.setEmailAddress(""); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setForename(null); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setPhoneNumber(null); //TODO Not needed for BRES, needs to be reimplemented for Census
+    actionContact.setEmailAddress(null); //TODO Not needed for BRES, needs to be reimplemented for Census
     actionRequest.setContact(actionContact);
 
     ActionEvent actionEvent = new ActionEvent();
@@ -361,7 +362,7 @@ public class ActionDistributor {
   //  actionRequest.setCaseRef(caseDTO.getCaseRef());
 
     ActionAddress actionAddress = new ActionAddress();
-    mapperFacade.map(partyDTO, ActionAddress.class);
+    mapperFacade.map(party, ActionAddress.class);
     actionAddress.setSampleUnitRef(caseDTO.getCaseGroup().getSampleUnitRef());
     actionRequest.setAddress(actionAddress);
     return actionRequest;
