@@ -96,6 +96,7 @@ spring:
     properties:
       hibernate:
         ddl-auto: update
+        default_schema: action
 
  # all about redis
 data-grid:

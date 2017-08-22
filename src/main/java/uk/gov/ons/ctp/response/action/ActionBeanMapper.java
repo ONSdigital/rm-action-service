@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import ma.glasnost.orika.MapperFactory;
@@ -19,6 +20,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
  * The bean mapper to go from Entity objects to Presentation objects.
  */
 @Component
+@Primary
 public class ActionBeanMapper extends ConfigurableMapper {
 
   @Override
