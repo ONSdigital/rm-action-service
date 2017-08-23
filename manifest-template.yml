@@ -20,3 +20,5 @@ applications:
     caseSvc_connectionConfig_host: casesvc-SPACE.DOMAIN
     caseSvc_connectionConfig_port: "REPLACE_PORT"
     caseSvc_connectionConfig_scheme: REPLACE_PROTOCOL
+    endpoints_enabled: ENDPOINT_ENABLED
+    endpoints_info_enabled: true
