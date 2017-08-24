@@ -23,7 +23,8 @@ liquibase:
 
 security:
   basic:
-    enabled: false
+    enabled: true
+    realm: sdc
   user:
     name: admin
     password: secret
@@ -136,6 +137,8 @@ case-svc:
     scheme: http
     host: localhost
     port: 8171
+    username: admin
+    password: secret
     # how many times should we attempt connection on failure
     retry-attempts: 10
     # sleep between retries
@@ -152,6 +155,8 @@ collection-exercise-svc:
     scheme: http
     host: localhost
     port: 8145
+    username: admin
+    password: secret
     retry-attempts: 10
     retry-pause-milli-seconds: 5000
     connect-timeout-milli-seconds: 5000
@@ -162,8 +167,10 @@ party-svc:
   party-by-sample-unit-type-and-id-path: /party-api/v1/parties/type/{sampleUnitType}/id/{id}
   connection-config:
     scheme: http
-    host: ras-party-service-test.apps.devtest.onsclofo.uk
-    port: 80
+    host: localhost
+    port: 5062
+    username: admin
+    password: secret
     # how many times should we attempt connection on failure
     retry-attempts: 10
     # sleep between retries
