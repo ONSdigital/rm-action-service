@@ -19,15 +19,14 @@ applications:
     collectionExerciseSvc_connectionConfig_host: collectionexercisesvc-SPACE.DOMAIN
     collectionExerciseSvc_connectionConfig_port: "REPLACE_PORT"
     collectionExerciseSvc_connectionConfig_scheme: REPLACE_PROTOCOL
-    partySvc_connectionConfig_username: REPLACE_BA_USERNAME
-    partySvc_connectionConfig_password: REPLACE_BA_PASSWORD
+    collectionExerciseSvc_connectionConfig_username: REPLACE_BA_USERNAME
+    collectionExerciseSvc_connectionConfig_password: REPLACE_BA_PASSWORD
     caseSvc_connectionConfig_host: casesvc-SPACE.DOMAIN
     caseSvc_connectionConfig_port: "REPLACE_PORT"
     caseSvc_connectionConfig_scheme: REPLACE_PROTOCOL
-    partySvc_connectionConfig_username: REPLACE_BA_USERNAME
-    partySvc_connectionConfig_password: REPLACE_BA_PASSWORD
+    caseSvc_connectionConfig_username: REPLACE_BA_USERNAME
+    caseSvc_connectionConfig_password: REPLACE_BA_PASSWORD
     endpoints_enabled: ENDPOINT_ENABLED
     endpoints_info_enabled: true
     security_user_name: REPLACE_BA_USERNAME
     security_user_password: REPLACE_BA_PASSWORD
-    
