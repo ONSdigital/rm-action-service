@@ -29,3 +29,13 @@ databaseChangeLog:
             path: action_report_remove_pk.sql
             relativeToChangelogFile: true
             splitStatements: false
+
+  - changeSet:
+      id: 10.46.0-4
+      author: Sarah Radford
+      changes:
+        - sqlFile:
+            comment: Update offsets
+            path: update_seeddata_action.sql
+            relativeToChangelogFile: true
+            splitStatements: false
