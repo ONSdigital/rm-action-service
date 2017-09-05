@@ -325,7 +325,7 @@ public class ActionDistributor {
    * @param action the persistent Action obj from the db
    * @param actionPlan the persistent ActionPlan obj from the db
    * @param caseDTO the Case representation from the CaseSvc
-   * @param partyDTO the Party containing the Address representation from the PartySvc
+   * @param party the Party containing the Address representation from the PartySvc
    * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
    * @return the shiney new Action Request
    */
