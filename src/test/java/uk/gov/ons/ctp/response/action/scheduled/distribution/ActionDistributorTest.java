@@ -29,11 +29,13 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
+import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.action.service.impl.PartySvcClientServiceImpl;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Party;
+import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test the ActionDistributor
@@ -61,6 +64,7 @@ public class ActionDistributorTest {
 
   private static final int TEN = 10;
 
+  private static final String BRES_LONG_NAME = "Business Register and Employment Survey";
   private static final String CONNECTIVITY_ISSUE = "Connectivity issue";
   private static final String HOUSEHOLD_INITIAL_CONTACT = "HouseholdInitialContact";
   private static final String HOUSEHOLD_UPLOAD_IAC = "HouseholdUploadIAC";
@@ -117,6 +121,9 @@ public class ActionDistributorTest {
   @Mock
   private PartySvcClientServiceImpl partySvcClientService;
 
+  @Mock
+  private SurveySvcClientService surveySvcClientService;
+
   @InjectMocks
   private ActionDistributor actionDistributor;
 
@@ -152,7 +159,7 @@ public class ActionDistributorTest {
    */
   @Test
   public void testFailToGetAnyActionType() throws Exception {
-    Mockito.when(actionTypeRepo.findAll()).thenThrow(new RuntimeException("Database access failed"));
+    when(actionTypeRepo.findAll()).thenThrow(new RuntimeException("Database access failed"));
 
     DistributionInfo info = actionDistributor.distribute();
     List<InstructionCount> countList = info.getInstructionCounts();
@@ -186,8 +193,8 @@ public class ActionDistributorTest {
    */
   @Test
   public void testFailToGetAnyAction() throws Exception {
-    Mockito.when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    Mockito.when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(any(String.class), any(List.class),
+    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(any(String.class), any(List.class),
         any(List.class), any(Pageable.class))).thenThrow(new RuntimeException("Database access failed"));
 
     DistributionInfo info = actionDistributor.distribute();
@@ -233,21 +240,24 @@ public class ActionDistributorTest {
    */
   @Test
   public void testHappyPath() throws Exception {
-    Mockito.when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    Mockito.when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
+    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
             householdInitialContactActions);
-    Mockito.when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
         householdUploadIACActions);
-    Mockito.when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED,
+    when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED,
         ActionDTO.ActionEvent.REQUEST_DISTRIBUTED)).thenReturn(ActionState.PENDING);
-    Mockito.when(actionSvcStateTransitionManager.transition(ActionState.CANCEL_SUBMITTED,
+    when(actionSvcStateTransitionManager.transition(ActionState.CANCEL_SUBMITTED,
         ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)).thenReturn(ActionState.CANCEL_PENDING);
-    Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(any(UUID.class))).thenReturn(caseDetailsDTOs.get(0));
-    Mockito.when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
-    Mockito.when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(any(UUID.class))).thenReturn(caseDetailsDTOs.get(0));
+    when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
+    when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
             thenReturn(collectionExerciseDTOs.get(0));
+    SurveyDTO surveyDTO = new SurveyDTO();
+    surveyDTO.setLongName(BRES_LONG_NAME);
+    when(surveySvcClientService.requestDetailsForSurvey(any(String.class))).thenReturn(surveyDTO);
 
     DistributionInfo info = actionDistributor.distribute();
     List<InstructionCount> countList = info.getInstructionCounts();
@@ -305,25 +315,25 @@ public class ActionDistributorTest {
    */
   @Test
   public void testCaseServiceIssue() throws Exception {
-    Mockito.when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    Mockito.when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
+    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
         householdInitialContactActions);
-    Mockito.when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
         householdUploadIACActions);
-    Mockito.when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED,
+    when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED,
         ActionDTO.ActionEvent.REQUEST_DISTRIBUTED)).thenReturn(ActionState.PENDING);
 
-    Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1)).thenReturn(caseDetailsDTOs.get(0));
-    Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2)).thenReturn(caseDetailsDTOs.get(0));
-    Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1_ISSUE_WITH_CASESVC))
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1)).thenReturn(caseDetailsDTOs.get(0));
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2)).thenReturn(caseDetailsDTOs.get(0));
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1_ISSUE_WITH_CASESVC))
         .thenThrow(new RuntimeException(CONNECTIVITY_ISSUE));
-    Mockito.when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2_ISSUE_WITH_CASESVC))
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2_ISSUE_WITH_CASESVC))
         .thenThrow(new RuntimeException(CONNECTIVITY_ISSUE));
 
-    Mockito.when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
-    Mockito.when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
+    when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
+    when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
         thenReturn(collectionExerciseDTOs.get(0));
 
     DistributionInfo info = actionDistributor.distribute();

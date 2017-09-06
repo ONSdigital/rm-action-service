@@ -44,12 +44,15 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
+import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Party;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 /**
  * This is the 'service' class that distributes actions to downstream services, ie services outside of Response
@@ -108,6 +111,9 @@ public class ActionDistributor {
   
   @Autowired
   private PartySvcClientService partySvcClientService;
+
+  @Autowired
+  private SurveySvcClientService surveySvcClientService;
 
   @Autowired
   private ActionTypeRepository actionTypeRepo;
@@ -342,10 +348,11 @@ public class ActionDistributor {
 //    actionRequest.setQuestionSet(caseTypeDTO.getQuestionSet());
     actionRequest.setResponseRequired(action.getActionType().getResponseRequired());
     actionRequest.setCaseId(action.getCaseId().toString());
-  
-    UUID collectionId = caseDTO.getCaseGroup().getCollectionExerciseId();
-    CollectionExerciseDTO collectionExe =  collectionExerciseClientService.getCollectionExercise(collectionId);
-    actionRequest.setExerciseRef(collectionExe.getExerciseRef());
+
+    CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
+    UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
+    CollectionExerciseDTO collectionExercise =  collectionExerciseClientService.getCollectionExercise(collectionExerciseId);
+    actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
     ActionContact actionContact = new ActionContact();
     //actionContact.setTitle(partyMap.get("title")); //TODO Not in Party Swagger Spec.
@@ -363,8 +370,13 @@ public class ActionDistributor {
 
     ActionAddress actionAddress = new ActionAddress();
     mapperFacade.map(party, ActionAddress.class);
-    actionAddress.setSampleUnitRef(caseDTO.getCaseGroup().getSampleUnitRef());
+    actionAddress.setSampleUnitRef(caseGroupDTO.getSampleUnitRef());
     actionRequest.setAddress(actionAddress);
+
+    String surveyId = collectionExercise.getSurveyId();
+    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
+    actionRequest.setSurveyName(surveyDTO.getLongName());
+
     return actionRequest;
   }
 

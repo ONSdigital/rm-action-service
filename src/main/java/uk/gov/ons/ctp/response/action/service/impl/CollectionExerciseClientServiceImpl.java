@@ -2,7 +2,7 @@ package uk.gov.ons.ctp.response.action.service.impl;
 
 import java.util.UUID;
 
-import org.mortbay.log.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,6 +16,7 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
 /**
  * Impl of the service that centralizes all REST calls to the Collection Exercise service
  */
+@Slf4j
 @Service
 public class CollectionExerciseClientServiceImpl implements CollectionExerciseClientService {
 
@@ -32,7 +33,7 @@ public class CollectionExerciseClientServiceImpl implements CollectionExerciseCl
     CollectionExerciseDTO collectionDTO = collectionExceriseSvcClient
             .getResource(appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(),
         CollectionExerciseDTO.class, collectionExcerciseId);
-    Log.info("made call to collection Exercise");
+    log.info("made call to collection Exercise and retrieved {}", collectionDTO);
     return collectionDTO;
   }
 

@@ -10,7 +10,7 @@ info:
 # ie -Dlogging.level.org.springframework=DEBUG
 logging:
   level:
-    uk.gov.ons.ctp: DEBUG
+    uk.gov.ons.ctp: WARN
     org.springframework: WARN
   profile: DEV
 
@@ -23,7 +23,7 @@ liquibase:
 
 security:
   basic:
-    enabled: true
+    enabled: false
     realm: sdc
   user:
     name: admin
@@ -152,6 +152,20 @@ party-svc:
     # time to estab connection
     connect-timeout-milli-seconds: 5000
     # time to read response
+    read-timeout-milli-seconds: 5000
+
+ # calling the survey svc endpoints
+survey-svc:
+  request-survey-path: /surveys/{surveyId}
+  connection-config:
+    scheme: http
+    host: localhost
+    port: 8080
+    username: admin
+    password: secret
+    retry-attempts: 5
+    retry-pause-milli-seconds: 5000
+    connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
  # looking for the ingest file

@@ -152,7 +152,7 @@ public class ActionSvcApplication {
   }
 
   /**
-   * Bean used to access case frame service through REST calls
+   * Bean used to access collection exercise service through REST calls
    *
    * @return the service client
    */
@@ -172,6 +172,18 @@ public class ActionSvcApplication {
   @Qualifier("partySvcClient")
   public RestClient partyClient() {
     RestClient restHelper = new RestClient(appConfig.getPartySvc().getConnectionConfig());
+    return restHelper;
+  }
+
+  /**
+   * Bean used to access survey service through REST calls
+   *
+   * @return the service client
+   */
+  @Bean
+  @Qualifier("surveySvcClient")
+  public RestClient surveyClient() {
+    RestClient restHelper = new RestClient(appConfig.getSurveySvc().getConnectionConfig());
     return restHelper;
   }
 

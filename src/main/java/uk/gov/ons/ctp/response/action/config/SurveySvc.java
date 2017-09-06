@@ -5,13 +5,12 @@ import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.common.rest.RestClientConfig;
 
 /**
- * App config POJO for collection exercise service access - host location and endpoint
+ * App config POJO for survey service access - host location and endpoint
  * locations
- *
  */
 @CoverageIgnore
 @Data
-public class CollectionExerciseSvc {
+public class SurveySvc {
   private RestClientConfig connectionConfig;
-  private String collectionByCollectionExerciseGetPath;
+  private String requestSurveyPath;
 }
