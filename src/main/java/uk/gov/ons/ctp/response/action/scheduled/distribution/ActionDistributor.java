@@ -376,6 +376,7 @@ public class ActionDistributor {
     String surveyId = collectionExercise.getSurveyId();
     SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
     actionRequest.setSurveyName(surveyDTO.getLongName());
+    actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
     return actionRequest;
   }

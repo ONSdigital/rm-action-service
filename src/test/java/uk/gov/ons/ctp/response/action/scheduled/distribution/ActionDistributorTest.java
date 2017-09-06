@@ -65,6 +65,7 @@ public class ActionDistributorTest {
   private static final int TEN = 10;
 
   private static final String BRES_LONG_NAME = "Business Register and Employment Survey";
+  private static final String BRES_REF = "221";
   private static final String CONNECTIVITY_ISSUE = "Connectivity issue";
   private static final String HOUSEHOLD_INITIAL_CONTACT = "HouseholdInitialContact";
   private static final String HOUSEHOLD_UPLOAD_IAC = "HouseholdUploadIAC";
@@ -257,6 +258,7 @@ public class ActionDistributorTest {
             thenReturn(collectionExerciseDTOs.get(0));
     SurveyDTO surveyDTO = new SurveyDTO();
     surveyDTO.setLongName(BRES_LONG_NAME);
+    surveyDTO.setSurveyRef(BRES_REF);
     when(surveySvcClientService.requestDetailsForSurvey(any(String.class))).thenReturn(surveyDTO);
 
     DistributionInfo info = actionDistributor.distribute();
