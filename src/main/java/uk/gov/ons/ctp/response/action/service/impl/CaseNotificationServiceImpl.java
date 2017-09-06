@@ -53,10 +53,12 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
     String actionPlanIdStr = notification.getActionPlanId();
     UUID actionPlanId = UUID.fromString(actionPlanIdStr);
     ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+
     if (actionPlan != null) {
       UUID caseId = UUID.fromString(notification.getCaseId());
-      ActionCase actionCase = ActionCase.builder().actionPlanId(actionPlanId).actionPlanFK(
-              actionPlan.getActionPlanPK()).id(caseId).build();
+      ActionCase actionCase = ActionCase.builder().id(caseId).actionPlanId(actionPlanId).actionPlanFK(
+          actionPlan.getActionPlanPK()).build();
+
       switch (notification.getNotificationType()) {
         case REPLACED:
         case ACTIVATED:
@@ -65,6 +67,7 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
           actionCase.setActionPlanEndDate(new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
           checkAndSaveCase(actionCase);
           break;
+
         case DISABLED:
         case DEACTIVATED:
           try {
@@ -73,14 +76,19 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
             // TODO CTPA-1373 Do we really want to catch this. Should be let to go through.
             // TODO CTPA-1373 What happens with other notif?
           }
-          actionCaseRepo.delete(actionCase);
+          ActionCase actionCaseToDelete = actionCaseRepo.findById(caseId);
+          if (actionCaseToDelete != null) {
+            actionCaseRepo.delete(actionCaseToDelete);
+          } else {
+            log.warn("Unexpected situation where actionCaseToDelete is null for caseId {}", caseId);
+          }
           break;
         default:
           log.warn("Unknown Case lifecycle event {}", notification.getNotificationType());
           break;
       }
     } else {
-      log.warn("Cannot accept CaseNotification for none existent actionplan {}", actionPlanIdStr);
+      log.warn("Cannot accept CaseNotification for non-existent actionplan {}", actionPlanIdStr);
     }
 
     actionCaseRepo.flush();
