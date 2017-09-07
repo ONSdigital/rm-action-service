@@ -157,7 +157,7 @@ public class ActionDistributor {
                 }
               } catch (Exception e) {
                 log.error("Exception {} thrown processing action {}. Processing will be retried at next scheduled "
-                        + "distribution", e.getMessage(), action.getId());
+                        + "distribution",e, e.getMessage(), action.getId());
               }
             }
 
@@ -230,7 +230,7 @@ public class ActionDistributor {
    * @param action the action to deal with
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
-  public void processActionRequest(final Action action) throws CTPException {
+  private void processActionRequest(final Action action) throws CTPException {
     log.debug("processing actionRequest with actionid {} caseid {} actionplanFK {}", action.getId(),
         action.getCaseId(), action.getActionPlanFK());
 
@@ -251,7 +251,7 @@ public class ActionDistributor {
    * @param action the action to deal with
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
-  public void processActionCancel(final Action action) throws CTPException {
+  private void processActionCancel(final Action action) throws CTPException {
     log.info("processing action REQUEST actionid {} caseid {} actionplanid {}", action.getActionPK(),
         action.getCaseId(), action.getActionPlanFK());
 
