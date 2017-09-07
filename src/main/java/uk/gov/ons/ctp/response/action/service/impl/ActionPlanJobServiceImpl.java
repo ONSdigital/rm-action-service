@@ -102,7 +102,7 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
    * @return the plan job if it was run or null if not
    */
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
-  private ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJob, boolean forcedExecution) {
+  public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJob, boolean forcedExecution) {
     ActionPlanJob createdJob = null;
 
     Integer actionPlanPK = actionPlanJob.getActionPlanFK();
