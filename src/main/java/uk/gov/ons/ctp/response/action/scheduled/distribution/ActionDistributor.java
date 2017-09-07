@@ -161,7 +161,7 @@ public class ActionDistributor {
                 }
               } catch (Exception e) {
                 log.error("Exception {} thrown processing action {}. Processing will be retried at next scheduled "
-                        + "distribution",e, e.getMessage(), action.getId());
+                        + "distribution", e.getMessage(), action.getId());
               }
             }
 
