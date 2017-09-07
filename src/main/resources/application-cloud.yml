@@ -129,6 +129,20 @@ collection-exercise-svc:
     retry-pause-milli-seconds: 5000
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
+    
+ # calling the survey svc endpoints
+survey-svc:
+  request-survey-path: /surveys/{surveyId}
+  connection-config:
+    scheme: http
+    host: localhost
+    port: 8080
+    username: admin
+    password: secret
+    retry-attempts: 5
+    retry-pause-milli-seconds: 5000
+    connect-timeout-milli-seconds: 5000
+    read-timeout-milli-seconds: 5000
 
 # calling the party svc endpoint
 party-svc:
