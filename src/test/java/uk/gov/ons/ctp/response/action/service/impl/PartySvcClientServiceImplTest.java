@@ -10,7 +10,6 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.rest.RestClient;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.PartySvc;
-import uk.gov.ons.ctp.response.party.representation.Party;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 import java.util.UUID;
@@ -46,18 +45,18 @@ public class PartySvcClientServiceImplTest {
    */
   @Test
     public void verifyGetPartyCallInvokesRESTEndpoint() throws CTPException {
-        Party party = new Party();
+      PartyDTO party = new PartyDTO();
 
-        PartySvc partySvc = new PartySvc();
-        partySvc.setPartyBySampleUnitTypeAndIdPath("/sampleUnit");
+      PartySvc partySvc = new PartySvc();
+      partySvc.setPartyBySampleUnitTypeAndIdPath("/sampleUnit");
 
-        when(appConfig.getPartySvc()).thenReturn(partySvc);
-        when(partySvcClient.getResource("/sampleUnit", Party.class, "B",
+      when(appConfig.getPartySvc()).thenReturn(partySvc);
+      when(partySvcClient.getResource("/sampleUnit", PartyDTO.class, "B",
                 UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"))).thenReturn(party);
 
-        partySvcClientService.getParty("B", UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"));
+      partySvcClientService.getParty("B", UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"));
 
-        verify(partySvcClient, times(1)).getResource("/sampleUnit",
-                Party.class, "B", UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"));
+      verify(partySvcClient, times(1)).getResource("/sampleUnit",
+                PartyDTO.class, "B", UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"));
     }
 }

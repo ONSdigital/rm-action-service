@@ -1,9 +1,10 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -50,7 +51,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.Party;
+import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
@@ -78,9 +79,12 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 @Component
 @Slf4j
 public class ActionDistributor {
-
   // WILL NOT WORK WITHOUT THIS NEXT LINE
   private static final long IMPOSSIBLE_ACTION_ID = 999999999999L;
+
+  private static final String BUSINESS_TYPE = "B";
+  private static final String BI_TYPE = "BI";
+  private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
 
   @Autowired
   private DistributedListManager<BigInteger> actionDistributionListManager;
@@ -296,14 +300,24 @@ public class ActionDistributor {
         : actionPlanRepo.findOne(action.getActionPlanFK());
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
 
-    Party party = partySvcClientService.getParty(caseDTO.getSampleUnitType(), caseDTO.getPartyId());
-    log.debug("PARTYDTO: " + party.toString());
+    String sampleUnitType = caseDTO.getSampleUnitType();
+    PartyDTO businessUnitParty = null;
+    PartyDTO biParty = null;
+    // TODO Get rid of the hardcoded BUSINESS_TYPE & BI_TYPE
+    if (sampleUnitType.equalsIgnoreCase(BUSINESS_TYPE)) {
+      businessUnitParty = partySvcClientService.getParty(sampleUnitType, caseDTO.getPartyId());
+      log.debug("businessUnitParty retrieved is {}", businessUnitParty);
+    } else if (sampleUnitType.equalsIgnoreCase(BI_TYPE)) {
+      biParty = partySvcClientService.getParty(sampleUnitType, caseDTO.getPartyId());
+      log.debug("biParty retrieved is {}", biParty);
 
-    //List<CaseEventDTO> caseEventDTOs = caseSvcClientService.getCaseEvents(action.getCaseId());
+      UUID associatedBusinessPartyID = caseDTO.getCaseGroup().getPartyId();
+      businessUnitParty = partySvcClientService.getParty(BUSINESS_TYPE, associatedBusinessPartyID);
+    }
+
     List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
 
-
-    return createActionRequest(action, actionPlan, caseDTO, party, caseEventDTOs);
+    return createActionRequest(action, actionPlan, caseDTO, businessUnitParty, biParty, caseEventDTOs);
   }
 
   /**
@@ -331,34 +345,41 @@ public class ActionDistributor {
    * @param action the persistent Action obj from the db
    * @param actionPlan the persistent ActionPlan obj from the db
    * @param caseDTO the Case representation from the CaseSvc
-   * @param party the Party containing the Address representation from the PartySvc
+   * @param businessUnitParty the businessUnit Party containing the Address representation from the PartySvc
+   * @param biParty the BI Party containing the Address representation from the PartySvc
    * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
    * @return the shiney new Action Request
    */
   private ActionRequest createActionRequest(final Action action, final ActionPlan actionPlan,
       final CaseDetailsDTO caseDTO,
-      final Party party,
+      final PartyDTO businessUnitParty,
+      final PartyDTO biParty,
       final List<CaseEventDTO> caseEventDTOs) {
     ActionRequest actionRequest = new ActionRequest();
     // populate the request
     actionRequest.setActionId(action.getId().toString());
     actionRequest.setActionPlan((actionPlan == null) ? null : actionPlan.getName());
     actionRequest.setActionType(action.getActionType().getName());
-    // TODO BRES where does questionSet come from now?!
-//    actionRequest.setQuestionSet(caseTypeDTO.getQuestionSet());
     actionRequest.setResponseRequired(action.getActionType().getResponseRequired());
     actionRequest.setCaseId(action.getCaseId().toString());
 
     CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
     UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
-    CollectionExerciseDTO collectionExercise =  collectionExerciseClientService.getCollectionExercise(collectionExerciseId);
+    CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
+        collectionExerciseId);
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
     ActionContact actionContact = new ActionContact();
-    //actionContact.setTitle(partyMap.get("title")); //TODO Not in Party Swagger Spec.
-    actionContact.setForename(null); //TODO Not needed for BRES, needs to be reimplemented for Census
-    actionContact.setPhoneNumber(null); //TODO Not needed for BRES, needs to be reimplemented for Census
-    actionContact.setEmailAddress(null); //TODO Not needed for BRES, needs to be reimplemented for Census
+    Attributes businessUnitAttributes = businessUnitParty.getAttributes();
+    actionContact.setRuName(businessUnitAttributes.getName());
+    actionContact.setTradingStyle(String.format("%s %s %s", businessUnitAttributes.getTradstyle1()
+        , businessUnitAttributes.getTradstyle2()
+        , businessUnitAttributes.getTradstyle3()));
+    if (biParty != null) {
+      Attributes biPartyAttributes = biParty.getAttributes();
+      actionContact.setForename(biPartyAttributes.getFirstName());
+      actionContact.setSurname(biPartyAttributes.getLastName());
+    }
     actionRequest.setContact(actionContact);
 
     ActionEvent actionEvent = new ActionEvent();
@@ -366,10 +387,8 @@ public class ActionDistributor {
     actionRequest.setEvents(actionEvent);
     actionRequest.setIac(caseDTO.getIac());
     actionRequest.setPriority(Priority.fromValue(ActionPriority.valueOf(action.getPriority()).getName()));
-  //  actionRequest.setCaseRef(caseDTO.getCaseRef());
 
     ActionAddress actionAddress = new ActionAddress();
-    mapperFacade.map(party, ActionAddress.class);
     actionAddress.setSampleUnitRef(caseGroupDTO.getSampleUnitRef());
     actionRequest.setAddress(actionAddress);
 
@@ -377,6 +396,9 @@ public class ActionDistributor {
     SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
+
+    DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
+    actionRequest.setReturnByDate(df.format(collectionExercise.getScheduledEndDateTime()));
 
     return actionRequest;
   }
