@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.common.rest.RestClient;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
-import uk.gov.ons.ctp.response.party.representation.Party;
+import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 import java.util.UUID;
 
@@ -18,6 +18,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class PartySvcClientServiceImpl implements PartySvcClientService {
+
   @Autowired
   private AppConfig appConfig;
 
@@ -26,10 +27,10 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
   private RestClient partySvcClient;
 
   @Override
-  public Party getParty(final String sampleUnitType, final UUID partyId) {
-    Party party = partySvcClient.getResource(appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-            Party.class, sampleUnitType, partyId);
-    log.debug("PARTY GOTTEN: " + party.toString());
+  public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
+    PartyDTO party = partySvcClient.getResource(appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
+        PartyDTO.class, sampleUnitType, partyId);
+    log.debug("PARTY GOTTEN: {}", party);
     return party;
   }
 }
