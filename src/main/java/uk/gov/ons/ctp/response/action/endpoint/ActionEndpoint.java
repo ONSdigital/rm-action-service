@@ -234,11 +234,12 @@ public final class ActionEndpoint implements CTPEndpoint {
       throw new InvalidRequestException("Binding errors for feedback action: ", bindingResult);
     }
 
-    Action action = actionService.feedBackAction(mapperFacade.map(actionFeedbackRequestDTO, ActionFeedback.class));
+    ActionFeedback actionFeedback = mapperFacade.map(actionFeedbackRequestDTO, ActionFeedback.class);
+    actionFeedback.setActionId(actionId.toString());
+    Action action = actionService.feedBackAction(actionFeedback);
     if (action == null) {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, "Action not found for id %s", actionId);
     }
-    action.setId(UUID.fromString(actionId.toString()));
 
     ActionDTO resultDTO = mapperFacade.map(action, ActionDTO.class);
     UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();

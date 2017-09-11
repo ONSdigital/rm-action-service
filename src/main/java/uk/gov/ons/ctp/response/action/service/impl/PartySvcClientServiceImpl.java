@@ -28,8 +28,8 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
 
   @Override
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    PartyDTO party = partySvcClient.getResource(appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-        PartyDTO.class, sampleUnitType, partyId);
+    String thePath = appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath();
+    PartyDTO party = partySvcClient.getResource(thePath, PartyDTO.class, sampleUnitType, partyId);
     log.debug("PARTY GOTTEN: {}", party);
     return party;
   }

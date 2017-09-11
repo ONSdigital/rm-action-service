@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
+import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
@@ -119,19 +120,23 @@ public class ActionServiceImpl implements ActionService {
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action feedBackAction(ActionFeedback actionFeedback) throws CTPException {
-    log.debug("Entering feedBackAction with {}", actionFeedback.getActionId());
+    String actionId = actionFeedback.getActionId();
+    log.debug("Entering feedBackAction with actionId {}", actionId);
 
-    Action action = actionRepo.findById(UUID.fromString(actionFeedback.getActionId()));
-
-    if (action != null) {
-      ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
-      action.setSituation(actionFeedback.getSituation());
-      action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-      ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
-      action.setState(nextState);
-      action = actionRepo.saveAndFlush(action);
+    Action result = null;
+    if (!StringUtils.isEmpty(actionId)) {
+      result = actionRepo.findById(UUID.fromString(actionId));
+      if (result != null) {
+        ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
+        result.setSituation(actionFeedback.getSituation());
+        result.setUpdatedDateTime(DateTimeUtil.nowUTC());
+        ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(result.getState(), event);
+        result.setState(nextState);
+        result = actionRepo.saveAndFlush(result);
+      }
     }
-    return action;
+
+    return result;
   }
 
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)

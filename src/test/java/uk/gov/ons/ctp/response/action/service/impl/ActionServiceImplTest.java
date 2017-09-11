@@ -127,7 +127,16 @@ public class ActionServiceImplTest {
     verify(actionRepo, times(1)).findById(any());
     verify(actionRepo, times(0)).saveAndFlush(any());
     verify(actionSvcStateTransitionManager, times(0)).transition(any(), any());
+  }
 
+  @Test
+  public void whenFeedbackActionWithNullActionIdVerifySaveIsntCalled() throws Exception {
+    ActionFeedback actionFeedbackWithNullActionId = new ActionFeedback();
+    actionServiceImpl.feedBackAction(actionFeedbackWithNullActionId);
+
+    verify(actionRepo, times(0)).findById(any());
+    verify(actionRepo, times(0)).saveAndFlush(any());
+    verify(actionSvcStateTransitionManager, times(0)).transition(any(), any());
   }
 
   @Test
