@@ -18,7 +18,6 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,11 +34,10 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionServiceImplTest {
 
-  public static final UUID ACTION_CASEID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
-  public static final UUID ACTION_ID = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
-  public static final String ACTION_TYPENAME = "HouseholdInitialContact";
-  public static final BigInteger ACTION_PK = BigInteger.valueOf(1);
-  public static final BigInteger ACTION_PKNOTFOUND = BigInteger.valueOf(4);
+  private static final UUID ACTION_CASEID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
+  private static final UUID ACTION_ID_0 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
+  private static final UUID ACTION_ID_3 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72bd9");
+  private static final String ACTION_TYPENAME = "HouseholdInitialContact";
 
   @InjectMocks
   private ActionServiceImpl actionServiceImpl;
@@ -103,7 +101,7 @@ public class ActionServiceImplTest {
 
   @Test
   public void feedbackActionVerifyActionAreUpdatedAndStateHasChanged() throws Exception {
-    when(actionRepo.findById(ACTION_ID)).thenReturn(actions.get(0));
+    when(actionRepo.findById(ACTION_ID_0)).thenReturn(actions.get(0));
     when(actionSvcStateTransitionManager.transition(ActionState.PENDING, ActionEvent.REQUEST_COMPLETED))
         .thenReturn(ActionState.COMPLETED);
     when(actionRepo.saveAndFlush(any())).then(returnsFirstArg());
@@ -113,7 +111,7 @@ public class ActionServiceImplTest {
     ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
     Action originalAction = FixtureHelper.loadClassFixtures(Action[].class).get(0);
 
-    verify(actionRepo, times(1)).findById(ACTION_ID);
+    verify(actionRepo, times(1)).findById(ACTION_ID_0);
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
     verify(actionSvcStateTransitionManager, times(1)).transition(originalAction.getState(),
             event);
@@ -148,13 +146,11 @@ public class ActionServiceImplTest {
 
   @Test
   public void testUpdateActionCallsSaveEvent() throws Exception {
-    Action action1 = actions.get(0);
-    when(actionRepo.findOne(ACTION_PK)).thenReturn(action1);
+    Action action = actions.get(0);
+    when(actionRepo.findById(ACTION_ID_0)).thenReturn(action);
     when(actionRepo.saveAndFlush(any())).then(returnsFirstArg());
 
-    Action action2 = actions.get(1);
-    action2.setActionPK(action1.getActionPK());
-    actionServiceImpl.updateAction(action2);
+    actionServiceImpl.updateAction(action);
 
     verify(actionRepo, times(1)).saveAndFlush(any());
   }
@@ -169,11 +165,10 @@ public class ActionServiceImplTest {
 
   @Test
   public void testUpdateActionNoUpdate() throws Exception {
-    when(actionRepo.findOne(ACTION_PKNOTFOUND)).thenReturn(actions.get(3));
+    when(actionRepo.findById(ACTION_ID_3)).thenReturn(actions.get(3));
     Action existingAction = actionServiceImpl.updateAction(actions.get(3));
 
     verify(actionRepo, times(0)).saveAndFlush(any());
     assertThat(existingAction, is(actions.get(3)));
   }
-
 }

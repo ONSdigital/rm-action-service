@@ -179,14 +179,15 @@ public final class ActionEndpoint implements CTPEndpoint {
       throw new InvalidRequestException("Binding errors for update action: ", bindingResult);
     }
 
-    Action action = actionService.updateAction(mapperFacade.map(actionPutRequestDTO, Action.class));
-    if (action == null) {
+    Action actionToUpdate = mapperFacade.map(actionPutRequestDTO, Action.class);
+    actionToUpdate.setId(actionId);
+    actionToUpdate = actionService.updateAction(actionToUpdate);
+    if (actionToUpdate == null) {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_UPDATED, actionId);
     }
-    action.setId(actionId);
 
-    ActionDTO resultDTO = mapperFacade.map(action, ActionDTO.class);
-    UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();
+    ActionDTO resultDTO = mapperFacade.map(actionToUpdate, ActionDTO.class);
+    UUID actionPlanUUID = actionPlanService.findActionPlan(actionToUpdate.getActionPlanFK()).getId();
     resultDTO.setActionPlanId(actionPlanUUID);
     return resultDTO;
   }

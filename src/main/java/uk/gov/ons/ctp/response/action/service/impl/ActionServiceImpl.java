@@ -160,8 +160,9 @@ public class ActionServiceImpl implements ActionService {
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action updateAction(final Action action) {
-    log.debug("Entering updateAction with {}", action);
-    Action existingAction = actionRepo.findOne(action.getActionPK());
+    UUID actionId = action.getId();
+    log.debug("Entering updateAction with actionId {}", actionId);
+    Action existingAction = actionRepo.findById(actionId);
     if (existingAction != null) {
       boolean needsUpdate = false;
 
