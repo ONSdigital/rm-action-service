@@ -155,6 +155,7 @@ public class ActionServiceImpl implements ActionService {
     action.setManuallyCreated(true);
     action.setCreatedDateTime(DateTimeUtil.nowUTC());
     action.setState(ActionDTO.ActionState.SUBMITTED);
+    action.setId(UUID.randomUUID());
     return actionRepo.saveAndFlush(action);
   }
 
