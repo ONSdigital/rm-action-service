@@ -143,14 +143,15 @@ public class ActionServiceImpl implements ActionService {
   @Override
   public Action createAction(final Action action) {
     log.debug("Entering createAction with {}", action);
-    // the incoming action has a placeholder action type with the name as
-    // provided to the caller
-    // but we need the entire action type object for that action type name
-    ActionType actionType = actionTypeRepo.findByName(action.getActionType().getName());
-    // guard against the caller providing an id - we would perform an update
-    // otherwise
+
+    // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);
+
+    // the incoming action has a placeholder action type with the name as provided to the caller but we need the entire
+    // action type object for that action type name
+    ActionType actionType = actionTypeRepo.findByName(action.getActionType().getName());
     action.setActionType(actionType);
+
     action.setManuallyCreated(true);
     action.setCreatedDateTime(DateTimeUtil.nowUTC());
     action.setState(ActionDTO.ActionState.SUBMITTED);

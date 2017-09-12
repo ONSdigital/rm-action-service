@@ -11,10 +11,7 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionFeedbackDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
+import uk.gov.ons.ctp.response.action.representation.*;
 
 /**
  * The bean mapper to go from Entity objects to Presentation objects.
@@ -56,5 +53,11 @@ public class ActionBeanMapper extends ConfigurableMapper {
             .classMap(ActionFeedback.class, ActionFeedbackDTO.class)
             .byDefault()
             .register();
+
+    factory
+        .classMap(ActionPostRequestDTO.class, Action.class)
+        .field("actionTypeName", "actionType.name")
+        .byDefault()
+        .register();
   }
 }
