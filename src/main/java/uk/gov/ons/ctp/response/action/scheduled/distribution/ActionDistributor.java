@@ -1,13 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
-import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import lombok.extern.slf4j.Slf4j;
+import ma.glasnost.orika.MapperFacade;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -17,9 +11,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.extern.slf4j.Slf4j;
-import ma.glasnost.orika.MapperFacade;
 import uk.gov.ons.ctp.common.distributed.DistributedListManager;
 import uk.gov.ons.ctp.common.distributed.LockingException;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -54,6 +45,14 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
+
+import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * This is the 'service' class that distributes actions to downstream services, ie services outside of Response
@@ -145,6 +144,7 @@ public class ActionDistributor {
             actions = retrieveActions(actionType);
           } catch (Exception e) {
             log.error("Failed to obtain actions - error msg {} - cause {}", e.getMessage(), e.getCause());
+            log.error("Stacktrace: ", e);
           }
 
           if (!CollectionUtils.isEmpty(actions)) {
@@ -162,6 +162,7 @@ public class ActionDistributor {
               } catch (Exception e) {
                 log.error("Exception {} thrown processing action {}. Processing will be retried at next scheduled "
                         + "distribution", e.getMessage(), action.getId());
+                log.error("Stacktrace: ", e);
               }
             }
 
@@ -170,6 +171,7 @@ public class ActionDistributor {
             } catch (LockingException e) {
               log.error("Failed to remove the list of actions just processed from distributed list - actions distributed"
                   + " OK, but underlying problem may remain");
+              log.error("Stacktrace: ", e);
             }
           }
 
@@ -187,6 +189,7 @@ public class ActionDistributor {
       }
     } catch (Exception e) {
       log.error("Failed to process actions because {}", e.getMessage());
+      log.error("Stacktrace: ", e);
     }
 
     log.debug("ActionDistributor going back to sleep");
