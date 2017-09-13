@@ -390,6 +390,7 @@ public class ActionDistributor {
       Attributes biPartyAttributes = biParty.getAttributes();
       actionContact.setForename(biPartyAttributes.getFirstName());
       actionContact.setSurname(biPartyAttributes.getLastName());
+      actionContact.setEmailAddress(biPartyAttributes.getEmailAddress());
     }
     actionRequest.setContact(actionContact);
 
