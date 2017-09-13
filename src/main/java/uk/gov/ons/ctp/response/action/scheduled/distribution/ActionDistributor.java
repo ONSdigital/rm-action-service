@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
+import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.distributed.DistributedListManager;
 import uk.gov.ons.ctp.common.distributed.LockingException;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -285,25 +286,25 @@ public class ActionDistributor {
   }
 
   /**
-   * Take an action and using it, fetch further info from Case service in a
-   * number of rest calls, in order to create the ActionRequest
+   * Take an action and using it, fetch further info from Case service in a number of rest calls, in order to create
+   * the ActionRequest
    *
    * @param action It all starts with the Action
-   * @return The ActionRequest created from the Action and the other info from
-   *         CaseSvc
+   * @return The ActionRequest created from the Action and the other info from CaseSvc
    */
   private ActionRequest prepareActionRequest(final Action action) {
-    log.debug("constructing ActionRequest to publish to downstream handler for action id {} and case id {}",
-        action.getActionPK(), action.getCaseId());
-    // now call caseSvc for the following
+    UUID caseId = action.getCaseId();
+    log.debug("constructing ActionRequest to publish to downstream handler for action {} and case id {}",
+        action.getActionPK(), caseId);
+
     ActionPlan actionPlan = (action.getActionPlanFK() == null) ? null
         : actionPlanRepo.findOne(action.getActionPlanFK());
-    CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
+
+    CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
 
     String sampleUnitType = caseDTO.getSampleUnitType();
     PartyDTO businessUnitParty = null;
     PartyDTO biParty = null;
-    // TODO Get rid of the hardcoded BUSINESS_TYPE & BI_TYPE
     if (sampleUnitType.equalsIgnoreCase(BUSINESS_TYPE)) {
       businessUnitParty = partySvcClientService.getParty(sampleUnitType, caseDTO.getPartyId());
       log.debug("businessUnitParty retrieved is {}", businessUnitParty);
@@ -345,8 +346,8 @@ public class ActionDistributor {
    * @param action the persistent Action obj from the db
    * @param actionPlan the persistent ActionPlan obj from the db
    * @param caseDTO the Case representation from the CaseSvc
-   * @param businessUnitParty the businessUnit Party containing the Address representation from the PartySvc
-   * @param biParty the BI Party containing the Address representation from the PartySvc
+   * @param businessUnitParty the businessUnit Party from the PartySvc
+   * @param biParty the BI Party from the PartySvc
    * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
    * @return the shiney new Action Request
    */
@@ -356,7 +357,6 @@ public class ActionDistributor {
       final PartyDTO biParty,
       final List<CaseEventDTO> caseEventDTOs) {
     ActionRequest actionRequest = new ActionRequest();
-    // populate the request
     actionRequest.setActionId(action.getId().toString());
     actionRequest.setActionPlan((actionPlan == null) ? null : actionPlan.getName());
     actionRequest.setActionType(action.getActionType().getName());
@@ -372,9 +372,20 @@ public class ActionDistributor {
     ActionContact actionContact = new ActionContact();
     Attributes businessUnitAttributes = businessUnitParty.getAttributes();
     actionContact.setRuName(businessUnitAttributes.getName());
-    actionContact.setTradingStyle(String.format("%s %s %s", businessUnitAttributes.getTradstyle1()
-        , businessUnitAttributes.getTradstyle2()
-        , businessUnitAttributes.getTradstyle3()));
+    String tradStyle1 = businessUnitAttributes.getTradstyle1();
+    String tradStyle2 = businessUnitAttributes.getTradstyle2();
+    String tradStyle3 = businessUnitAttributes.getTradstyle3();
+    StringBuffer tradStyle = new StringBuffer();
+    if (!StringUtils.isEmpty(tradStyle1)) {
+      tradStyle.append(String.format("%s ", tradStyle1));
+    }
+    if (!StringUtils.isEmpty(tradStyle2)) {
+      tradStyle.append(String.format("%s ", tradStyle2));
+    }
+    if (!StringUtils.isEmpty(tradStyle3)) {
+      tradStyle.append(tradStyle3);
+    }
+    actionContact.setTradingStyle(tradStyle.toString().trim());
     if (biParty != null) {
       Attributes biPartyAttributes = biParty.getAttributes();
       actionContact.setForename(biPartyAttributes.getFirstName());
@@ -385,6 +396,7 @@ public class ActionDistributor {
     ActionEvent actionEvent = new ActionEvent();
     caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
+
     actionRequest.setIac(caseDTO.getIac());
     actionRequest.setPriority(Priority.fromValue(ActionPriority.valueOf(action.getPriority()).getName()));
 
