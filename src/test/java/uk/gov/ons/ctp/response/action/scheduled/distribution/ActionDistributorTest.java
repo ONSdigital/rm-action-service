@@ -234,12 +234,12 @@ public class ActionDistributorTest {
   }
 
   /**
-   * Happy Path with 2 ActionRequests and 2 ActionCancels
+   * Happy Path with 2 ActionRequests and 2 ActionCancels for a H case (ie parent case)
    *
    * @throws Exception oops
    */
   @Test
-  public void testHappyPath() throws Exception {
+  public void testHappyPathParentCase() throws Exception {
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
     when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
@@ -454,5 +454,4 @@ public class ActionDistributorTest {
     verify(actionInstructionPublisher, times(2)).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
-
 }
