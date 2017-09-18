@@ -295,6 +295,7 @@ public class ActionDistributorTest {
     verify(caseSvcClientService, times(2)).getCaseWithIACandCaseEvents(any(UUID.class));
     verify(partySvcClientService, times(2)).getParty(any(String.class), any(UUID.class));
     verify(collectionExerciseClientService, times(2)).getCollectionExercise(any(UUID.class));
+    verify(surveySvcClientService, times(2)).requestDetailsForSurvey(any(String.class));
 
     // Assertions for calls in processActionCancel
     verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.CANCEL_SUBMITTED,
