@@ -305,9 +305,8 @@ public class ActionDistributor {
 
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
     String sampleUnitTypeStr = caseDTO.getSampleUnitType();
-    try {
+    if (validate(sampleUnitTypeStr)) {
       SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
-
       PartyDTO parentParty;
       PartyDTO childParty = null;
       if (sampleUnitType.isParent()) {
@@ -325,8 +324,7 @@ public class ActionDistributor {
       List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
 
       return createActionRequest(action, actionPlan, caseDTO, parentParty, childParty, caseEventDTOs);
-    } catch (IllegalArgumentException e) {
-      log.error("Unexpected sampleUnitType {} that does NOT exist in our samplesvc-api.", sampleUnitTypeStr);
+    } else {
       return null;
     }
   }
@@ -438,6 +436,30 @@ public class ActionDistributor {
   private String formatCaseEvent(final CaseEventDTO caseEventDTO) {
     return String.format("%s : %s : %s : %s", caseEventDTO.getCategory(), caseEventDTO.getSubCategory(),
         caseEventDTO.getCreatedBy(), caseEventDTO.getDescription());
+  }
+
+  /**
+   * To validate the sampleUnitTypeStr versus SampleSvc-Api
+   *
+   * @param sampleUnitTypeStr the string value for sampleUnitType
+   * @return
+   */
+  private boolean validate(String sampleUnitTypeStr) {
+    boolean result = false;
+    try {
+      SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
+      if (sampleUnitType.isParent()) {
+        result = true;
+      } else {
+        String childSampleUnitTypeStr = sampleUnitTypeStr.substring(0, 1);
+        SampleUnitType.valueOf(childSampleUnitTypeStr);
+        result = true;
+      }
+    } catch (IllegalArgumentException e) {
+      log.error("Unexpected scenario. Error message is {}. Cause is {}", e.getMessage(), e.getCause());
+    }
+
+    return result;
   }
 
 }
