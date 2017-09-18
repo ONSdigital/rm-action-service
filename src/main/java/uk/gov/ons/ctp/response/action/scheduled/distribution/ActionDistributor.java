@@ -246,7 +246,10 @@ public class ActionDistributor {
     // advise casesvc to create a corresponding caseevent for our action
     caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
 
-    actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), prepareActionRequest(action));
+    ActionRequest actionRequest = prepareActionRequest(action);
+    if (actionRequest != null) {
+      actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), actionRequest);
+    }
   }
 
   /**
@@ -301,25 +304,30 @@ public class ActionDistributor {
 
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
     String sampleUnitTypeStr = caseDTO.getSampleUnitType();
-    SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
+    try {
+      SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
 
-    PartyDTO parentParty;
-    PartyDTO childParty = null;
-    if (sampleUnitType.isParent()) {
-      parentParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
-      log.debug("parentParty retrieved is {}", parentParty);
-    } else {
-      childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
-      log.debug("childParty retrieved is {}", childParty);
+      PartyDTO parentParty;
+      PartyDTO childParty = null;
+      if (sampleUnitType.isParent()) {
+        parentParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
+        log.debug("parentParty retrieved is {}", parentParty);
+      } else {
+        childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
+        log.debug("childParty retrieved is {}", childParty);
 
-      UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
-      // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
-      parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
+        UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
+        // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
+        parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
+      }
+
+      List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
+
+      return createActionRequest(action, actionPlan, caseDTO, parentParty, childParty, caseEventDTOs);
+    } catch (IllegalArgumentException e) {
+      log.error("Unexpected sampleUnitType {} that does NOT exist in our samplesvc-api.", sampleUnitTypeStr);
+      return null;
     }
-
-    List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
-
-    return createActionRequest(action, actionPlan, caseDTO, parentParty, childParty, caseEventDTOs);
   }
 
   /**
