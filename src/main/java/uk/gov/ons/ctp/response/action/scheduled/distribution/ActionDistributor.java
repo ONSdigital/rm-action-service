@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -419,8 +420,11 @@ public class ActionDistributor {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
-    DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
-    actionRequest.setReturnByDate(df.format(collectionExercise.getScheduledEndDateTime()));
+    Date scheduledEndDateTime = collectionExercise.getScheduledEndDateTime();
+    if (scheduledEndDateTime != null) {
+      DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
+      actionRequest.setReturnByDate(df.format(scheduledEndDateTime));
+    }
 
     return actionRequest;
   }

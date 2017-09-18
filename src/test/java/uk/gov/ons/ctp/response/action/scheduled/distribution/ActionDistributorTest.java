@@ -272,40 +272,39 @@ public class ActionDistributorTest {
         DistributionInfo.Instruction.REQUEST, 1));
     expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
         DistributionInfo.Instruction.CANCEL_REQUEST, 1));
-    // TODO CTPA-1557 Reinstate the below
-//    assertTrue(countList.equals(expectedCountList));
+    assertTrue(countList.equals(expectedCountList));
 
-//    verify(actionTypeRepo).findAll();
-//
-//    // Assertions for calls in method retrieveActions
-//    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-//    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-//    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-//        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-//    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-//        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-//    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
-//    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
-//
-//    // Assertions for calls in processActionRequest
-//    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.SUBMITTED,
-//        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED);
-//    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
-//        eq(CategoryDTO.CategoryName.ACTION_CREATED));
-//    verify(actionPlanRepo, times(2)).findOne(any(Integer.class));
-//    verify(caseSvcClientService, times(2)).getCaseWithIACandCaseEvents(any(UUID.class));
-//    verify(partySvcClientService, times(2)).getParty(any(String.class), any(UUID.class));
-//    verify(collectionExerciseClientService, times(2)).getCollectionExercise(any(UUID.class));
-//
-//    // Assertions for calls in processActionCancel
-//    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.CANCEL_SUBMITTED,
-//        ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-//    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
-//        eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
-//
-//    // Assertion on what is sent to queue
-//    verify(actionInstructionPublisher, times(4)).sendActionInstruction(any(String.class),
-//        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(actionTypeRepo).findAll();
+
+    // Assertions for calls in method retrieveActions
+    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
+    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
+    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
+        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
+    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
+        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
+    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
+    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
+
+    // Assertions for calls in processActionRequest
+    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.SUBMITTED,
+        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED);
+    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
+        eq(CategoryDTO.CategoryName.ACTION_CREATED));
+    verify(actionPlanRepo, times(2)).findOne(any(Integer.class));
+    verify(caseSvcClientService, times(2)).getCaseWithIACandCaseEvents(any(UUID.class));
+    verify(partySvcClientService, times(2)).getParty(any(String.class), any(UUID.class));
+    verify(collectionExerciseClientService, times(2)).getCollectionExercise(any(UUID.class));
+
+    // Assertions for calls in processActionCancel
+    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.CANCEL_SUBMITTED,
+        ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
+    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
+        eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
+
+    // Assertion on what is sent to queue
+    verify(actionInstructionPublisher, times(4)).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
   /**
