@@ -54,6 +54,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 /**
@@ -83,8 +84,6 @@ public class ActionDistributor {
   // WILL NOT WORK WITHOUT THIS NEXT LINE
   private static final long IMPOSSIBLE_ACTION_ID = 999999999999L;
 
-  private static final String BUSINESS_TYPE = "B";
-  private static final String BI_TYPE = "BI";
   private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
 
   @Autowired
@@ -301,24 +300,26 @@ public class ActionDistributor {
         : actionPlanRepo.findOne(action.getActionPlanFK());
 
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
+    String sampleUnitTypeStr = caseDTO.getSampleUnitType();
+    SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
 
-    String sampleUnitType = caseDTO.getSampleUnitType();
-    PartyDTO businessUnitParty = null;
-    PartyDTO biParty = null;
-    if (sampleUnitType.equalsIgnoreCase(BUSINESS_TYPE)) {
-      businessUnitParty = partySvcClientService.getParty(sampleUnitType, caseDTO.getPartyId());
-      log.debug("businessUnitParty retrieved is {}", businessUnitParty);
-    } else if (sampleUnitType.equalsIgnoreCase(BI_TYPE)) {
-      biParty = partySvcClientService.getParty(sampleUnitType, caseDTO.getPartyId());
-      log.debug("biParty retrieved is {}", biParty);
+    PartyDTO parentParty;
+    PartyDTO childParty = null;
+    if (sampleUnitType.isParent()) {
+      parentParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
+      log.debug("parentParty retrieved is {}", parentParty);
+    } else {
+      childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
+      log.debug("childParty retrieved is {}", childParty);
 
-      UUID associatedBusinessPartyID = caseDTO.getCaseGroup().getPartyId();
-      businessUnitParty = partySvcClientService.getParty(BUSINESS_TYPE, associatedBusinessPartyID);
+      UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
+      // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
+      parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
     }
 
     List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
 
-    return createActionRequest(action, actionPlan, caseDTO, businessUnitParty, biParty, caseEventDTOs);
+    return createActionRequest(action, actionPlan, caseDTO, parentParty, childParty, caseEventDTOs);
   }
 
   /**
@@ -346,15 +347,15 @@ public class ActionDistributor {
    * @param action the persistent Action obj from the db
    * @param actionPlan the persistent ActionPlan obj from the db
    * @param caseDTO the Case representation from the CaseSvc
-   * @param businessUnitParty the businessUnit Party from the PartySvc
-   * @param biParty the BI Party from the PartySvc
+   * @param parentParty the parent Party from the PartySvc (in BRES, it is a B)
+   * @param childParty the BI Party from the PartySvc (in BRES, it is a C)
    * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
    * @return the shiney new Action Request
    */
   private ActionRequest createActionRequest(final Action action, final ActionPlan actionPlan,
       final CaseDetailsDTO caseDTO,
-      final PartyDTO businessUnitParty,
-      final PartyDTO biParty,
+      final PartyDTO parentParty,
+      final PartyDTO childParty,
       final List<CaseEventDTO> caseEventDTOs) {
     ActionRequest actionRequest = new ActionRequest();
     actionRequest.setActionId(action.getId().toString());
@@ -370,7 +371,7 @@ public class ActionDistributor {
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
     ActionContact actionContact = new ActionContact();
-    Attributes businessUnitAttributes = businessUnitParty.getAttributes();
+    Attributes businessUnitAttributes = parentParty.getAttributes();
     actionContact.setRuName(businessUnitAttributes.getName());
     String tradStyle1 = businessUnitAttributes.getTradstyle1();
     String tradStyle2 = businessUnitAttributes.getTradstyle2();
@@ -386,8 +387,8 @@ public class ActionDistributor {
       tradStyle.append(tradStyle3);
     }
     actionContact.setTradingStyle(tradStyle.toString().trim());
-    if (biParty != null) {
-      Attributes biPartyAttributes = biParty.getAttributes();
+    if (childParty != null) {
+      Attributes biPartyAttributes = childParty.getAttributes();
       actionContact.setForename(biPartyAttributes.getFirstName());
       actionContact.setSurname(biPartyAttributes.getLastName());
       actionContact.setEmailAddress(biPartyAttributes.getEmailAddress());
