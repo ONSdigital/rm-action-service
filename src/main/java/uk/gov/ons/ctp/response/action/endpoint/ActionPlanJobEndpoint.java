@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
@@ -121,7 +122,11 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
     }
     ActionPlanJobDTO result = mapperFacade.map(job, ActionPlanJobDTO.class);
     result.setActionPlanId(actionPlanId);
-    return ResponseEntity.created(URI.create("TODO")).body(result);
+
+    String newResourceUrl = ServletUriComponentsBuilder
+        .fromCurrentRequest().buildAndExpand(result.getId()).toUri().toString();
+
+    return ResponseEntity.created(URI.create(newResourceUrl)).body(result);
   }
 
   /**

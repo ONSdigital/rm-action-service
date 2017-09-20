@@ -1,6 +1,5 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
-
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
@@ -157,7 +157,11 @@ public final class ActionEndpoint implements CTPEndpoint {
     ActionDTO resultDTO = mapperFacade.map(action, ActionDTO.class);
     UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();
     resultDTO.setActionPlanId(actionPlanUUID);
-    return ResponseEntity.created(URI.create("TODO")).body(resultDTO);
+
+    String newResourceUrl = ServletUriComponentsBuilder
+        .fromCurrentRequest().buildAndExpand(resultDTO.getId()).toUri().toString();
+
+    return ResponseEntity.created(URI.create(newResourceUrl)).body(resultDTO);
   }
 
   /**
