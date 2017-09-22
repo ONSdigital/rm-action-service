@@ -2,7 +2,7 @@ package uk.gov.ons.ctp.response.action.config;
 
 import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
-import uk.gov.ons.ctp.common.rest.RestClientConfig;
+import uk.gov.ons.ctp.common.rest.RestUtilityConfig;
 
 /**
  * App config POJO for survey service access - host location and endpoint
@@ -11,6 +11,6 @@ import uk.gov.ons.ctp.common.rest.RestClientConfig;
 @CoverageIgnore
 @Data
 public class SurveySvc {
-  private RestClientConfig connectionConfig;
+  private RestUtilityConfig connectionConfig;
   private String requestSurveyPath;
 }

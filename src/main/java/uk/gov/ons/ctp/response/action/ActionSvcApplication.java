@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action;
 
-import net.sourceforge.cobertura.CoverageIgnore;
+import java.math.BigInteger;
+
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -19,6 +20,9 @@ import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.client.RestTemplate;
+
+import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.common.distributed.DistributedInstanceManager;
 import uk.gov.ons.ctp.common.distributed.DistributedInstanceManagerRedissonImpl;
 import uk.gov.ons.ctp.common.distributed.DistributedLatchManager;
@@ -29,14 +33,12 @@ import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManagerRedissonImpl;
 import uk.gov.ons.ctp.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
-import uk.gov.ons.ctp.common.rest.RestClient;
+import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.state.StateTransitionManagerFactory;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
-
-import java.math.BigInteger;
 
 /**
  * The main entry point into the Action Service SpringBoot Application.
@@ -138,6 +140,16 @@ public class ActionSvcApplication {
         .setPassword(appConfig.getDataGrid().getPassword());
     return Redisson.create(config);
   }
+  
+  /**
+   * The restTemplate bean injected in REST client classes
+   *
+   * @return the restTemplate used in REST calls
+   */
+  @Bean
+  public RestTemplate restTemplate() {
+    return new RestTemplate();
+  }
 
   /**
    * Bean used to access case frame service through REST calls
@@ -146,9 +158,9 @@ public class ActionSvcApplication {
    */
   @Bean
   @Qualifier("caseSvcClient")
-  public RestClient caseClient() {
-    RestClient restHelper = new RestClient(appConfig.getCaseSvc().getConnectionConfig());
-    return restHelper;
+  public RestUtility caseClient() {
+    RestUtility restUtility = new RestUtility(appConfig.getCaseSvc().getConnectionConfig());
+    return restUtility;
   }
 
   /**
@@ -158,9 +170,9 @@ public class ActionSvcApplication {
    */
   @Bean
   @Qualifier("collectionExerciseSvcClient")
-  public RestClient collectionClient() {
-    RestClient restHelper = new RestClient(appConfig.getCollectionExerciseSvc().getConnectionConfig());
-    return restHelper;
+  public RestUtility collectionClient() {
+    RestUtility restUtility = new RestUtility(appConfig.getCollectionExerciseSvc().getConnectionConfig());
+    return restUtility;
   }
 
   /**
@@ -170,9 +182,9 @@ public class ActionSvcApplication {
    */
   @Bean
   @Qualifier("partySvcClient")
-  public RestClient partyClient() {
-    RestClient restHelper = new RestClient(appConfig.getPartySvc().getConnectionConfig());
-    return restHelper;
+  public RestUtility partyClient() {
+    RestUtility restUtility = new RestUtility(appConfig.getPartySvc().getConnectionConfig());
+    return restUtility;
   }
 
   /**
@@ -182,9 +194,9 @@ public class ActionSvcApplication {
    */
   @Bean
   @Qualifier("surveySvcClient")
-  public RestClient surveyClient() {
-    RestClient restHelper = new RestClient(appConfig.getSurveySvc().getConnectionConfig());
-    return restHelper;
+  public RestUtility surveyClient() {
+    RestUtility restUtility = new RestUtility(appConfig.getSurveySvc().getConnectionConfig());
+    return restUtility;
   }
 
   /**

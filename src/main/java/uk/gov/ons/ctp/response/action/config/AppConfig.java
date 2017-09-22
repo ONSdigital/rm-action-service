@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.annotation.EnableRetry;
 
 import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -12,6 +13,7 @@ import net.sourceforge.cobertura.CoverageIgnore;
  *
  */
 @CoverageIgnore
+@EnableRetry
 @Configuration
 @ConfigurationProperties
 @Data
