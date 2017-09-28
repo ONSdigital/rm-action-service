@@ -191,7 +191,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     log.debug("posting caseEvent for actionId {} to casesvc for category {} ", action.getId(),
         actionCategory);
     UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCasePostPath(),
-        null);
+        null,action.getCaseId());
     CaseEventCreationRequestDTO caseEventDTO = new CaseEventCreationRequestDTO();
     caseEventDTO.setCategory(actionCategory);
     caseEventDTO.setCreatedBy(action.getCreatedBy());
