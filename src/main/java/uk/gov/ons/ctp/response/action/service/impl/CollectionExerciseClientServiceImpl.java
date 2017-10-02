@@ -46,13 +46,12 @@ public class CollectionExerciseClientServiceImpl implements CollectionExerciseCl
   private ObjectMapper objectMapper;
 
   @Cacheable("collectionExercise")
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CollectionExerciseDTO getCollectionExercise(UUID collectionExcerciseId) {
     UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(),
-        null, collectionExcerciseId);
+        appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(), null, collectionExcerciseId);
 
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -69,6 +68,7 @@ public class CollectionExerciseClientServiceImpl implements CollectionExerciseCl
         log.error(msg);
       }
     }
+
     log.info("made call to collection Exercise and retrieved {}", result);
     return result;
   }

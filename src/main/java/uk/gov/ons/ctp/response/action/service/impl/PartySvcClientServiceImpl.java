@@ -45,11 +45,12 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
   private ObjectMapper objectMapper;
 
   @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-        null, sampleUnitType, partyId);
+    UriComponents uriComponents = restUtility.createUriComponents(
+        appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
     
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
     
@@ -66,6 +67,7 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
         log.error(msg);
       }
     }
+
     log.debug("PARTY GOTTEN {}", result);
     return result;
   }

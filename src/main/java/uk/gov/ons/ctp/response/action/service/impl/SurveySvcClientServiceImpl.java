@@ -42,12 +42,12 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
   @Autowired
   private ObjectMapper objectMapper;
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public SurveyDTO requestDetailsForSurvey(String surveyId) throws RestClientException {
-    UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getSurveySvc().getRequestSurveyPath(), null, surveyId);
+    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getSurveySvc().getRequestSurveyPath(),
+        null, surveyId);
     
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -64,6 +64,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
         log.error(msg);
       }
     }
+
     log.debug("made call to survey service and retrieved {}", result);
     return result;
   }

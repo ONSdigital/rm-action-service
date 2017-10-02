@@ -41,6 +41,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
 @Slf4j
 @Service
 public class CaseSvcClientServiceImpl implements CaseSvcClientService {
+
   @Autowired
   private AppConfig appConfig;
 
@@ -54,12 +55,12 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
   @Autowired
   private ObjectMapper objectMapper;
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCase(final UUID caseId) {
-    UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCaseSvc().getCaseByCaseGetPath(), null, caseId);
+    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
+        null, caseId);
 
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -79,12 +80,12 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseGroupDTO getCaseGroup(final UUID caseGroupId) {
-    UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCaseSvc().getCaseGroupPath(), null, caseGroupId);
+    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseGroupPath(), null,
+        caseGroupId);
 
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -104,12 +105,12 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public List<CaseEventDTO> getCaseEvents(final UUID caseId) {
-    UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCaseSvc().getCaseEventsByCaseGetPath(), null, caseId);
+    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCaseGetPath(),
+        null, caseId);
 
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -129,14 +130,14 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return Arrays.asList(result);
   }
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCaseWithIAC(UUID caseId) {
     MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.add("iac", "true");
-    UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCaseSvc().getCaseByCaseGetPath(), queryParams, caseId);
+    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
+        queryParams, caseId);
 
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -156,15 +157,15 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCaseWithIACandCaseEvents(UUID caseId) {
     MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.add("iac", "true");
     queryParams.add("caseevents", "true");
-    UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCaseSvc().getCaseByCaseGetPath(), queryParams, caseId);
+    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
+        queryParams, caseId);
 
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -184,8 +185,8 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}", backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CreatedCaseEventDTO createNewCaseEvent(final Action action, CategoryDTO.CategoryName actionCategory) {
     log.debug("posting caseEvent for actionId {} to casesvc for category {} ", action.getId(),
@@ -220,5 +221,4 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     }
     return result;
   }
-
 }
