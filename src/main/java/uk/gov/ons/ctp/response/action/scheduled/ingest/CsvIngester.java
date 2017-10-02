@@ -174,7 +174,8 @@ public class CsvIngester extends CsvToBean<CsvLine> {
           }
         }
       } catch (Exception e) {
-        log.error("Problem parsing {} - entire ingest aborted : {}", nextLine, e);
+        log.error("Problem parsing {} - entire ingest aborted", nextLine);
+        log.error("Stack trace: ", e);
         csvFile.renameTo(new File(csvFile.getPath() + ".fix_line_" + lineNum));
         return;
       } finally {
@@ -187,7 +188,8 @@ public class CsvIngester extends CsvToBean<CsvLine> {
       // all lines parsed successfully - now send out bucket contents
       publishBuckets(handlerInstructionBuckets);
     } catch (Exception e) {
-      log.error("Problem reading ingest file {} because : ", csvFile.getPath(), e);
+      log.error("Problem reading ingest file {}", csvFile.getPath());
+      log.error("Stack trace: ", e);
     }
   }
 

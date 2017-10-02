@@ -113,7 +113,7 @@ public class ActionDistributor {
 
   @Autowired
   private CollectionExerciseClientService collectionExerciseClientService;
-  
+
   @Autowired
   private PartySvcClientService partySvcClientService;
 
@@ -146,6 +146,7 @@ public class ActionDistributor {
             actions = retrieveActions(actionType);
           } catch (Exception e) {
             log.error("Failed to obtain actions - error msg {} - cause {}", e.getMessage(), e.getCause());
+            log.error("Stack trace: ", e);
           }
 
           if (!CollectionUtils.isEmpty(actions)) {
@@ -163,14 +164,16 @@ public class ActionDistributor {
               } catch (Exception e) {
                 log.error("Exception {} thrown processing action {}. Processing will be retried at next scheduled "
                         + "distribution", e.getMessage(), action.getId());
+                log.error("Stack trace: ", e);
               }
             }
 
             try {
               actionDistributionListManager.deleteList(actionType.getName(), true);
             } catch (LockingException e) {
-              log.error("Failed to remove the list of actions just processed from distributed list - actions distributed"
-                  + " OK, but underlying problem may remain");
+              log.error("Failed to remove the list of actions just processed from distributed list - "
+                  + "actions distributed OK, but underlying problem may remain");
+              log.error("Stack trace: ", e);
             }
           }
 
@@ -188,6 +191,7 @@ public class ActionDistributor {
       }
     } catch (Exception e) {
       log.error("Failed to process actions because {}", e.getMessage());
+      log.error("Stack trace: ", e);
     }
 
     log.debug("ActionDistributor going back to sleep");
@@ -405,7 +409,6 @@ public class ActionDistributor {
     ActionEvent actionEvent = new ActionEvent();
     caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
-
     actionRequest.setIac(caseDTO.getIac());
     actionRequest.setPriority(Priority.fromValue(ActionPriority.valueOf(action.getPriority()).getName()));
 
