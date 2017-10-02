@@ -63,13 +63,15 @@ public class CollectionExerciseClientServiceImplTest {
         .build();
 
     //cast to MultiValueMap was required to get mock to work.
-    when(restUtility.createUriComponents(any(String.class), (org.springframework.util.MultiValueMap<String, String>) isNull(MultiValueMap.class), any(UUID.class))).thenReturn(uriComponents);
+    when(restUtility.createUriComponents(any(String.class),
+        (org.springframework.util.MultiValueMap<String, String>) isNull(MultiValueMap.class), any(UUID.class)))
+        .thenReturn(uriComponents);
     when(appConfig.getCollectionExerciseSvc()).thenReturn(collectionExerciseSvc);
 
     collectionExerciseClientServiceImpl.getCollectionExercise(UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"));
 
-    verify(restUtility, times(1)).createUriComponents(PATH, null, UUID.fromString("d06c440e-4fad-4ea6-952a-72d9db144f05"));
+    verify(restUtility, times(1)).createUriComponents(PATH, null, UUID.fromString(
+        "d06c440e-4fad-4ea6-952a-72d9db144f05"));
     verify(restUtility, times(1)).createHttpEntity(null);
-    
   }
 }
