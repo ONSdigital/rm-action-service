@@ -1,47 +1,30 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
-import ma.glasnost.orika.MapperFacade;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.distributed.DistributedListManager;
-import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.config.ActionDistribution;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.config.CaseSvc;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
-import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
-import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
-import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
-import uk.gov.ons.ctp.response.action.service.impl.PartySvcClientServiceImpl;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
-import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,23 +44,12 @@ public class ActionDistributorTest {
 
   private static final int TEN = 10;
 
-  private static final String BRES_LONG_NAME = "Business Register and Employment Survey";
-  private static final String BRES_REF = "221";
-  private static final String CONNECTIVITY_ISSUE = "Connectivity issue";
   private static final String HOUSEHOLD_INITIAL_CONTACT = "HouseholdInitialContact";
   private static final String HOUSEHOLD_UPLOAD_IAC = "HouseholdUploadIAC";
-
-  private static final UUID CASE_ID_1_ISSUE_WITH_CASESVC = UUID.fromString("3382981d-3df0-464e-9c95-aea7aee80c81");
-  private static final UUID CASE_ID_2_ISSUE_WITH_CASESVC = UUID.fromString("3382981d-3df0-464e-9c95-aea7aee80c83");
-  private static final UUID CASE_ID_1 = UUID.fromString("3382981d-3df0-464e-9c95-aea7aee80c82");
-  private static final UUID CASE_ID_2 = UUID.fromString("3382981d-3df0-464e-9c95-aea7aee80c84");
 
   private List<ActionType> actionTypes;
   private List<Action> householdInitialContactActions;
   private List<Action> householdUploadIACActions;
-  private List<CaseDetailsDTO> caseDetailsDTOs;
-  private List<PartyDTO> partys;
-  private List<CollectionExerciseDTO> collectionExerciseDTOs;
 
   @Spy
   private AppConfig appConfig = new AppConfig();
@@ -92,12 +64,6 @@ public class ActionDistributorTest {
   private ActionTypeRepository actionTypeRepo;
 
   @Mock
-  private TransactionTemplate transactionTemplate;
-
-  @Mock
-  private PlatformTransactionManager platformTransactionManager;
-
-  @Mock
   private ActionProcessingService actionProcessingService;
 
   @InjectMocks
@@ -108,9 +74,6 @@ public class ActionDistributorTest {
    */
   @Before
   public void setUp() throws Exception {
-    CaseSvc caseSvcConfig = new CaseSvc();
-    appConfig.setCaseSvc(caseSvcConfig);
-
     ActionDistribution actionDistributionConfig = new ActionDistribution();
     actionDistributionConfig.setDelayMilliSeconds(TEN);
     actionDistributionConfig.setRetrievalMax(TEN);
@@ -120,15 +83,12 @@ public class ActionDistributorTest {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     householdInitialContactActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
     householdUploadIACActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_UPLOAD_IAC);
-    partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
-    caseDetailsDTOs = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
-    collectionExerciseDTOs = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
 
     MockitoAnnotations.initMocks(this);
   }
 
   /**
-   * Test that when we fail at first hurdle to load ActionTypes we do not go on to call anything else. In reality, the
+   * Test that when we fail at first hurdle to load ActionTypes, we do not go on to call anything else. In reality, the
    * wakeup method would then be called again after a sleep interval by Spring but we cannot test that here.
    *
    * @throws Exception oops
@@ -157,7 +117,7 @@ public class ActionDistributorTest {
   }
 
   /**
-   * We retrieve ok actionTypes but then exception thrown when retrieving actions.
+   * We retrieve actionTypes but then exception thrown when retrieving actions.
    *
    * @throws Exception oops
    */
@@ -170,7 +130,6 @@ public class ActionDistributorTest {
     DistributionInfo info = actionDistributor.distribute();
     List<InstructionCount> countList = info.getInstructionCounts();
     assertEquals(4, countList.size());
-
     List<InstructionCount> expectedCountList = new ArrayList<>();
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
         DistributionInfo.Instruction.REQUEST, 0));
@@ -261,150 +220,72 @@ public class ActionDistributorTest {
     assertTrue(expectedActionsList.equals(actionsList));
   }
 
-//  /**
-//   * Scenario where an exception is thrown when calling the CaseService for 2 of our 4 actions:
-//   *    - case with id 3382981d-3df0-464e-9c95-aea7aee80c81 (linked with a SUBMITTED action)
-//   *    - case with id 3382981d-3df0-464e-9c95-aea7aee80c83 (linked with a SUBMITTED action)
-//   *
-//   * @throws Exception oops
-//   */
-//  @Test
-//  public void testCaseServiceIssue() throws Exception {
-//    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-//    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
-//        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
-//        householdInitialContactActions);
-//    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
-//        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
-//        householdUploadIACActions);
-//    when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED,
-//        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED)).thenReturn(ActionState.PENDING);
-//
-//    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1)).thenReturn(caseDetailsDTOs.get(0));
-//    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2)).thenReturn(caseDetailsDTOs.get(0));
-//    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1_ISSUE_WITH_CASESVC))
-//        .thenThrow(new RuntimeException(CONNECTIVITY_ISSUE));
-//    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2_ISSUE_WITH_CASESVC))
-//        .thenThrow(new RuntimeException(CONNECTIVITY_ISSUE));
-//
-//    when(partySvcClientService.getParty(any(String.class), any(UUID.class))).thenReturn(partys.get(0));
-//    when(collectionExerciseClientService.getCollectionExercise(any(UUID.class))).
-//        thenReturn(collectionExerciseDTOs.get(0));
-//
-//    DistributionInfo info = actionDistributor.distribute();
-//    List<InstructionCount> countList = info.getInstructionCounts();
-//    assertEquals(4, countList.size());
-//    List<InstructionCount> expectedCountList = new ArrayList<>();
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
-//        DistributionInfo.Instruction.REQUEST, 0));
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
-//        DistributionInfo.Instruction.CANCEL_REQUEST, 1));
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
-//        DistributionInfo.Instruction.REQUEST, 0));
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
-//        DistributionInfo.Instruction.CANCEL_REQUEST, 1));
-//    assertTrue(countList.equals(expectedCountList));
-//
-//    verify(actionTypeRepo).findAll();
-//
-//    // Assertions for calls in method retrieveActions
-//    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-//    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-//    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-//        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-//    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-//        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-//    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
-//    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
-//
-//    // Assertions for calls in processActionRequest
-//    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.SUBMITTED,
-//        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED);
-//    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
-//        eq(CategoryDTO.CategoryName.ACTION_CREATED));
-//    verify(actionPlanRepo, times(2)).findOne(any(Integer.class));
-//    verify(caseSvcClientService, times(2)).getCaseWithIACandCaseEvents(any(UUID.class));
-//    verify(partySvcClientService, times(0)).getParty(any(String.class), any(UUID.class));
-//    verify(collectionExerciseClientService, times(0)).getCollectionExercise(any(UUID.class));
-//
-//    // Assertions for calls in processActionCancel
-//    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.CANCEL_SUBMITTED,
-//        ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-//    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
-//        eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
-//
-//    // Assertion on what is sent to queue
-//    verify(actionInstructionPublisher, times(2)).sendActionInstruction(any(String.class),
-//        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-//  }
-//
-//  /**
-//   * Error Path - 1 Action linked to a Case with an unrecognised sample unit type
-//   *
-//   * See the Z for sampleUnitType in the 2nd case defined in ActionDistributorTest.CaseDetailsDTO.json
-//   *
-//   * @throws Exception oops
-//   */
-//  @Test
-//  public void testErrorPathActionForCaseWithUnrecognisedSampleUnitType() throws Exception {
-//    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-//    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
-//        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
-//        householdInitialContactActions);
-//    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
-//        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
-//        householdUploadIACActions);
-//    when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED,
-//        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED)).thenReturn(ActionState.PENDING);
-//    when(actionSvcStateTransitionManager.transition(ActionState.CANCEL_SUBMITTED,
-//        ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)).thenReturn(ActionState.CANCEL_PENDING);
-//    when(caseSvcClientService.getCaseWithIACandCaseEvents(any(UUID.class))).thenReturn(caseDetailsDTOs.get(1));
-//
-//    DistributionInfo info = actionDistributor.distribute();
-//    List<InstructionCount> countList = info.getInstructionCounts();
-//    assertEquals(4, countList.size());
-//    List<InstructionCount> expectedCountList = new ArrayList<>();
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
-//        DistributionInfo.Instruction.REQUEST, 1));
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
-//        DistributionInfo.Instruction.CANCEL_REQUEST, 1));
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
-//        DistributionInfo.Instruction.REQUEST, 1));
-//    expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
-//        DistributionInfo.Instruction.CANCEL_REQUEST, 1));
-//    assertTrue(countList.equals(expectedCountList));
-//
-//    verify(actionTypeRepo).findAll();
-//
-//    // Assertions for calls in method retrieveActions
-//    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-//    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-//    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-//        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-//    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-//        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-//    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
-//    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
-//
-//    // Assertions for calls in processActionRequest
-//    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.SUBMITTED,
-//        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED);
-//    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
-//        eq(CategoryDTO.CategoryName.ACTION_CREATED));
-//    verify(actionPlanRepo, times(2)).findOne(any(Integer.class));
-//    verify(caseSvcClientService, times(2)).getCaseWithIACandCaseEvents(any(UUID.class));
-//    verify(partySvcClientService, times(0)).getParty(any(String.class), any(UUID.class));
-//    verify(collectionExerciseClientService, times(0)).getCollectionExercise(any(UUID.class));
-//    verify(surveySvcClientService, times(0)).requestDetailsForSurvey(any(String.class));
-//
-//    // Assertions for calls in processActionCancel
-//    verify(actionSvcStateTransitionManager, times(2)).transition(ActionState.CANCEL_SUBMITTED,
-//        ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-//    verify(caseSvcClientService, times(2)).createNewCaseEvent(any(Action.class),
-//        eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
-//
-//    // Assertion on what is sent to queue
-//    verify(actionInstructionPublisher, times(2)).sendActionInstruction(any(String.class),
-//        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-//  }
+  /**
+   * Test with 2 ActionRequests and 2 ActionCancels for a H case (ie parent case) where ActionProcessingService throws
+   * an Exception when processActionRequest and when processActionCancel
+   *
+   * @throws Exception oops
+   */
+  @Test
+  public void testActionProcessingServiceThrowsException() throws Exception {
+    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
+        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+        householdInitialContactActions);
+    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
+        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+        householdUploadIACActions);
+    doThrow(new RuntimeException("Database access failed")).when(actionProcessingService).processActionRequest(
+        any(Action.class));
+    doThrow(new RuntimeException("Database access failed")).when(actionProcessingService).processActionCancel(
+        any(Action.class));
+
+    DistributionInfo info = actionDistributor.distribute();
+    List<InstructionCount> countList = info.getInstructionCounts();
+    assertEquals(4, countList.size());
+    List<InstructionCount> expectedCountList = new ArrayList<>();
+    expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
+        DistributionInfo.Instruction.REQUEST, 0));
+    expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
+        DistributionInfo.Instruction.CANCEL_REQUEST, 0));
+    expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
+        DistributionInfo.Instruction.REQUEST, 0));
+    expectedCountList.add(new InstructionCount(HOUSEHOLD_UPLOAD_IAC,
+        DistributionInfo.Instruction.CANCEL_REQUEST, 0));
+    assertTrue(countList.equals(expectedCountList));
+
+    verify(actionTypeRepo).findAll();
+
+    // Assertions for calls in method retrieveActions
+    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
+    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
+    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
+        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
+    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
+        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
+    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
+    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
+
+    // Assertions for calls to actionProcessingService & processActionRequest
+    ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
+    verify(actionProcessingService, times(2)).processActionRequest(
+        actionCaptorForActionRequest.capture());
+    List<Action> actionsList = actionCaptorForActionRequest.getAllValues();
+    assertEquals(2, actionsList.size());
+    List<Action> expectedActionsList = new ArrayList<>();
+    expectedActionsList.add(householdInitialContactActions.get(0));
+    expectedActionsList.add(householdUploadIACActions.get(0));
+    assertTrue(expectedActionsList.equals(actionsList));
+
+    // Assertions for calls to actionProcessingService & processActionCancel
+    ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
+    verify(actionProcessingService, times(2)).processActionCancel(
+        actionCaptorForActionCancel.capture());
+    actionsList = actionCaptorForActionCancel.getAllValues();
+    assertEquals(2, actionsList.size());
+    expectedActionsList = new ArrayList<>();
+    expectedActionsList.add(householdInitialContactActions.get(1));
+    expectedActionsList.add(householdUploadIACActions.get(1));
+    assertTrue(expectedActionsList.equals(actionsList));
+  }
 }
