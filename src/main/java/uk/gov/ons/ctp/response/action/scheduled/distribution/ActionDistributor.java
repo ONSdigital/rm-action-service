@@ -1,12 +1,8 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import java.math.BigInteger;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -16,77 +12,33 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
-import ma.glasnost.orika.MapperFacade;
-import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.distributed.DistributedListManager;
 import uk.gov.ons.ctp.common.distributed.LockingException;
-import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.Action.ActionPriority;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionEvent;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.message.instruction.Priority;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
-import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
-import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
-import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
-import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
-import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.Attributes;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
-import uk.gov.ons.response.survey.representation.SurveyDTO;
+import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
 /**
  * This is the 'service' class that distributes actions to downstream services, ie services outside of Response
  * Management (ActionExporterSvc, NotifyGW, etc.).
  *
- * It has a number of injected beans, including a RestClient, Repositories and the ActionInstructionPublisher.
- *
- * This class has a self scheduled method wakeUp(), which looks for Actions in
- * SUBMITTED state to send to downstream handlers. On each wake cycle, it
- * fetches the first n actions of each type, by createddatatime, and attempts to
- * enrich them with case, questionnaire, address and caseevent details all
- * fetched in individual calls to the Case service through its RESTful
- * endpoints.
- *
- * It then updates its own action table to change the action state to PENDING,
- * posts a new CaseEvent to the Case Service, and constructs an outbound
- * ActionRequest instance. That instance is added to the list of request objects
- * that will sent out as a batch inside an ActionInstruction to the
- * SpringIntegration @Publisher once the N actions for the individual type have
- * all been processed.
- *
+ * This class has a self scheduled method wakeUp(), which looks for Actions in SUBMITTED state to send to
+ * downstream handlers. On each wake cycle, it fetches the first n actions of each type, by createddatatime, and
+ * forwards them to ActionProcessingService.
  */
 @Component
 @Slf4j
 public class ActionDistributor {
+
   // WILL NOT WORK WITHOUT THIS NEXT LINE
   private static final long IMPOSSIBLE_ACTION_ID = 999999999999L;
-
-  private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
-
   @Autowired
   private DistributedListManager<BigInteger> actionDistributionListManager;
 
@@ -94,34 +46,13 @@ public class ActionDistributor {
   private AppConfig appConfig;
 
   @Autowired
-  private StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
-
-  @Autowired
-  private ActionInstructionPublisher actionInstructionPublisher;
-
-  @Autowired
-  private MapperFacade mapperFacade;
-
-  @Autowired
   private ActionRepository actionRepo;
 
   @Autowired
-  private ActionPlanRepository actionPlanRepo;
-
-  @Autowired
-  private CaseSvcClientService caseSvcClientService;
-
-  @Autowired
-  private CollectionExerciseClientService collectionExerciseClientService;
-
-  @Autowired
-  private PartySvcClientService partySvcClientService;
-
-  @Autowired
-  private SurveySvcClientService surveySvcClientService;
-
-  @Autowired
   private ActionTypeRepository actionTypeRepo;
+
+  @Autowired
+  private ActionProcessingService actionProcessingService;
 
   /**
    * wake up on schedule and check for submitted actions, enrich and distribute them to spring integration channels
@@ -155,10 +86,10 @@ public class ActionDistributor {
             for (Action action : actions) {
               try {
                 if (action.getState().equals(ActionDTO.ActionState.SUBMITTED)) {
-                  processActionRequest(action);
+                  actionProcessingService.processActionRequest(action);
                   successesForActionRequests++;
                 } else if (action.getState().equals(ActionDTO.ActionState.CANCEL_SUBMITTED)) {
-                  processActionCancel(action);
+                  actionProcessingService.processActionCancel(action);
                   successesForActionCancels++;
                 }
               } catch (Exception e) {
@@ -230,244 +161,4 @@ public class ActionDistributor {
     }
     return actions;
   }
-
-  /**
-   * Deal with a single action - the transaction boundary is here.
-   *
-   * The processing requires numerous calls to Case service, to write to our own action table and to publish to queue.
-   *
-   * @param action the action to deal with
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
-  private void processActionRequest(final Action action) throws CTPException {
-    log.debug("processing actionRequest with actionid {} caseid {} actionplanFK {}", action.getId(),
-        action.getCaseId(), action.getActionPlanFK());
-
-    ActionDTO.ActionEvent event = action.getActionType().getResponseRequired() ?
-        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-
-    transitionAction(action, event);
-
-    // advise casesvc to create a corresponding caseevent for our action
-    caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
-
-    ActionRequest actionRequest = prepareActionRequest(action);
-    if (actionRequest != null) {
-      actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), actionRequest);
-    }
-  }
-
-  /**
-   * Deal with a single action cancel - the transaction boundary is here
-   *
-   * @param action the action to deal with
-   */
-  @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
-  private void processActionCancel(final Action action) throws CTPException {
-    log.info("processing action REQUEST actionid {} caseid {} actionplanid {}", action.getActionPK(),
-        action.getCaseId(), action.getActionPlanFK());
-
-    transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-
-    // advise casesvc to create a corresponding caseevent for our action
-    caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED);
-
-    actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), prepareActionCancel(action));
-  }
-
-  /**
-   * Change the action status in db to indicate we have sent this action
-   * downstream, and clear previous situation (in the scenario where the action
-   * has prev. failed)
-   *
-   * @param action the action to change and persist
-   * @param event the event to transition the action with
-   * @throws CTPException if action state transition error
-   */
-  private void transitionAction(final Action action, final ActionDTO.ActionEvent event) throws CTPException {
-    ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
-    action.setState(nextState);
-    action.setSituation(null);
-    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
-  }
-
-  /**
-   * Take an action and using it, fetch further info from Case service in a number of rest calls, in order to create
-   * the ActionRequest
-   *
-   * @param action It all starts with the Action
-   * @return The ActionRequest created from the Action and the other info from CaseSvc
-   */
-  private ActionRequest prepareActionRequest(final Action action) {
-    UUID caseId = action.getCaseId();
-    log.debug("constructing ActionRequest to publish to downstream handler for action {} and case id {}",
-        action.getActionPK(), caseId);
-
-    ActionPlan actionPlan = (action.getActionPlanFK() == null) ? null
-        : actionPlanRepo.findOne(action.getActionPlanFK());
-
-    CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
-    String sampleUnitTypeStr = caseDTO.getSampleUnitType();
-    if (validate(sampleUnitTypeStr)) {
-      SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
-      PartyDTO parentParty;
-      PartyDTO childParty = null;
-      if (sampleUnitType.isParent()) {
-        parentParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
-        log.debug("parentParty retrieved is {}", parentParty);
-      } else {
-        childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
-        log.debug("childParty retrieved is {}", childParty);
-
-        UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
-        // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
-        parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
-      }
-
-      List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
-
-      return createActionRequest(action, actionPlan, caseDTO, parentParty, childParty, caseEventDTOs);
-    } else {
-      return null;
-    }
-  }
-
-  /**
-   * Take an action and using it, fetch further info from Case service in a
-   * number of rest calls, in order to create the ActionRequest
-   *
-   * @param action It all starts wih the Action
-   * @return The ActionRequest created from the Action and the other info from
-   *         CaseSvc
-   */
-  private ActionCancel prepareActionCancel(final Action action) {
-    log.debug("constructing ActionCancel to publish to downstream handler for action id {} and case id {}",
-        action.getActionPK(), action.getCaseId());
-    ActionCancel actionCancel = new ActionCancel();
-    actionCancel.setActionId(action.getId().toString());
-    actionCancel.setResponseRequired(true);
-    actionCancel.setReason("Action cancelled by Response Management");
-    return actionCancel;
-  }
-
-  /**
-   * Given the business objects passed, create, populate and return an
-   * ActionRequest
-   *
-   * @param action the persistent Action obj from the db
-   * @param actionPlan the persistent ActionPlan obj from the db
-   * @param caseDTO the Case representation from the CaseSvc
-   * @param parentParty the parent Party from the PartySvc (in BRES, it is a B)
-   * @param childParty the BI Party from the PartySvc (in BRES, it is a C)
-   * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
-   * @return the shiney new Action Request
-   */
-  private ActionRequest createActionRequest(final Action action, final ActionPlan actionPlan,
-      final CaseDetailsDTO caseDTO,
-      final PartyDTO parentParty,
-      final PartyDTO childParty,
-      final List<CaseEventDTO> caseEventDTOs) {
-    ActionRequest actionRequest = new ActionRequest();
-    actionRequest.setActionId(action.getId().toString());
-    actionRequest.setActionPlan((actionPlan == null) ? null : actionPlan.getName());
-    actionRequest.setActionType(action.getActionType().getName());
-    actionRequest.setResponseRequired(action.getActionType().getResponseRequired());
-    actionRequest.setCaseId(action.getCaseId().toString());
-
-    CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
-    UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
-    CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
-        collectionExerciseId);
-    actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
-
-    ActionContact actionContact = new ActionContact();
-    Attributes businessUnitAttributes = parentParty.getAttributes();
-    actionContact.setRuName(businessUnitAttributes.getName());
-    String tradStyle1 = businessUnitAttributes.getTradstyle1();
-    String tradStyle2 = businessUnitAttributes.getTradstyle2();
-    String tradStyle3 = businessUnitAttributes.getTradstyle3();
-    StringBuffer tradStyle = new StringBuffer();
-    if (!StringUtils.isEmpty(tradStyle1)) {
-      tradStyle.append(String.format("%s ", tradStyle1));
-    }
-    if (!StringUtils.isEmpty(tradStyle2)) {
-      tradStyle.append(String.format("%s ", tradStyle2));
-    }
-    if (!StringUtils.isEmpty(tradStyle3)) {
-      tradStyle.append(tradStyle3);
-    }
-    actionContact.setTradingStyle(tradStyle.toString().trim());
-    if (childParty != null) {
-      Attributes biPartyAttributes = childParty.getAttributes();
-      actionContact.setForename(biPartyAttributes.getFirstName());
-      actionContact.setSurname(biPartyAttributes.getLastName());
-      actionContact.setEmailAddress(biPartyAttributes.getEmailAddress());
-    }
-    actionRequest.setContact(actionContact);
-
-    ActionEvent actionEvent = new ActionEvent();
-    caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
-    actionRequest.setEvents(actionEvent);
-    actionRequest.setIac(caseDTO.getIac());
-    Integer actionPriority = action.getPriority();
-    if (actionPriority != null) {
-      actionRequest.setPriority(Priority.fromValue(ActionPriority.valueOf(actionPriority).getName()));
-    } else {
-      actionRequest.setPriority(Priority.LOWEST);
-    }
-
-    ActionAddress actionAddress = new ActionAddress();
-    actionAddress.setSampleUnitRef(caseGroupDTO.getSampleUnitRef());
-    actionRequest.setAddress(actionAddress);
-
-    String surveyId = collectionExercise.getSurveyId();
-    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
-    actionRequest.setSurveyName(surveyDTO.getLongName());
-    actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
-
-    Date scheduledEndDateTime = collectionExercise.getScheduledEndDateTime();
-    if (scheduledEndDateTime != null) {
-      DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
-      actionRequest.setReturnByDate(df.format(scheduledEndDateTime));
-    }
-
-    return actionRequest;
-  }
-
-  /**
-   * Formats a CaseEvent as a string that can added to the ActionRequest
-   *
-   * @param caseEventDTO the DTO to be formatted
-   * @return the pretty one liner
-   */
-  private String formatCaseEvent(final CaseEventDTO caseEventDTO) {
-    return String.format("%s : %s : %s : %s", caseEventDTO.getCategory(), caseEventDTO.getSubCategory(),
-        caseEventDTO.getCreatedBy(), caseEventDTO.getDescription());
-  }
-
-  /**
-   * To validate the sampleUnitTypeStr versus SampleSvc-Api
-   *
-   * @param sampleUnitTypeStr the string value for sampleUnitType
-   * @return
-   */
-  private boolean validate(String sampleUnitTypeStr) {
-    boolean result = false;
-    try {
-      SampleUnitType sampleUnitType = SampleUnitType.valueOf(sampleUnitTypeStr);
-      if (sampleUnitType.isParent()) {
-        result = true;
-      } else {
-        String childSampleUnitTypeStr = sampleUnitTypeStr.substring(0, 1);
-        SampleUnitType.valueOf(childSampleUnitTypeStr);
-        result = true;
-      }
-    } catch (IllegalArgumentException e) {
-      log.error("Unexpected scenario. Error message is {}. Cause is {}", e.getMessage(), e.getCause());
-    }
-
-    return result;
-  }
-
 }
