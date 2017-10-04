@@ -8,11 +8,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
+import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
@@ -22,8 +24,10 @@ import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -37,9 +41,15 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionProcessingServiceImplTest {
 
+  private static final Integer ACTION_PLAN_FK = 1;
+
+  private static final String ACTION_PLAN_NAME = "action plan 1";
   private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action State transition failed.";
   private static final String DB_ERROR_MSG = "DB is KO.";
   private static final String REST_ERROR_MSG = "REST call is KO.";
+
+  private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
+  private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
 
   @Spy
   private AppConfig appConfig = new AppConfig();
@@ -71,6 +81,8 @@ public class ActionProcessingServiceImplTest {
   @InjectMocks
   private ActionProcessingServiceImpl actionProcessingService;
 
+  private List<CaseDetailsDTO> caseDetailsDTOs;
+
   /**
    * Initialises Mockito and loads Class Fixtures
    */
@@ -83,7 +95,7 @@ public class ActionProcessingServiceImplTest {
 //    householdInitialContactActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
 //    householdUploadIACActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_UPLOAD_IAC);
 //    partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
-//    caseDetailsDTOs = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
+    caseDetailsDTOs = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
 //    collectionExerciseDTOs = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
 
     MockitoAnnotations.initMocks(this);
@@ -194,6 +206,35 @@ public class ActionProcessingServiceImplTest {
         any(CategoryDTO.CategoryName.class));
     verify(actionPlanRepo, never()).findOne(any(Integer.class));
     verify(caseSvcClientService, never()).getCaseWithIACandCaseEvents(any(UUID.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * Happy path, ie we go all the way to producing an ActionRequest and publishing it
+   */
+  @Test
+  public void testProcessActionRequestHappyPath() throws CTPException {
+    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
+
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
+
+    Action action = new Action();
+    action.setId(ACTION_ID);
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    action.setActionPlanFK(ACTION_PLAN_FK);
+    action.setCaseId(CASE_ID);
+    actionProcessingService.processActionRequest(action);
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
+    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(any(UUID.class));
+    // TODO verify calls to partySvcClientService
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
