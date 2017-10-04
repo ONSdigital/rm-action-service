@@ -11,6 +11,7 @@ import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
@@ -75,17 +76,22 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     log.debug("processing actionRequest with actionid {} caseid {} actionplanFK {}", action.getId(),
         action.getCaseId(), action.getActionPlanFK());
 
-    ActionDTO.ActionEvent event = action.getActionType().getResponseRequired() ?
-        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+    ActionType actionType = action.getActionType();
+    if (actionType != null) {
+      ActionDTO.ActionEvent event = actionType.getResponseRequired() ?
+          ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
 
-    transitionAction(action, event);
+      transitionAction(action, event);
 
-    // advise casesvc to create a corresponding caseevent for our action
-    caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
+      // advise casesvc to create a corresponding caseevent for our action
+      caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
 
-    ActionRequest actionRequest = prepareActionRequest(action);
-    if (actionRequest != null) {
-      actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), actionRequest);
+      ActionRequest actionRequest = prepareActionRequest(action);
+      if (actionRequest != null) {
+        actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
+      }
+    } else {
+      log.error("Unexpected situation. actionType is not defined for action with actionid {}", action.getId());
     }
   }
 
@@ -282,9 +288,8 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   }
 
   /**
-   * Change the action status in db to indicate we have sent this action
-   * downstream, and clear previous situation (in the scenario where the action
-   * has prev. failed)
+   * Change the action status in db to indicate we have sent this action downstream, and clear previous situation
+   * (in the scenario where the action has prev. failed)
    *
    * @param action the action to change and persist
    * @param event the event to transition the action with
