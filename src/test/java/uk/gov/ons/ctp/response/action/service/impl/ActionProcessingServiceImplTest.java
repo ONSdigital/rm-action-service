@@ -106,9 +106,6 @@ public class ActionProcessingServiceImplTest {
     CaseSvc caseSvcConfig = new CaseSvc();
     appConfig.setCaseSvc(caseSvcConfig);
 
-//    actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
-//    householdInitialContactActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
-//    householdUploadIACActions = FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_UPLOAD_IAC);
     partyDTOs = FixtureHelper.loadClassFixtures(PartyDTO[].class);
     caseDetailsDTOs = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
     collectionExerciseDTOs = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
@@ -360,6 +357,57 @@ public class ActionProcessingServiceImplTest {
     verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * Scenario where actionSvcStateTransitionManager throws an exception on transition
+   */
+  @Test
+  public void testProcessActionCancelStateTransitionException() throws CTPException {
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class),
+        eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED))).thenThrow(new CTPException(CTPException.Fault.SYSTEM_ERROR,
+        ACTION_STATE_TRANSITION_ERROR_MSG));
+
+    try {
+      Action action = new Action();
+      actionProcessingService.processActionCancel(action);
+      fail();
+    } catch (CTPException e) {
+      assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
+      assertEquals(ACTION_STATE_TRANSITION_ERROR_MSG, e.getMessage());
+    }
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+    verify(actionRepo, never()).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * Scenario where the action's state transitions OK but issue while persisting action to DB
+   */
+  @Test
+  public void testProcessActionCancelPersistingException() throws CTPException {
+    when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
+
+    try {
+      Action action = new Action();
+      actionProcessingService.processActionCancel(action);
+      fail();
+    } catch (RuntimeException e) {
+      assertEquals(DB_ERROR_MSG, e.getMessage());
+    }
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 }

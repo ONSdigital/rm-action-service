@@ -102,7 +102,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
   public void processActionCancel(final Action action) throws CTPException {
-    log.info("processing action REQUEST actionid {} caseid {} actionplanid {}", action.getActionPK(),
+    log.info("processing action cancel for actionid {} caseid {} actionplanFK {}", action.getId(),
         action.getCaseId(), action.getActionPlanFK());
 
     transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
