@@ -162,7 +162,7 @@ public class ActionProcessingServiceImplTest {
     }
 
     verify(actionSvcStateTransitionManager, times(1)).transition(
-        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
         any(CategoryDTO.CategoryName.class));
@@ -187,7 +187,7 @@ public class ActionProcessingServiceImplTest {
     }
 
     verify(actionSvcStateTransitionManager, times(1)).transition(
-        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
         any(CategoryDTO.CategoryName.class));
@@ -213,10 +213,10 @@ public class ActionProcessingServiceImplTest {
     }
 
     verify(actionSvcStateTransitionManager, times(1)).transition(
-        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
-        any(CategoryDTO.CategoryName.class));
+        eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, never()).findOne(any(Integer.class));
     verify(caseSvcClientService, never()).getCaseWithIACandCaseEvents(any(UUID.class));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
@@ -255,10 +255,10 @@ public class ActionProcessingServiceImplTest {
 
     // Start of section to verify calls
     verify(actionSvcStateTransitionManager, times(1)).transition(
-        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
-        any(CategoryDTO.CategoryName.class));
+        eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
     verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
@@ -296,10 +296,10 @@ public class ActionProcessingServiceImplTest {
 
     // Start of section to verify calls
     verify(actionSvcStateTransitionManager, times(1)).transition(
-        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
-        any(CategoryDTO.CategoryName.class));
+        eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_1);
     verify(partySvcClientService, never()).getParty(any(String.class), any(UUID.class));
@@ -343,10 +343,10 @@ public class ActionProcessingServiceImplTest {
 
     // Start of section to verify calls
     verify(actionSvcStateTransitionManager, times(1)).transition(
-        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
-        any(CategoryDTO.CategoryName.class));
+        eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_2);
     verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_HI, PARTY_ID);
@@ -407,6 +407,32 @@ public class ActionProcessingServiceImplTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
         any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * An exception is thrown when creating a CaseEvent after the Action's state was transitioned and persisted OK.
+   */
+  @Test
+  public void testProcessActionCancelCaseEventCreationThrowsException() throws CTPException {
+    when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
+        thenThrow(new RuntimeException(REST_ERROR_MSG));
+
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    try {
+      actionProcessingService.processActionCancel(action);
+      fail();
+    } catch (RuntimeException e) {
+      assertEquals(REST_ERROR_MSG, e.getMessage());
+    }
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
+        eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
