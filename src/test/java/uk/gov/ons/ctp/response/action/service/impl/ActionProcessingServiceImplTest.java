@@ -24,6 +24,8 @@ import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 
+import java.util.UUID;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -37,6 +39,7 @@ public class ActionProcessingServiceImplTest {
 
   private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action State transition failed.";
   private static final String DB_ERROR_MSG = "DB is KO.";
+  private static final String REST_ERROR_MSG = "REST call is KO.";
 
   @Spy
   private AppConfig appConfig = new AppConfig();
@@ -163,6 +166,34 @@ public class ActionProcessingServiceImplTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
         any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * An exception is thrown when creating a CaseEvent after the Action's state was transitioned and persisted OK.
+   */
+  @Test
+  public void testProcessActionRequestCaseEventCreationThrowsException() throws CTPException {
+    when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
+        thenThrow(new RuntimeException(REST_ERROR_MSG));
+
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    try {
+      actionProcessingService.processActionRequest(action);
+      fail();
+    } catch (RuntimeException e) {
+      assertEquals(REST_ERROR_MSG, e.getMessage());
+    }
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionPlanRepo, never()).findOne(any(Integer.class));
+    verify(caseSvcClientService, never()).getCaseWithIACandCaseEvents(any(UUID.class));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
