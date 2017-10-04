@@ -268,7 +268,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * To validate the sampleUnitTypeStr versus SampleSvc-Api
    *
    * @param sampleUnitTypeStr the string value for sampleUnitType
-   * @return
+   * @return true if sampleUnitTypeStr is known to us
    */
   private boolean validate(String sampleUnitTypeStr) {
     boolean result = false;
