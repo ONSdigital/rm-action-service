@@ -1,19 +1,18 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.UUID;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.UUID;
 
 /**
  * Domain model object.

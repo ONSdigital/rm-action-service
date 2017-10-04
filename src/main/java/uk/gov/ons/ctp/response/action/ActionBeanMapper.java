@@ -1,21 +1,16 @@
 package uk.gov.ons.ctp.response.action;
 
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.ConfigurableMapper;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
 import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionFeedbackDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.*;
 
 /**
  * The bean mapper to go from Entity objects to Presentation objects.

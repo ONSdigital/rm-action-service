@@ -3,10 +3,7 @@ package uk.gov.ons.ctp.response.action.service.impl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -19,6 +16,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
@@ -33,10 +31,10 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
+import static uk.gov.ons.ctp.response.action.service.impl.ActionProcessingServiceImpl.CANCELLATION_REASON;
 
 /**
  * Tests for the ActionProcessingServiceImpl
@@ -435,5 +433,29 @@ public class ActionProcessingServiceImplTest {
         eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  @Test
+  public void testProcessActionCancelHappyPath() throws CTPException {
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
+    action.setId(ACTION_ID);
+    actionProcessingService.processActionCancel(action);
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
+        eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
+
+    ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
+        ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
+    verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
+        actionCaptor.capture());
+    uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel = (ActionCancel)actionCaptor.
+        getValue();
+    assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
+    assertTrue(publishedActionCancel.isResponseRequired());
+    assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
   }
 }

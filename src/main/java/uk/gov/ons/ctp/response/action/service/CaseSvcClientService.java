@@ -1,11 +1,7 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.*;
 
 import java.util.List;
 import java.util.UUID;

@@ -1,9 +1,9 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import java.util.UUID;
-
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
+
+import java.util.UUID;
 
 /**
  * The service for ActionPlanJobs

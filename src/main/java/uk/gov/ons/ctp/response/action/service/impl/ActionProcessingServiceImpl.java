@@ -38,6 +38,7 @@ import java.util.UUID;
 @Service
 public class ActionProcessingServiceImpl implements ActionProcessingService {
 
+  public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
 
   @Autowired
@@ -168,7 +169,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     ActionCancel actionCancel = new ActionCancel();
     actionCancel.setActionId(action.getId().toString());
     actionCancel.setResponseRequired(true);
-    actionCancel.setReason("Action cancelled by Response Management");
+    actionCancel.setReason(CANCELLATION_REASON);
     return actionCancel;
   }
 
