@@ -13,6 +13,7 @@ import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
@@ -23,16 +24,18 @@ import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the ActionProcessingServiceImpl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionProcessingServiceImplTest {
+
+  private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action State transition failed.";
 
   @Spy
   private AppConfig appConfig = new AppConfig();
@@ -89,6 +92,48 @@ public class ActionProcessingServiceImplTest {
 
     verify(actionSvcStateTransitionManager, never()).transition(any(ActionDTO.ActionState.class),
         any(ActionDTO.ActionEvent.class));
+    verify(actionRepo, never()).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  @Test
+  public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
+    Action action = new Action();
+    action.setActionType(ActionType.builder().build());
+    actionProcessingService.processActionRequest(action);
+
+    verify(actionSvcStateTransitionManager, never()).transition(any(ActionDTO.ActionState.class),
+        any(ActionDTO.ActionEvent.class));
+    verify(actionRepo, never()).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * An exception is thrown when transitioning the state of the Action
+   */
+  @Test
+  public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+        .thenThrow(new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
+
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    try{
+      actionProcessingService.processActionRequest(action);
+      fail();
+    } catch (CTPException e) {
+      assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
+      assertEquals(ACTION_STATE_TRANSITION_ERROR_MSG, e.getMessage());
+    }
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
         any(CategoryDTO.CategoryName.class));

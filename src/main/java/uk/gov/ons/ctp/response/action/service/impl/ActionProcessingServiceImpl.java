@@ -77,7 +77,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
         action.getCaseId(), action.getActionPlanFK());
 
     ActionType actionType = action.getActionType();
-    if (actionType != null) {
+    if (valid(actionType)) {
       ActionDTO.ActionEvent event = actionType.getResponseRequired() ?
           ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
 
@@ -301,5 +301,15 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     action.setSituation(null);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());
     actionRepo.saveAndFlush(action);
+  }
+
+  /**
+   * To validate an ActionType
+   *
+   * @param actionType the ActionType to validate
+   * @return true if valid
+   */
+  private boolean valid(ActionType actionType) {
+    return (actionType != null) && (actionType.getResponseRequired() != null);
   }
 }
