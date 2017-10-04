@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
 public class ActionProcessingServiceImplTest {
 
   private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action State transition failed.";
+  private static final String DB_ERROR_MSG = "DB is KO.";
 
   @Spy
   private AppConfig appConfig = new AppConfig();
@@ -135,6 +136,31 @@ public class ActionProcessingServiceImplTest {
     verify(actionSvcStateTransitionManager, times(1)).transition(
         any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  /**
+   * An exception is thrown when saving the Action after its state was transitioned
+   */
+  @Test
+  public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
+    when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
+
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    try {
+      actionProcessingService.processActionRequest(action);
+      fail();
+    } catch (RuntimeException e) {
+      assertEquals(DB_ERROR_MSG, e.getMessage());
+    }
+
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, never()).createNewCaseEvent(any(Action.class),
         any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
