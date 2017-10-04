@@ -270,4 +270,42 @@ public class ActionProcessingServiceImplTest {
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
+
+  /**
+   * Test where an action is linked to a case for a sample unit which is not recognised (ie none of the expected values
+   * H, HI, CI, B, BI)
+   */
+  @Test
+  public void testProcessActionRequestForActionLinkedToInvalidSampleUnitType() throws CTPException {
+    // Start of section to mock responses
+    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
+
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(1)); // the returned case has a sample unit type of Z
+    // End of section to mock responses
+
+    // Start of section to run the test
+    Action action = new Action();
+    action.setId(ACTION_ID);
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
+    action.setActionPlanFK(ACTION_PLAN_FK);
+    action.setCaseId(CASE_ID);
+    action.setPriority(1);
+    actionProcessingService.processActionRequest(action);
+    // End of section to run the test
+
+    // Start of section to verify calls
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+        any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
+        any(CategoryDTO.CategoryName.class));
+    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
+    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(any(UUID.class));
+    verify(partySvcClientService, never()).getParty(any(String.class), any(UUID.class));
+    verify(collectionExerciseClientService, never()).getCollectionExercise(any(UUID.class));
+    verify(surveySvcClientService, never()).requestDetailsForSurvey(any(String.class));
+    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
 }
