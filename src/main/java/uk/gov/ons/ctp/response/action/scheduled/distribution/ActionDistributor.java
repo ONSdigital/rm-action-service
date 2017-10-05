@@ -410,7 +410,12 @@ public class ActionDistributor {
     caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
     actionRequest.setIac(caseDTO.getIac());
-    actionRequest.setPriority(Priority.fromValue(ActionPriority.valueOf(action.getPriority()).getName()));
+    Integer actionPriority = action.getPriority();
+    if (actionPriority != null) {
+      actionRequest.setPriority(Priority.fromValue(ActionPriority.valueOf(actionPriority).getName()));
+    } else {
+      actionRequest.setPriority(Priority.LOWEST);
+    }
 
     ActionAddress actionAddress = new ActionAddress();
     actionAddress.setSampleUnitRef(caseGroupDTO.getSampleUnitRef());
