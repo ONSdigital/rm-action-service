@@ -56,6 +56,7 @@ public final class ActionEndpoint implements CTPEndpoint {
 
   public static final String ACTION_NOT_FOUND = "Action not found for id %s";
   public static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
+  public static final String CASE_NOT_FOUND = "Case not found for id %s";
 
   /**
    * GET the Action for the specified action id.
@@ -70,7 +71,7 @@ public final class ActionEndpoint implements CTPEndpoint {
     log.info("Entering findActionByActionId with {}", actionId);
     Action action = actionService.findActionById(actionId);
     if (action == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, "Action not found for id %s", actionId);
+      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_FOUND, actionId);
     }
 
     ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
@@ -148,20 +149,28 @@ public final class ActionEndpoint implements CTPEndpoint {
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
   public ResponseEntity<ActionDTO> createAction(final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
               BindingResult bindingResult) throws CTPException, InvalidRequestException {
-    log.info("Entering createAction with Action {}", actionPostRequestDTO);
+    log.debug("Entering createAction with actionPostRequestDTO {}", actionPostRequestDTO);
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action: ", bindingResult);
     }
 
-    Action action = actionService.createAction(mapperFacade.map(actionPostRequestDTO, Action.class));
-    ActionDTO resultDTO = mapperFacade.map(action, ActionDTO.class);
-    UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();
-    resultDTO.setActionPlanId(actionPlanUUID);
+    UUID parentCaseId = actionPostRequestDTO.getCaseId();
+    ActionCase parentCase = actionCaseService.findActionCase(parentCaseId);
+    if (parentCase != null) {
+      Action action = mapperFacade.map(actionPostRequestDTO, Action.class);
+      action.setCaseFK(parentCase.getCasePK());
+      action = actionService.createAction(action);
 
-    String newResourceUrl = ServletUriComponentsBuilder
-        .fromCurrentRequest().buildAndExpand(resultDTO.getId()).toUri().toString();
+      ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
+      UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();
+      actionDTO.setActionPlanId(actionPlanUUID);
 
-    return ResponseEntity.created(URI.create(newResourceUrl)).body(resultDTO);
+      String newResourceUrl = ServletUriComponentsBuilder
+          .fromCurrentRequest().buildAndExpand(actionDTO.getId()).toUri().toString();
+      return ResponseEntity.created(URI.create(newResourceUrl)).body(actionDTO);
+    } else {
+      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, CASE_NOT_FOUND, parentCaseId);
+    }
   }
 
   /**
@@ -210,7 +219,7 @@ public final class ActionEndpoint implements CTPEndpoint {
 
     ActionCase caze = actionCaseService.findActionCase(caseId);
     if (caze == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, "Case not found for caseId %s", caseId);
+      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, CASE_NOT_FOUND, caseId);
     }
 
     List<Action> actions = actionService.cancelActions(caseId);
@@ -243,7 +252,7 @@ public final class ActionEndpoint implements CTPEndpoint {
     actionFeedback.setActionId(actionId.toString());
     Action action = actionService.feedBackAction(actionFeedback);
     if (action == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, "Action not found for id %s", actionId);
+      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_FOUND, actionId);
     }
 
     ActionDTO resultDTO = mapperFacade.map(action, ActionDTO.class);

@@ -73,7 +73,7 @@ public class Action implements Serializable {
 
     /**
      * Create an instance of the enum
-     * @param value priority as integere
+     * @param value priority as integer
      * @param label verbage
      */
     ActionPriority(int value, String label) {

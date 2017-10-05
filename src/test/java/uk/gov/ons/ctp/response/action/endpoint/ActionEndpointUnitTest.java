@@ -35,7 +35,7 @@ import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,6 +48,7 @@ import static uk.gov.ons.ctp.common.error.RestExceptionHandler.PROVIDED_JSON_INC
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_UPDATED;
+import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.CASE_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.CREATED_BY_SYSTEM;
 
 /**
@@ -73,6 +74,7 @@ public final class ActionEndpointUnitTest {
   private MockMvc mockMvc;
 
   private List<Action> actions;
+  private List<ActionCase> actionCases;
   private List<ActionPlan> actionPlans;
 
   private static final Boolean ACTION1_MANUALLY_CREATED = true;
@@ -174,6 +176,7 @@ public final class ActionEndpointUnitTest {
             .build();
 
     actions = FixtureHelper.loadClassFixtures(Action[].class);
+    actionCases = FixtureHelper.loadClassFixtures(ActionCase[].class);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
   }
 
@@ -628,25 +631,53 @@ public final class ActionEndpointUnitTest {
   }
 
   /**
-   * Test creating an Action with valid JSON.
+   * Test creating an Action with valid JSON but no existing parent case.
+   *
    * @throws Exception when postJson does
    */
   @Test
-  public void createActionGoodJsonProvided() throws Exception {
-    when(actionService.createAction(any(Action.class))).thenReturn(actions.get(0));
+  public void createActionGoodJsonProvidedButNoParentCase() throws Exception {
+    ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
+
+    resultActions.andExpect(status().isNotFound())
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("createAction"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
+        .andExpect(jsonPath("$.error.message", is(String.format(CASE_NOT_FOUND, ACTION_ID_2_CASE_ID))))
+        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+
+    verify(actionCaseService, times(1)).findActionCase(ACTION_ID_2_CASE_ID);
+    verify(actionService, never()).createAction(any(Action.class));
+    verify(actionPlanService, never()).findActionPlan(any(Integer.class));
+  }
+
+  /**
+   * Test creating an Action with valid JSON and existing parent case.
+   *
+   * @throws Exception when postJson does
+   */
+  @Test
+  public void createActionGoodJsonProvidedAndExistingParentCase() throws Exception {
+    when(actionCaseService.findActionCase(ACTION_ID_2_CASE_ID)).thenReturn(actionCases.get(0));
+    when(actionService.createAction(any(Action.class))).thenReturn(actions.get(1));
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
     ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
 
     resultActions.andExpect(status().isCreated())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("createAction"))
-            .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
-            .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$.priority", is(1)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("createAction"))
+        .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
+        .andExpect(jsonPath("$.caseId", is(ACTION_ID_2_CASE_ID.toString())))
+        .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_2)))
+        .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$.priority", is(2)));
+
+    verify(actionCaseService, times(1)).findActionCase(ACTION_ID_2_CASE_ID);
+    verify(actionService, times(1)).createAction(any(Action.class));
+    verify(actionPlanService, times(1)).findActionPlan(any(Integer.class));
   }
+
 
   /**
    * Test creating an Action with invalid JSON Property.
@@ -662,6 +693,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+
+    verify(actionCaseService, never()).findActionCase(any(UUID.class));
   }
 
 
@@ -679,6 +712,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(INVALID_JSON)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+
+    verify(actionCaseService, never()).findActionCase(any(UUID.class));
   }
 
   /**
