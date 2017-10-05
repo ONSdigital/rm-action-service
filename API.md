@@ -128,16 +128,16 @@ An `HTTP 404 Not Found` status code is returned if the action with the specified
 {
   "id": "d24b3f17-bbf8-4c71-b2f0-a4334125d78d",
   "caseId": "7bc5d41b-0549-40b3-ba76-42f6d4cf3fdb",
-  "actionPlanId": "5381731e-e386-41a1-8462-26373744db86",
-  "actionRuleId": 120,
-  "actionTypeName": "HouseholdCreateVisit",
+  "actionPlanId": null,
+  "actionRuleId": null,
+  "actionTypeName": "BSREM",
   "createdBy": "SYSTEM",
-  "manuallyCreated": false,
-  "priority": 3,
+  "manuallyCreated": true,
+  "priority": null,
   "situation": null,
   "state": "SUBMITTED",
-  "createdDateTime": "2017-05-15T10:00:00Z",
-  "updatedDateTime": "2017-05-15T10:00:00Z"
+  "createdDateTime": "2017-10-05T14:37:30.014+0100",
+  "updatedDateTime": null
 }
 ```
 

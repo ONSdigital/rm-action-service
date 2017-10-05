@@ -648,7 +648,6 @@ public final class ActionEndpointUnitTest {
 
     verify(actionCaseService, times(1)).findActionCase(ACTION_ID_2_CASE_ID);
     verify(actionService, never()).createAction(any(Action.class));
-    verify(actionPlanService, never()).findActionPlan(any(Integer.class));
   }
 
   /**
@@ -660,7 +659,6 @@ public final class ActionEndpointUnitTest {
   public void createActionGoodJsonProvidedAndExistingParentCase() throws Exception {
     when(actionCaseService.findActionCase(ACTION_ID_2_CASE_ID)).thenReturn(actionCases.get(0));
     when(actionService.createAction(any(Action.class))).thenReturn(actions.get(1));
-    when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
     ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
 
@@ -675,7 +673,6 @@ public final class ActionEndpointUnitTest {
 
     verify(actionCaseService, times(1)).findActionCase(ACTION_ID_2_CASE_ID);
     verify(actionService, times(1)).createAction(any(Action.class));
-    verify(actionPlanService, times(1)).findActionPlan(any(Integer.class));
   }
 
 

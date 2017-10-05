@@ -162,9 +162,6 @@ public final class ActionEndpoint implements CTPEndpoint {
       action = actionService.createAction(action);
 
       ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
-      UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();
-      actionDTO.setActionPlanId(actionPlanUUID);
-
       String newResourceUrl = ServletUriComponentsBuilder
           .fromCurrentRequest().buildAndExpand(actionDTO.getId()).toUri().toString();
       return ResponseEntity.created(URI.create(newResourceUrl)).body(actionDTO);
