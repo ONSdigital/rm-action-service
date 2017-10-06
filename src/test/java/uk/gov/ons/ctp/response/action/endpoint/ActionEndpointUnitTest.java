@@ -641,7 +641,7 @@ public final class ActionEndpointUnitTest {
 
     resultActions.andExpect(status().isNotFound())
         .andExpect(handler().handlerType(ActionEndpoint.class))
-        .andExpect(handler().methodName("createAction"))
+        .andExpect(handler().methodName("createAdhocAction"))
         .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
         .andExpect(jsonPath("$.error.message", is(String.format(CASE_NOT_FOUND, ACTION_ID_2_CASE_ID))))
         .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
@@ -664,7 +664,7 @@ public final class ActionEndpointUnitTest {
 
     resultActions.andExpect(status().isCreated())
         .andExpect(handler().handlerType(ActionEndpoint.class))
-        .andExpect(handler().methodName("createAction"))
+        .andExpect(handler().methodName("createAdhocAction"))
         .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
         .andExpect(jsonPath("$.caseId", is(ACTION_ID_2_CASE_ID.toString())))
         .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_2)))
@@ -686,7 +686,7 @@ public final class ActionEndpointUnitTest {
 
     resultActions.andExpect(status().isBadRequest())
             .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("createAction"))
+            .andExpect(handler().methodName("createAdhocAction"))
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
@@ -705,7 +705,7 @@ public final class ActionEndpointUnitTest {
 
     resultActions.andExpect(status().isBadRequest())
             .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("createAction"))
+            .andExpect(handler().methodName("createAdhocAction"))
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(INVALID_JSON)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));

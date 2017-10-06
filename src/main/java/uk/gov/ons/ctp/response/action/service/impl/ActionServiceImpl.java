@@ -142,7 +142,7 @@ public class ActionServiceImpl implements ActionService {
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action createAction(final Action action) {
-    log.debug("Entering createAction with {}", action);
+    log.debug("Entering createAdhocAction with {}", action);
 
     // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);

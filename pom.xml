@@ -4,11 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>uk.gov.ons.ctp.product</groupId>
   <artifactId>actionsvc</artifactId>
-<<<<<<< HEAD
   <version>10.49.0-SNAPSHOT</version>
-=======
-  <version>10.48.0-SNAPSHOT</version>
->>>>>>> CTPA-1585 start of dev
   <packaging>jar</packaging>
 
   <name>CTP : ActionService</name>

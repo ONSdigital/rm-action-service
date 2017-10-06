@@ -137,7 +137,7 @@ public final class ActionEndpoint implements CTPEndpoint {
   }
 
   /**
-   * POST Create an Action.
+   * POST Create an adhoc Action.
    *
    * @param actionPostRequestDTO Incoming ActionDTO with details to validate and from which
    *          to create Action
@@ -147,9 +147,9 @@ public final class ActionEndpoint implements CTPEndpoint {
    * @throws InvalidRequestException if binding errors
    */
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
-  public ResponseEntity<ActionDTO> createAction(final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
+  public ResponseEntity<ActionDTO> createAdhocAction(final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
               BindingResult bindingResult) throws CTPException, InvalidRequestException {
-    log.debug("Entering createAction with actionPostRequestDTO {}", actionPostRequestDTO);
+    log.debug("Entering createAdhocAction with actionPostRequestDTO {}", actionPostRequestDTO);
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action: ", bindingResult);
     }
