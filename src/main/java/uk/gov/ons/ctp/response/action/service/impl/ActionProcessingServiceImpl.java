@@ -283,6 +283,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       }
     } catch (IllegalArgumentException e) {
       log.error("Unexpected scenario. Error message is {}. Cause is {}", e.getMessage(), e.getCause());
+      log.error("Stacktrace: ", e);
     }
 
     return result;

@@ -60,6 +60,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
 

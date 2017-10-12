@@ -76,7 +76,7 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
             // TODO CTPA-1373 Do we really want to catch this. Should be let to go through.
             // TODO CTPA-1373 What happens with other notif?
             log.error(String.format("message = %s - cause = %s", e.getMessage(), e.getCause()));
-            log.error("Stack trace: ", e);
+            log.error("Stacktrace: ", e);
           }
           ActionCase actionCaseToDelete = actionCaseRepo.findById(caseId);
           if (actionCaseToDelete != null) {

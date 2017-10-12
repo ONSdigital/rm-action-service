@@ -40,6 +40,8 @@ public class DistributionScheduler implements HealthIndicator {
       distributionInfo = actionDistributorImpl.distribute();
     } catch (Exception e) {
       log.error("Exception in action distributor", e);
+      log.error("Stacktrace: ", e);
+
     }
   }
 }

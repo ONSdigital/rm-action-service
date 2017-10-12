@@ -68,6 +68,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
     return result;
@@ -93,6 +94,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
     return result;
@@ -118,6 +120,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
     return Arrays.asList(result);
@@ -145,6 +148,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
     return result;
@@ -173,6 +177,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
     return result;
@@ -210,6 +215,7 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
+        log.error("Stacktrace: ", e);
       }
     }
     return result;

@@ -35,6 +35,7 @@ public class PlanScheduler implements HealthIndicator {
       executionInfo.setExecutedJobs(actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs());
     } catch (Exception e) {
       log.error("Exception in action plan scheduler", e);
+      log.error("Stacktrace: ", e);
     }
   }
 
