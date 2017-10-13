@@ -47,7 +47,7 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    log.info("entering getParty with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
+    log.info("entering party with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
     UriComponents uriComponents = restUtility.createUriComponents(
         appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
     
