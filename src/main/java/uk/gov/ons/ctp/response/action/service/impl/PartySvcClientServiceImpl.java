@@ -47,6 +47,7 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
+    log.info("entering getParty with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
     UriComponents uriComponents = restUtility.createUriComponents(
         appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
     
@@ -54,20 +55,24 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
     
     ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
+    log.info("responseEntity is {}", responseEntity);
     
     PartyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
       String responseBody = responseEntity.getBody();
+      log.info("responseBody is {}", responseBody);
       try {
+        log.info("about to map to PartyDTO...");
         result = objectMapper.readValue(responseBody, PartyDTO.class);
+        log.info("result is {}", result);
       } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+        String msg = String.format("zzzyzzz cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
     }
 
-    log.debug("PARTY GOTTEN {}", result);
+    log.info("PARTY GOTTEN {}", result);
     return result;
   }
 }

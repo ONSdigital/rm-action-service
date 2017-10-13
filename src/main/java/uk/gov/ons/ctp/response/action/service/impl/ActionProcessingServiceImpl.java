@@ -123,30 +123,34 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    */
   private ActionRequest prepareActionRequest(final Action action) {
     UUID caseId = action.getCaseId();
-    log.debug("constructing ActionRequest to publish to downstream handler for action {} and case id {}",
+    log.info("constructing ActionRequest to publish to downstream handler for action {} and case id {}",
         action.getActionPK(), caseId);
 
     ActionPlan actionPlan = (action.getActionPlanFK() == null) ? null
         : actionPlanRepo.findOne(action.getActionPlanFK());
+    log.info("actionPlan {}", actionPlan);
 
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
     String sampleUnitTypeStr = caseDTO.getSampleUnitType();
-    log.debug("sampleUnitTypeStr {}", sampleUnitTypeStr);
-    if (validate(sampleUnitTypeStr)) {
+    log.info("sampleUnitTypeStr {}", sampleUnitTypeStr);
+    boolean sampleUnitTypeValid = validate(sampleUnitTypeStr);
+    log.info("sampleUnitTypeValid {}", sampleUnitTypeValid);
+    if (sampleUnitTypeValid) {
       SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
+      log.info("sampleUnitType zzz is {}", sampleUnitType);
       PartyDTO parentParty;
       PartyDTO childParty = null;
       if (sampleUnitType.isParent()) {
         parentParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
-        log.debug("parentParty retrieved is {}", parentParty);
+        log.info("parentParty retrieved is {}", parentParty);
       } else {
         childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
-        log.debug("childParty retrieved is {}", childParty);
+        log.info("childParty retrieved is {}", childParty);
 
         UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
         // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
         parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
-        log.debug("parentParty for the child retrieved is {}", parentParty);
+        log.info("parentParty for the child retrieved is {}", parentParty);
       }
 
       List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
@@ -280,12 +284,17 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   private boolean validate(String sampleUnitTypeStr) {
     boolean result = false;
     try {
+      log.debug("in validate sampleUnitTypeStr {}", sampleUnitTypeStr);
       SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
+      log.debug("in validate sampleUnitType {}", sampleUnitType);
       if (sampleUnitType.isParent()) {
+        log.debug("we have a parent");
         result = true;
       } else {
         String childSampleUnitTypeStr = sampleUnitTypeStr.substring(0, 1);
+        log.debug("in validate childSampleUnitTypeStr {}", childSampleUnitTypeStr);
         SampleUnitDTO.SampleUnitType.valueOf(childSampleUnitTypeStr);
+        log.debug("we have a child");
         result = true;
       }
     } catch (IllegalArgumentException e) {
