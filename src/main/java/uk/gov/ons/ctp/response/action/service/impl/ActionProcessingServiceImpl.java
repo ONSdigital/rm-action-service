@@ -131,6 +131,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
     String sampleUnitTypeStr = caseDTO.getSampleUnitType();
+    log.debug("sampleUnitTypeStr {}", sampleUnitTypeStr);
     if (validate(sampleUnitTypeStr)) {
       SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
       PartyDTO parentParty;
@@ -145,6 +146,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
         UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
         // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
         parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
+        log.debug("parentParty for the child retrieved is {}", parentParty);
       }
 
       List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
@@ -191,7 +193,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       final PartyDTO childParty,
       final List<CaseEventDTO> caseEventDTOs) {
     ActionRequest actionRequest = new ActionRequest();
-    actionRequest.setActionId(action.getId().toString());
+    String actionID = action.getId().toString();
+    log.debug("actionID is {}", actionID);
+    actionRequest.setActionId(actionID);
     actionRequest.setActionPlan((actionPlan == null) ? null : actionPlan.getName());
     actionRequest.setActionType(action.getActionType().getName());
     actionRequest.setResponseRequired(action.getActionType().getResponseRequired());
@@ -220,11 +224,14 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       tradStyle.append(tradStyle3);
     }
     actionContact.setTradingStyle(tradStyle.toString().trim());
+    log.debug("childParty {}", childParty);
     if (childParty != null) {
       Attributes biPartyAttributes = childParty.getAttributes();
       actionContact.setForename(biPartyAttributes.getFirstName());
       actionContact.setSurname(biPartyAttributes.getLastName());
-      actionContact.setEmailAddress(biPartyAttributes.getEmailAddress());
+      String emailAddress = biPartyAttributes.getEmailAddress();
+      log.debug("zzzemailAddress {}", emailAddress);
+      actionContact.setEmailAddress(emailAddress);
     }
     actionRequest.setContact(actionContact);
 
