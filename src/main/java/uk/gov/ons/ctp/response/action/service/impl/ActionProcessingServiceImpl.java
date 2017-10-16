@@ -84,13 +84,13 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
       transitionAction(action, event);
 
-      // advise casesvc to create a corresponding caseevent for our action
-      caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
-
       ActionRequest actionRequest = prepareActionRequest(action);
       if (actionRequest != null) {
         actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
       }
+
+      // advise casesvc to create a corresponding caseevent for our action
+      caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
     } else {
       log.error("Unexpected situation. actionType is not defined for action with actionid {}", action.getId());
     }
@@ -108,10 +108,10 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
 
+    actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), prepareActionCancel(action));
+
     // advise casesvc to create a corresponding caseevent for our action
     caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED);
-
-    actionInstructionPublisher.sendActionInstruction(action.getActionType().getHandler(), prepareActionCancel(action));
   }
 
   /**

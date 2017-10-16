@@ -198,12 +198,30 @@ public class ActionProcessingServiceImplTest {
    */
   @Test
   public void testProcessActionRequestCaseEventCreationThrowsException() throws CTPException {
+    // Start of section to mock responses
+    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
+
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
+
+    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+
+    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
+        thenReturn(collectionExerciseDTOs.get(0));
+
+    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
+    // End of section to mock responses
 
-    Action action = new Action();
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     try {
+      Action action = new Action();
+      action.setId(ACTION_ID);
+      action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
+      action.setActionPlanFK(ACTION_PLAN_FK);
+      action.setCaseId(CASE_ID);
+      action.setPriority(1);
       actionProcessingService.processActionRequest(action);
       fail();
     } catch (RuntimeException e) {
@@ -213,12 +231,17 @@ public class ActionProcessingServiceImplTest {
     verify(actionSvcStateTransitionManager, times(1)).transition(
         any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
+    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
+    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
+    verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
+    verify(collectionExerciseClientService, times(1)).
+        getCollectionExercise(COLLECTION_EXERCISE_ID);
+    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(actionInstructionPublisher, times(1)).sendActionInstruction(any(String.class),
+        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
         eq(CategoryDTO.CategoryName.ACTION_CREATED));
-    verify(actionPlanRepo, never()).findOne(any(Integer.class));
-    verify(caseSvcClientService, never()).getCaseWithIACandCaseEvents(any(UUID.class));
-    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
-        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
   /**
@@ -417,9 +440,10 @@ public class ActionProcessingServiceImplTest {
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
 
-    Action action = new Action();
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     try {
+      Action action = new Action();
+      action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
+      action.setId(ACTION_ID);
       actionProcessingService.processActionCancel(action);
       fail();
     } catch (RuntimeException e) {
@@ -429,10 +453,17 @@ public class ActionProcessingServiceImplTest {
     verify(actionSvcStateTransitionManager, times(1)).transition(
         any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
+        ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
+    verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
+        actionCaptor.capture());
+    uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel = (ActionCancel)actionCaptor.
+        getValue();
+    assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
+    assertTrue(publishedActionCancel.isResponseRequired());
+    assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
         eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
-    verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
-        any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
   @Test
