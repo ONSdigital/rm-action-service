@@ -1,11 +1,16 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
-import lombok.extern.slf4j.Slf4j;
-import net.sourceforge.cobertura.CoverageIgnore;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
+import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
@@ -17,12 +22,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Implementation
@@ -89,18 +88,17 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
   }
 
   /**
-   * the root method for executing an action plan - called indirectly by the
+   * The root method for executing an action plan - called indirectly by the
    * restful endpoint when executing a single plan manually and by the scheduled
    * execution of all plans in sequence. See the other createAndExecute plan
-   * methods in this class
+   * methods in this class.
    *
-   * @param actionPlanJob the plan to execute
+   * @param actionPlanJob the plan to execute.
    * @param forcedExecution true when called indirectly for manual execution -
    *          the plan lock is still used (we don't want more than one
-   *          concurrent plan execution), but we skip the last run time check
-   * @return the plan job if it was run or null if not
+   *          concurrent plan execution), but we skip the last run time check.
+   * @return the plan job if it was run or null if not.
    */
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
   private ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJob, boolean forcedExecution) {
     ActionPlanJob createdJob = null;
 
@@ -118,21 +116,29 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
             }
           }
 
-          // if no cases for actionplan why bother?
+          // If no cases for actionplan why bother?
           if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
             log.debug("No open cases for action plan {} - skipping", actionPlanPK);
             return createdJob;
           }
 
-          // enrich and save the job
+          // Enrich and save the job.
           actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
           actionPlanJob.setCreatedDateTime(now);
           actionPlanJob.setUpdatedDateTime(now);
           actionPlanJob.setId(UUID.randomUUID());
+          // Please note it is not possible to place the saving of the
+          // actionPlanJob and call to createActions SQL function in the same
+          // transaction. The createActions function uses the actionPlanJob row
+          // which will not be visible to it until the transaction is committed.
+          // The function creates all the actions in one transaction block
+          // however, and needs the actionPlanJob row to be there to work. A
+          // actionPlanJob could be left with state SUBMITTED if the function
+          // failed.
           createdJob = actionPlanJobRepo.save(actionPlanJob);
           log.info("Running actionplanjobid {} actionplanid {}", createdJob.getActionPlanJobPK(),
-                  createdJob.getActionPlanFK());
-          // get the repo to call sql function to create actions
+              createdJob.getActionPlanFK());
+          // Get the repo to call SQL function to create actions.
           actionCaseRepo.createActions(createdJob.getActionPlanJobPK());
         } finally {
           log.debug("Releasing lock on action plan {}", actionPlanPK);
