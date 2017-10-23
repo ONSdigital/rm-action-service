@@ -252,10 +252,10 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
-    Date scheduledEndDateTime = collectionExercise.getScheduledEndDateTime();
-    if (scheduledEndDateTime != null) {
+    Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
+    if (scheduledReturnDateTime != null) {
       DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
-      actionRequest.setReturnByDate(df.format(scheduledEndDateTime));
+      actionRequest.setReturnByDate(df.format(scheduledReturnDateTime));
     }
 
     return actionRequest;
