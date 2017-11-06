@@ -551,7 +551,7 @@ public final class ActionEndpointUnitTest {
    * Test updating action with invalid json
    * @throws Exception when putJson does
    */
-  @Test
+/*  @Test
   public void updateActionByActionIdWithInvalidJson() throws Exception {
     when(actionService.updateAction(any(Action.class))).thenReturn(actions.get(0));
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
@@ -565,7 +565,7 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }
+  }*/
 
   /**
    * Test updating action feedback for action not found
@@ -588,7 +588,7 @@ public final class ActionEndpointUnitTest {
    * Test updating action feedback for action found BUT bad json
    * @throws Exception when putJson does
    */
-  @Test
+/*  @Test
   public void updateActionFeedbackByActionIdFoundButBadJson() throws Exception {
     ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s/feedback", ACTION_ID_1),
             ACTION_FEEDBACK_INVALID_JSON));
@@ -599,7 +599,7 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }
+  }*/
 
   /**
    * Test updating action feedback for action found
@@ -680,7 +680,7 @@ public final class ActionEndpointUnitTest {
    * Test creating an Action with invalid JSON Property.
    * @throws Exception when postJson does
    */
-  @Test
+/*  @Test
   public void createActionInvalidPropJsonProvided() throws Exception {
     ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_INVALID_JSON_BAD_PROP));
 
@@ -692,7 +692,7 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
 
     verify(actionCaseService, never()).findActionCase(any(UUID.class));
-  }
+  }*/
 
 
   /**

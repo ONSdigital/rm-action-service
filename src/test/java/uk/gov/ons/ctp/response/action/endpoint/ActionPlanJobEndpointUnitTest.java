@@ -236,7 +236,7 @@ public class ActionPlanJobEndpointUnitTest {
    *
    * @throws Exception exception thrown when postJson does
    */
-  @Test
+/*  @Test
   public void executeActionPlanIncorrectJsonProvided() throws Exception {
     ResultActions actions = mockMvc.perform(postJson(String.format("/actionplans/%s/jobs", ACTIONPLANID),
             ACTION_PLAN_JOB_INCORRECT_JSON));
@@ -247,7 +247,7 @@ public class ActionPlanJobEndpointUnitTest {
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
             .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }
+  }*/
 
   /**
    * A Test to execute an action plan providing json failing validation

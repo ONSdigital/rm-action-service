@@ -214,7 +214,7 @@ public class ActionPlanEndpointUnitTest {
    * 
    * @throws Exception exception thrown when putJson does
    */
-  @Test
+/*  @Test
   public void updateActionPlanIncorrectJson1() throws Exception {
     ResultActions actions = mockMvc.perform(putJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID),
         ACTION_PLAN_INCORRECT_JSON));
@@ -225,7 +225,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
         .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
         .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }
+  }*/
 
   /**
    * A Test to update an ActionPlan with valid json
