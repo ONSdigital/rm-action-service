@@ -142,9 +142,9 @@ party-svc:
   connection-config:
     scheme: http
     host: localhost
-    port: 5062
-    username: dummy_user
-    password: dummy_password
+    port: 8081
+    username: admin
+    password: secret
     retry-attempts: 1
     retry-pause-milli-seconds: 5000
     connect-timeout-milli-seconds: 5000
