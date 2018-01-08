@@ -1,10 +1,12 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.MultiHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
@@ -26,13 +28,14 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
+import uk.gov.ons.response.commstemplate.representation.CommsTemplateDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierTypeDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -52,6 +55,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   @Autowired
   private SurveySvcClientService surveySvcClientService;
+
+  @Autowired
+  private CommsTemplateSvcClientService commsTemplateSvcClientService
 
   @Autowired
   private ActionRepository actionRepo;
@@ -249,8 +255,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     String surveyId = collectionExercise.getSurveyId();
     SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
+
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
+
+    //actionRequest.setCommunicationsTemplate(retrieveCommunicationsTemplate(surveyId))
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
@@ -259,6 +268,34 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
 
     return actionRequest;
+  }
+
+  /**
+   * Retrieves a CommunicationsTemplate for a specific survey
+   * @param surveyId
+   * @return Communications Template TODO: Currently just pass it all across for the consuming service to decide what it needs (probably only params and id)
+   */
+  private CommsTemplateDTO retrieveCommunicationsTemplate(final String surveyId) {
+    List<SurveyClassifierDTO> surveyClassifierTypes = surveySvcClientService.requestSurveyClassifierTypes(surveyId);
+
+    try {
+      commsTemplateClassifierId = surveyClassifierTypes.stream().filter(classifierType -> classifierType.getName().equals("COMMUNICATIONS_TEMPLATE")).map(classifierType.getId());
+    } catch (Exception e) {
+      // What is the exceptions / Should it be a null check
+      // Produce a HTTP error saying that the communications template doesn't exist??
+    }
+
+    SurveyClassifierTypeDTO surveyClassifiers = surveySvcClientService.requestSurveyClassifiers(surveyId, commsTemplateClassifierId);
+
+    List<String> classifierTypes = surveyClassifiers.getClassifierTypes();
+
+    // TODO: I NEED TO THEN FIND THE VALUES FOR THE CLASSIFIERS, ARE THESE IN THE SAMPLE
+
+    MultiValueMap<String, String> classifierTypesMap = new HashMap<>();
+
+    CommsTemplateDTO commsTemplate = commsTemplateSvcClientService.getCommsTemplate(classifierTypesMap);
+
+    return commsTemplate;
   }
 
   /**
