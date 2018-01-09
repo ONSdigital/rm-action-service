@@ -1,7 +1,8 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import org.springframework.util.MultiValueMap;
 import uk.gov.ons.response.commstemplate.representation.CommsTemplateDTO;
+
+import java.util.Map;
 
 /**
  * A Service which utilises the CommsTemplateSvc via RESTful client calls
@@ -15,5 +16,5 @@ public interface CommsTemplateSvcClientService {
      * TODO: create CommsTemplateDTO
      * @return  CommsTemplateDTO Returns the CommsTemplateDTO for the specified classifiers.
      * */
-    CommsTemplateDTO getCommsTemplate(MultiValueMap<String, String> classifiers);
+    CommsTemplateDTO getCommsTemplateByClassifiers(Map<String, String> classifiers);
 }

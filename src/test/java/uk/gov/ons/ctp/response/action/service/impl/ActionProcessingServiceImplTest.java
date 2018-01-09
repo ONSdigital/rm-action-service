@@ -209,7 +209,7 @@ public class ActionProcessingServiceImplTest {
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
 
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
@@ -237,7 +237,7 @@ public class ActionProcessingServiceImplTest {
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(surveySvcClientService, times(1)).getDetailsForSurvey(CENSUS);
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
@@ -261,7 +261,7 @@ public class ActionProcessingServiceImplTest {
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
     // End of section to mock responses
 
     // Start of section to run the test
@@ -286,7 +286,7 @@ public class ActionProcessingServiceImplTest {
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(surveySvcClientService, times(1)).getDetailsForSurvey(CENSUS);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
@@ -325,7 +325,7 @@ public class ActionProcessingServiceImplTest {
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_1);
     verify(partySvcClientService, never()).getParty(any(String.class), any(UUID.class));
     verify(collectionExerciseClientService, never()).getCollectionExercise(any(UUID.class));
-    verify(surveySvcClientService, never()).requestDetailsForSurvey(any(String.class));
+    verify(surveySvcClientService, never()).getDetailsForSurvey(any(String.class));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
@@ -349,7 +349,7 @@ public class ActionProcessingServiceImplTest {
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
     // End of section to mock responses
 
     // Start of section to run the test
@@ -375,7 +375,7 @@ public class ActionProcessingServiceImplTest {
         PARTY_ID_PARENT_FOR_CASE_ID_2);
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(surveySvcClientService, times(1)).getDetailsForSurvey(CENSUS);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));

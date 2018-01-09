@@ -21,6 +21,7 @@ import uk.gov.ons.ctp.response.action.service.CommsTemplateSvcClientService;
 import uk.gov.ons.response.commstemplate.representation.CommsTemplateDTO;
 
 import java.io.IOException;
+import java.util.Map;
 
 
 @Slf4j
@@ -44,9 +45,9 @@ public class CommsTemplateSvcClientServiceImpl implements CommsTemplateSvcClient
     @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
             backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
     @Override
-    public CommsTemplateDTO getCommsTemplate(MultiValueMap<String, String> classifiers) {
+    public CommsTemplateDTO getCommsTemplateByClassifiers(Map<String, String> classifiers) {
         UriComponents uriComponents = restUtility.createUriComponents(
-                appConfig.getCommsTemplateSvc().getTemplateByClassifiersGetPath(), classifiers);
+                appConfig.getCommsTemplateSvc().getTemplateByClassifiersGetPath(), (MultiValueMap)classifiers); // TODO: Check if this casting is ok?
 
         HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 

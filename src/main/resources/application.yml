@@ -153,8 +153,8 @@ party-svc:
  # calling the survey svc endpoints
 survey-svc:
   request-survey-path: /surveys/{surveyId}
-  request-survey-classifier-types: /surveys/{surveyId}/classiertypeselectors
-  request-classifiers: /surveys/{surveyId}/classiertypeselectors/{classifierId}
+  request-survey-classifier-types: /surveys/{surveyId}/classifiertypeselectors
+  request-classifiers: /surveys/{surveyId}/classifiertypeselectors/{classifierId}
   connection-config:
     scheme: http
     host: localhost

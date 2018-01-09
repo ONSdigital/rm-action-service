@@ -20,9 +20,9 @@ public interface SurveySvcClientService {
    * @throws RestClientException something went wrong making http call.
    *
    */
-  SurveyDTO requestDetailsForSurvey(String surveyId) throws RestClientException;
+  SurveyDTO getDetailsForSurvey(String surveyId) throws RestClientException;
 
-  List<SurveyClassifierDTO> requestSurveyClassifierTypes(String surveyId) throws RestClientException;
+  List<SurveyClassifierDTO> getSurveyClassifierTypes(String surveyId) throws RestClientException;
 
-  SurveyClassifierTypeDTO requestSurveyClassifiers(String surveyId, String classifierTypeId) throws RestClientException;
+  SurveyClassifierTypeDTO getSurveyClassifiers(String surveyId, String classifierTypeId) throws RestClientException;
 }

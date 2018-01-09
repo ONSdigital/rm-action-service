@@ -1,12 +1,10 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.MultiHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
@@ -57,7 +55,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   private SurveySvcClientService surveySvcClientService;
 
   @Autowired
-  private CommsTemplateSvcClientService commsTemplateSvcClientService
+  private CommsTemplateSvcClientService commsTemplateSvcClientService;
 
   @Autowired
   private ActionRepository actionRepo;
@@ -254,12 +252,16 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setAddress(actionAddress);
 
     String surveyId = collectionExercise.getSurveyId();
-    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
+    SurveyDTO surveyDTO = surveySvcClientService.getDetailsForSurvey(surveyId);
 
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
-    //actionRequest.setCommunicationsTemplate(retrieveCommunicationsTemplate(surveyId))
+    List<String> classifierTypes = getClassifierTypes(surveyId);
+    Map<String, String> classifiers = gatherClassifiers(classifierTypes, surveyDTO, parentParty);
+    CommsTemplateDTO commsTemplateDTO = commsTemplateSvcClientService.getCommsTemplateByClassifiers(classifiers);
+
+    actionRequest.setCommsTemplateId(commsTemplateDTO.getId());
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
@@ -270,32 +272,38 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     return actionRequest;
   }
 
-  /**
-   * Retrieves a CommunicationsTemplate for a specific survey
-   * @param surveyId
-   * @return Communications Template TODO: Currently just pass it all across for the consuming service to decide what it needs (probably only params and id)
-   */
-  private CommsTemplateDTO retrieveCommunicationsTemplate(final String surveyId) {
-    List<SurveyClassifierDTO> surveyClassifierTypes = surveySvcClientService.requestSurveyClassifierTypes(surveyId);
+  private List<String> getClassifierTypes(final String surveyId) {
+    List<SurveyClassifierDTO> surveyClassifierTypes = surveySvcClientService.getSurveyClassifierTypes(surveyId);
+
+    String commsTemplateClassifierId = null;
 
     try {
-      commsTemplateClassifierId = surveyClassifierTypes.stream().filter(classifierType -> classifierType.getName().equals("COMMUNICATIONS_TEMPLATE")).map(classifierType.getId());
+      commsTemplateClassifierId = surveyClassifierTypes.stream().filter(classifierType -> classifierType.getName().equals("COMMUNICATIONS_TEMPLATE")).findFirst().map(SurveyClassifierDTO::getId).get();
     } catch (Exception e) {
       // What is the exceptions / Should it be a null check
       // Produce a HTTP error saying that the communications template doesn't exist??
     }
 
-    SurveyClassifierTypeDTO surveyClassifiers = surveySvcClientService.requestSurveyClassifiers(surveyId, commsTemplateClassifierId);
+    SurveyClassifierTypeDTO surveyClassifierTypeDTO = surveySvcClientService.getSurveyClassifiers(surveyId, commsTemplateClassifierId);
 
-    List<String> classifierTypes = surveyClassifiers.getClassifierTypes();
+    return surveyClassifierTypeDTO.getClassifierTypes();
+  }
 
-    // TODO: I NEED TO THEN FIND THE VALUES FOR THE CLASSIFIERS, ARE THESE IN THE SAMPLE
 
-    MultiValueMap<String, String> classifierTypesMap = new HashMap<>();
+  private Map<String, String> gatherClassifiers(final List<String> classifierTypes, SurveyDTO surveyDTO, PartyDTO parentParty) {
+    Map<String, String> classifiers = new HashMap<>();
 
-    CommsTemplateDTO commsTemplate = commsTemplateSvcClientService.getCommsTemplate(classifierTypesMap);
+    // TODO: MORE GENERIC WAY TO POPULATE MAP??
+    Attributes businessUnitAttributes = parentParty.getAttributes();
 
-    return commsTemplate;
+    if(classifierTypes.contains("LEGAL_BASIS")) {
+      classifiers.put("LEGAL_BASIS", surveyDTO.getLegalBasis());
+    }
+    if(classifierTypes.contains("REGION")) {
+      classifiers.put("REGION", businessUnitAttributes.getRegion());
+    }
+
+    return classifiers;
   }
 
   /**

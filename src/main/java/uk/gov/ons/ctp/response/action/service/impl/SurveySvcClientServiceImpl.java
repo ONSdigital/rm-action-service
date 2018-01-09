@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jdk.internal.org.objectweb.asm.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -47,7 +46,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public SurveyDTO requestDetailsForSurvey(String surveyId) throws RestClientException {
+  public SurveyDTO getDetailsForSurvey(String surveyId) throws RestClientException {
     UriComponents uriComponents = restUtility.createUriComponents(appConfig.getSurveySvc().getRequestSurveyPath(),
         null, surveyId);
     
@@ -75,7 +74,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
           backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public List<SurveyClassifierDTO> requestSurveyClassifierTypes(String surveyId) throws RestClientException {
+  public List<SurveyClassifierDTO> getSurveyClassifierTypes(String surveyId) throws RestClientException {
     UriComponents uriComponents = restUtility.createUriComponents(
             appConfig.getSurveySvc().getRequestSurveyClassifiers(), null, surveyId);
 
@@ -90,7 +89,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
       String responseBody = responseEntity.getBody();
       try {
         results = objectMapper.readValue(responseBody,
-                objectMapper.getTypeFactory().constructCollectionType(List.class, SurveyClassifierDTO.class)); // https://stackoverflow.com/questions/6349421/how-to-use-jackson-to-deserialise-an-array-of-objects
+                objectMapper.getTypeFactory().constructCollectionType(List.class, SurveyClassifierDTO.class));
       } catch (IOException e) {
         String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
@@ -105,7 +104,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
           backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public SurveyClassifierTypeDTO requestSurveyClassifiers(String surveyId, String classifierTypeId) throws RestClientException {
+  public SurveyClassifierTypeDTO getSurveyClassifiers(String surveyId, String classifierTypeId) throws RestClientException {
     UriComponents uriComponents = restUtility.createUriComponents(
             appConfig.getSurveySvc().getRequestSurveyClassifiers(), null, surveyId, classifierTypeId);
 
