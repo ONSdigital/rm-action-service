@@ -1,0 +1,19 @@
+[{
+  "classification": {
+    "GEOGRAPHY": "NI"
+  },
+  "id": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef89",
+  "label": "test data",
+  "params": [],
+  "type": "EMAIL",
+  "uri": "test-uri.com"},
+  {
+    "classification": {
+      "GEOGRAPHY": "NI"
+    },
+    "id": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef90",
+    "label": "test data",
+    "params": [],
+    "type": "EMAIL",
+    "uri": "test-uri.com"
+  }]

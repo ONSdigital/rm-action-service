@@ -12,9 +12,8 @@ public interface CommsTemplateSvcClientService {
     /**
      * Find CollectionExerciseDTO entity by specified classifiers
      *
-     * @param classifiers hash map of classifiers
-     * TODO: create CommsTemplateDTO
-     * @return  CommsTemplateDTO Returns the CommsTemplateDTO for the specified classifiers.
+     * @param classifiers, map of classifiers
+     * @return  CommsTemplateDTO
      * */
     CommsTemplateDTO getCommsTemplateByClassifiers(Map<String, String> classifiers);
 }

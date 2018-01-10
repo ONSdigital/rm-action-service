@@ -104,7 +104,7 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
           backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public SurveyClassifierTypeDTO getSurveyClassifiers(String surveyId, String classifierTypeId) throws RestClientException {
+  public SurveyClassifierTypeDTO getSurveyClassifierType(String surveyId, String classifierTypeId) throws RestClientException {
     UriComponents uriComponents = restUtility.createUriComponents(
             appConfig.getSurveySvc().getRequestSurveyClassifiers(), null, surveyId, classifierTypeId);
 

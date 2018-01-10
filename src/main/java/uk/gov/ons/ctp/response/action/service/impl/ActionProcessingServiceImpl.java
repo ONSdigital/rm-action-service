@@ -284,9 +284,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       // Produce a HTTP error saying that the communications template doesn't exist??
     }
 
-    SurveyClassifierTypeDTO surveyClassifierTypeDTO = surveySvcClientService.getSurveyClassifiers(surveyId, commsTemplateClassifierId);
+    SurveyClassifierTypeDTO surveyClassifierTypeDTO = surveySvcClientService.getSurveyClassifierType(surveyId, commsTemplateClassifierId);
 
-    return surveyClassifierTypeDTO.getClassifierTypes();
+     return surveyClassifierTypeDTO.getClassifierTypes();
   }
 
 

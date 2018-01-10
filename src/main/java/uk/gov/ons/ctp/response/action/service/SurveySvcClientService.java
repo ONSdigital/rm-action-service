@@ -24,5 +24,5 @@ public interface SurveySvcClientService {
 
   List<SurveyClassifierDTO> getSurveyClassifierTypes(String surveyId) throws RestClientException;
 
-  SurveyClassifierTypeDTO getSurveyClassifiers(String surveyId, String classifierTypeId) throws RestClientException;
+  SurveyClassifierTypeDTO getSurveyClassifierType(String surveyId, String classifierTypeId) throws RestClientException;
 }
