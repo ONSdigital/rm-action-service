@@ -1,6 +1,7 @@
 [{
   "classification": {
-    "GEOGRAPHY": "NI"
+    "REGION": "NI",
+    "LEGAL_BASIS" : "MANDATORY"
   },
   "id": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef89",
   "label": "test data",
@@ -9,7 +10,8 @@
   "uri": "test-uri.com"},
   {
     "classification": {
-      "GEOGRAPHY": "NI"
+      "REGION": "NI",
+      "LEGAL_BASIS" : "MANDATORY"
     },
     "id": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef90",
     "label": "test data",

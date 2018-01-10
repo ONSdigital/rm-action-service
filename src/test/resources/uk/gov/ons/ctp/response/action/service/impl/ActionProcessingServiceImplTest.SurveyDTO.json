@@ -3,6 +3,7 @@
     "id":"1",
     "shortName":"unit test survey short name",
     "longName":"unit test survey long name",
-    "surveyRef":"unit test survey ref"
+    "surveyRef":"unit test survey ref",
+    "legalBasis": "MANDATORY"
   }
 ]

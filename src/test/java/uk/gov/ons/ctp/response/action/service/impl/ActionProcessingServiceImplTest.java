@@ -32,7 +32,9 @@ import uk.gov.ons.response.survey.representation.SurveyClassifierDTO;
 import uk.gov.ons.response.survey.representation.SurveyClassifierTypeDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -56,6 +58,10 @@ public class ActionProcessingServiceImplTest {
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_H = "H";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
+  private static final String REGION = "REGION";
+  private static final String REGION_VALUE = "NI";
+  private static final String LEGAL_BASIS = "LEGAL_BASIS";
+  private static final String LEGAL_BASIS_VALUE = "MANDATORY";
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
@@ -123,6 +129,13 @@ public class ActionProcessingServiceImplTest {
     commsTemplateDTOs = FixtureHelper.loadClassFixtures(CommsTemplateDTO[].class);
 
     MockitoAnnotations.initMocks(this);
+  }
+
+  private Map<String, String> getExpectedClassifiers() {
+    Map<String, String> classifiers = new HashMap<>();
+    classifiers.put(LEGAL_BASIS, LEGAL_BASIS_VALUE);
+    classifiers.put(REGION, REGION_VALUE);
+    return classifiers;
   }
 
   @Test
@@ -226,9 +239,9 @@ public class ActionProcessingServiceImplTest {
 
     when(surveySvcClientService.getSurveyClassifierTypes(CENSUS)).thenReturn(surveyClassifierDTOs);
 
-    when(surveySvcClientService.getSurveyClassifierType(anyString(), anyString())).thenReturn(surveyClassifierTypeDTOs.get(0));
+    when(surveySvcClientService.getSurveyClassifierType(CENSUS, "1")).thenReturn(surveyClassifierTypeDTOs.get(0));
 
-    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(any())).thenReturn(commsTemplateDTOs.get(0));
+    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(getExpectedClassifiers())).thenReturn(commsTemplateDTOs.get(0));
 
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
@@ -284,9 +297,9 @@ public class ActionProcessingServiceImplTest {
 
     when(surveySvcClientService.getSurveyClassifierTypes(CENSUS)).thenReturn(surveyClassifierDTOs);
 
-    when(surveySvcClientService.getSurveyClassifierType(anyString(), anyString())).thenReturn(surveyClassifierTypeDTOs.get(0));
+    when(surveySvcClientService.getSurveyClassifierType(CENSUS, "1")).thenReturn(surveyClassifierTypeDTOs.get(0));
 
-    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(any())).thenReturn(commsTemplateDTOs.get(0));
+    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(getExpectedClassifiers())).thenReturn(commsTemplateDTOs.get(0));
     // End of section to mock responses
 
     // Start of section to run the test
@@ -375,12 +388,12 @@ public class ActionProcessingServiceImplTest {
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
-    
+
     when(surveySvcClientService.getSurveyClassifierTypes(CENSUS)).thenReturn(surveyClassifierDTOs);
 
-    when(surveySvcClientService.getSurveyClassifierType(anyString(), anyString())).thenReturn(surveyClassifierTypeDTOs.get(0));
+    when(surveySvcClientService.getSurveyClassifierType(CENSUS, "1")).thenReturn(surveyClassifierTypeDTOs.get(0));
 
-    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(any())).thenReturn(commsTemplateDTOs.get(0));
+    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(getExpectedClassifiers())).thenReturn(commsTemplateDTOs.get(0));
     // End of section to mock responses
 
     // Start of section to run the test
