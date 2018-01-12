@@ -18,8 +18,10 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 
@@ -41,6 +43,9 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
 
   @Autowired
   private ActionPlanRepository actionPlanRepo;
+  
+  @Autowired
+  private ActionRepository actionRepo;
 
   @Autowired
   private ActionCaseRepository actionCaseRepo;
@@ -121,7 +126,16 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
             log.debug("No open cases for action plan {} - skipping", actionPlanPK);
             return createdJob;
           }
-
+                              
+          final Long totalInCompleteActions = actionRepo.countByActionPlanFKAndStateNot(actionPlanPK, ActionDTO.ActionState.COMPLETED);
+          log.info("Total number of not completed actions for a given action plan{} - {}", actionPlanPK, totalInCompleteActions);
+          // If no actions for a given action plan are pending then skip ActionPlanJob
+          if (totalInCompleteActions == 0) {
+        	  		log.debug("No actions are pending for a given action plan{} - skipping", actionPlanPK);
+        	  		return createdJob;
+          }
+          
+          
           // Enrich and save the job.
           actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
           actionPlanJob.setCreatedDateTime(now);
