@@ -1,7 +1,11 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import org.springframework.web.client.RestClientException;
+import uk.gov.ons.response.survey.representation.SurveyClassifierDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierTypeDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
+
+import java.util.List;
 
 /**
  * Service responsible for making client calls to the Survey service
@@ -16,5 +20,9 @@ public interface SurveySvcClientService {
    * @throws RestClientException something went wrong making http call.
    *
    */
-  SurveyDTO requestDetailsForSurvey(String surveyId) throws RestClientException;
+  SurveyDTO getDetailsForSurvey(String surveyId) throws RestClientException;
+
+  List<SurveyClassifierDTO> getSurveyClassifierTypes(String surveyId) throws RestClientException;
+
+  SurveyClassifierTypeDTO getSurveyClassifierType(String surveyId, String classifierTypeId) throws RestClientException;
 }

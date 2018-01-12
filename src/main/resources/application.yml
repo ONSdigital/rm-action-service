@@ -153,6 +153,8 @@ party-svc:
  # calling the survey svc endpoints
 survey-svc:
   request-survey-path: /surveys/{surveyId}
+  request-survey-classifier-types: /surveys/{surveyId}/classifiertypeselectors
+  request-classifiers: /surveys/{surveyId}/classifiertypeselectors/{classifierId}
   connection-config:
     scheme: http
     host: localhost
@@ -163,6 +165,9 @@ survey-svc:
     retry-pause-milli-seconds: 5000
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
+
+comms-template-svc:
+  template-by-classifiers-get-path: /templates/
 
  # looking for the ingest file
 csv-ingest:

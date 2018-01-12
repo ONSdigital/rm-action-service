@@ -6,7 +6,8 @@
     "attributes": {
       "entref": "bob",
       "entname1": "07235235235235235",
-      "entname2": "test@test.com"
+      "entname2": "test@test.com",
+      "region": "NI"
     }
   },
   {
@@ -16,7 +17,8 @@
     "attributes": {
       "entref": "bob",
       "entname1": "07235235235235236",
-      "entname2": "test@test.co.uk"
+      "entname2": "test@test.co.uk",
+      "region" : "NI"
     }
   }
 ]

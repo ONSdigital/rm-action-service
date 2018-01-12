@@ -26,13 +26,14 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
+import uk.gov.ons.response.commstemplate.representation.CommsTemplateDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierTypeDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -52,6 +53,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   @Autowired
   private SurveySvcClientService surveySvcClientService;
+
+  @Autowired
+  private CommsTemplateSvcClientService commsTemplateSvcClientService;
 
   @Autowired
   private ActionRepository actionRepo;
@@ -248,9 +252,16 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setAddress(actionAddress);
 
     String surveyId = collectionExercise.getSurveyId();
-    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
+    SurveyDTO surveyDTO = surveySvcClientService.getDetailsForSurvey(surveyId);
+
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
+
+    List<String> classifierTypes = getClassifierTypes(surveyId);
+    Map<String, String> classifiers = gatherClassifiers(classifierTypes, surveyDTO, parentParty);
+    CommsTemplateDTO commsTemplateDTO = commsTemplateSvcClientService.getCommsTemplateByClassifiers(classifiers);
+
+    actionRequest.setCommsTemplateId(commsTemplateDTO.getId());
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
@@ -259,6 +270,40 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
 
     return actionRequest;
+  }
+
+  private List<String> getClassifierTypes(final String surveyId) {
+    List<SurveyClassifierDTO> surveyClassifierTypes = surveySvcClientService.getSurveyClassifierTypes(surveyId);
+
+    String commsTemplateClassifierId = null;
+
+    try {
+      commsTemplateClassifierId = surveyClassifierTypes.stream().filter(classifierType -> classifierType.getName().equals("COMMUNICATIONS_TEMPLATE")).findFirst().map(SurveyClassifierDTO::getId).get();
+    } catch (Exception e) {
+      // What is the exceptions / Should it be a null check
+      // Produce a HTTP error saying that the communications template doesn't exist??
+    }
+
+    SurveyClassifierTypeDTO surveyClassifierTypeDTO = surveySvcClientService.getSurveyClassifierType(surveyId, commsTemplateClassifierId);
+
+     return surveyClassifierTypeDTO.getClassifierTypes();
+  }
+
+
+  private Map<String, String> gatherClassifiers(final List<String> classifierTypes, SurveyDTO surveyDTO, PartyDTO parentParty) {
+    Map<String, String> classifiers = new HashMap<>();
+
+    // TODO: MORE GENERIC WAY TO POPULATE MAP??
+    Attributes businessUnitAttributes = parentParty.getAttributes();
+
+    if(classifierTypes.contains("LEGAL_BASIS")) {
+      classifiers.put("LEGAL_BASIS", surveyDTO.getLegalBasis());
+    }
+    if(classifierTypes.contains("REGION")) {
+      classifiers.put("REGION", businessUnitAttributes.getRegion());
+    }
+
+    return classifiers;
   }
 
   /**

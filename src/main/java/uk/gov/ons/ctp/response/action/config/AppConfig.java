@@ -17,6 +17,7 @@ import org.springframework.retry.annotation.EnableRetry;
 @ConfigurationProperties
 @Data
 public class AppConfig {
+  private CommsTemplateSvc commsTemplateSvc;
   private CaseSvc caseSvc;
   private CollectionExerciseSvc collectionExerciseSvc;
   private PartySvc partySvc;

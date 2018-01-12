@@ -13,4 +13,6 @@ import uk.gov.ons.ctp.common.rest.RestUtilityConfig;
 public class SurveySvc {
   private RestUtilityConfig connectionConfig;
   private String requestSurveyPath;
+  private String requestSurveyClassifierTypes;
+  private String requestSurveyClassifiers;
 }

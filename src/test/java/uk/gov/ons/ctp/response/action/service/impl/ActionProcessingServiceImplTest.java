@@ -22,13 +22,19 @@ import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
+import uk.gov.ons.ctp.response.action.service.CommsTemplateSvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.response.commstemplate.representation.CommsTemplateDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierDTO;
+import uk.gov.ons.response.survey.representation.SurveyClassifierTypeDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -52,6 +58,10 @@ public class ActionProcessingServiceImplTest {
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_H = "H";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
+  private static final String REGION = "REGION";
+  private static final String REGION_VALUE = "NI";
+  private static final String LEGAL_BASIS = "LEGAL_BASIS";
+  private static final String LEGAL_BASIS_VALUE = "MANDATORY";
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
@@ -77,6 +87,9 @@ public class ActionProcessingServiceImplTest {
   private SurveySvcClientService surveySvcClientService;
 
   @Mock
+  private CommsTemplateSvcClientService commsTemplateSvcClientService;
+
+  @Mock
   private ActionRepository actionRepo;
 
   @Mock
@@ -95,6 +108,9 @@ public class ActionProcessingServiceImplTest {
   private List<CollectionExerciseDTO> collectionExerciseDTOs;
   private List<PartyDTO> partyDTOs;
   private List<SurveyDTO> surveyDTOs;
+  private List<SurveyClassifierDTO> surveyClassifierDTOs;
+  private List<SurveyClassifierTypeDTO> surveyClassifierTypeDTOs;
+  private List<CommsTemplateDTO> commsTemplateDTOs;
 
   /**
    * Initialises Mockito and loads Class Fixtures
@@ -108,8 +124,18 @@ public class ActionProcessingServiceImplTest {
     caseDetailsDTOs = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
     collectionExerciseDTOs = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
     surveyDTOs = FixtureHelper.loadClassFixtures(SurveyDTO[].class);
+    surveyClassifierTypeDTOs = FixtureHelper.loadClassFixtures(SurveyClassifierTypeDTO[].class);
+    surveyClassifierDTOs = FixtureHelper.loadClassFixtures(SurveyClassifierDTO[].class);
+    commsTemplateDTOs = FixtureHelper.loadClassFixtures(CommsTemplateDTO[].class);
 
     MockitoAnnotations.initMocks(this);
+  }
+
+  private Map<String, String> getExpectedClassifiers() {
+    Map<String, String> classifiers = new HashMap<>();
+    classifiers.put(LEGAL_BASIS, LEGAL_BASIS_VALUE);
+    classifiers.put(REGION, REGION_VALUE);
+    return classifiers;
   }
 
   @Test
@@ -209,7 +235,13 @@ public class ActionProcessingServiceImplTest {
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(surveySvcClientService.getSurveyClassifierTypes(CENSUS)).thenReturn(surveyClassifierDTOs);
+
+    when(surveySvcClientService.getSurveyClassifierType(CENSUS, "1")).thenReturn(surveyClassifierTypeDTOs.get(0));
+
+    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(getExpectedClassifiers())).thenReturn(commsTemplateDTOs.get(0));
 
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
@@ -237,7 +269,7 @@ public class ActionProcessingServiceImplTest {
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(surveySvcClientService, times(1)).getDetailsForSurvey(CENSUS);
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
@@ -261,7 +293,13 @@ public class ActionProcessingServiceImplTest {
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(surveySvcClientService.getSurveyClassifierTypes(CENSUS)).thenReturn(surveyClassifierDTOs);
+
+    when(surveySvcClientService.getSurveyClassifierType(CENSUS, "1")).thenReturn(surveyClassifierTypeDTOs.get(0));
+
+    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(getExpectedClassifiers())).thenReturn(commsTemplateDTOs.get(0));
     // End of section to mock responses
 
     // Start of section to run the test
@@ -286,7 +324,7 @@ public class ActionProcessingServiceImplTest {
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(surveySvcClientService, times(1)).getDetailsForSurvey(CENSUS);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
@@ -325,7 +363,7 @@ public class ActionProcessingServiceImplTest {
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_1);
     verify(partySvcClientService, never()).getParty(any(String.class), any(UUID.class));
     verify(collectionExerciseClientService, never()).getCollectionExercise(any(UUID.class));
-    verify(surveySvcClientService, never()).requestDetailsForSurvey(any(String.class));
+    verify(surveySvcClientService, never()).getDetailsForSurvey(any(String.class));
     verify(actionInstructionPublisher, never()).sendActionInstruction(any(String.class),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
@@ -349,7 +387,13 @@ public class ActionProcessingServiceImplTest {
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(surveySvcClientService.getDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(surveySvcClientService.getSurveyClassifierTypes(CENSUS)).thenReturn(surveyClassifierDTOs);
+
+    when(surveySvcClientService.getSurveyClassifierType(CENSUS, "1")).thenReturn(surveyClassifierTypeDTOs.get(0));
+
+    when(commsTemplateSvcClientService.getCommsTemplateByClassifiers(getExpectedClassifiers())).thenReturn(commsTemplateDTOs.get(0));
     // End of section to mock responses
 
     // Start of section to run the test
@@ -375,7 +419,7 @@ public class ActionProcessingServiceImplTest {
         PARTY_ID_PARENT_FOR_CASE_ID_2);
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+    verify(surveySvcClientService, times(1)).getDetailsForSurvey(CENSUS);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
