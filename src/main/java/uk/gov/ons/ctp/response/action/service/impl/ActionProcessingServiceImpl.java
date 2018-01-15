@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.type.AssociationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,13 +24,17 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
+import uk.gov.ons.ctp.response.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import javax.print.DocFlavor;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -211,21 +216,10 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     ActionContact actionContact = new ActionContact();
     Attributes businessUnitAttributes = parentParty.getAttributes();
+
     actionContact.setRuName(businessUnitAttributes.getName());
-    String tradStyle1 = businessUnitAttributes.getTradstyle1();
-    String tradStyle2 = businessUnitAttributes.getTradstyle2();
-    String tradStyle3 = businessUnitAttributes.getTradstyle3();
-    StringBuffer tradStyle = new StringBuffer();
-    if (!StringUtils.isEmpty(tradStyle1)) {
-      tradStyle.append(String.format("%s ", tradStyle1));
-    }
-    if (!StringUtils.isEmpty(tradStyle2)) {
-      tradStyle.append(String.format("%s ", tradStyle2));
-    }
-    if (!StringUtils.isEmpty(tradStyle3)) {
-      tradStyle.append(tradStyle3);
-    }
-    actionContact.setTradingStyle(tradStyle.toString().trim());
+    actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
+
     log.debug("childParty {}", childParty);
     if (childParty != null) {
       Attributes biPartyAttributes = childParty.getAttributes();
@@ -252,6 +246,28 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
+    ActionClassifiers actionClassifiers = new ActionClassifiers();
+    actionClassifiers.setLegalBasis(surveyDTO.getLegalBasis());
+    actionClassifiers.setRegion(businessUnitAttributes.getRegion());
+
+    // For BRES Child party is BI, does this change the logic?
+    if (childParty != null) {
+
+      actionClassifiers.setRespondentAccountStatus(childParty.getStatus());
+
+      List<String> enrolmentStatuses = new ArrayList<>();
+      for (Association association : childParty.getAssociations()) {
+        for (Enrolment enrolment : association.getEnrolments()) {
+          enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+        }
+      }
+      //https://stackoverflow.com/questions/13913000/why-doesnt-jaxb-generate-setters-for-lists
+      actionClassifiers.getEnrolmentStatuses().addAll(enrolmentStatuses);
+    }
+
+    actionClassifiers.setResponseStatus(action.getState().toString());
+    actionRequest.setClassifiers(actionClassifiers);
+
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
       DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
@@ -259,6 +275,28 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
 
     return actionRequest;
+  }
+
+  /**
+   * Concatenate the businessUnitAttributes trading style fields into a single string
+   * @param businessUnitAttributes
+   * @return concatenated trading styles
+   */
+  private String generateTradingStyle(final Attributes businessUnitAttributes) {
+    String tradStyle1 = businessUnitAttributes.getTradstyle1();
+    String tradStyle2 = businessUnitAttributes.getTradstyle2();
+    String tradStyle3 = businessUnitAttributes.getTradstyle3();
+    StringBuffer tradStyle = new StringBuffer();
+    if (!StringUtils.isEmpty(tradStyle1)) {
+      tradStyle.append(String.format("%s ", tradStyle1));
+    }
+    if (!StringUtils.isEmpty(tradStyle2)) {
+      tradStyle.append(String.format("%s ", tradStyle2));
+    }
+    if (!StringUtils.isEmpty(tradStyle3)) {
+      tradStyle.append(tradStyle3);
+    }
+    return tradStyle.toString().trim();
   }
 
   /**

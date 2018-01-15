@@ -213,6 +213,8 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
     // End of section to mock responses
 
     try {
@@ -262,6 +264,8 @@ public class ActionProcessingServiceImplTest {
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
     // End of section to mock responses
 
     // Start of section to run the test
@@ -350,6 +354,7 @@ public class ActionProcessingServiceImplTest {
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
     // End of section to mock responses
 
     // Start of section to run the test
