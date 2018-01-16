@@ -31,13 +31,9 @@ import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
-import javax.print.DocFlavor;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -45,6 +41,10 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
+  private static final String ENABLED = "ENABLED";
+  private static final String PENDING = "PENDING";
+  private static final String DISABLED = "DISABLED";
+  private static final String SUSPENDED = "SUSPENDED";
 
   @Autowired
   private CaseSvcClientService caseSvcClientService;
@@ -246,27 +246,20 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
-    ActionClassifiers actionClassifiers = new ActionClassifiers();
-    actionClassifiers.setLegalBasis(surveyDTO.getLegalBasis());
-    actionClassifiers.setRegion(businessUnitAttributes.getRegion());
+    CommsTypeClassifiers classifiers = new CommsTypeClassifiers();
+    classifiers.setLegalBasis(surveyDTO.getLegalBasis());
+    classifiers.setRegion(businessUnitAttributes.getRegion());
+    actionRequest.setCommsTypeClassifiers(classifiers);
+
+    Statuses statuses = new Statuses();
 
     // For BRES Child party is BI, does this change the logic?
     if (childParty != null) {
-
-      actionClassifiers.setRespondentAccountStatus(childParty.getStatus());
-
-      List<String> enrolmentStatuses = new ArrayList<>();
-      for (Association association : childParty.getAssociations()) {
-        for (Enrolment enrolment : association.getEnrolments()) {
-          enrolmentStatuses.add(enrolment.getEnrolmentStatus());
-        }
-      }
-      //https://stackoverflow.com/questions/13913000/why-doesnt-jaxb-generate-setters-for-lists
-      actionClassifiers.getEnrolmentStatuses().addAll(enrolmentStatuses);
+      statuses.setCaseGroupStatus(childParty.getStatus());
+      statuses.setEnrolmentStatus(getEnrolmentStatus(childParty));
     }
 
-    actionClassifiers.setResponseStatus(caseDTO.getResponseState().toString());
-    actionRequest.setClassifiers(actionClassifiers);
+    statuses.setCaseGroupStatus(caseDTO.getCaseGroupStatus().toString());
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
@@ -275,6 +268,26 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
 
     return actionRequest;
+  }
+
+  private String getEnrolmentStatus(final PartyDTO childParty) {
+    List<String> enrolmentStatuses = new ArrayList<>();
+    for (Association association : childParty.getAssociations()) {
+      for (Enrolment enrolment : association.getEnrolments()) {
+        enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+      }
+    }
+    //TODO: There has got to be a better way to do this??
+    if(enrolmentStatuses.contains(ENABLED)) {
+      return ENABLED;
+    }
+    if(enrolmentStatuses.contains(PENDING)) {
+      return PENDING;
+    }
+    if(enrolmentStatuses.contains(SUSPENDED)) {
+      return SUSPENDED;
+    }
+    return DISABLED;
   }
 
   /**

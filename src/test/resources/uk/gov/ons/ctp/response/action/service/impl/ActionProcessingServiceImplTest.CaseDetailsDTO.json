@@ -9,6 +9,7 @@
     "sampleUnitType": "H",
     "createdBy": "me",
     "createdDateTime": 1460732606544,
+    "caseGroupStatus": "COMPLETE",
     "responses": [
       {
         "dateTime": 1460732606544,
@@ -61,6 +62,7 @@
     "sampleUnitType": "Z",
     "createdBy": "me",
     "createdDateTime": 1460732606544,
+    "caseGroupStatus": "INPROGRESS",
     "responses": [
       {
         "dateTime": 1460732606544,
@@ -113,6 +115,7 @@
     "sampleUnitType": "HI",
     "createdBy": "me",
     "createdDateTime": 1460732606544,
+    "caseGroupStatus": "INPROGRESS",
     "responses": [
       {
         "dateTime": 1460732606544,
