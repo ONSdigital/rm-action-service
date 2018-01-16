@@ -265,7 +265,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       actionClassifiers.getEnrolmentStatuses().addAll(enrolmentStatuses);
     }
 
-    actionClassifiers.setResponseStatus(action.getState().toString());
+    actionClassifiers.setResponseStatus(caseDTO.getResponseState().toString());
     actionRequest.setClassifiers(actionClassifiers);
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
