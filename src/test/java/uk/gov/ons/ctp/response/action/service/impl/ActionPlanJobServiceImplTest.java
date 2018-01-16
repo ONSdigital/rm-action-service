@@ -262,7 +262,7 @@ public class ActionPlanJobServiceImplTest {
     Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
     Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
     Mockito.when(actionRepo.countByActionPlanFKAndStateNot(1,
-    		ActionDTO.ActionState.COMPLETED)).thenReturn(new Long(actions.size()));
+        ActionDTO.ActionState.COMPLETED)).thenReturn(new Long(actions.size()));
 
     //let it roll
     ActionPlanJob executedJob = actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));

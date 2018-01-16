@@ -134,10 +134,10 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
 
           // If no actions for a given action plan are pending then skip ActionPlanJob
           if (totalInCompleteActions == 0) {
-        	  	log.debug("No actions are pending for a given action plan{} - skipping", actionPlanPK);
-        	  	return createdJob;
+            log.debug("No actions are pending for a given action plan{} - skipping", actionPlanPK);
+            return createdJob;
           }
-                    
+         
           // Enrich and save the job.
           actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
           actionPlanJob.setCreatedDateTime(now);
