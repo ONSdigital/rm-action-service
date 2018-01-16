@@ -86,9 +86,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    * @return List<Action> returns all actions for state
    */
   List<Action> findByStateOrderByCreatedDateTimeDesc(ActionDTO.ActionState state);
-  
-  
-  
+      
   /**
    * just count cases for an action which are not completed
    * @param actionPlanKey the plan id
@@ -97,5 +95,4 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    */
   Long countByActionPlanFKAndStateNot(Integer actionPlanKey, ActionDTO.ActionState state);
   
-
 }
