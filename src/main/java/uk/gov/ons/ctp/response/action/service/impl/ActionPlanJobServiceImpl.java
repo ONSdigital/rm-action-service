@@ -137,7 +137,7 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
             log.debug("No actions are pending for a given action plan{} - skipping", actionPlanPK);
             return createdJob;
           }
-         
+
           // Enrich and save the job.
           actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
           actionPlanJob.setCreatedDateTime(now);
