@@ -85,7 +85,7 @@ public class ActionPlanJobServiceImplTest {
     Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
     Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
     Mockito.when(actionRepo.countByActionPlanFKAndStateNot(1,
-    		ActionDTO.ActionState.COMPLETED)).thenReturn(new Long(1));
+        ActionDTO.ActionState.COMPLETED)).thenReturn(new Long(1));
     Mockito.when(actionPlanJobRepo.save(actionPlanJobs.get(0))).thenReturn(actionPlanJobs.get(0));
     Mockito.when(actionCaseRepo.createActions(1)).thenReturn(Boolean.TRUE);
    

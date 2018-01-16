@@ -94,5 +94,5 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    * @return how many number of actions for that plan which are not completed
    */
   Long countByActionPlanFKAndStateNot(Integer actionPlanKey, ActionDTO.ActionState state);
-  
+
 }

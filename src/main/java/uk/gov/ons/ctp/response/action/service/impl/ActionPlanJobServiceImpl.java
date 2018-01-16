@@ -126,12 +126,12 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
             log.debug("No open cases for action plan {} - skipping", actionPlanPK);
             return createdJob;
           }
-                              
+
           final Long totalInCompleteActions = actionRepo.countByActionPlanFKAndStateNot(actionPlanPK,
-        		  ActionDTO.ActionState.COMPLETED);
+              ActionDTO.ActionState.COMPLETED);
           log.info("Total number of not completed actions for a given action plan{} - {}", actionPlanPK,
-        		  totalInCompleteActions);
-        		
+              totalInCompleteActions);
+
           // If no actions for a given action plan are pending then skip ActionPlanJob
           if (totalInCompleteActions == 0) {
         	  	log.debug("No actions are pending for a given action plan{} - skipping", actionPlanPK);
