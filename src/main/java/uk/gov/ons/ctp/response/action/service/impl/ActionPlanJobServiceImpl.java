@@ -43,7 +43,7 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
 
   @Autowired
   private ActionPlanRepository actionPlanRepo;
-  
+
   @Autowired
   private ActionRepository actionRepo;
 
@@ -128,8 +128,8 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
           }
                               
           final Long totalInCompleteActions = actionRepo.countByActionPlanFKAndStateNot(actionPlanPK,
-        		  ActionDTO.ActionState.COMPLETED);        		
-          log.info("Total number of not completed actions for a given action plan{} - {}", actionPlanPK, 
+        		  ActionDTO.ActionState.COMPLETED);
+          log.info("Total number of not completed actions for a given action plan{} - {}", actionPlanPK,
         		  totalInCompleteActions);
         		
           // If no actions for a given action plan are pending then skip ActionPlanJob
