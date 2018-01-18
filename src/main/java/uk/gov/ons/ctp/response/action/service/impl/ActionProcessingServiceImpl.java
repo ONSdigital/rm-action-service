@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.type.AssociationType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -33,7 +32,10 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -270,6 +272,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     return actionRequest;
   }
 
+  /**
+   * enrolment status for the case based off the enrolled parties
+   * @param childParty
+   * @return enrolment status
+   */
   private String getEnrolmentStatus(final PartyDTO childParty) {
     List<String> enrolmentStatuses = new ArrayList<>();
     for (Association association : childParty.getAssociations()) {
@@ -278,13 +285,13 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       }
     }
     //TODO: There has got to be a better way to do this??
-    if(enrolmentStatuses.contains(ENABLED)) {
+    if (enrolmentStatuses.contains(ENABLED)) {
       return ENABLED;
     }
-    if(enrolmentStatuses.contains(PENDING)) {
+    if (enrolmentStatuses.contains(PENDING)) {
       return PENDING;
     }
-    if(enrolmentStatuses.contains(SUSPENDED)) {
+    if (enrolmentStatuses.contains(SUSPENDED)) {
       return SUSPENDED;
     }
     return DISABLED;
