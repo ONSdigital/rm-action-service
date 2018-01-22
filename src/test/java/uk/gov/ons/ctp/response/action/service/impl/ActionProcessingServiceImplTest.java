@@ -494,4 +494,28 @@ public class ActionProcessingServiceImplTest {
     assertTrue(publishedActionCancel.isResponseRequired());
     assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
   }
+
+  @Test
+  public void testGetEnrolmentStatusEnabled () {
+    PartyDTO partyDTO = partyDTOs.get(0);
+    assertEquals("ENABLED", actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void getTestGetEnrolmentStatusPending() {
+    PartyDTO partyDTO = partyDTOs.get(1);
+    assertEquals("PENDING", actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void getTestGetEnrolmentStatusSuspended() {
+    PartyDTO partyDTO = partyDTOs.get(2);
+    assertEquals("SUSPENDED", actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void getTestGetEnrolmentStatusDisabled() {
+    PartyDTO partyDTO = partyDTOs.get(3);
+    assertEquals("DISABLED", actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
 }

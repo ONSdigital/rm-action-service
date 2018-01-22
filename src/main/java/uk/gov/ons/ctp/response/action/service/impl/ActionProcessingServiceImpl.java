@@ -277,7 +277,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * @param childParty
    * @return enrolment status
    */
-  private String getEnrolmentStatus(final PartyDTO childParty) {
+  public String getEnrolmentStatus(final PartyDTO childParty) {
     List<String> enrolmentStatuses = new ArrayList<>();
     for (Association association : childParty.getAssociations()) {
       for (Enrolment enrolment : association.getEnrolments()) {

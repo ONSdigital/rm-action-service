@@ -15,7 +15,12 @@
           {
             "name": "Joe bloggs",
             "surveyId": "surveyId",
-            "enrolmentStatus": "PENDING"
+            "enrolmentStatus": "SUSPENDED"
+          },
+          {
+            "name": "Dave bloggs",
+            "surveyId": "surveyId2",
+            "enrolmentStatus": "ENABLED"
           }
         ]
       }
@@ -38,6 +43,60 @@
             "name": "Joe bloggs",
             "surveyId": "surveyId",
             "enrolmentStatus": "PENDING"
+          },
+          {
+            "name": "Dave bloggs",
+            "surveyId": "surveyId2",
+            "enrolmentStatus": "SUSPENDED"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id":"2e6add83-e43d-4f52-954f-4109be506c81",
+    "sampleUnitType":"HI",
+    "sampleUnitRef": "333",
+    "attributes": {
+      "entref": "bob",
+      "entname1": "07235235235235236",
+      "entname2": "test@test.co.uk"
+    },
+    "associations": [
+      {
+        "partyId": "partyID",
+        "enrolments": [
+          {
+            "name": "Joe bloggs",
+            "surveyId": "surveyId",
+            "enrolmentStatus": "DISABLED"
+          },
+          {
+            "name": "Dave bloggs",
+            "surveyId": "surveyId2",
+            "enrolmentStatus": "SUSPENDED"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id":"2e6add83-e43d-4f52-954f-4109be506c81",
+    "sampleUnitType":"HI",
+    "sampleUnitRef": "333",
+    "attributes": {
+      "entref": "bob",
+      "entname1": "07235235235235236",
+      "entname2": "test@test.co.uk"
+    },
+    "associations": [
+      {
+        "partyId": "partyID",
+        "enrolments": [
+          {
+            "name": "Joe bloggs",
+            "surveyId": "surveyId",
+            "enrolmentStatus": "DISABLED"
           }
         ]
       }
