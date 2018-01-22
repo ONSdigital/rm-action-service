@@ -284,7 +284,6 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
         enrolmentStatuses.add(enrolment.getEnrolmentStatus());
       }
     }
-    //TODO: There has got to be a better way to do this??
     if (enrolmentStatuses.contains(ENABLED)) {
       return ENABLED;
     }
