@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.gov.ons.ctp.common.FixtureHelper;
+import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
@@ -33,6 +34,7 @@ import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -42,9 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.ons.ctp.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.common.MvcHelper.postJson;
 import static uk.gov.ons.ctp.common.MvcHelper.putJson;
-import static uk.gov.ons.ctp.common.TestHelper.createTestDate;
 import static uk.gov.ons.ctp.common.error.RestExceptionHandler.INVALID_JSON;
-import static uk.gov.ons.ctp.common.error.RestExceptionHandler.PROVIDED_JSON_INCORRECT;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_UPDATED;
@@ -114,8 +114,8 @@ public final class ActionEndpointUnitTest {
   private static final String ACTION2_ACTIONTYPENAME = "actiontypename2";
   private static final String ACTION1_SITUATION = "Assigned";
   private static final String ACTION_CREATEDBY = "Unit Tester";
-  private static final String ALL_ACTIONS_CREATEDDATE_VALUE = createTestDate("2017-05-15T10:00:00.000+0000");
-  private static final String ALL_ACTIONS_UPDATEDDATE_VALUE = createTestDate("2017-05-15T11:00:00.000+0000");
+  private static final String ALL_ACTIONS_CREATEDDATE_VALUE = "2017-05-15T11:00:00.000+01:00";
+  private static final String ALL_ACTIONS_UPDATEDDATE_VALUE = "2017-05-15T12:00:00.000+01:00";
   private static final String ACTION_TYPE_NOTFOUND = "NotFound";
   private static final String NON_EXISTING_ID = "e1c26bf2-eaa8-4a8a-b44f-3b8f004ef271";
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
@@ -238,12 +238,12 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ACTIVE.name(),
                     ActionDTO.ActionState.SUBMITTED.name(), ActionDTO.ActionState.COMPLETED.name(),
                     ActionDTO.ActionState.CANCELLED.name(), ActionDTO.ActionState.ABORTED.name())))
-            .andExpect(jsonPath("$[*].createdDateTime", containsInAnyOrder(ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE, ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE, ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[*].updatedDateTime", containsInAnyOrder(ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE, ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE, ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$[*].createdDateTime", contains(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$[*].updatedDateTime", contains(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -294,8 +294,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$[0].priority", is(1)))
             .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
             .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$[0].createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[0].updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$[0].createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$[0].updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -327,8 +327,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$[0].priority", is(1)))
             .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
             .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$[0].createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[0].updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$[0].createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$[0].updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
 
@@ -377,8 +377,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$[0].priority", is(1)))
             .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
             .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$[0].createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[0].updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$[0].createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$[0].updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -443,8 +443,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.priority", is(1)))
             .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
             .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$.createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$.updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -481,10 +481,10 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_6, ACTION_SITUATION_7)))
             .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ABORTED.name(),
                     ActionDTO.ActionState.CANCELLED.name())))
-            .andExpect(jsonPath("$[*].createdDateTime", containsInAnyOrder(ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[*].updatedDateTime", containsInAnyOrder(ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$[*].createdDateTime", contains(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$[*].updatedDateTime", contains(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -543,8 +543,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.priority", is(1)))
             .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
             .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$.createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$.updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -626,8 +626,8 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$.priority", is(1)))
             .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
             .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$.createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$.updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -749,10 +749,10 @@ public final class ActionEndpointUnitTest {
             .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_6, ACTION_SITUATION_7)))
             .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ABORTED.name(),
                     ActionDTO.ActionState.CANCELLED.name())))
-            .andExpect(jsonPath("$[*].createdDateTime", containsInAnyOrder(ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[*].updatedDateTime", containsInAnyOrder(ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE)));
+            .andExpect(jsonPath("$[*].createdDateTime", contains(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+            .andExpect(jsonPath("$[*].updatedDateTime", contains(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+                    new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**

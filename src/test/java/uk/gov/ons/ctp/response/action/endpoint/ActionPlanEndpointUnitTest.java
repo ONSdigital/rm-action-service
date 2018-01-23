@@ -16,6 +16,7 @@ import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
+import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
@@ -26,14 +27,13 @@ import java.util.UUID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static uk.gov.ons.ctp.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.common.MvcHelper.putJson;
-import static uk.gov.ons.ctp.common.TestHelper.createTestDate;
-import static uk.gov.ons.ctp.common.error.RestExceptionHandler.PROVIDED_JSON_INCORRECT;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.CREATED_BY_SYSTEM;
@@ -51,8 +51,8 @@ public class ActionPlanEndpointUnitTest {
   private static final String ACTION_PLAN_2_NAME = "C1O331D10F";
   private static final String ACTION_PLAN_1_DESC = "Component 1 - England/online/field day ten/three reminders";
   private static final String ACTION_PLAN_2_DESC = "Component 2 - England/online/field day ten/three reminders";
-  private static final String ACTION_PLAN_1_LAST_RUN_DATE_TIME = createTestDate("2016-04-15T16:03:26.544+0100");
-  private static final String ACTION_PLAN_2_LAST_RUN_DATE_TIME = createTestDate("2016-04-15T16:03:26.644+0100");
+  private static final String ACTION_PLAN_1_LAST_RUN_DATE_TIME = "2016-04-15T16:03:26.544+01:00";
+  private static final String ACTION_PLAN_2_LAST_RUN_DATE_TIME = "2016-04-15T16:03:26.644+01:00";
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
 
   private static final String ACTION_PLAN_JSON = "{\"description\":\"testing\",\"lastRunDateTime\":null}";
@@ -104,7 +104,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * A Test to retrieve all action plans BUT exception thrown
-   * 
+   *
    * @throws Exception exception thrown when getJson does
    */
   @Test
@@ -123,7 +123,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * A Test to retrieve all action plans
-   * 
+   *
    * @throws Exception exception thrown when getJson does
    */
   @Test
@@ -143,13 +143,13 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$[*].name", containsInAnyOrder(ACTION_PLAN_1_NAME, ACTION_PLAN_2_NAME)))
         .andExpect(jsonPath("$[*].description", containsInAnyOrder(ACTION_PLAN_1_DESC, ACTION_PLAN_2_DESC)))
         .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
-        .andExpect(jsonPath("$[*].lastRunDateTime", containsInAnyOrder(ACTION_PLAN_1_LAST_RUN_DATE_TIME,
-            ACTION_PLAN_2_LAST_RUN_DATE_TIME)));
+        .andExpect(jsonPath("$[*].lastRunDateTime", contains(new DateMatcher(ACTION_PLAN_1_LAST_RUN_DATE_TIME),
+            new DateMatcher(ACTION_PLAN_2_LAST_RUN_DATE_TIME))));
   }
 
   /**
    * A Test to retrieve an ActionPlan BUT not found
-   * 
+   *
    * @throws Exception exception thrown when getJson does
    */
   @Test
@@ -166,7 +166,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * A Test to retrieve an ActionPlan BUT exception thrown
-   * 
+   *
    * @throws Exception exception thrown when getJson does
    */
   @Test
@@ -186,7 +186,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * A Test to retrieve an ActionPlan
-   * 
+   *
    * @throws Exception exception thrown when getJson does
    */
   @Test
@@ -203,7 +203,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
         .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-        .andExpect(jsonPath("$.lastRunDateTime", is(ACTION_PLAN_1_LAST_RUN_DATE_TIME)));
+        .andExpect(jsonPath("$.lastRunDateTime", is(new DateMatcher(ACTION_PLAN_1_LAST_RUN_DATE_TIME))));
 
     System.out.println(actions.andReturn().getResponse().getContentAsString());
 
@@ -211,7 +211,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * A Test to update an ActionPlan with incorrect json
-   * 
+   *
    * @throws Exception exception thrown when putJson does
    */
 /*  @Test
@@ -229,7 +229,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * A Test to update an ActionPlan with valid json
-   * 
+   *
    * @throws Exception exception thrown when putJson does
    */
   @Test
@@ -247,7 +247,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
         .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-        .andExpect(jsonPath("$.lastRunDateTime", is(ACTION_PLAN_1_LAST_RUN_DATE_TIME)));
+        .andExpect(jsonPath("$.lastRunDateTime", is(new DateMatcher(ACTION_PLAN_1_LAST_RUN_DATE_TIME))));
   }
 
 }

@@ -223,8 +223,6 @@ public class ActionSvcApplication {
   public CustomObjectMapper customObjectMapper() {
     CustomObjectMapper mapper = new CustomObjectMapper();
 
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
     return mapper;
   }
 
