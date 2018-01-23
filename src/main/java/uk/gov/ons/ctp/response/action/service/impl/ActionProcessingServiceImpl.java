@@ -257,11 +257,15 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     // For BRES Child party is BI, does this change the logic?
     if (childParty != null) {
-      statuses.setCaseGroupStatus(childParty.getStatus());
-      statuses.setEnrolmentStatus(getEnrolmentStatus(childParty));
+      statuses.setRespondentStatus(childParty.getStatus());
     }
 
+    // Do i need to set a default value for respondent status if no child party, as no respondent account created?
+
+    statuses.setEnrolmentStatus(getEnrolmentStatus(parentParty));
     statuses.setCaseGroupStatus(caseDTO.getCaseGroupStatus().toString());
+
+    actionRequest.setStatuses(statuses);
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
@@ -274,12 +278,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   /**
    * enrolment status for the case based off the enrolled parties
-   * @param childParty
+   * @param parentParty
    * @return enrolment status
    */
-  public String getEnrolmentStatus(final PartyDTO childParty) {
+  public String getEnrolmentStatus(final PartyDTO parentParty) {
     List<String> enrolmentStatuses = new ArrayList<>();
-    for (Association association : childParty.getAssociations()) {
+    for (Association association : parentParty.getAssociations()) {
       for (Enrolment enrolment : association.getEnrolments()) {
         enrolmentStatuses.add(enrolment.getEnrolmentStatus());
       }
