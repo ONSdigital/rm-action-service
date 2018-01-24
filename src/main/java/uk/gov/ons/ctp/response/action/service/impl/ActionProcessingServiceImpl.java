@@ -248,24 +248,18 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
-    CommsTypeClassifiers classifiers = new CommsTypeClassifiers();
-    classifiers.setLegalBasis(surveyDTO.getLegalBasis());
-    classifiers.setRegion(businessUnitAttributes.getRegion());
-    actionRequest.setCommsTypeClassifiers(classifiers);
-
-    Statuses statuses = new Statuses();
+    actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
+    actionRequest.setRegion(businessUnitAttributes.getRegion());
 
     // For BRES Child party is BI, does this change the logic?
     if (childParty != null) {
-      statuses.setRespondentStatus(childParty.getStatus());
+      actionRequest.setRespondentStatus(childParty.getStatus());
     }
 
     // Do i need to set a default value for respondent status if no child party, as no respondent account created?
+    actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
+    actionRequest.setCaseGroupStatus(caseDTO.getCaseGroupStatus().toString());
 
-    statuses.setEnrolmentStatus(getEnrolmentStatus(parentParty));
-    statuses.setCaseGroupStatus(caseDTO.getCaseGroupStatus().toString());
-
-    actionRequest.setStatuses(statuses);
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
