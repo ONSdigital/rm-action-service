@@ -43,10 +43,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
-  private static final String ENABLED = "ENABLED";
-  private static final String PENDING = "PENDING";
-  private static final String DISABLED = "DISABLED";
-  private static final String SUSPENDED = "SUSPENDED";
+
+  public static final String ENABLED = "ENABLED";
+  public static final String PENDING = "PENDING";
+  public static final String DISABLED = "DISABLED";
+  public static final String SUSPENDED = "SUSPENDED";
 
   @Autowired
   private CaseSvcClientService caseSvcClientService;
@@ -72,6 +73,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
 
+  @Autowired
+  private ActionRequestValidator validator;
+
   /**
    * Deal with a single action - the transaction boundary is here.
    *
@@ -92,7 +96,8 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       transitionAction(action, event);
 
       ActionRequest actionRequest = prepareActionRequest(action);
-      if (actionRequest != null) {
+
+      if (actionRequest != null && validator.validate(actionType, actionRequest)) {
         actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
       }
 
@@ -165,6 +170,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       return null;
     }
   }
+
 
   /**
    * Take an action and using it, fetch further info from Case service in a

@@ -17,6 +17,7 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
@@ -87,6 +88,9 @@ public class ActionProcessingServiceImplTest {
 
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
+
+  @Mock
+  private ActionRequestValidator validator;
 
   @InjectMocks
   private ActionProcessingServiceImpl actionProcessingService;
@@ -215,6 +219,7 @@ public class ActionProcessingServiceImplTest {
         thenThrow(new RuntimeException(REST_ERROR_MSG));
 
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+      when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     try {
@@ -266,6 +271,7 @@ public class ActionProcessingServiceImplTest {
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
 
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
@@ -355,6 +361,7 @@ public class ActionProcessingServiceImplTest {
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
@@ -496,25 +503,73 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
+  public void testActionInstructionNotSentIfInvalid() throws CTPException{
+    // Start of section to mock responses
+    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
+
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
+
+    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+
+    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
+            thenReturn(collectionExerciseDTOs.get(0));
+
+    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(false);
+    // End of section to mock responses
+
+    // Start of section to run the test
+    Action action = new Action();
+    action.setId(ACTION_ID);
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
+    action.setActionPlanFK(ACTION_PLAN_FK);
+    action.setCaseId(CASE_ID);
+    action.setPriority(1);
+    actionProcessingService.processActionRequest(action);
+    // End of section to run the test
+
+    // Start of section to verify calls
+    verify(actionSvcStateTransitionManager, times(1)).transition(
+            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
+    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
+            eq(CategoryDTO.CategoryName.ACTION_CREATED));
+    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
+    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
+    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
+    verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
+    verify(collectionExerciseClientService, times(1)).
+            getCollectionExercise(COLLECTION_EXERCISE_ID);
+    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
+
+    // VALIDATOR HAS STOPPED MESSAGE FROM BEING SENT
+    verify(actionInstructionPublisher, times(0)).sendActionInstruction(eq(ACTIONEXPORTER),
+            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  @Test
   public void testGetEnrolmentStatusEnabled () {
     PartyDTO partyDTO = partyDTOs.get(0);
     assertEquals("ENABLED", actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
-  public void getTestGetEnrolmentStatusPending() {
+  public void testGetEnrolmentStatusPending() {
     PartyDTO partyDTO = partyDTOs.get(1);
     assertEquals("PENDING", actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
-  public void getTestGetEnrolmentStatusSuspended() {
+  public void testGetEnrolmentStatusSuspended() {
     PartyDTO partyDTO = partyDTOs.get(2);
     assertEquals("SUSPENDED", actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
-  public void getTestGetEnrolmentStatusDisabled() {
+  public void testGetEnrolmentStatusDisabled() {
     PartyDTO partyDTO = partyDTOs.get(3);
     assertEquals("DISABLED", actionProcessingService.getEnrolmentStatus(partyDTO));
   }
