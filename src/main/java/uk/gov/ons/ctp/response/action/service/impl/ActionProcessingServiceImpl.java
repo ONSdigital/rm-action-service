@@ -213,7 +213,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
     UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
     CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
-        collectionExerciseId);
+            collectionExerciseId);
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
     ActionContact actionContact = new ActionContact();
@@ -251,12 +251,13 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
     actionRequest.setRegion(businessUnitAttributes.getRegion());
 
-    // For BRES Child party is BI, does this change the logic?
+    // If it a B party then the respondent status is that of the child BI party
     if (childParty != null) {
       actionRequest.setRespondentStatus(childParty.getStatus());
+    } else {
+      actionRequest.setRespondentStatus(parentParty.getStatus());
     }
 
-    // Do i need to set a default value for respondent status if no child party, as no respondent account created?
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
     actionRequest.setCaseGroupStatus(caseDTO.getCaseGroupStatus().toString());
 
