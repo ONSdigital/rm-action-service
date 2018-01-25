@@ -10,18 +10,29 @@ public class ActionRequestValidator {
 
     public static final String RESPONDENTCREATED = "CREATED";
     public static final String RESPONDENTACTIVE= "ACTIVE";
+    public static final String NOTIFYGATEWAY = "NOTIFY";
+    public static final String ACTIONEXPORTER = "PRINTER";
 
-    public boolean validate(ActionType actionType, ActionRequest actionRequest) {
+    /**
+     * Validates whether the ActionRequest should be sent to a handler service.
+     * Contains the business logic for deciding whether the recipient is to receive an email or letter,
+     * dependent on the status of their account and the response.
+     * @param actionType
+     * @param actionRequest
+     * @return isValid
+     */
+    public boolean validate(final ActionType actionType, final ActionRequest actionRequest) {
+        String handler = actionType.getHandler();
         // Completed no action required
-        if(actionRequest.getCaseGroupStatus().equals(CaseGroupStatus.COMPLETE.toString())) {
+        if (actionRequest.getCaseGroupStatus().equals(CaseGroupStatus.COMPLETE.toString())) {
             return false;
         }
 
-        if (hasActiveRespondent(actionRequest) && enrolmentEnabled(actionRequest)) {
+        if (isEmail(handler) && hasActiveRespondent(actionRequest) && enrolmentEnabled(actionRequest)) {
             return validateEmail(actionType, actionRequest);
         }
 
-        if (hasCreatedRespondent(actionRequest)) {
+        if (isLetter(handler) && hasCreatedRespondent(actionRequest)) {
             return validateLetter(actionType, actionRequest);
         }
         return false;
@@ -46,7 +57,14 @@ public class ActionRequestValidator {
             return true;
         }
         return false;
+    }
 
+    private boolean isLetter(final String handler) {
+        return handler.equals(ACTIONEXPORTER);
+    }
+
+    private boolean isEmail(final String handler) {
+        return handler.equals(NOTIFYGATEWAY);
     }
 
     private boolean isNotificationLetter(final ActionType actionType) {

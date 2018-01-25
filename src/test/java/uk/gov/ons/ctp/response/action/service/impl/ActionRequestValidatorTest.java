@@ -1,31 +1,19 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
-import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
-import uk.gov.ons.ctp.response.action.service.impl.ActionRequestValidator.*;
 
 
 @RunWith(MockitoJUnitRunner.class)
 public class ActionRequestValidatorTest {
 
-    @InjectMocks
-    private ActionRequestValidator validator;
-
-    /**
-     * Initialises Mockito and loads Class Fixtures
-     */
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
+    private ActionRequestValidator validator = new ActionRequestValidator();
 
     @Test
     public void testValidNotificationLetter() {
@@ -169,7 +157,7 @@ public class ActionRequestValidatorTest {
     }
 
     @Test
-    public void testInvalidNotificationEmailInvaliRespondentStatus() {
+    public void testInvalidNotificationEmailInvalidRespondentStatus() {
         ActionType actionType = buildNotificationEmailActionType();
         ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
                 .withEnrolmentStatus(ActionProcessingServiceImpl.ENABLED)
@@ -180,19 +168,19 @@ public class ActionRequestValidatorTest {
 
 
     private ActionType buildNotificationLetterActionType() {
-        return ActionType.builder().actionTypePK(1).name("BSNOT").build();
+        return ActionType.builder().actionTypePK(1).name("BSNOT").handler(ActionRequestValidator.ACTIONEXPORTER).build();
     }
 
     private ActionType buildReminderLetterActionType() {
-        return ActionType.builder().actionTypePK(2).name("BSREM").build();
+        return ActionType.builder().actionTypePK(2).name("BSREM").handler(ActionRequestValidator.ACTIONEXPORTER).build();
     }
 
     private ActionType buildReminderEmailActionType() {
-        return ActionType.builder().actionTypePK(3).name("BSNE").build();
+        return ActionType.builder().actionTypePK(3).name("BSNE").handler(ActionRequestValidator.NOTIFYGATEWAY).build();
     }
 
     private ActionType buildNotificationEmailActionType() {
         //TODO: Update name when we actually populate the systems with this actiontype
-        return ActionType.builder().actionTypePK(4).name("UNKNOWN").build();
+        return ActionType.builder().actionTypePK(4).name("UNKNOWN").handler(ActionRequestValidator.NOTIFYGATEWAY).build();
     }
 }
