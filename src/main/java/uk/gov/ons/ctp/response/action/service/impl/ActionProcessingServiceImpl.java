@@ -36,6 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -257,11 +258,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
     actionRequest.setRegion(businessUnitAttributes.getRegion());
 
-    // If it a B party then the respondent status is that of the child BI party
-    if (childParty != null) {
+    if(childParty != null) {
+      //BI case
       actionRequest.setRespondentStatus(childParty.getStatus());
     } else {
-      actionRequest.setRespondentStatus(parentParty.getStatus());
+      //B case
+      actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty));
     }
 
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
@@ -277,6 +279,28 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     return actionRequest;
   }
 
+
+  private String parseRespondentStatuses(PartyDTO parentParty) {
+
+    List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
+
+    List<String> childPartyStatuses = new ArrayList<>();
+
+    for(String id : childPartyIds) {
+      childPartyStatuses.add(partySvcClientService.getParty("BI", id).getStatus());
+    }
+
+    String respondentStatus = null;
+
+    if(childPartyStatuses.contains("ACTIVE")) {
+      respondentStatus = "ACTIVE";
+    }
+
+    if (childPartyStatuses.contains("CREATED")) {
+      respondentStatus = "CREATED";
+    }
+    return respondentStatus;
+  }
   /**
    * enrolment status for the case based off the enrolled parties
    * @param parentParty
