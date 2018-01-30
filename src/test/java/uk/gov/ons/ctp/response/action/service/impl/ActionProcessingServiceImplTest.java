@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
@@ -53,6 +54,12 @@ public class ActionProcessingServiceImplTest {
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_H = "H";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
+  private static final Integer B_PARTY = 4;
+  private static final Integer ACTIVE_BI = 5;
+  private static final Integer SUSPENDED_BI = 6;
+  private static final Integer CREATED_BI = 7;
+  private static final Integer NO_ASSOCIATIONS_BI = 8;
+
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
@@ -551,26 +558,53 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
+  public void testParseRespondentStatusesActive() {
+    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(partyDTOs.get(ACTIVE_BI));
+    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(partyDTOs.get(CREATED_BI));
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "BI");
+
+    assertEquals(actionProcessingService.ACTIVE, respondentStatus);
+  }
+
+  @Ignore
+  @Test
+  public void testParseRespondentStatusesCreated() {
+    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(partyDTOs.get(SUSPENDED_BI));
+    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(partyDTOs.get(CREATED_BI));
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "BI");
+
+    assertEquals(actionProcessingService.CREATED, respondentStatus);
+  }
+
+  @Ignore
+  @Test
+  public void testParseRespondentStatusesEmpty() {
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(NO_ASSOCIATIONS_BI), "BI");
+
+    assertEquals(null, respondentStatus);
+  }
+
+  @Test
   public void testGetEnrolmentStatusEnabled () {
     PartyDTO partyDTO = partyDTOs.get(0);
-    assertEquals("ENABLED", actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(actionProcessingService.ENABLED, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
   public void testGetEnrolmentStatusPending() {
     PartyDTO partyDTO = partyDTOs.get(1);
-    assertEquals("PENDING", actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(actionProcessingService.PENDING, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
   public void testGetEnrolmentStatusSuspended() {
     PartyDTO partyDTO = partyDTOs.get(2);
-    assertEquals("SUSPENDED", actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(actionProcessingService.SUSPENDED, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
   public void testGetEnrolmentStatusDisabled() {
     PartyDTO partyDTO = partyDTOs.get(3);
-    assertEquals("DISABLED", actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(actionProcessingService.DISABLED, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 }

@@ -284,10 +284,10 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   /**
    *  iterate through child parties and parse respondent statuses'
    * @param parentParty
-   * @param sampleUnitTypeStr
+   * @param childUnitTypeStr
    * @return
    */
-  private String parseRespondentStatuses(PartyDTO parentParty, String sampleUnitTypeStr) {
+  public String parseRespondentStatuses(PartyDTO parentParty, String childUnitTypeStr) {
 
     List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
 
@@ -295,7 +295,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     for (String id : childPartyIds) {
       try {
-        PartyDTO childParty = partySvcClientService.getParty(sampleUnitTypeStr, id);
+        PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
         childPartyStatuses.add(childParty.getStatus());
       } catch (RuntimeException e) {
         log.info("Unable to get party with id, {}", id);
