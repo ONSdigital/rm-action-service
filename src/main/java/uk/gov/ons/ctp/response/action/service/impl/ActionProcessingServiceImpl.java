@@ -49,6 +49,8 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   public static final String PENDING = "PENDING";
   public static final String DISABLED = "DISABLED";
   public static final String SUSPENDED = "SUSPENDED";
+  public static final String ACTIVE = "ACTIVE";
+  public static final String CREATED = "CREATED";
 
   @Autowired
   private CaseSvcClientService caseSvcClientService;
@@ -258,16 +260,16 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
     actionRequest.setRegion(businessUnitAttributes.getRegion());
 
-    if(childParty != null) {
+    if (childParty != null) {
       //BI case
       actionRequest.setRespondentStatus(childParty.getStatus());
     } else {
-      //B case
-      actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty));
+      //B case, sampleUnitTypeStr is the child type.
+      actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty, caseDTO.getSampleUnitType()));
     }
 
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
-    actionRequest.setCaseGroupStatus(caseDTO.getCaseGroupStatus().toString());
+    actionRequest.setCaseGroupStatus(caseDTO.getCaseGroup().getCaseGroupStatus().toString());
 
 
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
@@ -279,25 +281,35 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     return actionRequest;
   }
 
-
-  private String parseRespondentStatuses(PartyDTO parentParty) {
+  /**
+   *  iterate through child parties and parse respondent statuses'
+   * @param parentParty
+   * @param sampleUnitTypeStr
+   * @return
+   */
+  private String parseRespondentStatuses(PartyDTO parentParty, String sampleUnitTypeStr) {
 
     List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
 
     List<String> childPartyStatuses = new ArrayList<>();
 
-    for(String id : childPartyIds) {
-      childPartyStatuses.add(partySvcClientService.getParty("BI", id).getStatus());
+    for (String id : childPartyIds) {
+      try {
+        PartyDTO childParty = partySvcClientService.getParty(sampleUnitTypeStr, id);
+        childPartyStatuses.add(childParty.getStatus());
+      } catch (RuntimeException e) {
+        log.info("Unable to get party with id, {}", id);
+      }
     }
 
     String respondentStatus = null;
 
-    if(childPartyStatuses.contains("ACTIVE")) {
-      respondentStatus = "ACTIVE";
+    if (childPartyStatuses.contains(ACTIVE)) {
+      respondentStatus = ACTIVE;
     }
 
-    if (childPartyStatuses.contains("CREATED")) {
-      respondentStatus = "CREATED";
+    if (childPartyStatuses.contains(CREATED)) {
+      respondentStatus = CREATED;
     }
     return respondentStatus;
   }
