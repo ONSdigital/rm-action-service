@@ -18,10 +18,7 @@ import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.*;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.*;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.*;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
@@ -264,8 +261,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       //BI case
       actionRequest.setRespondentStatus(childParty.getStatus());
     } else {
-      //B case, sampleUnitTypeStr is the child type.
-      actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty, caseDTO.getSampleUnitType()));
+      //B case
+      String parentUnitType = caseDTO.getSampleUnitType()
+      actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty, parentUnitType));
     }
 
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
@@ -284,14 +282,17 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   /**
    *  iterate through child parties and parse respondent statuses'
    * @param parentParty
-   * @param childUnitTypeStr
+   * @param parentUnitTypeStr
    * @return
    */
-  public String parseRespondentStatuses(PartyDTO parentParty, String childUnitTypeStr) {
+  public String parseRespondentStatuses(PartyDTO parentParty, String parentUnitTypeStr) {
 
     List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
 
     List<String> childPartyStatuses = new ArrayList<>();
+
+    //TODO: THIS IS AWFUL!! All child samples are parent+I but must be better way
+    String childUnitTypeStr = parentUnitTypeStr + "I";
 
     for (String id : childPartyIds) {
       try {
