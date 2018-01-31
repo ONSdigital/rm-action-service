@@ -60,11 +60,11 @@ public class ActionRequestValidator {
     }
 
     private boolean isLetter(final String handler) {
-        return handler.equals(ACTIONEXPORTER);
+        return handler.equalsIgnoreCase(ACTIONEXPORTER);
     }
 
     private boolean isEmail(final String handler) {
-        return handler.equals(NOTIFYGATEWAY);
+        return handler.equalsIgnoreCase(NOTIFYGATEWAY);
     }
 
     private boolean isNotificationLetter(final ActionType actionType) {
@@ -85,27 +85,27 @@ public class ActionRequestValidator {
     }
 
     private boolean caseInProgress(final ActionRequest actionRequest) {
-        return actionRequest.getCaseGroupStatus().equals(CaseGroupStatus.INPROGRESS.toString());
+        return actionRequest.getCaseGroupStatus().equalsIgnoreCase(CaseGroupStatus.INPROGRESS.toString());
     }
 
     private boolean caseNotStarted(final ActionRequest actionRequest) {
-        return actionRequest.getCaseGroupStatus().equals(CaseGroupStatus.NOTSTARTED.toString());
+        return actionRequest.getCaseGroupStatus().equalsIgnoreCase(CaseGroupStatus.NOTSTARTED.toString());
     }
 
     private boolean enrolmentPending(final ActionRequest actionRequest) {
-        return actionRequest.getEnrolmentStatus().equals(ActionProcessingServiceImpl.PENDING);
+        return actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.PENDING);
     }
 
     private boolean enrolmentEnabled(final ActionRequest actionRequest) {
-        return actionRequest.getEnrolmentStatus().equals(ActionProcessingServiceImpl.ENABLED);
+        return actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.ENABLED);
     }
 
     private boolean hasActiveRespondent(final ActionRequest actionRequest) {
-        return actionRequest.getRespondentStatus().equals(RESPONDENTACTIVE);
+        return actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTACTIVE);
     }
 
     private boolean hasCreatedRespondent(final ActionRequest actionRequest) {
-        return actionRequest.getRespondentStatus().equals(RESPONDENTCREATED);
+        return actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTCREATED);
     }
 
 }
