@@ -262,7 +262,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       actionRequest.setRespondentStatus(childParty.getStatus());
     } else {
       //B case
-      String parentUnitType = caseDTO.getSampleUnitType()
+      String parentUnitType = caseDTO.getSampleUnitType();
       actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty, parentUnitType));
     }
 

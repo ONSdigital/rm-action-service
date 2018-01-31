@@ -124,6 +124,16 @@ public class ActionRequestValidatorTest {
 
         assertFalse(validator.validate(actionType, actionRequest));
     }
+
+    @Test
+    public void testInvalidRemindEmailNullEnromentStatus() {
+        ActionType actionType = buildReminderEmailActionType();
+        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+                .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED).build();
+
+        assertFalse(validator.validate(actionType, actionRequest));
+    }
+
     @Test
     public void testInvalidReminderEmailInvalidEnrolment() {
         ActionType actionType = buildReminderEmailActionType();
@@ -162,6 +172,15 @@ public class ActionRequestValidatorTest {
         ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
                 .withEnrolmentStatus(ActionProcessingServiceImpl.ENABLED)
                 .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED).build();
+
+        assertFalse(validator.validate(actionType, actionRequest));
+    }
+
+    @Test
+    public void testInvalidNotificationEmailNullRespondentStatus() {
+        ActionType actionType = buildNotificationEmailActionType();
+        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+                .withEnrolmentStatus(ActionProcessingServiceImpl.ENABLED).build();
 
         assertFalse(validator.validate(actionType, actionRequest));
     }

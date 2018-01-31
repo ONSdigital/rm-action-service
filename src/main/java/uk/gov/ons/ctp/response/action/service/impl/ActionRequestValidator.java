@@ -68,20 +68,20 @@ public class ActionRequestValidator {
     }
 
     private boolean isNotificationLetter(final ActionType actionType) {
-        return actionType.getActionTypePK().equals(1);
+        return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(1);
     }
 
     private boolean isReminderLetter(final ActionType actionType) {
-        return actionType.getActionTypePK().equals(2);
+        return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(2);
     }
 
     private boolean isReminderEmail(final ActionType actionType) {
-        return actionType.getActionTypePK().equals(3);
+        return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(3);
     }
 
     private boolean isNotificationEmail(final ActionType actionType) {
         //TODO: Currently not available in system but will be added
-        return actionType.getActionTypePK().equals(4);
+        return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(4);
     }
 
     private boolean caseInProgress(final ActionRequest actionRequest) {
@@ -93,19 +93,19 @@ public class ActionRequestValidator {
     }
 
     private boolean enrolmentPending(final ActionRequest actionRequest) {
-        return actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.PENDING);
+        return actionRequest.getEnrolmentStatus() != null && actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.PENDING);
     }
 
     private boolean enrolmentEnabled(final ActionRequest actionRequest) {
-        return actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.ENABLED);
+        return actionRequest.getEnrolmentStatus() != null && actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.ENABLED);
     }
 
     private boolean hasActiveRespondent(final ActionRequest actionRequest) {
-        return actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTACTIVE);
+        return actionRequest.getRespondentStatus() != null && actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTACTIVE);
     }
 
     private boolean hasCreatedRespondent(final ActionRequest actionRequest) {
-        return actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTCREATED);
+        return actionRequest.getRespondentStatus() != null && actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTCREATED);
     }
 
 }
