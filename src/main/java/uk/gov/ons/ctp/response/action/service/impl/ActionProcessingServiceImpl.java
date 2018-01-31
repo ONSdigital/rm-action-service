@@ -44,8 +44,6 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   public static final String ENABLED = "ENABLED";
   public static final String PENDING = "PENDING";
-  public static final String DISABLED = "DISABLED";
-  public static final String SUSPENDED = "SUSPENDED";
   public static final String ACTIVE = "ACTIVE";
   public static final String CREATED = "CREATED";
 
@@ -326,16 +324,16 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
         enrolmentStatuses.add(enrolment.getEnrolmentStatus());
       }
     }
+    String enrolmentStatus = null;
+
     if (enrolmentStatuses.contains(ENABLED)) {
-      return ENABLED;
+      enrolmentStatus = ENABLED;
     }
     if (enrolmentStatuses.contains(PENDING)) {
-      return PENDING;
+      enrolmentStatus = PENDING;
     }
-    if (enrolmentStatuses.contains(SUSPENDED)) {
-      return SUSPENDED;
-    }
-    return DISABLED;
+
+    return enrolmentStatus;
   }
 
   /**

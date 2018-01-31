@@ -598,14 +598,9 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
-  public void testGetEnrolmentStatusSuspended() {
+  public void testGetEnrolmentStatusDefault() {
     PartyDTO partyDTO = partyDTOs.get(2);
-    assertEquals(actionProcessingService.SUSPENDED, actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
-  @Test
-  public void testGetEnrolmentStatusDisabled() {
-    PartyDTO partyDTO = partyDTOs.get(3);
-    assertEquals(actionProcessingService.DISABLED, actionProcessingService.getEnrolmentStatus(partyDTO));
-  }
 }

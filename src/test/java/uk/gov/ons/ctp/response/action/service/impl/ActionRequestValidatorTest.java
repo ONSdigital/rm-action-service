@@ -18,7 +18,7 @@ public class ActionRequestValidatorTest {
     @Test
     public void testValidNotificationLetter() {
         ActionType actionType = buildNotificationLetterActionType();
-        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.NOTSTARTED.toString())
                 .withEnrolmentStatus(ActionProcessingServiceImpl.PENDING)
                 .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED).build();
 
@@ -57,7 +57,7 @@ public class ActionRequestValidatorTest {
     @Test
     public void testValidReminderLetterPendingEnrolment() {
         ActionType actionType = buildReminderLetterActionType();
-        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.NOTSTARTED.toString())
                 .withEnrolmentStatus(ActionProcessingServiceImpl.PENDING)
                 .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED).build();
 
@@ -65,11 +65,10 @@ public class ActionRequestValidatorTest {
     }
 
     @Test
-    public void testValidReminderLetterEnabledEnrolment() {
+    public void testValidReminderLetterNoActivity() {
         ActionType actionType = buildReminderLetterActionType();
-        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
-                .withEnrolmentStatus(ActionProcessingServiceImpl.ENABLED)
-                .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED).build();
+        ActionRequest actionRequest = ActionRequest.builder()
+                .withCaseGroupStatus(CaseGroupStatus.NOTSTARTED.toString()).build();
 
         assertTrue(validator.validate(actionType, actionRequest));
     }
@@ -78,7 +77,7 @@ public class ActionRequestValidatorTest {
     public void testInvalidReminderLetterInvalidEnrolment() {
         ActionType actionType = buildReminderLetterActionType();
         ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
-                .withEnrolmentStatus(ActionProcessingServiceImpl.SUSPENDED)
+                .withEnrolmentStatus("SUSPENDED")
                 .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED)
                 .build();
 
@@ -138,7 +137,7 @@ public class ActionRequestValidatorTest {
     public void testInvalidReminderEmailInvalidEnrolment() {
         ActionType actionType = buildReminderEmailActionType();
         ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.NOTSTARTED.toString())
-                .withEnrolmentStatus(ActionProcessingServiceImpl.PENDING)
+                .withEnrolmentStatus("SUSPENDED")
                 .withRespondentStatus(ActionRequestValidator.RESPONDENTACTIVE).build();
 
         assertFalse(validator.validate(actionType, actionRequest));
@@ -199,7 +198,6 @@ public class ActionRequestValidatorTest {
     }
 
     private ActionType buildNotificationEmailActionType() {
-        //TODO: Update name when we actually populate the systems with this actiontype
         return ActionType.builder().actionTypePK(4).name("UNKNOWN").handler(ActionRequestValidator.NOTIFYGATEWAY).build();
     }
 }

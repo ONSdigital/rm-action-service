@@ -24,7 +24,7 @@ public class ActionRequestValidator {
     public boolean validate(final ActionType actionType, final ActionRequest actionRequest) {
         String handler = actionType.getHandler();
         // Completed no action required
-        if (actionRequest.getCaseGroupStatus().equals(CaseGroupStatus.COMPLETE.toString())) {
+        if (caseCompleted(actionRequest)) {
             return false;
         }
 
@@ -32,8 +32,8 @@ public class ActionRequestValidator {
             return validateEmail(actionType, actionRequest);
         }
 
-        if (isLetter(handler) && hasCreatedRespondent(actionRequest)) {
-            return validateLetter(actionType, actionRequest);
+        if (isLetter(handler)) {
+            return validateLetter(actionRequest);
         }
         return false;
     }
@@ -49,30 +49,22 @@ public class ActionRequestValidator {
         return false;
     }
 
-    private boolean validateLetter(final ActionType actionType, final ActionRequest actionRequest) {
-        if(isNotificationLetter(actionType) && enrolmentPending(actionRequest)) {
+    private boolean validateLetter(final ActionRequest actionRequest) {
+        if (hasNoRespondent(actionRequest) && hasNoEnrolment(actionRequest) && caseNotStarted(actionRequest)) {
             return true;
         }
-        if (isReminderLetter(actionType) && (enrolmentPending(actionRequest) || enrolmentEnabled(actionRequest))) {
+        if (enrolmentPending(actionRequest) && hasCreatedRespondent(actionRequest) && caseNotStarted(actionRequest)) {
             return true;
         }
         return false;
     }
 
     private boolean isLetter(final String handler) {
-        return handler.equalsIgnoreCase(ACTIONEXPORTER);
+        return ACTIONEXPORTER.equalsIgnoreCase(handler);
     }
 
     private boolean isEmail(final String handler) {
-        return handler.equalsIgnoreCase(NOTIFYGATEWAY);
-    }
-
-    private boolean isNotificationLetter(final ActionType actionType) {
-        return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(1);
-    }
-
-    private boolean isReminderLetter(final ActionType actionType) {
-        return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(2);
+        return NOTIFYGATEWAY.equalsIgnoreCase(handler);
     }
 
     private boolean isReminderEmail(final ActionType actionType) {
@@ -80,32 +72,43 @@ public class ActionRequestValidator {
     }
 
     private boolean isNotificationEmail(final ActionType actionType) {
-        //TODO: Currently not available in system but will be added
         return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(4);
     }
 
+    private boolean caseCompleted(final ActionRequest actionRequest) {
+        return CaseGroupStatus.COMPLETE.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
+    }
+
     private boolean caseInProgress(final ActionRequest actionRequest) {
-        return actionRequest.getCaseGroupStatus().equalsIgnoreCase(CaseGroupStatus.INPROGRESS.toString());
+        return CaseGroupStatus.INPROGRESS.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
     }
 
     private boolean caseNotStarted(final ActionRequest actionRequest) {
-        return actionRequest.getCaseGroupStatus().equalsIgnoreCase(CaseGroupStatus.NOTSTARTED.toString());
+        return CaseGroupStatus.NOTSTARTED.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
     }
 
     private boolean enrolmentPending(final ActionRequest actionRequest) {
-        return actionRequest.getEnrolmentStatus() != null && actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.PENDING);
+        return ActionProcessingServiceImpl.PENDING.equalsIgnoreCase(actionRequest.getEnrolmentStatus());
     }
 
     private boolean enrolmentEnabled(final ActionRequest actionRequest) {
-        return actionRequest.getEnrolmentStatus() != null && actionRequest.getEnrolmentStatus().equalsIgnoreCase(ActionProcessingServiceImpl.ENABLED);
+        return ActionProcessingServiceImpl.ENABLED.equalsIgnoreCase(actionRequest.getEnrolmentStatus());
+    }
+
+    private boolean hasNoEnrolment(final ActionRequest actionRequest) {
+        return actionRequest.getEnrolmentStatus() == null;
     }
 
     private boolean hasActiveRespondent(final ActionRequest actionRequest) {
-        return actionRequest.getRespondentStatus() != null && actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTACTIVE);
+        return RESPONDENTACTIVE.equalsIgnoreCase(actionRequest.getRespondentStatus());
     }
 
     private boolean hasCreatedRespondent(final ActionRequest actionRequest) {
-        return actionRequest.getRespondentStatus() != null && actionRequest.getRespondentStatus().equalsIgnoreCase(RESPONDENTCREATED);
+        return RESPONDENTCREATED.equalsIgnoreCase(actionRequest.getRespondentStatus());
+    }
+
+    private boolean hasNoRespondent(final ActionRequest actionRequest) {
+        return actionRequest.getRespondentStatus() == null;
     }
 
 }
