@@ -15,7 +15,7 @@
           {
             "name": "Joe bloggs",
             "surveyId": "surveyId",
-            "enrolmentStatus": "SUSPENDED"
+            "enrolmentStatus": "PENDING"
           },
           {
             "name": "Dave bloggs",

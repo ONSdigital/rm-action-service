@@ -303,13 +303,15 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     String respondentStatus = null;
 
+    if (childPartyStatuses.contains(CREATED)) {
+      respondentStatus =  CREATED;
+    }
+
     if (childPartyStatuses.contains(ACTIVE)) {
       respondentStatus = ACTIVE;
     }
 
-    if (childPartyStatuses.contains(CREATED)) {
-      respondentStatus = CREATED;
-    }
+
     return respondentStatus;
   }
   /**
@@ -319,18 +321,24 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    */
   public String getEnrolmentStatus(final PartyDTO parentParty) {
     List<String> enrolmentStatuses = new ArrayList<>();
-    for (Association association : parentParty.getAssociations()) {
-      for (Enrolment enrolment : association.getEnrolments()) {
-        enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+
+    List<Association> associations = parentParty.getAssociations();
+    if(associations != null) {
+      for (Association association : associations) {
+          for (Enrolment enrolment : association.getEnrolments()) {
+            enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+        }
       }
     }
+
     String enrolmentStatus = null;
+
+    if (enrolmentStatuses.contains(PENDING)) {
+      enrolmentStatus = PENDING;
+    }
 
     if (enrolmentStatuses.contains(ENABLED)) {
       enrolmentStatus = ENABLED;
-    }
-    if (enrolmentStatuses.contains(PENDING)) {
-      enrolmentStatus = PENDING;
     }
 
     return enrolmentStatus;

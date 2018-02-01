@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
@@ -558,29 +557,41 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
-  @Ignore
   public void testParseRespondentStatusesActive() {
-    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(partyDTOs.get(ACTIVE_BI));
-    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(partyDTOs.get(CREATED_BI));
-    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "BI");
+    //Have to set it this way as the api class uses @JSONIGNORE on status, this allows for a single DTO for BI and B
+    // cases but will ignore when serializing from json, which is how the loadClassFixtures helpers populate test data
+    PartyDTO respondentActiveBI = partyDTOs.get(ACTIVE_BI);
+    respondentActiveBI.setStatus("ACTIVE");
+    PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
+    respondentCreatedBI.setStatus("CREATED");
+
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentActiveBI);
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "B");
 
     assertEquals(actionProcessingService.ACTIVE, respondentStatus);
   }
 
-  @Ignore
   @Test
   public void testParseRespondentStatusesCreated() {
-    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(partyDTOs.get(SUSPENDED_BI));
-    when(partySvcClientService.getParty("BI",partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(partyDTOs.get(CREATED_BI));
-    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "BI");
+    //Have to set it this way as the api class uses @JSONIGNORE on status, this allows for a single DTO for BI and B
+    // cases but will ignore when serializing from json, which is how the loadClassFixtures helpers populate test data
+    PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
+    respondentSuspendedBI.setStatus("SUSPENDED");
+    PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
+    respondentCreatedBI.setStatus("CREATED");
+
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentSuspendedBI);
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
+
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "B");
 
     assertEquals(actionProcessingService.CREATED, respondentStatus);
   }
 
-  @Ignore
   @Test
   public void testParseRespondentStatusesEmpty() {
-    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(NO_ASSOCIATIONS_BI), "BI");
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(NO_ASSOCIATIONS_BI), "B");
 
     assertEquals(null, respondentStatus);
   }
@@ -600,6 +611,13 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testGetEnrolmentStatusDefault() {
     PartyDTO partyDTO = partyDTOs.get(2);
+    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusNoEnrolments() {
+    PartyDTO partyDTO = partyDTOs.get(2);
+    partyDTO.setAssociations(null);
     assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
