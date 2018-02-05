@@ -2,9 +2,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>uk.gov.ons.ctp.product</groupId>
   <artifactId>actionsvc</artifactId>
-  <version>10.49.4-SNAPSHOT</version>
+  <version>10.49.6-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>CTP : ActionService</name>
@@ -16,24 +15,23 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
 
-  <!-- Inherit parent BOM to control versions of dependencies and plugin version & config -->
   <parent>
     <groupId>uk.gov.ons.ctp.product</groupId>
     <artifactId>rm-common-config</artifactId>
-    <version>10.49.6-SNAPSHOT</version>
+    <version>10.49.8</version>
   </parent>
 
   <scm>
-    <connection>scm:git:git@github.com:ONSdigital/rm-action-service.git</connection>
-    <developerConnection>scm:git:git@github.com:ONSdigital/rm-action-service.git</developerConnection>
-    <url>git@github.com:ONSdigital/rm-action-service.git</url>
+    <connection>scm:git:https://github.com/ONSdigital/rm-action-service</connection>
+    <developerConnection>scm:git:https://github.com/ONSdigital/rm-action-service</developerConnection>
+    <url>https://github.com/ONSdigital/rm-action-service</url>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>uk.gov.ons.ctp.product</groupId>
       <artifactId>partysvc-api</artifactId>
-      <version>10.49.2-SNAPSHOT</version>
+      <version>10.50.2</version>
     </dependency>
 
     <dependency>
@@ -51,13 +49,13 @@
     <dependency>
       <groupId>uk.gov.ons.ctp.product</groupId>
       <artifactId>collectionexercisesvc-api</artifactId>
-      <version>10.49.0</version>
+      <version>10.49.4</version>
     </dependency>
 
     <dependency>
       <groupId>uk.gov.ons.ctp.product</groupId>
       <artifactId>surveysvc-api</artifactId>
-      <version>10.49.0</version>
+      <version>10.49.2</version>
     </dependency>
 
     <dependency>
@@ -70,6 +68,12 @@
       <groupId>uk.gov.ons.ctp.product</groupId>
       <artifactId>samplesvc-api</artifactId>
       <version>10.49.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>uk.gov.ons.ctp.common</groupId>
+      <artifactId>framework</artifactId>
+      <version>10.49.8</version>
     </dependency>
 
     <dependency>
@@ -183,6 +187,12 @@
     <dependency>
       <groupId>net.sourceforge.cobertura</groupId>
       <artifactId>cobertura</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>servlet-api-2.5</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -194,6 +204,7 @@
     <dependency>
       <groupId>uk.gov.ons.ctp.common</groupId>
       <artifactId>test-framework</artifactId>
+      <version>10.49.7</version>
       <scope>test</scope>
     </dependency>
 
@@ -208,7 +219,6 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>
@@ -249,6 +259,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.20.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -270,6 +281,25 @@
             <goals>
               <goal>repackage</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.spotify</groupId>
+        <artifactId>dockerfile-maven-plugin</artifactId>
+        <version>1.3.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <repository>sdcplatform/${project.artifactId}</repository>
+              <buildArgs>
+                <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+              </buildArgs>
+            </configuration>
           </execution>
         </executions>
       </plugin>
