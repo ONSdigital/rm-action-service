@@ -1,8 +1,9 @@
-FROM openjdk:8u121-jre
-MAINTAINER Kieran Wardle <kieran.wardle@ons.gov.uk>
-ARG jar
+FROM openjdk:8-jre
+
 VOLUME /tmp
-COPY $jar actionsvc.jar
-RUN sh -c 'touch /actionsvc.jar'
-ENV JAVA_OPTS=""
-ENTRYPOINT [ "sh", "-c", "java -jar /actionsvc.jar" ]
+ARG JAR_FILE=actionsvc*.jar
+COPY target/$JAR_FILE /opt/actionsvc.jar
+
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar /opt/actionsvc.jar" ]
+
+

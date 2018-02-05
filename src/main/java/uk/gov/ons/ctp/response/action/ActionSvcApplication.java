@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.response.action;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -219,7 +221,9 @@ public class ActionSvcApplication {
    */
   @Bean @Primary
   public CustomObjectMapper customObjectMapper() {
-    return new CustomObjectMapper();
+    CustomObjectMapper mapper = new CustomObjectMapper();
+
+    return mapper;
   }
 
   /**
