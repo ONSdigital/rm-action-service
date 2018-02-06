@@ -44,7 +44,7 @@ This page documents the Action service API endpoints. Apart from the Service Inf
 An `HTTP 204 No Content` status code is returned if there are no actions.
 
 ## List Actions for Case
-* `GET /actions/case/{caseId}` will return a list of actions for the case with the given id.
+* `GET /actions/case/{caseId}` will return a list of actions for the case with the given Id.
 
 ### Example JSON Response
 ```json
@@ -66,10 +66,10 @@ An `HTTP 204 No Content` status code is returned if there are no actions.
 ]
 ```
 
-An `HTTP 404 Not Found` status code is returned if the case with the specified ID could not be found. An `HTTP 204 No Content` status code is returned if there are no actions.
+An `HTTP 404 Not Found` status code is returned if the case with the specified Id could not be found. An `HTTP 204 No Content` status code is returned if there are no actions.
 
 ## Cancel Actions for Case
-* `PUT /actions/case/{caseId}/cancel` will cancel all actions for the case with the given id.
+* `PUT /actions/case/{caseId}/cancel` will cancel all actions for the case with the given Id.
 
 ### Example JSON Response
 ```json
@@ -91,10 +91,10 @@ An `HTTP 404 Not Found` status code is returned if the case with the specified I
 ]
 ```
 
-An `HTTP 404 Not Found` status code is returned if the case with the specified ID could not be found. An `HTTP 204 No Content` status code is returned if there are no actions to be cancelled.
+An `HTTP 404 Not Found` status code is returned if the case with the specified Id could not be found. An `HTTP 204 No Content` status code is returned if there are no actions to be cancelled.
 
 ## Get Action
-* `GET /actions/{actionId}` will return the details of the action with the given ID.
+* `GET /actions/{actionId}` will return the details of the action with the given Id.
 
 ### Example JSON Response
 ```json
@@ -114,12 +114,12 @@ An `HTTP 404 Not Found` status code is returned if the case with the specified I
 }
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action with the specified ID could not be found.
+An `HTTP 404 Not Found` status code is returned if the action with the specified Id could not be found.
 
 ## Create Action
 * `POST /actions` will create an action.
 
-**Required parameters**: `caseId` as the ID of the case the action is for, `actionTypeName` as the name of the action type the action is for and `createdBy` as the creator of the action.
+**Required parameters**: `caseId` as the Id of the case the action is for, `actionTypeName` as the name of the action type the action is for and `createdBy` as the creator of the action.
 
 *Optional parameters:* `priority` as the action priority (1 = highest, 5 = lowest) as passed to the remote handler.
 
@@ -145,7 +145,7 @@ An `HTTP 201 Created` status code is returned if the action creation was a succe
 
 
 ## Update Action
-* `PUT /actions/{actionId}` will update the details of the action with the given id.
+* `PUT /actions/{actionId}` will update the details of the action with the given Id.
 
 *Optional parameters:* `priority` as the action priority (1 = highest, 5 = lowest) as passed to the remote handler, `situation` as the action status as recorded by the remote handler.
 
@@ -167,10 +167,10 @@ An `HTTP 201 Created` status code is returned if the action creation was a succe
 }
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action with the specified ID could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
+An `HTTP 404 Not Found` status code is returned if the action with the specified Id could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
 
 ## Update Action Feedback
-* `PUT /actions/{actionId}/feedback` will transition the state of the action with a given id.
+* `PUT /actions/{actionId}/feedback` will transition the state of the action with a given Id.
 
 **Required parameters**: `situation` as the action status as recorded by the remote handler, `outcome` as the outcome of the action within the context of the remote handler.
 
@@ -192,7 +192,7 @@ An `HTTP 404 Not Found` status code is returned if the action with the specified
 }
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action with the specified ID could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
+An `HTTP 404 Not Found` status code is returned if the action with the specified Id could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
 
 ## List Action Plans
 * `GET /actionplans` will return a list of all action plans, most recent first.
@@ -213,7 +213,7 @@ An `HTTP 404 Not Found` status code is returned if the action with the specified
 An `HTTP 204 No Content` status code is returned if there are no action plans.
 
 ## Get Action Plan
-* `GET /actionplans/{actionplanId}` will return the details of the action plan with the given id.
+* `GET /actionplans/{actionplanId}` will return the details of the action plan with the given Id.
 
 ### Example JSON Response
 ```json
@@ -226,10 +226,10 @@ An `HTTP 204 No Content` status code is returned if there are no action plans.
 }
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found.
+An `HTTP 404 Not Found` status code is returned if the action plan with the specified Id could not be found.
 
 ## Update Action Plan
-* `PUT /actionplans/{actionplanId}` will update the details of the action plan with the given id.
+* `PUT /actionplans/{actionplanId}` will update the details of the action plan with the given Id.
 
 *Optional parameters:* `description` as the action plan description, `lastRunDateTime` as the date/time the action plan was last successfully run.
 
@@ -244,10 +244,10 @@ An `HTTP 404 Not Found` status code is returned if the action plan with the spec
 }
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
+An `HTTP 404 Not Found` status code is returned if the action plan with the specified Id could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
 
 ## List Action Plan Jobs
-* `GET /actionplans/{actionplanId}/jobs` will return a list of action plan jobs (most recent first) for the action plan with given id.
+* `GET /actionplans/{actionplanId}/jobs` will return a list of action plan jobs (most recent first) for the action plan with given Id.
 
 ### Example JSON Response
 ```json
@@ -263,10 +263,10 @@ An `HTTP 404 Not Found` status code is returned if the action plan with the spec
 ]
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found. An `HTTP 204 No Content` status code is returned if there are no action plan jobs for the action plan.
+An `HTTP 404 Not Found` status code is returned if the action plan with the specified Id could not be found. An `HTTP 204 No Content` status code is returned if there are no action plan jobs for the action plan.
 
 ## Get Action Plan Job
-* `GET /actionplans/jobs/{actionplanId} will return the details of the action plan job with the given id.
+* `GET /actionplans/jobs/{actionplanId} will return the details of the action plan job with the given Id.
 
 ### Example JSON Response
 ```json
@@ -280,10 +280,10 @@ An `HTTP 404 Not Found` status code is returned if the action plan with the spec
 }
 ```
 
-An `HTTP 404 Not Found` status code is returned if the action plan job with the specified ID could not be found.
+An `HTTP 404 Not Found` status code is returned if the action plan job with the specified Id could not be found.
 
 ## Create Action Plan Job
-* `POST /actionplans/{actionplanId}/jobs` will create an action plan job (i.e. execute the action plan) for the action plan with the given id.
+* `POST /actionplans/{actionplanId}/jobs` will create an action plan job (i.e. execute the action plan) for the action plan with the given Id.
 
 **Required parameters**: `createdBy` as the creator of the action plan job.
 
@@ -299,4 +299,4 @@ An `HTTP 404 Not Found` status code is returned if the action plan job with the 
 }
 ```
 
-An `HTTP 201 Created` status code is returned if the action plan job creation was a success. An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found. An `HTTP 400 Bad Request` is returned if any of the required parameters are missing.
+An `HTTP 201 Created` status code is returned if the action plan job creation was a success. An `HTTP 404 Not Found` status code is returned if the action plan with the specified Id could not be found. An `HTTP 400 Bad Request` is returned if any of the required parameters are missing.
