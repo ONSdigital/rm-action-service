@@ -14,7 +14,7 @@ pipeline {
 
             }
             steps {
-                sh 'mvn --settings .travis.settings.xml clean install -Ddockerfile.skip -Ddocker.skip -DskipITs'
+                sh 'mvn --settings .travis.settings.xml clean install -Ddockerfile.skip'
             }
         }
         stage('snapshot') {
@@ -28,7 +28,7 @@ pipeline {
                 ARTIFACTORY = credentials('ARTIFACTORY')
             }
             steps {
-                sh 'mvn --settings .travis.settings.xml deploy -Ddockerfile.skip -Ddocker.skip -DskipITs'
+                sh 'mvn --settings .travis.settings.xml deploy -Ddockerfile.skip'
             }
         }
 
@@ -158,8 +158,8 @@ pipeline {
                 sh 'git tag -d $(git tag -l)'
                 sh 'git config --local user.email "jenkins@jenkins2.rmdev.onsdigital.uk"'
                 sh 'git config --local user.name "Jenkins";'
-                sh "mvn --settings .travis.settings.xml -B clean release:clean release:prepare -Dusername=${GITHUB_API_KEY} -Darguments='-Ddockerfile.skip -Ddocker.skip -DskipITs'"
-                sh "mvn --settings .travis.settings.xml -B release:perform -Dusername=${GITHUB_API_KEY} -Darguments='-Dmaven.javadoc.skip=true -Ddockerfile.skip -Ddocker.skip -DskipITs'"
+                sh "mvn --settings .travis.settings.xml -B clean release:clean release:prepare -Dusername=${GITHUB_API_KEY} -Darguments='-Ddockerfile.skip'"
+                sh "mvn --settings .travis.settings.xml -B release:perform -Dusername=${GITHUB_API_KEY} -Darguments='-Dmaven.javadoc.skip=true -Ddockerfile.skip'"
             }
         }
 
