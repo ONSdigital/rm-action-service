@@ -14,7 +14,7 @@ pipeline {
 
             }
             steps {
-                git branch: ${env.BRANCH_NAME}
+                git url: 'https://github.com/ONSdigital/rm-action-service.git', branch: "${env.BRANCH_NAME}"
                 sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
             }
         }
