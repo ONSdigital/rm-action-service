@@ -14,6 +14,7 @@ pipeline {
 
             }
             steps {
+                git branch: ${env.BRANCH_NAME}
                 sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
             }
         }
