@@ -6,6 +6,7 @@ pipeline {
     }
 
     stages {
+
         stage('build') {
             agent {
                 docker {
@@ -18,12 +19,18 @@ pipeline {
                     result = sh (script: "git log -1 | grep '.*\\[ci skip\\].*'", returnStatus: true)
                     if (result == 0) {
                         echo ("'ci skip' spotted in git commit. Aborting.")
-                        success ("'ci skip' spotted in git commit. Aborting.")
+                        SKIP=TRUE
                     }
                     sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
                 }
             }
         }
+
+        if( $SKIP == TRUE ) {
+            currentBuild.result = 'SUCCESS'
+            return
+        }
+
         stage('snapshot') {
             agent {
                 docker {
