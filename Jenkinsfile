@@ -19,16 +19,11 @@ pipeline {
                     result = sh (script: "git log -1 | grep '.*\\[ci skip\\].*'", returnStatus: true)
                     if (result == 0) {
                         echo ("'ci skip' spotted in git commit. Aborting.")
-                        SKIP=TRUE
+                        success ("'ci skip' spotted in git commit. Aborting.")
                     }
                     sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
                 }
             }
-        }
-
-        if( $SKIP == TRUE ) {
-            currentBuild.result = 'SUCCESS'
-            return
         }
 
         stage('snapshot') {
