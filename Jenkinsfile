@@ -15,6 +15,7 @@ pipeline {
             }
             steps {
                 sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
+                result = sh "git log -1 | grep '.*\\[ci skip\\].*'"
             }
         }
         stage('snapshot') {
