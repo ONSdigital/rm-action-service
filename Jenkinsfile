@@ -14,8 +14,14 @@ pipeline {
 
             }
             steps {
-                sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
-                result = sh "git log -1 | grep '.*\\[ci skip\\].*'"
+                script {
+                    result = sh (script: "git log -1 | grep '.*\\[ci skip\\].*'", returnStatus: true)
+                    if (result == 0) {
+                        echo ("'ci skip' spotted in git commit. Aborting.")
+                        success ("'ci skip' spotted in git commit. Aborting.")
+                    }
+                    sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
+                }
             }
         }
         stage('snapshot') {
