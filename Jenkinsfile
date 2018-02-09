@@ -14,7 +14,7 @@ pipeline {
 
             }
             steps {
-                git url: 'https://github.com/ONSdigital/rm-action-service.git', branch: 'master'
+                git url: 'https://github.com/ONSdigital/rm-action-service.git', branch: 'jenkins-pipeline'
                 sh 'mvn --settings .maven.settings.xml clean install -Ddockerfile.skip'
             }
         }
