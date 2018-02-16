@@ -92,7 +92,7 @@ action-distribution:
  # the thread that executes plans to create the  actions
 plan-execution:
   # pause after each execution exercise
-  delay-milli-seconds: 1000
+  delay-milli-seconds: 3600000
 
  # calling the case svc endpoints
 case-svc:
