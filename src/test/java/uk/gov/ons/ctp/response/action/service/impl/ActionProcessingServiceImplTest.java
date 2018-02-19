@@ -26,6 +26,7 @@ import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
@@ -511,45 +512,21 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testActionInstructionNotSentIfInvalid() throws CTPException{
     // Start of section to mock responses
-    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
-    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
-
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
-
     when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
-
-    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
-            thenReturn(collectionExerciseDTOs.get(0));
-
+    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)). thenReturn(collectionExerciseDTOs.get(0));
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
 
-    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(false);
     // End of section to mock responses
 
     // Start of section to run the test
-    Action action = new Action();
-    action.setId(ACTION_ID);
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
-    action.setActionPlanFK(ACTION_PLAN_FK);
-    action.setCaseId(CASE_ID);
-    action.setPriority(1);
+    Action action = Action.builder()
+            .id(ACTION_ID)
+            .actionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build())
+            .caseId(CASE_ID)
+            .priority(1).build();
     actionProcessingService.processActionRequest(action);
     // End of section to run the test
-
-    // Start of section to verify calls
-    verify(actionSvcStateTransitionManager, times(1)).transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
-            eq(CategoryDTO.CategoryName.ACTION_CREATED));
-    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
-    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
-    verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
-    verify(collectionExerciseClientService, times(1)).
-            getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
 
     // VALIDATOR HAS STOPPED MESSAGE FROM BEING SENT
     verify(actionInstructionPublisher, times(0)).sendActionInstruction(eq(ACTIONEXPORTER),
@@ -621,4 +598,38 @@ public class ActionProcessingServiceImplTest {
     assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
+  @Test
+  public void testGenerateTradingStyle() {
+    Attributes businessAttributes = new Attributes();
+    businessAttributes.setTradstyle1("TRADSTYLE1");
+    businessAttributes.setTradstyle2("TRADSTYLE2");
+    businessAttributes.setTradstyle3("TRADSTYLE3");
+
+    String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE2 TRADSTYLE3";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
+
+  @Test
+  public void testGenerateTradingStyleWithEmptyValues() {
+    Attributes businessAttributes = new Attributes();
+
+    String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    String expectedTradingStyle = "";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
+
+  @Test
+  public void testGenerateTradingStyleWithSubsetOfTradingStyles() {
+    Attributes businessAttributes = new Attributes();
+    businessAttributes.setTradstyle1("TRADSTYLE1");
+    businessAttributes.setTradstyle3("TRADSTYLE3");
+
+    String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE3";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
 }

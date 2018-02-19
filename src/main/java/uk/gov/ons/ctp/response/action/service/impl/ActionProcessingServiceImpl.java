@@ -29,10 +29,7 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -293,12 +290,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     String childUnitTypeStr = parentUnitTypeStr + "I";
 
     for (String id : childPartyIds) {
-      try {
         PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
-        childPartyStatuses.add(childParty.getStatus());
-      } catch (RuntimeException e) {
-        log.info("Unable to get party with id, {}", id);
-      }
+        if (childParty != null) {
+          childPartyStatuses.add(childParty.getStatus());
+        } else {
+          log.info("Unable to get party with id, {}", id);
+        }
     }
 
     String respondentStatus = null;
@@ -323,7 +320,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     List<String> enrolmentStatuses = new ArrayList<>();
 
     List<Association> associations = parentParty.getAssociations();
-    if(associations != null) {
+    if (associations != null) {
       for (Association association : associations) {
           for (Enrolment enrolment : association.getEnrolments()) {
             enrolmentStatuses.add(enrolment.getEnrolmentStatus());
@@ -349,21 +346,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * @param businessUnitAttributes
    * @return concatenated trading styles
    */
-  private String generateTradingStyle(final Attributes businessUnitAttributes) {
-    String tradStyle1 = businessUnitAttributes.getTradstyle1();
-    String tradStyle2 = businessUnitAttributes.getTradstyle2();
-    String tradStyle3 = businessUnitAttributes.getTradstyle3();
-    StringBuffer tradStyle = new StringBuffer();
-    if (!StringUtils.isEmpty(tradStyle1)) {
-      tradStyle.append(String.format("%s ", tradStyle1));
-    }
-    if (!StringUtils.isEmpty(tradStyle2)) {
-      tradStyle.append(String.format("%s ", tradStyle2));
-    }
-    if (!StringUtils.isEmpty(tradStyle3)) {
-      tradStyle.append(tradStyle3);
-    }
-    return tradStyle.toString().trim();
+  public String generateTradingStyle(final Attributes businessUnitAttributes) {
+    List<String> tradeStyles = Arrays.asList(businessUnitAttributes.getTradstyle1(),
+            businessUnitAttributes.getTradstyle2(), businessUnitAttributes.getTradstyle3());
+    return tradeStyles.stream().filter(Objects::nonNull)
+            .collect(Collectors.joining(" "));
   }
 
   /**
