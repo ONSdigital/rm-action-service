@@ -1,10 +1,12 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
 
+@Slf4j
 @Service
 public class ActionRequestValidator {
 
@@ -35,6 +37,9 @@ public class ActionRequestValidator {
         if (isLetter(handler)) {
             return validateLetter(actionRequest);
         }
+
+        log.info("Invalid Action Request: "+ actionRequest.toString());
+
         return false;
     }
 
