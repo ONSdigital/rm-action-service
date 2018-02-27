@@ -38,7 +38,9 @@ public class ActionRequestValidator {
             return validateLetter(actionRequest);
         }
 
-        log.info("Invalid Action Request: "+ actionRequest.toString());
+        log.info("Invalid action request: handler = {} : respondentStatus {} :  enrolmentStatus {} : actionTypePK {}",
+                handler, actionRequest.getCaseGroupStatus(), actionRequest.getEnrolmentStatus(),
+                actionType.getActionTypePK());
 
         return false;
     }
