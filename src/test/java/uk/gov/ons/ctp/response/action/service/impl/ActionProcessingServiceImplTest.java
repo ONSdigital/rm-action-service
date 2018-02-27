@@ -535,12 +535,8 @@ public class ActionProcessingServiceImplTest {
 
   @Test
   public void testParseRespondentStatusesActive() {
-    //Have to set it this way as the api class uses @JSONIGNORE on status, this allows for a single DTO for BI and B
-    // cases but will ignore when serializing from json, which is how the loadClassFixtures helpers populate test data
     PartyDTO respondentActiveBI = partyDTOs.get(ACTIVE_BI);
-    respondentActiveBI.setStatus("ACTIVE");
     PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
-    respondentCreatedBI.setStatus("CREATED");
 
     when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentActiveBI);
     when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
@@ -551,12 +547,8 @@ public class ActionProcessingServiceImplTest {
 
   @Test
   public void testParseRespondentStatusesCreated() {
-    //Have to set it this way as the api class uses @JSONIGNORE on status, this allows for a single DTO for BI and B
-    // cases but will ignore when serializing from json, which is how the loadClassFixtures helpers populate test data
     PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
-    respondentSuspendedBI.setStatus("SUSPENDED");
     PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
-    respondentCreatedBI.setStatus("CREATED");
 
     when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentSuspendedBI);
     when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
