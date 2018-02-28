@@ -261,7 +261,25 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     } else {
       //B case
       String parentUnitType = caseDTO.getSampleUnitType();
-      actionRequest.setRespondentStatus(parseRespondentStatuses(parentParty, parentUnitType));
+
+      //Map of child parties, key'd by their statuses
+      Map<String, PartyDTO> childPartyMapByStatus = getChildParties(parentParty, parentUnitType);
+
+      actionRequest.setRespondentStatus(parseRespondentStatuses(childPartyMapByStatus));
+
+      // B case with BI registered without a fully validated email
+      // It needs the contact details of the non validated respondent sent to the business in the print file
+      if (CREATED.equals(actionRequest.getRespondentStatus())) {
+        actionRequest.setIac(null); //Don't want to send this to the business
+
+        PartyDTO createdStatusChildParty = childPartyMapByStatus.get(CREATED);
+
+        Attributes childAttributes = createdStatusChildParty.getAttributes();
+        actionContact.setForename(childAttributes.getFirstName());
+        actionContact.setSurname(childAttributes.getLastName());
+        actionContact.setEmailAddress(childAttributes.getEmailAddress());
+      }
+
     }
 
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
@@ -278,41 +296,43 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   }
 
   /**
-   *  iterate through child parties and parse respondent statuses'
-   * @param parentParty
-   * @param parentUnitTypeStr
-   * @return
+   *  iterate through map of <RespondentStatus, ChildParties> and parse respondent statuses'
+   * @param childPartyMap
+   * @return respondentStatus
    */
-  public String parseRespondentStatuses(PartyDTO parentParty, String parentUnitTypeStr) {
-
-    List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
-
-    List<String> childPartyStatuses = new ArrayList<>();
-
-    //TODO: THIS IS AWFUL!! All child samples are parent+I but must be better way
-    String childUnitTypeStr = parentUnitTypeStr + "I";
-
-    for (String id : childPartyIds) {
-        PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
-        if (childParty != null) {
-          childPartyStatuses.add(childParty.getStatus());
-        } else {
-          log.info("Unable to get party with id, {}", id);
-        }
-    }
+  public String parseRespondentStatuses(Map<String, PartyDTO> childPartyMap) {
 
     String respondentStatus = null;
 
-    if (childPartyStatuses.contains(CREATED)) {
+    if (childPartyMap.keySet().contains(CREATED)) {
       respondentStatus =  CREATED;
     }
 
-    if (childPartyStatuses.contains(ACTIVE)) {
+    if (childPartyMap.keySet().contains(ACTIVE)) {
       respondentStatus = ACTIVE;
     }
 
-
     return respondentStatus;
+  }
+
+
+  public Map<String, PartyDTO> getChildParties(final PartyDTO parentParty, final String parentUnitTypeStr) {
+    Map<String, PartyDTO> statusMapOfChildParties = new HashMap<>();
+
+    List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
+
+    //ALl child parties are parent+I, i.e B & BI.
+    String childUnitTypeStr = parentUnitTypeStr + "I";
+
+    for (String id : childPartyIds) {
+      PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
+      if (childParty != null) {
+        statusMapOfChildParties.put(childParty.getStatus(), childParty);
+      } else {
+        log.info("Unable to get party with id, {}", id);
+      }
+    }
+    return statusMapOfChildParties;
   }
   /**
    * enrolment status for the case based off the enrolled parties

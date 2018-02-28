@@ -30,7 +30,9 @@ import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -534,33 +536,48 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
-  public void testParseRespondentStatusesActive() {
-    PartyDTO respondentActiveBI = partyDTOs.get(ACTIVE_BI);
-    PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
-
-    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentActiveBI);
-    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
-    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "B");
-
-    assertEquals(actionProcessingService.ACTIVE, respondentStatus);
-  }
-
-  @Test
-  public void testParseRespondentStatusesCreated() {
+  public void testGenerateChildPartyMap() {
     PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
     PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
 
     when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentSuspendedBI);
     when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
 
-    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(B_PARTY), "B");
+    Map<String, PartyDTO> expectedChildPartyMap = new HashMap<>();
+    expectedChildPartyMap.put("SUSPENDED", respondentSuspendedBI);
+    expectedChildPartyMap.put(actionProcessingService.CREATED, respondentCreatedBI);
+
+    Map<String, PartyDTO> actualChildPartyMap = actionProcessingService.getChildParties(partyDTOs.get(B_PARTY), "B");
+
+    assertEquals(expectedChildPartyMap, actualChildPartyMap);
+  }
+
+  @Test
+  public void testParseRespondentStatusCreated() {
+    Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put("SUSPENDED", partyDTOs.get(SUSPENDED_BI));
+
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
 
     assertEquals(actionProcessingService.CREATED, respondentStatus);
   }
 
   @Test
+  public void testParseRespondentStatusActive() {
+    Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put(actionProcessingService.ACTIVE, partyDTOs.get(ACTIVE_BI));
+
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(actionProcessingService.ACTIVE, respondentStatus);
+  }
+
+  @Test
   public void testParseRespondentStatusesEmpty() {
-    String respondentStatus = actionProcessingService.parseRespondentStatuses(partyDTOs.get(NO_ASSOCIATIONS_BI), "B");
+    Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
 
     assertEquals(null, respondentStatus);
   }
