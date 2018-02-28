@@ -263,7 +263,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       // B case with BI registered without a fully validated email
       // It needs the contact details of the non validated respondent sent to the business in the print file
       if (CREATED.equals(actionRequest.getRespondentStatus())) {
-        actionRequest.setIac(null); //Don't want to send this to the business
+        actionRequest.setIac(""); //Don't want to send this to the business, breaks if null
 
         PartyDTO createdStatusChildParty = childPartyMapByStatus.get(CREATED);
 
