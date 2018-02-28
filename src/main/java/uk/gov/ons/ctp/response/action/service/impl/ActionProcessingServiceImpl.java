@@ -220,22 +220,6 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
             collectionExerciseId);
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
-    ActionContact actionContact = new ActionContact();
-    Attributes businessUnitAttributes = parentParty.getAttributes();
-
-    actionContact.setRuName(businessUnitAttributes.getName());
-    actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
-
-    log.debug("childParty {}", childParty);
-    if (childParty != null) {
-      Attributes biPartyAttributes = childParty.getAttributes();
-      actionContact.setForename(biPartyAttributes.getFirstName());
-      actionContact.setSurname(biPartyAttributes.getLastName());
-      String emailAddress = biPartyAttributes.getEmailAddress();
-      actionContact.setEmailAddress(emailAddress);
-    }
-    actionRequest.setContact(actionContact);
-
     ActionEvent actionEvent = new ActionEvent();
     caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
@@ -252,12 +236,21 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
+    Attributes businessUnitAttributes = parentParty.getAttributes();
+
     actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
     actionRequest.setRegion(businessUnitAttributes.getRegion());
+
+    ActionContact actionContact = new ActionContact();
+    actionContact.setRuName(businessUnitAttributes.getName());
+    actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
 
     if (childParty != null) {
       //BI case
       actionRequest.setRespondentStatus(childParty.getStatus());
+
+      Attributes biPartyAttributes = childParty.getAttributes();
+      populateContactDetails(biPartyAttributes, actionContact);
     } else {
       //B case
       String parentUnitType = caseDTO.getSampleUnitType();
@@ -275,12 +268,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
         PartyDTO createdStatusChildParty = childPartyMapByStatus.get(CREATED);
 
         Attributes childAttributes = createdStatusChildParty.getAttributes();
-        actionContact.setForename(childAttributes.getFirstName());
-        actionContact.setSurname(childAttributes.getLastName());
-        actionContact.setEmailAddress(childAttributes.getEmailAddress());
+        populateContactDetails(childAttributes, actionContact);
       }
 
     }
+
+    actionRequest.setContact(actionContact);
 
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
     actionRequest.setCaseGroupStatus(caseDTO.getCaseGroup().getCaseGroupStatus().toString());
@@ -293,6 +286,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
 
     return actionRequest;
+  }
+
+  public void populateContactDetails(final Attributes attributes, ActionContact actionContact) {
+    actionContact.setForename(attributes.getFirstName());
+    actionContact.setSurname(attributes.getLastName());
+    actionContact.setEmailAddress(attributes.getEmailAddress());
   }
 
   /**
