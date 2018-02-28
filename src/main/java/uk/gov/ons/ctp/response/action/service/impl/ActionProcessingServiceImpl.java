@@ -18,21 +18,19 @@ import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.*;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.*;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.*;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
+import uk.gov.ons.ctp.response.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,6 +38,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
+
+  public static final String ENABLED = "ENABLED";
+  public static final String PENDING = "PENDING";
+  public static final String ACTIVE = "ACTIVE";
+  public static final String CREATED = "CREATED";
 
   @Autowired
   private CaseSvcClientService caseSvcClientService;
@@ -65,6 +68,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
 
+  @Autowired
+  private ActionRequestValidator validator;
+
   /**
    * Deal with a single action - the transaction boundary is here.
    *
@@ -85,8 +91,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       transitionAction(action, event);
 
       ActionRequest actionRequest = prepareActionRequest(action);
-      if (actionRequest != null) {
+
+      if (actionRequest != null && validator.validate(actionType, actionRequest)) {
+        log.info("Sending actionInstruction to " + actionType.getHandler());
         actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
+      } else {
+        log.info("Not sending action");
       }
 
       // advise casesvc to create a corresponding caseevent for our action
@@ -159,6 +169,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
   }
 
+
   /**
    * Take an action and using it, fetch further info from Case service in a
    * number of rest calls, in order to create the ActionRequest
@@ -206,35 +217,8 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
     UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
     CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
-        collectionExerciseId);
+            collectionExerciseId);
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
-
-    ActionContact actionContact = new ActionContact();
-    Attributes businessUnitAttributes = parentParty.getAttributes();
-    actionContact.setRuName(businessUnitAttributes.getName());
-    String tradStyle1 = businessUnitAttributes.getTradstyle1();
-    String tradStyle2 = businessUnitAttributes.getTradstyle2();
-    String tradStyle3 = businessUnitAttributes.getTradstyle3();
-    StringBuffer tradStyle = new StringBuffer();
-    if (!StringUtils.isEmpty(tradStyle1)) {
-      tradStyle.append(String.format("%s ", tradStyle1));
-    }
-    if (!StringUtils.isEmpty(tradStyle2)) {
-      tradStyle.append(String.format("%s ", tradStyle2));
-    }
-    if (!StringUtils.isEmpty(tradStyle3)) {
-      tradStyle.append(tradStyle3);
-    }
-    actionContact.setTradingStyle(tradStyle.toString().trim());
-    log.debug("childParty {}", childParty);
-    if (childParty != null) {
-      Attributes biPartyAttributes = childParty.getAttributes();
-      actionContact.setForename(biPartyAttributes.getFirstName());
-      actionContact.setSurname(biPartyAttributes.getLastName());
-      String emailAddress = biPartyAttributes.getEmailAddress();
-      actionContact.setEmailAddress(emailAddress);
-    }
-    actionRequest.setContact(actionContact);
 
     ActionEvent actionEvent = new ActionEvent();
     caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
@@ -252,6 +236,49 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
+    Attributes businessUnitAttributes = parentParty.getAttributes();
+
+    actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
+    actionRequest.setRegion(businessUnitAttributes.getRegion());
+
+    ActionContact actionContact = new ActionContact();
+    actionContact.setRuName(businessUnitAttributes.getName());
+    actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
+
+    if (childParty != null) {
+      //BI case
+      actionRequest.setRespondentStatus(childParty.getStatus());
+
+      Attributes biPartyAttributes = childParty.getAttributes();
+      populateContactDetails(biPartyAttributes, actionContact);
+    } else {
+      //B case
+      String parentUnitType = caseDTO.getSampleUnitType();
+
+      //Map of child parties, key'd by their statuses
+      Map<String, PartyDTO> childPartyMapByStatus = getChildParties(parentParty, parentUnitType);
+
+      actionRequest.setRespondentStatus(parseRespondentStatuses(childPartyMapByStatus));
+
+      // B case with BI registered without a fully validated email
+      // It needs the contact details of the non validated respondent sent to the business in the print file
+      if (CREATED.equals(actionRequest.getRespondentStatus())) {
+        actionRequest.setIac(""); //Don't want to send this to the business, breaks if null
+
+        PartyDTO createdStatusChildParty = childPartyMapByStatus.get(CREATED);
+
+        Attributes childAttributes = createdStatusChildParty.getAttributes();
+        populateContactDetails(childAttributes, actionContact);
+      }
+
+    }
+
+    actionRequest.setContact(actionContact);
+
+    actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
+    actionRequest.setCaseGroupStatus(caseDTO.getCaseGroup().getCaseGroupStatus().toString());
+
+
     Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
       DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
@@ -259,6 +286,93 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
 
     return actionRequest;
+  }
+
+  public void populateContactDetails(final Attributes attributes, ActionContact actionContact) {
+    actionContact.setForename(attributes.getFirstName());
+    actionContact.setSurname(attributes.getLastName());
+    actionContact.setEmailAddress(attributes.getEmailAddress());
+  }
+
+  /**
+   *  iterate through map of <RespondentStatus, ChildParties> and parse respondent statuses'
+   * @param childPartyMap
+   * @return respondentStatus
+   */
+  public String parseRespondentStatuses(Map<String, PartyDTO> childPartyMap) {
+
+    String respondentStatus = null;
+
+    if (childPartyMap.keySet().contains(CREATED)) {
+      respondentStatus =  CREATED;
+    }
+
+    if (childPartyMap.keySet().contains(ACTIVE)) {
+      respondentStatus = ACTIVE;
+    }
+
+    return respondentStatus;
+  }
+
+
+  public Map<String, PartyDTO> getChildParties(final PartyDTO parentParty, final String parentUnitTypeStr) {
+    Map<String, PartyDTO> statusMapOfChildParties = new HashMap<>();
+
+    List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
+
+    //ALl child parties are parent+I, i.e B & BI.
+    String childUnitTypeStr = parentUnitTypeStr + "I";
+
+    for (String id : childPartyIds) {
+      PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
+      if (childParty != null) {
+        statusMapOfChildParties.put(childParty.getStatus(), childParty);
+      } else {
+        log.info("Unable to get party with id, {}", id);
+      }
+    }
+    return statusMapOfChildParties;
+  }
+  /**
+   * enrolment status for the case based off the enrolled parties
+   * @param parentParty
+   * @return enrolment status
+   */
+  public String getEnrolmentStatus(final PartyDTO parentParty) {
+    List<String> enrolmentStatuses = new ArrayList<>();
+
+    List<Association> associations = parentParty.getAssociations();
+    if (associations != null) {
+      for (Association association : associations) {
+          for (Enrolment enrolment : association.getEnrolments()) {
+            enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+        }
+      }
+    }
+
+    String enrolmentStatus = null;
+
+    if (enrolmentStatuses.contains(PENDING)) {
+      enrolmentStatus = PENDING;
+    }
+
+    if (enrolmentStatuses.contains(ENABLED)) {
+      enrolmentStatus = ENABLED;
+    }
+
+    return enrolmentStatus;
+  }
+
+  /**
+   * Concatenate the businessUnitAttributes trading style fields into a single string
+   * @param businessUnitAttributes
+   * @return concatenated trading styles
+   */
+  public String generateTradingStyle(final Attributes businessUnitAttributes) {
+    List<String> tradeStyles = Arrays.asList(businessUnitAttributes.getTradstyle1(),
+            businessUnitAttributes.getTradstyle2(), businessUnitAttributes.getTradstyle3());
+    return tradeStyles.stream().filter(Objects::nonNull)
+            .collect(Collectors.joining(" "));
   }
 
   /**

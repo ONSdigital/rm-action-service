@@ -48,7 +48,8 @@
     "caseGroup":
     {
       "collectionExerciseId": "c2124abc-10c6-4c7c-885a-779d185a03a4",
-      "sampleUnitRef": "222"
+      "sampleUnitRef": "222",
+      "caseGroupStatus": "COMPLETE"
     }
   },
   {
@@ -100,7 +101,8 @@
     "caseGroup":
     {
       "collectionExerciseId": "c2124abc-10c6-4c7c-885a-779d185a03a4",
-      "sampleUnitRef": "222"
+      "sampleUnitRef": "222",
+      "caseGroupStatus": "INPROGRESS"
     }
   },
   {
@@ -153,7 +155,8 @@
     {
       "collectionExerciseId": "c2124abc-10c6-4c7c-885a-779d185a03a4",
       "sampleUnitRef": "222",
-      "partyId": "2e6add83-e43d-4f52-954f-4109be506c81"
+      "partyId": "2e6add83-e43d-4f52-954f-4109be506c81",
+      "caseGroupStatus": "INPROGRESS"
     }
   }
 ]

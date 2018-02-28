@@ -51,12 +51,25 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
     UriComponents uriComponents = restUtility.createUriComponents(
         appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
     
+    return makePartyServiceRequest(uriComponents);
+  }
+
+  @Override
+  public PartyDTO getParty(final String sampleUnitType, final String partyId) {
+    log.debug("entering party with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
+    UriComponents uriComponents = restUtility.createUriComponents(
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
+
+    return makePartyServiceRequest(uriComponents);
+  }
+
+  private PartyDTO makePartyServiceRequest(UriComponents uriComponents) {
     HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
-    
+
     ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+            String.class);
     log.debug("responseEntity is {}", responseEntity);
-    
+
     PartyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
       String responseBody = responseEntity.getBody();

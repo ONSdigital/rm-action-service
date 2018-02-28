@@ -17,6 +17,7 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
@@ -25,10 +26,13 @@ import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -52,6 +56,12 @@ public class ActionProcessingServiceImplTest {
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_H = "H";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
+  private static final Integer B_PARTY = 4;
+  private static final Integer ACTIVE_BI = 5;
+  private static final Integer SUSPENDED_BI = 6;
+  private static final Integer CREATED_BI = 7;
+  private static final Integer NO_ASSOCIATIONS_BI = 8;
+
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
@@ -87,6 +97,9 @@ public class ActionProcessingServiceImplTest {
 
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
+
+  @Mock
+  private ActionRequestValidator validator;
 
   @InjectMocks
   private ActionProcessingServiceImpl actionProcessingService;
@@ -213,6 +226,9 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+      when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     try {
@@ -262,6 +278,9 @@ public class ActionProcessingServiceImplTest {
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
@@ -350,6 +369,8 @@ public class ActionProcessingServiceImplTest {
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
@@ -488,5 +509,136 @@ public class ActionProcessingServiceImplTest {
     assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
     assertTrue(publishedActionCancel.isResponseRequired());
     assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
+  }
+
+  @Test
+  public void testActionInstructionNotSentIfInvalid() throws CTPException{
+    // Start of section to mock responses
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
+    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)). thenReturn(collectionExerciseDTOs.get(0));
+    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    // End of section to mock responses
+
+    // Start of section to run the test
+    Action action = Action.builder()
+            .id(ACTION_ID)
+            .actionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build())
+            .caseId(CASE_ID)
+            .priority(1).build();
+    actionProcessingService.processActionRequest(action);
+    // End of section to run the test
+
+    // VALIDATOR HAS STOPPED MESSAGE FROM BEING SENT
+    verify(actionInstructionPublisher, times(0)).sendActionInstruction(eq(ACTIONEXPORTER),
+            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+  }
+
+  @Test
+  public void testGenerateChildPartyMap() {
+    PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
+    PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
+
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentSuspendedBI);
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
+
+    Map<String, PartyDTO> expectedChildPartyMap = new HashMap<>();
+    expectedChildPartyMap.put("SUSPENDED", respondentSuspendedBI);
+    expectedChildPartyMap.put(actionProcessingService.CREATED, respondentCreatedBI);
+
+    Map<String, PartyDTO> actualChildPartyMap = actionProcessingService.getChildParties(partyDTOs.get(B_PARTY), "B");
+
+    assertEquals(expectedChildPartyMap, actualChildPartyMap);
+  }
+
+  @Test
+  public void testParseRespondentStatusCreated() {
+    Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put("SUSPENDED", partyDTOs.get(SUSPENDED_BI));
+
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(actionProcessingService.CREATED, respondentStatus);
+  }
+
+  @Test
+  public void testParseRespondentStatusActive() {
+    Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put(actionProcessingService.ACTIVE, partyDTOs.get(ACTIVE_BI));
+
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(actionProcessingService.ACTIVE, respondentStatus);
+  }
+
+  @Test
+  public void testParseRespondentStatusesEmpty() {
+    Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(null, respondentStatus);
+  }
+
+  @Test
+  public void testGetEnrolmentStatusEnabled () {
+    PartyDTO partyDTO = partyDTOs.get(0);
+    assertEquals(actionProcessingService.ENABLED, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusPending() {
+    PartyDTO partyDTO = partyDTOs.get(1);
+    assertEquals(actionProcessingService.PENDING, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusDefault() {
+    PartyDTO partyDTO = partyDTOs.get(2);
+    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusNoEnrolments() {
+    PartyDTO partyDTO = partyDTOs.get(2);
+    partyDTO.setAssociations(null);
+    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGenerateTradingStyle() {
+    Attributes businessAttributes = new Attributes();
+    businessAttributes.setTradstyle1("TRADSTYLE1");
+    businessAttributes.setTradstyle2("TRADSTYLE2");
+    businessAttributes.setTradstyle3("TRADSTYLE3");
+
+    String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE2 TRADSTYLE3";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
+
+  @Test
+  public void testGenerateTradingStyleWithEmptyValues() {
+    Attributes businessAttributes = new Attributes();
+
+    String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    String expectedTradingStyle = "";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
+
+  @Test
+  public void testGenerateTradingStyleWithSubsetOfTradingStyles() {
+    Attributes businessAttributes = new Attributes();
+    businessAttributes.setTradstyle1("TRADSTYLE1");
+    businessAttributes.setTradstyle3("TRADSTYLE3");
+
+    String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE3";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
   }
 }
