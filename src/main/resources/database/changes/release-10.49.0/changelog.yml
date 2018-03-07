@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 10.49.0-1
+      author: Tejas Patel
+      changes:
+        - sqlFile:
+            comment: Change action plan names for BRES
+            path: change_action_plan_names.sql
+            relativeToChangelogFile: true
+            splitStatements: false

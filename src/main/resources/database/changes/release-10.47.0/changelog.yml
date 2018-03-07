@@ -16,6 +16,6 @@ databaseChangeLog:
       changes:
         - sqlFile:
             comment: Change rule offsets
-            path: change_action_offsets.sql
+            path: change_action_plan_names.sql
             relativeToChangelogFile: true
             splitStatements: false
