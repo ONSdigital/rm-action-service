@@ -89,14 +89,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
           ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
 
       transitionAction(action, event);
+      transitionAction(action, event);
 
       ActionRequest actionRequest = prepareActionRequest(action);
 
-      if (actionRequest != null && validator.validate(actionType, actionRequest)) {
-        log.info("Sending actionInstruction to " + actionType.getHandler());
+      if (actionRequest != null) {
         actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
-      } else {
-        log.info("Not sending action");
       }
 
       // advise casesvc to create a corresponding caseevent for our action
