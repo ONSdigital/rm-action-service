@@ -512,30 +512,6 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
-  public void testActionInstructionNotSentIfInvalid() throws CTPException{
-    // Start of section to mock responses
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
-    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)). thenReturn(collectionExerciseDTOs.get(0));
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
-
-    // End of section to mock responses
-
-    // Start of section to run the test
-    Action action = Action.builder()
-            .id(ACTION_ID)
-            .actionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build())
-            .caseId(CASE_ID)
-            .priority(1).build();
-    actionProcessingService.processActionRequest(action);
-    // End of section to run the test
-
-    // VALIDATOR HAS STOPPED MESSAGE FROM BEING SENT
-    verify(actionInstructionPublisher, times(0)).sendActionInstruction(eq(ACTIONEXPORTER),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  @Test
   public void testGenerateChildPartyMap() {
     PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
     PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);

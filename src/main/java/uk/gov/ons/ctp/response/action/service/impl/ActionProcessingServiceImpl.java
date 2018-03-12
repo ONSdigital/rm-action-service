@@ -89,7 +89,6 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
           ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
 
       transitionAction(action, event);
-      transitionAction(action, event);
 
       ActionRequest actionRequest = prepareActionRequest(action);
 
