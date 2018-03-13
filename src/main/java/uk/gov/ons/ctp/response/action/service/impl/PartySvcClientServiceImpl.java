@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -19,6 +21,7 @@ import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -47,10 +50,27 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    log.debug("entering party with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
+    log.debug("Retrieving party with sampleUnitType {} - partyId {}", sampleUnitType, partyId.toString());
     UriComponents uriComponents = restUtility.createUriComponents(
         appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
     
+    return makePartyServiceRequest(uriComponents);
+  }
+
+  @Retryable(value = {
+          RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+          backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Override
+  public PartyDTO getPartyWithAssociationsFilteredBySurvey(final String sampleUnitType, final UUID partyId, String surveyId) {
+    log.debug("Retrieving party with sampleUnitType {} - partyId {}, with associations filtered by surveyId - {}",
+            sampleUnitType, partyId.toString(), surveyId);
+
+    MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+    queryParams.put("survey_id", Arrays.asList(surveyId));
+
+    UriComponents uriComponents = restUtility.createUriComponents(
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), queryParams, sampleUnitType, partyId);
+
     return makePartyServiceRequest(uriComponents);
   }
 

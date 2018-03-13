@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
@@ -143,10 +142,18 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     if (validate(sampleUnitTypeStr)) {
       SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
       log.debug("sampleUnitType is {}", sampleUnitType);
+
+      CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
+
+      UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
+      CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
+              collectionExerciseId);
+
       PartyDTO parentParty;
       PartyDTO childParty = null;
       if (sampleUnitType.isParent()) {
-        parentParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
+        parentParty = partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+                sampleUnitTypeStr, caseDTO.getPartyId(), collectionExercise.getSurveyId());
         log.debug("parentParty retrieved is {}", parentParty);
       } else {
         childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
@@ -154,13 +161,14 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
         UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
         // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
-        parentParty = partySvcClientService.getParty(sampleUnitTypeStr.substring(0, 1), associatedParentPartyID);
+        parentParty = partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+                sampleUnitTypeStr.substring(0, 1), associatedParentPartyID, collectionExercise.getSurveyId());
         log.debug("parentParty for the child retrieved is {}", parentParty);
       }
 
       List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
 
-      return createActionRequest(action, actionPlan, caseDTO, parentParty, childParty, caseEventDTOs);
+      return populateActionRequest(action, actionPlan, caseDTO, parentParty, childParty, collectionExercise, caseEventDTOs);
     } else {
       return null;
     }
@@ -197,11 +205,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
    * @return the shiney new Action Request
    */
-  private ActionRequest createActionRequest(final Action action, final ActionPlan actionPlan,
-      final CaseDetailsDTO caseDTO,
-      final PartyDTO parentParty,
-      final PartyDTO childParty,
-      final List<CaseEventDTO> caseEventDTOs) {
+  private ActionRequest populateActionRequest(final Action action, final ActionPlan actionPlan,
+                                              final CaseDetailsDTO caseDTO,
+                                              final PartyDTO parentParty,
+                                              final PartyDTO childParty,
+                                              final CollectionExerciseDTO collectionExercise,
+                                              final List<CaseEventDTO> caseEventDTOs) {
     ActionRequest actionRequest = new ActionRequest();
     String actionID = action.getId().toString();
     log.debug("actionID is {}", actionID);
@@ -211,10 +220,6 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setResponseRequired(action.getActionType().getResponseRequired());
     actionRequest.setCaseId(action.getCaseId().toString());
 
-    CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
-    UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
-    CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
-            collectionExerciseId);
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
     ActionEvent actionEvent = new ActionEvent();
@@ -225,11 +230,10 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setPriority(Priority.fromValue(Action.ActionPriority.valueOf(action.getPriority()).getName()));
 
     ActionAddress actionAddress = new ActionAddress();
-    actionAddress.setSampleUnitRef(caseGroupDTO.getSampleUnitRef());
+    actionAddress.setSampleUnitRef(caseDTO.getCaseGroup().getSampleUnitRef());
     actionRequest.setAddress(actionAddress);
 
-    String surveyId = collectionExercise.getSurveyId();
-    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(surveyId);
+    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
