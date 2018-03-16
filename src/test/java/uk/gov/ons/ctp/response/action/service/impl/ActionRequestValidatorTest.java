@@ -34,6 +34,14 @@ public class ActionRequestValidatorTest {
     }
 
     @Test
+    public void testInvalidNotificationLetterCaseCompletedByPhone() {
+        ActionType actionType = buildNotificationLetterActionType();
+        ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.COMPLETEDBYPHONE.toString()).build();
+
+        assertFalse(validator.validate(actionType, actionRequest));
+    }
+
+    @Test
     public void testInvalidNotificationLetterEnrolmentNotPending() {
         ActionType actionType = buildNotificationLetterActionType();
         ActionRequest actionRequest = ActionRequest.builder().withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())

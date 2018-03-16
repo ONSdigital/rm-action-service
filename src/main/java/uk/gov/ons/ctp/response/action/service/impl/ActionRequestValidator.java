@@ -26,7 +26,7 @@ public class ActionRequestValidator {
     public boolean validate(final ActionType actionType, final ActionRequest actionRequest) {
         String handler = actionType.getHandler();
         // Completed no action required
-        if (caseCompleted(actionRequest)) {
+        if (caseCompleted(actionRequest) || caseCompletedByPhone(actionRequest)) {
             return false;
         }
 
@@ -84,6 +84,10 @@ public class ActionRequestValidator {
 
     private boolean caseCompleted(final ActionRequest actionRequest) {
         return CaseGroupStatus.COMPLETE.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
+    }
+
+    private boolean caseCompletedByPhone(final ActionRequest actionRequest) {
+        return CaseGroupStatus.COMPLETEDBYPHONE.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
     }
 
     private boolean caseInProgress(final ActionRequest actionRequest) {
