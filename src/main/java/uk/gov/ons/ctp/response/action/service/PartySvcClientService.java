@@ -21,6 +21,11 @@ public interface PartySvcClientService {
   PartyDTO getParty(String sampleUnitType, UUID partyId);
 
   /**
+   * Get a party with the associations filtered by surveyId
+   */
+  PartyDTO getPartyWithAssociationsFilteredBySurvey(String sampleUnitType, UUID partyid, String surveyId);
+
+  /**
    * Call PartySvc using REST to get the Party MAY throw a RuntimeException if
    * the call fails
    *
