@@ -217,7 +217,8 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
 
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS))
+            .thenReturn(partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
@@ -249,7 +250,8 @@ public class ActionProcessingServiceImplTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
+    verify(partySvcClientService, times(1)).getPartyWithAssociationsFilteredBySurvey(
+            SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS);
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
@@ -272,7 +274,7 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
 
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS)).thenReturn(partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
@@ -301,8 +303,8 @@ public class ActionProcessingServiceImplTest {
         eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
-    verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
+    verify(partySvcClientService, times(1)).getPartyWithAssociationsFilteredBySurvey(
+            SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS);
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
     verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
@@ -361,8 +363,8 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2)).thenReturn(caseDetailsDTOs.get(2));
 
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_HI, PARTY_ID)).thenReturn(partyDTOs.get(1));
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2)).thenReturn(
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_HI, PARTY_ID, CENSUS)).thenReturn(partyDTOs.get(1));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS)).thenReturn(
         partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
@@ -391,9 +393,8 @@ public class ActionProcessingServiceImplTest {
         eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_2);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_HI, PARTY_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H,
-        PARTY_ID_PARENT_FOR_CASE_ID_2);
+    verify(partySvcClientService, times(1)).getPartyWithAssociationsFilteredBySurvey(
+            SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS);
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
     verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
@@ -509,30 +510,6 @@ public class ActionProcessingServiceImplTest {
     assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
     assertTrue(publishedActionCancel.isResponseRequired());
     assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
-  }
-
-  @Test
-  public void testActionInstructionNotSentIfInvalid() throws CTPException{
-    // Start of section to mock responses
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
-    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)). thenReturn(collectionExerciseDTOs.get(0));
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
-
-    // End of section to mock responses
-
-    // Start of section to run the test
-    Action action = Action.builder()
-            .id(ACTION_ID)
-            .actionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build())
-            .caseId(CASE_ID)
-            .priority(1).build();
-    actionProcessingService.processActionRequest(action);
-    // End of section to run the test
-
-    // VALIDATOR HAS STOPPED MESSAGE FROM BEING SENT
-    verify(actionInstructionPublisher, times(0)).sendActionInstruction(eq(ACTIONEXPORTER),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
   @Test
