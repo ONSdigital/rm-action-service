@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.response.action.scheduled.distribution.DistributionInfo.Instruction;
@@ -11,9 +12,14 @@ import uk.gov.ons.ctp.response.action.scheduled.distribution.DistributionInfo.In
  */
 @CoverageIgnore
 @Data
+@Builder
 @AllArgsConstructor
-public class InstructionCount {
+class InstructionCount {
   private String actionTypeName;
   private Instruction instruction;
   private Integer count;
+
+  void increment() {
+    count += 1;
+  }
 }
