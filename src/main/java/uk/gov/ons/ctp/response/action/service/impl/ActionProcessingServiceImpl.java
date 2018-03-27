@@ -96,7 +96,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    *
    * @param action the action to deal with
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = Exception.class)
   public void processActionRequest(final Action action) throws CTPException {
     log.debug("processing actionRequest with actionid {} caseid {} actionplanFK {}", action.getId(),
         action.getCaseId(), action.getActionPlanFK());
@@ -126,7 +126,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    *
    * @param action the action to deal with
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = false, rollbackFor = Exception.class)
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = Exception.class)
   public void processActionCancel(final Action action) throws CTPException {
     log.info("processing action cancel for actionid {} caseid {} actionplanFK {}", action.getId(),
         action.getCaseId(), action.getActionPlanFK());
