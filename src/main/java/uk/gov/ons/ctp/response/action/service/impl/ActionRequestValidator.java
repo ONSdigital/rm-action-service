@@ -20,13 +20,7 @@ public class ActionRequestValidator {
      * Cases where other BI's have completed the survey
      */
     public boolean validate(final ActionRequest actionRequest) {
-        boolean isValid = true;
-
-        if (caseCompleted(actionRequest) || caseCompletedByPhone(actionRequest)) {
-            isValid = false;
-        }
-
-        return isValid;
+        return !(caseCompleted(actionRequest) || caseCompletedByPhone(actionRequest));
     }
 
     private boolean caseCompleted(final ActionRequest actionRequest) {
