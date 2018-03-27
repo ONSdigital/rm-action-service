@@ -96,7 +96,6 @@ class ActionDistributor {
       }
     } catch (Exception e) {
       log.error("Failed to process action type {}", actionType, e);
-      return Arrays.asList(requestCount, cancelCount);
     } finally {
       actionDistributionListManager.deleteList(actionType.getName(), true);
     }
