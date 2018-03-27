@@ -2,7 +2,6 @@ package uk.gov.ons.ctp.response.action.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
 
@@ -19,8 +18,6 @@ public class ActionRequestValidator {
      * Validates whether the ActionRequest should be sent to a handler service.
      * Checks if the CaseGroupStatus is completed, this stops any actions beings sent for BI
      * Cases where other BI's have completed the survey
-     * @param actionRequest
-     * @return isValid
      */
     public boolean validate(final ActionRequest actionRequest) {
         boolean isValid = true;
