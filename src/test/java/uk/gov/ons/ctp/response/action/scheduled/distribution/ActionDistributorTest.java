@@ -71,9 +71,6 @@ public class ActionDistributorTest {
   @Mock
   private ActionProcessingService actionProcessingService;
 
-  @Mock
-  private TransactionTemplate transactionTemplate;
-
   @InjectMocks
   private ActionDistributor actionDistributor;
 
