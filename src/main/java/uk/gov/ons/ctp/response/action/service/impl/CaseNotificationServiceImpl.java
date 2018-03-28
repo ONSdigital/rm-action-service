@@ -24,7 +24,6 @@ import java.util.UUID;
 /**
  * Save to Action.Case table for case creation life cycle events, delete for
  * case close life cycle events.
- *
  */
 @Service
 @Slf4j
@@ -49,20 +48,20 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
 
   @Override
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
-  public void acceptNotification(CaseNotification notification) throws CTPException {
-    String actionPlanIdStr = notification.getActionPlanId();
-    UUID actionPlanId = UUID.fromString(actionPlanIdStr);
-    ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+  public void acceptNotification(final CaseNotification notification) throws CTPException {
+    final String actionPlanIdStr = notification.getActionPlanId();
+    final UUID actionPlanId = UUID.fromString(actionPlanIdStr);
+    final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
 
     if (actionPlan != null) {
-      UUID caseId = UUID.fromString(notification.getCaseId());
-      ActionCase actionCase = ActionCase.builder().id(caseId).actionPlanId(actionPlanId).actionPlanFK(
+      final UUID caseId = UUID.fromString(notification.getCaseId());
+      final ActionCase actionCase = ActionCase.builder().id(caseId).actionPlanId(actionPlanId).actionPlanFK(
           actionPlan.getActionPlanPK()).build();
 
       switch (notification.getNotificationType()) {
         case REPLACED:
         case ACTIVATED:
-          CollectionExerciseDTO collectionExercise = getCollectionExercise(notification);
+          final CollectionExerciseDTO collectionExercise = getCollectionExercise(notification);
           actionCase.setActionPlanStartDate(new Timestamp(collectionExercise.getScheduledStartDateTime().getTime()));
           actionCase.setActionPlanEndDate(new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
           checkAndSaveCase(actionCase);
@@ -72,13 +71,13 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
         case DEACTIVATED:
           try {
             actionService.cancelActions(caseId);
-          } catch (CTPException e) {
+          } catch (final CTPException e) {
             // TODO CTPA-1373 Do we really want to catch this. Should be let to go through.
             // TODO CTPA-1373 What happens with other notif?
             log.error(String.format("message = %s - cause = %s", e.getMessage(), e.getCause()));
             log.error("Stacktrace: ", e);
           }
-          ActionCase actionCaseToDelete = actionCaseRepo.findById(caseId);
+          final ActionCase actionCaseToDelete = actionCaseRepo.findById(caseId);
           if (actionCaseToDelete != null) {
             actionCaseRepo.delete(actionCaseToDelete);
           } else {
@@ -98,15 +97,14 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
 
   /**
    * This method is to retrive the survey start date from the collection excerise
+   *
    * @param notification CaseNotification containing caseId
    * @return CollectionExercise collectionExerciseDTO
    */
-  private CollectionExerciseDTO getCollectionExercise(CaseNotification notification) {
-
-   CaseDetailsDTO caseDTO = caseSvcClientServiceImpl.getCase(UUID.fromString(notification.getCaseId()));
-   CollectionExerciseDTO collectionExercise = collectionSvcClientServiceImpl
-       .getCollectionExercise(caseDTO.getCaseGroup().getCollectionExerciseId());
-   return collectionExercise;
+  private CollectionExerciseDTO getCollectionExercise(final CaseNotification notification) {
+    final CaseDetailsDTO caseDTO = caseSvcClientServiceImpl.getCase(UUID.fromString(notification.getCaseId()));
+    return collectionSvcClientServiceImpl
+        .getCollectionExercise(caseDTO.getCaseGroup().getCollectionExerciseId());
   }
 
   /**
@@ -114,9 +112,10 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
    * for an already existing caseid, quietly error else save it as a new entry.
    * If we were to allow the save to go ahead we would get a JPA exception, which would result in the notification
    * going back to the queue and us retrying again and again
+   *
    * @param actionCase the case to check and save
    */
-  private void checkAndSaveCase(ActionCase actionCase) {
+  private void checkAndSaveCase(final ActionCase actionCase) {
     if (actionCaseRepo.findById(actionCase.getId()) != null) {
       log.error("CaseNotification illiciting case creation for an existing case id {}", actionCase.getId());
     } else {

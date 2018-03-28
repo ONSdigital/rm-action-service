@@ -5,7 +5,6 @@ import net.sourceforge.cobertura.CoverageIgnore;
 
 /**
  * Config POJO for distribition params
- *
  */
 @CoverageIgnore
 @Data

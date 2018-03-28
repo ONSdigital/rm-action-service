@@ -15,6 +15,7 @@ public interface ActionPlanJobRepository extends JpaRepository<ActionPlanJob, In
 
   /**
    * Retrieve by UUID
+   *
    * @param actionPlanJobId the Id of the ActionPlanJob
    * @return the associated job
    */
@@ -22,6 +23,7 @@ public interface ActionPlanJobRepository extends JpaRepository<ActionPlanJob, In
 
   /**
    * Gte the actionplanjobs for an action plan by id
+   *
    * @param actionPlanFK the plan id
    * @return the jobs
    */

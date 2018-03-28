@@ -14,10 +14,22 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.message.instruction.*;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionEvent;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
+import uk.gov.ons.ctp.response.action.message.instruction.Priority;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.service.*;
-import uk.gov.ons.ctp.response.casesvc.representation.*;
+import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
+import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
+import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
+import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
+import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
@@ -28,7 +40,14 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -72,7 +91,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   /**
    * Deal with a single action - the transaction boundary is here.
-   *
+   * <p>
    * The processing requires numerous calls to Case service, to write to our own action table and to publish to queue.
    *
    * @param action the action to deal with
@@ -82,14 +101,14 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     log.debug("processing actionRequest with actionid {} caseid {} actionplanFK {}", action.getId(),
         action.getCaseId(), action.getActionPlanFK());
 
-    ActionType actionType = action.getActionType();
+    final ActionType actionType = action.getActionType();
     if (valid(actionType)) {
-      ActionDTO.ActionEvent event = actionType.getResponseRequired() ?
-          ActionDTO.ActionEvent.REQUEST_DISTRIBUTED : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+      final ActionDTO.ActionEvent event = actionType.getResponseRequired() ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
+          : ActionDTO.ActionEvent.REQUEST_COMPLETED;
 
       transitionAction(action, event);
 
-      ActionRequest actionRequest = prepareActionRequest(action);
+      final ActionRequest actionRequest = prepareActionRequest(action);
 
       if (actionRequest != null) {
         actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
@@ -128,45 +147,45 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * @return The ActionRequest created from the Action and the other info from CaseSvc
    */
   private ActionRequest prepareActionRequest(final Action action) {
-    UUID caseId = action.getCaseId();
+    final UUID caseId = action.getCaseId();
     log.debug("constructing ActionRequest to publish to downstream handler for action {} and case id {}",
         action.getActionPK(), caseId);
 
-    ActionPlan actionPlan = (action.getActionPlanFK() == null) ? null
+    final ActionPlan actionPlan = (action.getActionPlanFK() == null) ? null
         : actionPlanRepo.findOne(action.getActionPlanFK());
     log.debug("actionPlan {}", actionPlan);
 
-    CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
-    String sampleUnitTypeStr = caseDTO.getSampleUnitType();
+    final CaseDetailsDTO caseDTO = caseSvcClientService.getCaseWithIACandCaseEvents(caseId);
+    final String sampleUnitTypeStr = caseDTO.getSampleUnitType();
     log.debug("sampleUnitTypeStr {}", sampleUnitTypeStr);
     if (validate(sampleUnitTypeStr)) {
-      SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
+      final SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
       log.debug("sampleUnitType is {}", sampleUnitType);
 
-      CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
+      final CaseGroupDTO caseGroupDTO = caseDTO.getCaseGroup();
 
-      UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
-      CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
-              collectionExerciseId);
+      final UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
+      final CollectionExerciseDTO collectionExercise = collectionExerciseClientService.getCollectionExercise(
+          collectionExerciseId);
 
-      PartyDTO parentParty;
+      final PartyDTO parentParty;
       PartyDTO childParty = null;
       if (sampleUnitType.isParent()) {
         parentParty = partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-                sampleUnitTypeStr, caseDTO.getPartyId(), collectionExercise.getSurveyId());
+            sampleUnitTypeStr, caseDTO.getPartyId(), collectionExercise.getSurveyId());
         log.debug("parentParty retrieved is {}", parentParty);
       } else {
         childParty = partySvcClientService.getParty(sampleUnitTypeStr, caseDTO.getPartyId());
         log.debug("childParty retrieved is {}", childParty);
 
-        UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
+        final UUID associatedParentPartyID = caseDTO.getCaseGroup().getPartyId();
         // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
         parentParty = partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-                sampleUnitTypeStr.substring(0, 1), associatedParentPartyID, collectionExercise.getSurveyId());
+            sampleUnitTypeStr.substring(0, 1), associatedParentPartyID, collectionExercise.getSurveyId());
         log.debug("parentParty for the child retrieved is {}", parentParty);
       }
 
-      List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
+      final List<CaseEventDTO> caseEventDTOs = caseDTO.getCaseEvents();
 
       return populateActionRequest(action, actionPlan, caseDTO, parentParty, childParty, collectionExercise, caseEventDTOs);
     } else {
@@ -181,12 +200,12 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    *
    * @param action It all starts wih the Action
    * @return The ActionRequest created from the Action and the other info from
-   *         CaseSvc
+   * CaseSvc
    */
   private ActionCancel prepareActionCancel(final Action action) {
     log.debug("constructing ActionCancel to publish to downstream handler for action id {} and case id {}",
         action.getActionPK(), action.getCaseId());
-    ActionCancel actionCancel = new ActionCancel();
+    final ActionCancel actionCancel = new ActionCancel();
     actionCancel.setActionId(action.getId().toString());
     actionCancel.setResponseRequired(true);
     actionCancel.setReason(CANCELLATION_REASON);
@@ -197,11 +216,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * Given the business objects passed, create, populate and return an
    * ActionRequest
    *
-   * @param action the persistent Action obj from the db
-   * @param actionPlan the persistent ActionPlan obj from the db
-   * @param caseDTO the Case representation from the CaseSvc
-   * @param parentParty the parent Party from the PartySvc (in BRES, it is a B)
-   * @param childParty the BI Party from the PartySvc (in BRES, it is a C)
+   * @param action        the persistent Action obj from the db
+   * @param actionPlan    the persistent ActionPlan obj from the db
+   * @param caseDTO       the Case representation from the CaseSvc
+   * @param parentParty   the parent Party from the PartySvc (in BRES, it is a B)
+   * @param childParty    the BI Party from the PartySvc (in BRES, it is a C)
    * @param caseEventDTOs the list of CaseEvent representations from the CaseSvc
    * @return the shiney new Action Request
    */
@@ -211,8 +230,8 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
                                               final PartyDTO childParty,
                                               final CollectionExerciseDTO collectionExercise,
                                               final List<CaseEventDTO> caseEventDTOs) {
-    ActionRequest actionRequest = new ActionRequest();
-    String actionID = action.getId().toString();
+    final ActionRequest actionRequest = new ActionRequest();
+    final String actionID = action.getId().toString();
     log.debug("actionID is {}", actionID);
     actionRequest.setActionId(actionID);
     actionRequest.setActionPlan((actionPlan == null) ? null : actionPlan.getName());
@@ -222,27 +241,27 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
-    ActionEvent actionEvent = new ActionEvent();
+    final ActionEvent actionEvent = new ActionEvent();
     caseEventDTOs.forEach((caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
 
     actionRequest.setIac(caseDTO.getIac());
     actionRequest.setPriority(Priority.fromValue(Action.ActionPriority.valueOf(action.getPriority()).getName()));
 
-    ActionAddress actionAddress = new ActionAddress();
+    final ActionAddress actionAddress = new ActionAddress();
     actionAddress.setSampleUnitRef(caseDTO.getCaseGroup().getSampleUnitRef());
     actionRequest.setAddress(actionAddress);
 
-    SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
+    final SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
 
-    Attributes businessUnitAttributes = parentParty.getAttributes();
+    final Attributes businessUnitAttributes = parentParty.getAttributes();
 
     actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
     actionRequest.setRegion(businessUnitAttributes.getRegion());
 
-    ActionContact actionContact = new ActionContact();
+    final ActionContact actionContact = new ActionContact();
     actionContact.setRuName(businessUnitAttributes.getName());
     actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
 
@@ -250,14 +269,14 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       //BI case
       actionRequest.setRespondentStatus(childParty.getStatus());
 
-      Attributes biPartyAttributes = childParty.getAttributes();
+      final Attributes biPartyAttributes = childParty.getAttributes();
       populateContactDetails(biPartyAttributes, actionContact);
     } else {
       //B case
-      String parentUnitType = caseDTO.getSampleUnitType();
+      final String parentUnitType = caseDTO.getSampleUnitType();
 
       //Map of child parties, key'd by their statuses
-      Map<String, PartyDTO> childPartyMapByStatus = getChildParties(parentParty, parentUnitType);
+      final Map<String, PartyDTO> childPartyMapByStatus = getChildParties(parentParty, parentUnitType);
 
       actionRequest.setRespondentStatus(parseRespondentStatuses(childPartyMapByStatus));
 
@@ -266,9 +285,9 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
       if (CREATED.equals(actionRequest.getRespondentStatus())) {
         actionRequest.setIac(""); //Don't want to send this to the business, breaks if null
 
-        PartyDTO createdStatusChildParty = childPartyMapByStatus.get(CREATED);
+        final PartyDTO createdStatusChildParty = childPartyMapByStatus.get(CREATED);
 
-        Attributes childAttributes = createdStatusChildParty.getAttributes();
+        final Attributes childAttributes = createdStatusChildParty.getAttributes();
         populateContactDetails(childAttributes, actionContact);
       }
 
@@ -280,32 +299,33 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setCaseGroupStatus(caseDTO.getCaseGroup().getCaseGroupStatus().toString());
 
 
-    Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
+    final Date scheduledReturnDateTime = collectionExercise.getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
-      DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
+      final DateFormat df = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
       actionRequest.setReturnByDate(df.format(scheduledReturnDateTime));
     }
 
     return actionRequest;
   }
 
-  public void populateContactDetails(final Attributes attributes, ActionContact actionContact) {
+  public void populateContactDetails(final Attributes attributes, final ActionContact actionContact) {
     actionContact.setForename(attributes.getFirstName());
     actionContact.setSurname(attributes.getLastName());
     actionContact.setEmailAddress(attributes.getEmailAddress());
   }
 
   /**
-   *  iterate through map of <RespondentStatus, ChildParties> and parse respondent statuses'
+   * iterate through map of <RespondentStatus, ChildParties> and parse respondent statuses'
+   *
    * @param childPartyMap
    * @return respondentStatus
    */
-  public String parseRespondentStatuses(Map<String, PartyDTO> childPartyMap) {
+  public String parseRespondentStatuses(final Map<String, PartyDTO> childPartyMap) {
 
     String respondentStatus = null;
 
     if (childPartyMap.keySet().contains(CREATED)) {
-      respondentStatus =  CREATED;
+      respondentStatus = CREATED;
     }
 
     if (childPartyMap.keySet().contains(ACTIVE)) {
@@ -317,15 +337,15 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
 
   public Map<String, PartyDTO> getChildParties(final PartyDTO parentParty, final String parentUnitTypeStr) {
-    Map<String, PartyDTO> statusMapOfChildParties = new HashMap<>();
+    final Map<String, PartyDTO> statusMapOfChildParties = new HashMap<>();
 
-    List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
+    final List<String> childPartyIds = parentParty.getAssociations().stream().map(Association::getPartyId).collect(Collectors.toList());
 
     //ALl child parties are parent+I, i.e B & BI.
-    String childUnitTypeStr = parentUnitTypeStr + "I";
+    final String childUnitTypeStr = parentUnitTypeStr + "I";
 
-    for (String id : childPartyIds) {
-      PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
+    for (final String id : childPartyIds) {
+      final PartyDTO childParty = partySvcClientService.getParty(childUnitTypeStr, id);
       if (childParty != null) {
         statusMapOfChildParties.put(childParty.getStatus(), childParty);
       } else {
@@ -334,19 +354,21 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     }
     return statusMapOfChildParties;
   }
+
   /**
    * enrolment status for the case based off the enrolled parties
+   *
    * @param parentParty
    * @return enrolment status
    */
   public String getEnrolmentStatus(final PartyDTO parentParty) {
-    List<String> enrolmentStatuses = new ArrayList<>();
+    final List<String> enrolmentStatuses = new ArrayList<>();
 
-    List<Association> associations = parentParty.getAssociations();
+    final List<Association> associations = parentParty.getAssociations();
     if (associations != null) {
-      for (Association association : associations) {
-          for (Enrolment enrolment : association.getEnrolments()) {
-            enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+      for (final Association association : associations) {
+        for (final Enrolment enrolment : association.getEnrolments()) {
+          enrolmentStatuses.add(enrolment.getEnrolmentStatus());
         }
       }
     }
@@ -366,14 +388,15 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
   /**
    * Concatenate the businessUnitAttributes trading style fields into a single string
+   *
    * @param businessUnitAttributes
    * @return concatenated trading styles
    */
   public String generateTradingStyle(final Attributes businessUnitAttributes) {
-    List<String> tradeStyles = Arrays.asList(businessUnitAttributes.getTradstyle1(),
-            businessUnitAttributes.getTradstyle2(), businessUnitAttributes.getTradstyle3());
+    final List<String> tradeStyles = Arrays.asList(businessUnitAttributes.getTradstyle1(),
+        businessUnitAttributes.getTradstyle2(), businessUnitAttributes.getTradstyle3());
     return tradeStyles.stream().filter(Objects::nonNull)
-            .collect(Collectors.joining(" "));
+        .collect(Collectors.joining(" "));
   }
 
   /**
@@ -393,19 +416,19 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * @param sampleUnitTypeStr the string value for sampleUnitType
    * @return true if sampleUnitTypeStr is known to us
    */
-  private boolean validate(String sampleUnitTypeStr) {
+  private boolean validate(final String sampleUnitTypeStr) {
     boolean result = false;
     try {
-      SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
+      final SampleUnitDTO.SampleUnitType sampleUnitType = SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
       log.debug("sampleUnitType {}", sampleUnitType);
       if (sampleUnitType.isParent()) {
         result = true;
       } else {
-        String childSampleUnitTypeStr = sampleUnitTypeStr.substring(0, 1);
+        final String childSampleUnitTypeStr = sampleUnitTypeStr.substring(0, 1);
         SampleUnitDTO.SampleUnitType.valueOf(childSampleUnitTypeStr);
         result = true;
       }
-    } catch (IllegalArgumentException e) {
+    } catch (final IllegalArgumentException e) {
       log.error("Unexpected scenario. Error message is {}. Cause is {}", e.getMessage(), e.getCause());
       log.error("Stacktrace: ", e);
     }
@@ -418,11 +441,11 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * (in the scenario where the action has prev. failed)
    *
    * @param action the action to change and persist
-   * @param event the event to transition the action with
+   * @param event  the event to transition the action with
    * @throws CTPException if action state transition error
    */
   private void transitionAction(final Action action, final ActionDTO.ActionEvent event) throws CTPException {
-    ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    final ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
     action.setState(nextState);
     action.setSituation(null);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());
@@ -435,7 +458,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
    * @param actionType the ActionType to validate
    * @return true if valid
    */
-  private boolean valid(ActionType actionType) {
+  private boolean valid(final ActionType actionType) {
     return (actionType != null) && (actionType.getResponseRequired() != null);
   }
 }

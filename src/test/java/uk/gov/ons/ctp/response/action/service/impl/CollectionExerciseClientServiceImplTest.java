@@ -19,7 +19,9 @@ import java.util.UUID;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * test for CollectionExerciseSvcClient
@@ -49,10 +51,10 @@ public class CollectionExerciseClientServiceImplTest {
 
   @Test
   public void verifyGetCollectionExerciseCallInvokesRESTEndpoint() throws CTPException {
-    CollectionExerciseSvc collectionExerciseSvc = new CollectionExerciseSvc();
+    final CollectionExerciseSvc collectionExerciseSvc = new CollectionExerciseSvc();
     collectionExerciseSvc.setCollectionByCollectionExerciseGetPath("/path");
 
-    UriComponents uriComponents = UriComponentsBuilder.newInstance()
+    final UriComponents uriComponents = UriComponentsBuilder.newInstance()
         .scheme(HTTP)
         .host(LOCALHOST)
         .port(80)

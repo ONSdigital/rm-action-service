@@ -41,19 +41,19 @@ public class ActionInstructionPublisherImplTest {
    */
   @Test
   public void sendActionInstructionWithOneActionRequest() throws Exception {
-    String handler = "test";
-    List<ActionRequest> actionRequests = FixtureHelper.loadClassFixtures(ActionRequest[].class);
-    ActionRequest requestToSend = actionRequests.get(0);
+    final String handler = "test";
+    final List<ActionRequest> actionRequests = FixtureHelper.loadClassFixtures(ActionRequest[].class);
+    final ActionRequest requestToSend = actionRequests.get(0);
 
     actionInstructionPublisherImpl.sendActionInstruction(handler, requestToSend);
 
-    ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
+    final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
+    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
 
     verify(rabbitTemplate, times(1)).convertAndSend(routingKeyCaptor.capture(),
         actionInstructionCaptor.capture());
     assertEquals(String.format("%s%s%s", ACTION, handler, BINDING), routingKeyCaptor.getValue());
-    ActionInstruction instructionSent = actionInstructionCaptor.getValue();
+    final ActionInstruction instructionSent = actionInstructionCaptor.getValue();
     assertNull(instructionSent.getActionCancel());
     assertNull(instructionSent.getActionUpdate());
     assertEquals(requestToSend, instructionSent.getActionRequest());
@@ -66,19 +66,19 @@ public class ActionInstructionPublisherImplTest {
    */
   @Test
   public void sendActionInstructionWithOneActionCancel() throws Exception {
-    String handler = "test";
-    List<ActionCancel> actionCancels = FixtureHelper.loadClassFixtures(ActionCancel[].class);
-    ActionCancel cancelToSend = actionCancels.get(0);
+    final String handler = "test";
+    final List<ActionCancel> actionCancels = FixtureHelper.loadClassFixtures(ActionCancel[].class);
+    final ActionCancel cancelToSend = actionCancels.get(0);
 
     actionInstructionPublisherImpl.sendActionInstruction(handler, cancelToSend);
 
-    ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
+    final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
+    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
 
     verify(rabbitTemplate, times(1)).convertAndSend(routingKeyCaptor.capture(),
         actionInstructionCaptor.capture());
     assertEquals(String.format("%s%s%s", ACTION, handler, BINDING), routingKeyCaptor.getValue());
-    ActionInstruction instructionSent = actionInstructionCaptor.getValue();
+    final ActionInstruction instructionSent = actionInstructionCaptor.getValue();
     assertNull(instructionSent.getActionRequest());
     assertNull(instructionSent.getActionUpdate());
     assertEquals(cancelToSend, instructionSent.getActionCancel());
@@ -91,17 +91,17 @@ public class ActionInstructionPublisherImplTest {
    */
   @Test
   public void sendActionInstructionWithNoActionRequestNorCancel() throws Exception {
-    String handler = "test";
+    final String handler = "test";
 
     actionInstructionPublisherImpl.sendActionInstruction(handler, new Action());
 
-    ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
+    final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
+    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
 
     verify(rabbitTemplate, times(1)).convertAndSend(routingKeyCaptor.capture(),
         actionInstructionCaptor.capture());
     assertEquals(String.format("%s%s%s", ACTION, handler, BINDING), routingKeyCaptor.getValue());
-    ActionInstruction instructionSent = actionInstructionCaptor.getValue();
+    final ActionInstruction instructionSent = actionInstructionCaptor.getValue();
     assertNull(instructionSent.getActionRequest());
     assertNull(instructionSent.getActionUpdate());
     assertNull(instructionSent.getActionCancel());

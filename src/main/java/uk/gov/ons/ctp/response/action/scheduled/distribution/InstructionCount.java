@@ -8,7 +8,6 @@ import uk.gov.ons.ctp.response.action.scheduled.distribution.DistributionInfo.In
 
 /**
  * Simple pojo for health info re instructions of a type sent
- *
  */
 @CoverageIgnore
 @Data

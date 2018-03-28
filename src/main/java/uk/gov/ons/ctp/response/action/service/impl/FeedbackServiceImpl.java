@@ -45,50 +45,50 @@ public class FeedbackServiceImpl implements FeedbackService {
 
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
-  public void acceptFeedback(ActionFeedback feedback) throws CTPException {
-    UUID actionId = UUID.fromString(feedback.getActionId());
+  public void acceptFeedback(final ActionFeedback feedback) throws CTPException {
+    final UUID actionId = UUID.fromString(feedback.getActionId());
 
-    Action action = actionRepo.findById(actionId);
+    final Action action = actionRepo.findById(actionId);
 
     if (action != null) {
-      ActionDTO.ActionEvent outcomeEvent = ActionDTO.ActionEvent.valueOf(feedback.getOutcome().name());
+      final ActionDTO.ActionEvent outcomeEvent = ActionDTO.ActionEvent.valueOf(feedback.getOutcome().name());
 
       if (outcomeEvent != null) {
-        String situation = feedback.getSituation();
-        ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(),
-              outcomeEvent);
+        final String situation = feedback.getSituation();
+        final ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(),
+            outcomeEvent);
         updateAction(action, nextState, situation);
 
-        String handler = action.getActionType().getHandler();
-        OutcomeHandlerId outcomeHandlerId = OutcomeHandlerId.builder().handler(handler).actionOutcome(outcomeEvent)
+        final String handler = action.getActionType().getHandler();
+        final OutcomeHandlerId outcomeHandlerId = OutcomeHandlerId.builder().handler(handler).actionOutcome(outcomeEvent)
             .build();
-        OutcomeCategory outcomeCategory = outcomeCategoryRepository.findOne(outcomeHandlerId);
+        final OutcomeCategory outcomeCategory = outcomeCategoryRepository.findOne(outcomeHandlerId);
         if (outcomeCategory != null) {
-          CategoryDTO.CategoryName category = CategoryDTO.CategoryName.valueOf(outcomeCategory.getEventCategory());
+          final CategoryDTO.CategoryName category = CategoryDTO.CategoryName.valueOf(outcomeCategory.getEventCategory());
           caseSvcClientService.createNewCaseEvent(action, category);
         }
       } else {
         log.error("Feedback Service unable to decipher the outcome {} from feedback - ignoring this feedback",
             feedback.getOutcome());
         throw new CTPException(CTPException.Fault.SYSTEM_ERROR,
-                String.format("Outcome % unknown", feedback.getOutcome()));
+            String.format("Outcome % unknown", feedback.getOutcome()));
       }
     } else {
       log.error("Feedback Service unable to find action id {} from feedback - ignoring this feedback",
-              feedback.getActionId());
+          feedback.getActionId());
       throw new CTPException(CTPException.Fault.SYSTEM_ERROR, String.format("ActionID %s unknown",
-              feedback.getActionId()));
+          feedback.getActionId()));
     }
   }
 
   /**
    * Update the action
    *
-   * @param action the action to update
+   * @param action    the action to update
    * @param nextState the state to transition to
    * @param situation the situation provided by the feedback
    */
-  private void updateAction(Action action, ActionDTO.ActionState nextState, String situation) {
+  private void updateAction(final Action action, final ActionDTO.ActionState nextState, final String situation) {
     action.setSituation(situation);
     action.setState(nextState);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());

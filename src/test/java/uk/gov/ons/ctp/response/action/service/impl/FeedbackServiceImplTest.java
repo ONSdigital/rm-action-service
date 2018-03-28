@@ -39,7 +39,7 @@ public class FeedbackServiceImplTest {
 
   private static final UUID ACTION_ID1 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
   private static final UUID ACTION_ID2 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
-  
+
   @Mock
   private CaseSvcClientService caseSvcClientService;
 
@@ -68,12 +68,13 @@ public class FeedbackServiceImplTest {
 
   /**
    * Yep - another test
+   *
    * @throws Exception exception thrown
    */
   @Test
   public void testFeedbackAccepted() throws Exception {
-    List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
-    List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
+    final List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
+    final List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
 
     Mockito.when(actionRepo.findById(ACTION_ID1)).thenReturn(actions.get(0));
     Mockito.when(actionSvcStateTransitionManager.transition(ActionState.PENDING, ActionEvent.REQUEST_ACCEPTED))
@@ -86,22 +87,23 @@ public class FeedbackServiceImplTest {
     // Verify calls made
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(0)).createNewCaseEvent(any(Action.class),
-            any(CategoryDTO.CategoryName.class));
+        any(CategoryDTO.CategoryName.class));
   }
 
   /**
    * Yep - another test
+   *
    * @throws Exception exception thrown
    */
   @Test
   public void testFeedbackBlankSituationActionCompleted() throws Exception {
-    List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
-    List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
-    List<OutcomeCategory> situationCats = FixtureHelper.loadClassFixtures(OutcomeCategory[].class);
+    final List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
+    final List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
+    final List<OutcomeCategory> situationCats = FixtureHelper.loadClassFixtures(OutcomeCategory[].class);
 
     Mockito.when(actionRepo.findById(ACTION_ID2)).thenReturn(actions.get(2));
     Mockito.when(outcomeCategoryRepository.findOne(new OutcomeHandlerId(ActionDTO.ActionEvent
-            .valueOf(actionFeedbacks.get(2).getOutcome().name()), "Printer"))).thenReturn(situationCats.get(0));
+        .valueOf(actionFeedbacks.get(2).getOutcome().name()), "Printer"))).thenReturn(situationCats.get(0));
     Mockito.when(actionSvcStateTransitionManager.transition(ActionState.ACTIVE, ActionEvent.REQUEST_COMPLETED))
         .thenReturn(ActionState.COMPLETED);
     // Call method
@@ -109,23 +111,24 @@ public class FeedbackServiceImplTest {
     // Verify calls made
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(actions.get(2),
-            CategoryDTO.CategoryName.ACTION_COMPLETED);
+        CategoryDTO.CategoryName.ACTION_COMPLETED);
   }
 
 
   /**
    * Yep - another test
+   *
    * @throws Exception exception thrown
    */
   @Test
   public void testFeedbackDerelictSituationActionCompleted() throws Exception {
-    List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
-    List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
-    List<OutcomeCategory> situationCats = FixtureHelper.loadClassFixtures(OutcomeCategory[].class);
+    final List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
+    final List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
+    final List<OutcomeCategory> situationCats = FixtureHelper.loadClassFixtures(OutcomeCategory[].class);
 
     Mockito.when(actionRepo.findById(ACTION_ID2)).thenReturn(actions.get(2));
     Mockito.when(outcomeCategoryRepository.findOne(new OutcomeHandlerId(ActionDTO.ActionEvent
-            .valueOf(actionFeedbacks.get(3).getOutcome().name()), "Printer"))).thenReturn(situationCats.get(0));
+        .valueOf(actionFeedbacks.get(3).getOutcome().name()), "Printer"))).thenReturn(situationCats.get(0));
     Mockito.when(actionSvcStateTransitionManager.transition(ActionState.ACTIVE, ActionEvent.REQUEST_COMPLETED))
         .thenReturn(ActionState.COMPLETED);
 
@@ -135,22 +138,23 @@ public class FeedbackServiceImplTest {
     // Verify calls made
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(actions.get(2),
-            CategoryDTO.CategoryName.ACTION_COMPLETED);
+        CategoryDTO.CategoryName.ACTION_COMPLETED);
   }
 
   /**
    * Yep - another test
+   *
    * @throws Exception exception thrown
    */
   @Test
   public void testFeedbackConfusedSituationActionCompleted() throws Exception {
-    List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
-    List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
-    List<OutcomeCategory> situationCats = FixtureHelper.loadClassFixtures(OutcomeCategory[].class);
+    final List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
+    final List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
+    final List<OutcomeCategory> situationCats = FixtureHelper.loadClassFixtures(OutcomeCategory[].class);
 
     Mockito.when(actionRepo.findById(ACTION_ID2)).thenReturn(actions.get(2));
     Mockito.when(outcomeCategoryRepository.findOne(new OutcomeHandlerId(ActionDTO.ActionEvent.valueOf(
-            actionFeedbacks.get(4).getOutcome().name()), "Printer"))).thenReturn(situationCats.get(1));
+        actionFeedbacks.get(4).getOutcome().name()), "Printer"))).thenReturn(situationCats.get(1));
     Mockito.when(actionSvcStateTransitionManager.transition(ActionState.ACTIVE, ActionEvent.REQUEST_COMPLETED))
         .thenReturn(ActionState.COMPLETED);
 
@@ -160,19 +164,20 @@ public class FeedbackServiceImplTest {
     //Verify calls made
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1)).createNewCaseEvent(actions.get(2),
-            CategoryDTO.CategoryName.ACTION_COMPLETED_DEACTIVATED);
+        CategoryDTO.CategoryName.ACTION_COMPLETED_DEACTIVATED);
   }
-  
+
   /**
    * Yep - another test
+   *
    * @throws Exception exception thrown
    */
   @Test(expected = CTPException.class)
   public void testFeedbackActionWithNonExistentActionIdThrowsCTPException() throws Exception {
-    List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
+    final List<ActionFeedback> actionFeedbacks = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
 
     //Call method
     feedbackService.acceptFeedback(actionFeedbacks.get(0));
   }
-  
+
 }

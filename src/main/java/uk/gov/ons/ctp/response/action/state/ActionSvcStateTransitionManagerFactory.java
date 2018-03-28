@@ -29,109 +29,93 @@ public class ActionSvcStateTransitionManagerFactory implements StateTransitionMa
   public ActionSvcStateTransitionManagerFactory() {
     managers = new HashMap<>();
 
-    Map<ActionState, Map<ActionEvent, ActionState>> transitions = new HashMap<>();
+    final Map<ActionState, Map<ActionEvent, ActionState>> transitions = new HashMap<>();
 
     // SUBMITTED
-    {
-      Map<ActionEvent, ActionState> transitionMapForSubmitted = new HashMap<>();
-      transitionMapForSubmitted.put(ActionEvent.REQUEST_DISTRIBUTED, ActionState.PENDING);
+    final Map<ActionEvent, ActionState> transitionMapForSubmitted = new HashMap<>();
+    transitionMapForSubmitted.put(ActionEvent.REQUEST_DISTRIBUTED, ActionState.PENDING);
 
-      transitionMapForSubmitted.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
+    transitionMapForSubmitted.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
 
-      transitionMapForSubmitted.put(ActionEvent.REQUEST_CANCELLED, ActionState.ABORTED);
+    transitionMapForSubmitted.put(ActionEvent.REQUEST_CANCELLED, ActionState.ABORTED);
 
-      transitions.put(ActionState.SUBMITTED, transitionMapForSubmitted);
-    }
+    transitions.put(ActionState.SUBMITTED, transitionMapForSubmitted);
 
     // PENDING
-    {
-      Map<ActionEvent, ActionState> transitionMapForPending = new HashMap<>();
-      transitionMapForPending.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
+    final Map<ActionEvent, ActionState> transitionMapForPending = new HashMap<>();
+    transitionMapForPending.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
 
-      transitionMapForPending.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForPending.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
 
-      transitionMapForPending.put(ActionEvent.REQUEST_ACCEPTED, ActionState.ACTIVE);
+    transitionMapForPending.put(ActionEvent.REQUEST_ACCEPTED, ActionState.ACTIVE);
 
-      transitionMapForPending.put(ActionEvent.REQUEST_DECLINED, ActionState.DECLINED);
+    transitionMapForPending.put(ActionEvent.REQUEST_DECLINED, ActionState.DECLINED);
 
-      transitionMapForPending.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
-      transitionMapForPending.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.COMPLETED);
-      transitionMapForPending.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
-      transitions.put(ActionState.PENDING, transitionMapForPending);
-    }
+    transitionMapForPending.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
+    transitionMapForPending.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.COMPLETED);
+    transitionMapForPending.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
+    transitions.put(ActionState.PENDING, transitionMapForPending);
 
     // ACTIVE
-    {
-      Map<ActionEvent, ActionState> transitionMapForActive = new HashMap<>();
-      transitionMapForActive.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
+    final Map<ActionEvent, ActionState> transitionMapForActive = new HashMap<>();
+    transitionMapForActive.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
 
-      transitionMapForActive.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForActive.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
 
-      transitionMapForActive.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
-      transitionMapForActive.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.COMPLETED);
-      transitionMapForActive.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
-      transitions.put(ActionState.ACTIVE, transitionMapForActive);
-    }
+    transitionMapForActive.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
+    transitionMapForActive.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.COMPLETED);
+    transitionMapForActive.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
+    transitions.put(ActionState.ACTIVE, transitionMapForActive);
 
     // COMPLETED
-    {
-      Map<ActionEvent, ActionState> transitionMapForCompleted = new HashMap<>();
-      transitionMapForCompleted.put(ActionEvent.REQUEST_CANCELLED, ActionState.COMPLETED);
-      transitions.put(ActionState.COMPLETED, transitionMapForCompleted);
-    }
+    final Map<ActionEvent, ActionState> transitionMapForCompleted = new HashMap<>();
+    transitionMapForCompleted.put(ActionEvent.REQUEST_CANCELLED, ActionState.COMPLETED);
+    transitions.put(ActionState.COMPLETED, transitionMapForCompleted);
 
     // CANCEL_SUBMITTED
-    {
-      Map<ActionEvent, ActionState> transitionMapForCancelSubmitted = new HashMap<>();
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_SUBMITTED);
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_SUBMITTED);
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_SUBMITTED);
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_SUBMITTED);
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_SUBMITTED);
-      transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_SUBMITTED);
+    final Map<ActionEvent, ActionState> transitionMapForCancelSubmitted = new HashMap<>();
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelSubmitted.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_SUBMITTED);
 
-      transitionMapForCancelSubmitted.put(ActionEvent.CANCELLATION_DISTRIBUTED, ActionState.CANCEL_PENDING);
-      transitions.put(ActionState.CANCEL_SUBMITTED, transitionMapForCancelSubmitted);
-    }
+    transitionMapForCancelSubmitted.put(ActionEvent.CANCELLATION_DISTRIBUTED, ActionState.CANCEL_PENDING);
+    transitions.put(ActionState.CANCEL_SUBMITTED, transitionMapForCancelSubmitted);
 
     // CANCEL_PENDING
-    {
-      Map<ActionEvent, ActionState> transitionMapForCancelPending = new HashMap<>();
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_PENDING);
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_PENDING);
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_PENDING);
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_PENDING);
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_PENDING);
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_PENDING);
-      transitionMapForCancelPending.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_PENDING);
+    final Map<ActionEvent, ActionState> transitionMapForCancelPending = new HashMap<>();
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_PENDING);
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_PENDING);
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_PENDING);
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_PENDING);
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_PENDING);
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_PENDING);
+    transitionMapForCancelPending.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_PENDING);
 
-      transitionMapForCancelPending.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelPending.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
 
-      transitionMapForCancelPending.put(ActionEvent.CANCELLATION_ACCEPTED, ActionState.CANCELLING);
-      transitionMapForCancelPending.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
-      transitions.put(ActionState.CANCEL_PENDING, transitionMapForCancelPending);
-    }
+    transitionMapForCancelPending.put(ActionEvent.CANCELLATION_ACCEPTED, ActionState.CANCELLING);
+    transitionMapForCancelPending.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
+    transitions.put(ActionState.CANCEL_PENDING, transitionMapForCancelPending);
 
     // CANCELLING
-    {
-      Map<ActionEvent, ActionState> transitionMapForCancelling = new HashMap<>();
-      transitionMapForCancelling.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLING);
+    final Map<ActionEvent, ActionState> transitionMapForCancelling = new HashMap<>();
+    transitionMapForCancelling.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLING);
 
-      transitionMapForCancelling.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
+    transitionMapForCancelling.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
 
-      transitionMapForCancelling.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
-      transitions.put(ActionState.CANCELLING, transitionMapForCancelling);
-    }
+    transitionMapForCancelling.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
+    transitions.put(ActionState.CANCELLING, transitionMapForCancelling);
 
     // CANCELLED
-    {
-      Map<ActionEvent, ActionState> transitionMapForCancelled = new HashMap<>();
-      transitionMapForCancelled.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLED);
-      transitions.put(ActionState.CANCELLED, transitionMapForCancelled);
-    }
+    final Map<ActionEvent, ActionState> transitionMapForCancelled = new HashMap<>();
+    transitionMapForCancelled.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLED);
+    transitions.put(ActionState.CANCELLED, transitionMapForCancelled);
 
-    StateTransitionManager<ActionState, ActionEvent> actionStateTransitionManager =
+    final StateTransitionManager<ActionState, ActionEvent> actionStateTransitionManager =
         new BasicStateTransitionManager<>(transitions);
 
     managers.put(ACTION_ENTITY, actionStateTransitionManager);
@@ -145,7 +129,7 @@ public class ActionSvcStateTransitionManagerFactory implements StateTransitionMa
    */
   @SuppressWarnings("unchecked")
   @Override
-  public StateTransitionManager<?, ?> getStateTransitionManager(String entity) {
+  public StateTransitionManager<?, ?> getStateTransitionManager(final String entity) {
     return managers.get(entity);
   }
 

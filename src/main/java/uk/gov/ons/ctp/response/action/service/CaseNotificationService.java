@@ -5,7 +5,6 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 
 /**
  * Service to persist case life cycle event notifications.
- *
  */
 public interface CaseNotificationService {
 

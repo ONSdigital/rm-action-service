@@ -55,7 +55,7 @@ public class ActionServiceImpl implements ActionService {
   @CoverageIgnore
   @Override
   public List<Action> findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(final String actionTypeName,
-      final ActionDTO.ActionState state) {
+                                                                                  final ActionDTO.ActionState state) {
     log.debug("Entering findActionsByTypeAndState with {} {}", actionTypeName, state);
     return actionRepo.findByActionTypeNameAndStateOrderByCreatedDateTimeDesc(actionTypeName, state);
   }
@@ -100,12 +100,12 @@ public class ActionServiceImpl implements ActionService {
   public List<Action> cancelActions(final UUID caseId) throws CTPException {
     log.debug("Entering cancelAction with {}", caseId);
 
-    List<Action> flushedActions = new ArrayList<>();
-    List<Action> actions = actionRepo.findByCaseId(caseId);
-    for (Action action : actions) {
+    final List<Action> flushedActions = new ArrayList<>();
+    final List<Action> actions = actionRepo.findByCaseId(caseId);
+    for (final Action action : actions) {
       if (action.getActionType().getCanCancel()) {
         log.debug("Cancelling action {} of type {}", action.getId(), action.getActionType().getName());
-        ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(),
+        final ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(),
             ActionEvent.REQUEST_CANCELLED);
         action.setState(nextState);
         action.setUpdatedDateTime(DateTimeUtil.nowUTC());
@@ -118,18 +118,18 @@ public class ActionServiceImpl implements ActionService {
 
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
-  public Action feedBackAction(ActionFeedback actionFeedback) throws CTPException {
-    String actionId = actionFeedback.getActionId();
+  public Action feedBackAction(final ActionFeedback actionFeedback) throws CTPException {
+    final String actionId = actionFeedback.getActionId();
     log.debug("Entering feedBackAction with actionId {}", actionId);
 
     Action result = null;
     if (!StringUtils.isEmpty(actionId)) {
       result = actionRepo.findById(UUID.fromString(actionId));
       if (result != null) {
-        ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
+        final ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
         result.setSituation(actionFeedback.getSituation());
         result.setUpdatedDateTime(DateTimeUtil.nowUTC());
-        ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(result.getState(), event);
+        final ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(result.getState(), event);
         result.setState(nextState);
         result = actionRepo.saveAndFlush(result);
       }
@@ -148,7 +148,7 @@ public class ActionServiceImpl implements ActionService {
 
     // the incoming action has a placeholder action type with the name as provided to the caller but we need the entire
     // action type object for that action type name
-    ActionType actionType = actionTypeRepo.findByName(action.getActionType().getName());
+    final ActionType actionType = actionTypeRepo.findByName(action.getActionType().getName());
     action.setActionType(actionType);
 
     action.setManuallyCreated(true);
@@ -161,20 +161,20 @@ public class ActionServiceImpl implements ActionService {
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action updateAction(final Action action) {
-    UUID actionId = action.getId();
+    final UUID actionId = action.getId();
     log.debug("Entering updateAction with actionId {}", actionId);
     Action existingAction = actionRepo.findById(actionId);
     if (existingAction != null) {
       boolean needsUpdate = false;
 
-      Integer newPriority = action.getPriority();
+      final Integer newPriority = action.getPriority();
       log.debug("newPriority = {}", newPriority);
       if (newPriority != null) {
         needsUpdate = true;
         existingAction.setPriority(newPriority);
       }
 
-      String newSituation = action.getSituation();
+      final String newSituation = action.getSituation();
       log.debug("newSituation = {}", newSituation);
       if (newSituation != null) {
         needsUpdate = true;

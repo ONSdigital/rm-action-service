@@ -5,7 +5,6 @@ import net.sourceforge.cobertura.CoverageIgnore;
 
 /**
  * Config POJO for action plan exec params
- *
  */
 @CoverageIgnore
 @Data

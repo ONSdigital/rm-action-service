@@ -5,7 +5,6 @@ import net.sourceforge.cobertura.CoverageIgnore;
 
 /**
  * App config POJO for csv ingest params
- *
  */
 @CoverageIgnore
 @Data

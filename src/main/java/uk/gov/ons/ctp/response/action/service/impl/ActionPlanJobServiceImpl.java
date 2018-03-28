@@ -56,7 +56,7 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
   @Override
   public List<ActionPlanJob> findActionPlanJobsForActionPlan(final UUID actionPlanId) throws CTPException {
     log.debug("Entering findActionPlanJobsForActionPlan with {}", actionPlanId);
-    ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+    final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, NO_ACTIONPLAN_MSG, actionPlanId);
     }
@@ -66,16 +66,16 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
 
   @Override
   public List<ActionPlanJob> createAndExecuteAllActionPlanJobs() {
-    List<ActionPlanJob> executedJobs = new ArrayList<>();
+    final List<ActionPlanJob> executedJobs = new ArrayList<>();
     actionPlanRepo.findAll().forEach(actionPlan -> {
-      Date lastExecutionTime = new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
+      final Date lastExecutionTime = new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
       if (actionPlan.getLastRunDateTime() == null || actionPlan.getLastRunDateTime().before(lastExecutionTime)) {
         ActionPlanJob job = ActionPlanJob.builder()
-                .actionPlanFK(actionPlan.getActionPlanPK())
-                .createdBy(CREATED_BY_SYSTEM)
-                .build();
+            .actionPlanFK(actionPlan.getActionPlanPK())
+            .createdBy(CREATED_BY_SYSTEM)
+            .build();
         job = createAndExecuteActionPlanJob(job);
-        if (job !=  null) {
+        if (job != null) {
           executedJobs.add(job);
         }
       } else {
@@ -93,15 +93,15 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
    */
   @Override
   public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
-    Integer actionPlanPK = actionPlanJobTemplate.getActionPlanFK();
-    ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
+    final Integer actionPlanPK = actionPlanJobTemplate.getActionPlanFK();
+    final ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
     if (actionPlan == null) {
       log.debug("Action plan {} is null", actionPlanPK);
     } else if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
       log.debug("No open cases for action plan {}", actionPlanPK);
     } else if (actionPlanExecutionLockManager.lock(actionPlan.getName())) {
       try {
-        ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
+        final ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
         // createActions needs to be executed after actionPlanJob has been created and committed.
         // createActions invokes a database procedure which won't be able to see the actionPlanJob if not committed.
         // This also means an actionPlanJob could be left with state SUBMITTED if createActions failed.
@@ -118,12 +118,12 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
   }
 
   private ActionPlanJob createActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
-    Timestamp now = nowUTC();
+    final Timestamp now = nowUTC();
     actionPlanJobTemplate.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
     actionPlanJobTemplate.setCreatedDateTime(now);
     actionPlanJobTemplate.setUpdatedDateTime(now);
     actionPlanJobTemplate.setId(UUID.randomUUID());
-    ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJobTemplate);
+    final ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJobTemplate);
     log.info("Running actionplanjobid {} actionplanid {}", createdJob.getActionPlanJobPK(),
         createdJob.getActionPlanFK());
     return createdJob;

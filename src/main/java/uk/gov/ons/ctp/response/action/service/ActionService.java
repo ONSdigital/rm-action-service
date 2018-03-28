@@ -28,11 +28,11 @@ public interface ActionService extends CTPService {
    * descending
    *
    * @param actionTypeName Action type name by which to filter
-   * @param state State by which to filter
+   * @param state          State by which to filter
    * @return List<Action> List of Actions or empty List
    */
   List<Action> findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(String actionTypeName,
-      ActionDTO.ActionState state);
+                                                                           ActionDTO.ActionState state);
 
   /**
    * Find Actions filtered by ActionType.
@@ -60,6 +60,7 @@ public interface ActionService extends CTPService {
 
   /**
    * Find an action by its UUID id
+   *
    * @param actionId the UUID
    * @return the action
    */
@@ -77,10 +78,8 @@ public interface ActionService extends CTPService {
    * Cancel all the actions for a given caseId.
    *
    * @param caseId Integer caseId for all the Actions to be cancelled
-   *
    * @return List<Action> Returns list of all actions for the case that were cancelled. Not all actions are
    * cancellable!
-   *
    * @throws CTPException if action state transition error
    */
   List<Action> cancelActions(UUID caseId) throws CTPException;
@@ -89,7 +88,6 @@ public interface ActionService extends CTPService {
    * Create an action.
    *
    * @param action Action to be created
-   *
    * @return Action Returns created Action.
    */
   Action createAction(Action action);
@@ -104,6 +102,7 @@ public interface ActionService extends CTPService {
 
   /**
    * Accept the feedback for an action
+   *
    * @param actionFeedback the feedback
    * @return the updated action
    * @throws CTPException if action state transition error

@@ -47,22 +47,22 @@ public class CollectionExerciseClientServiceImpl implements CollectionExerciseCl
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public CollectionExerciseDTO getCollectionExercise(UUID collectionExcerciseId) {
-    UriComponents uriComponents = restUtility.createUriComponents(
+  public CollectionExerciseDTO getCollectionExercise(final UUID collectionExcerciseId) {
+    final UriComponents uriComponents = restUtility.createUriComponents(
         appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(), null, collectionExcerciseId);
 
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
 
     CollectionExerciseDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CollectionExerciseDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
