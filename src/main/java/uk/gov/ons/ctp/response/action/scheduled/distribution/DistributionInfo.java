@@ -11,7 +11,6 @@ import java.util.List;
 
 /**
  * info regarding the last action distribution to handlers
- *
  */
 @CoverageIgnore
 @Data
@@ -24,7 +23,7 @@ public class DistributionInfo extends ScheduledHealthInfo {
    */
   public enum Instruction {
     REQUEST, CANCEL_REQUEST
-  };
+  }
 
   private List<InstructionCount> instructionCounts = new ArrayList<>();
 

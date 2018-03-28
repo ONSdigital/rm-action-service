@@ -14,7 +14,6 @@ public interface SurveySvcClientService {
    * @param surveyId UUID String for which to request details.
    * @return the survey details.
    * @throws RestClientException something went wrong making http call.
-   *
    */
   SurveyDTO requestDetailsForSurvey(String surveyId) throws RestClientException;
 }

@@ -13,13 +13,13 @@ import java.util.UUID;
  */
 public interface ActionReportRepository extends JpaRepository<ActionReport, UUID> {
 
-    /**
-     * To execute generate_action_mi
-     *
-     * @return boolean whether report has been created successfully
-     */
-    @Modifying
-    @Transactional
-    @Procedure(name = "ActionReport.mi")
-    Boolean miStoredProcedure();
+  /**
+   * To execute generate_action_mi
+   *
+   * @return boolean whether report has been created successfully
+   */
+  @Modifying
+  @Transactional
+  @Procedure(name = "ActionReport.mi")
+  Boolean miStoredProcedure();
 }

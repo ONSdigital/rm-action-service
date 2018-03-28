@@ -25,7 +25,6 @@ public class PlanScheduler implements HealthIndicator {
   /**
    * schedule the Execution of Action Plans It is simply a scheduled trigger for
    * the service layer method.
-   *
    */
   @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void run() {
@@ -33,7 +32,7 @@ public class PlanScheduler implements HealthIndicator {
     try {
       executionInfo = new PlanExecutionInfo();
       executionInfo.setExecutedJobs(actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs());
-    } catch (Exception e) {
+    } catch (final Exception e) {
       log.error("Exception in action plan scheduler", e);
       log.error("Stacktrace: ", e);
     }

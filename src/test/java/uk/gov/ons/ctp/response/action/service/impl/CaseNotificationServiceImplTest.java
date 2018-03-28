@@ -27,7 +27,9 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 /**
@@ -70,42 +72,43 @@ public class CaseNotificationServiceImplTest {
 
   /**
    * Test calls repository correctly
+   *
    * @throws Exception exception thrown
    */
   @Test
   public void testAcceptNotification() throws Exception {
-      CaseNotification caseNotification = new CaseNotification();
-      caseNotification.setActionPlanId(DUMMY_UUID);
-      caseNotification.setCaseId(DUMMY_UUID);
-      caseNotification.setNotificationType(NotificationType.ACTIVATED);
+    final CaseNotification caseNotification = new CaseNotification();
+    caseNotification.setActionPlanId(DUMMY_UUID);
+    caseNotification.setCaseId(DUMMY_UUID);
+    caseNotification.setNotificationType(NotificationType.ACTIVATED);
 
-      ActionPlan actionPlan = new ActionPlan();
-      actionPlan.setActionPlanPK(1);
+    final ActionPlan actionPlan = new ActionPlan();
+    actionPlan.setActionPlanPK(1);
 
-      when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
+    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
 
-      List<CaseDetailsDTO> caseJson = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
-      List<CollectionExerciseDTO> collectionExerciseJson = FixtureHelper.loadClassFixtures(
-              CollectionExerciseDTO[].class);
+    final List<CaseDetailsDTO> caseJson = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
+    final List<CollectionExerciseDTO> collectionExerciseJson = FixtureHelper.loadClassFixtures(
+        CollectionExerciseDTO[].class);
 
 
-      when(caseSvcClientServiceImpl.getCase(UUID.fromString(DUMMY_UUID))).thenReturn(caseJson.get(0));
-      when(collectionSvcClientServiceImpl.getCollectionExercise(caseJson.get(0).getCaseGroup()
-            .getCollectionExerciseId())).thenReturn(collectionExerciseJson.get(0));
+    when(caseSvcClientServiceImpl.getCase(UUID.fromString(DUMMY_UUID))).thenReturn(caseJson.get(0));
+    when(collectionSvcClientServiceImpl.getCollectionExercise(caseJson.get(0).getCaseGroup()
+        .getCollectionExerciseId())).thenReturn(collectionExerciseJson.get(0));
 
-      caseNotificationService.acceptNotification(caseNotification);
+    caseNotificationService.acceptNotification(caseNotification);
 
-      ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
+    final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
 
-      verify(actionCaseRepo, times(1)).save(actionCase.capture());
+    verify(actionCaseRepo, times(1)).save(actionCase.capture());
 
-      List<ActionCase> caze = actionCase.getAllValues();
+    final List<ActionCase> caze = actionCase.getAllValues();
 
-      verify(actionCaseRepo, times(1)).flush();
+    verify(actionCaseRepo, times(1)).flush();
 
-      assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getActionPlanId());
-      assertTrue(caze.get(0).getActionPlanStartDate() != null);
-      assertTrue(caze.get(0).getActionPlanEndDate() != null);
-      assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
+    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getActionPlanId());
+    assertTrue(caze.get(0).getActionPlanStartDate() != null);
+    assertTrue(caze.get(0).getActionPlanEndDate() != null);
+    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
   }
 }

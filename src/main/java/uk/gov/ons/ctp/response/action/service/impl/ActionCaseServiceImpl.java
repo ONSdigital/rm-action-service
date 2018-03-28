@@ -20,7 +20,7 @@ public class ActionCaseServiceImpl implements ActionCaseService {
   private ActionCaseRepository actionCaseRepo;
 
   @Override
-  public ActionCase findActionCase(UUID caseId) {
+  public ActionCase findActionCase(final UUID caseId) {
     return actionCaseRepo.findById(caseId);
   }
 }

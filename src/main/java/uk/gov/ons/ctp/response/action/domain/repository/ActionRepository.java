@@ -25,6 +25,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
 
   /**
    * Find action by UUID
+   *
    * @param actionId the action uuid
    * @return the action found
    */
@@ -51,25 +52,27 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    * date time order descending.
    *
    * @param actionTypeName ActionTypeName filter criteria
-   * @param state State of Action
+   * @param state          State of Action
    * @return List<Action> returns all actions for actionTypeName and state
    */
   List<Action> findByActionTypeNameAndStateOrderByCreatedDateTimeDesc(String actionTypeName,
-      ActionDTO.ActionState state);
+                                                                      ActionDTO.ActionState state);
 
   /**
    * Return all actions for the specified actionTypeName and states according to
    * the page specification
    *
    * @param actionTypeName ActionTypeName filter criteria
-   * @param states States of Action
-   * @param actionPKs the actionPKs
-   * @param pageable the paging info for the query
+   * @param states         States of Action
+   * @param actionPKs      the actionPKs
+   * @param pageable       the paging info for the query
    * @return List<Action> returns all actions for actionTypeName and states, for
-   *         the given page
+   * the given page
    */
   List<Action> findByActionTypeNameAndStateInAndActionPKNotIn(String actionTypeName,
-      List<ActionDTO.ActionState> states, List<BigInteger> actionPKs, Pageable pageable);
+                                                              List<ActionDTO.ActionState> states,
+                                                              List<BigInteger> actionPKs,
+                                                              Pageable pageable);
 
   /**
    * Return all actions for the specified actionTypeName.

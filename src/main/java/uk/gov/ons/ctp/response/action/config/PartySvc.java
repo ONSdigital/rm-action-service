@@ -7,7 +7,6 @@ import uk.gov.ons.ctp.common.rest.RestUtilityConfig;
 /**
  * App config POJO for Party service access - host/location and endpoint
  * locations
- *
  */
 @CoverageIgnore
 @Data

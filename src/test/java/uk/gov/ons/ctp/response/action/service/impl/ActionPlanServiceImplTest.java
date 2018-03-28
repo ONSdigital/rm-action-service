@@ -52,8 +52,8 @@ public class ActionPlanServiceImplTest {
   @Test
   public void testUpdateActionPlanNoChange() throws Exception {
     // set up dummy data
-    List<ActionPlan> persistedActionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    ActionPlan blankActionPlan = ActionPlan.builder().build();
+    final List<ActionPlan> persistedActionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    final ActionPlan blankActionPlan = ActionPlan.builder().build();
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findOne(1)).thenReturn(persistedActionPlans.get(0));
@@ -72,8 +72,8 @@ public class ActionPlanServiceImplTest {
   @Test
   public void testUpdateActionPlanChangeDesc() throws Exception {
     // set up dummy data
-    List<ActionPlan> persistedActionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    ActionPlan actionPlanWithDesc = ActionPlan.builder().description("this is a test").build();
+    final List<ActionPlan> persistedActionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    final ActionPlan actionPlanWithDesc = ActionPlan.builder().description("this is a test").build();
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findById(ACTION_PLAN_1_ID)).thenReturn(persistedActionPlans.get(0));
@@ -86,15 +86,15 @@ public class ActionPlanServiceImplTest {
     verify(actionPlanRepo).findById(ACTION_PLAN_1_ID);
     verify(actionPlanRepo, times(1)).save(any(ActionPlan.class));
   }
-  
+
   /**
    * @throws Exception oops
    */
   @Test
   public void testUpdateActionPlanChangeLastGoodRunDateTime() throws Exception {
     // set up dummy data
-    List<ActionPlan> persistedActionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    ActionPlan actionPlanWithLastGoodRunDateTime = ActionPlan.builder().lastRunDateTime(DateTimeUtil.nowUTC()).build();
+    final List<ActionPlan> persistedActionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    final ActionPlan actionPlanWithLastGoodRunDateTime = ActionPlan.builder().lastRunDateTime(DateTimeUtil.nowUTC()).build();
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findById(ACTION_PLAN_1_ID)).thenReturn(persistedActionPlans.get(0));

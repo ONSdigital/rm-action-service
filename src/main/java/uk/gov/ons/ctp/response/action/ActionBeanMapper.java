@@ -10,7 +10,11 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
-import uk.gov.ons.ctp.response.action.representation.*;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionFeedbackDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
 
 /**
  * The bean mapper to go from Entity objects to Presentation objects.
@@ -20,7 +24,7 @@ import uk.gov.ons.ctp.response.action.representation.*;
 public class ActionBeanMapper extends ConfigurableMapper {
 
   @Override
-  public void configureFactoryBuilder(DefaultMapperFactory.Builder builder) {
+  public void configureFactoryBuilder(final DefaultMapperFactory.Builder builder) {
     builder.compilerStrategy(new EclipseJdtCompilerStrategy());
   }
 
@@ -49,9 +53,9 @@ public class ActionBeanMapper extends ConfigurableMapper {
         .register();
 
     factory
-            .classMap(ActionFeedback.class, ActionFeedbackDTO.class)
-            .byDefault()
-            .register();
+        .classMap(ActionFeedback.class, ActionFeedbackDTO.class)
+        .byDefault()
+        .register();
 
     factory
         .classMap(ActionPostRequestDTO.class, Action.class)

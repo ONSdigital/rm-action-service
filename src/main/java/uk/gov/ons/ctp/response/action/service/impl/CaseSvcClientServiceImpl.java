@@ -20,7 +20,12 @@ import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
-import uk.gov.ons.ctp.response.casesvc.representation.*;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseEventCreationRequestDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -29,7 +34,6 @@ import java.util.UUID;
 
 /**
  * Impl of the service that centralizes all REST calls to the Case service
- *
  */
 @Slf4j
 @Service
@@ -52,21 +56,21 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCase(final UUID caseId) {
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
         null, caseId);
 
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
 
     CaseDetailsDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
@@ -78,21 +82,21 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseGroupDTO getCaseGroup(final UUID caseGroupId) {
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseGroupPath(), null,
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseGroupPath(), null,
         caseGroupId);
 
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
 
     CaseGroupDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CaseGroupDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
@@ -104,21 +108,21 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public List<CaseEventDTO> getCaseEvents(final UUID caseId) {
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCaseGetPath(),
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCaseGetPath(),
         null, caseId);
 
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
 
     CaseEventDTO[] result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CaseEventDTO[].class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
@@ -129,24 +133,24 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public CaseDetailsDTO getCaseWithIAC(UUID caseId) {
-    MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+  public CaseDetailsDTO getCaseWithIAC(final UUID caseId) {
+    final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.add("iac", "true");
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
         queryParams, caseId);
 
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
 
     CaseDetailsDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
@@ -157,25 +161,25 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public CaseDetailsDTO getCaseWithIACandCaseEvents(UUID caseId) {
-    MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+  public CaseDetailsDTO getCaseWithIACandCaseEvents(final UUID caseId) {
+    final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.add("iac", "true");
     queryParams.add("caseevents", "true");
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
         queryParams, caseId);
 
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
 
     CaseDetailsDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }
@@ -186,12 +190,12 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public CreatedCaseEventDTO createNewCaseEvent(final Action action, CategoryDTO.CategoryName actionCategory) {
+  public CreatedCaseEventDTO createNewCaseEvent(final Action action, final CategoryDTO.CategoryName actionCategory) {
     log.debug("posting caseEvent for actionId {} to casesvc for category {} ", action.getId(),
         actionCategory);
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCasePostPath(),
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCasePostPath(),
         null, action.getCaseId());
-    CaseEventCreationRequestDTO caseEventDTO = new CaseEventCreationRequestDTO();
+    final CaseEventCreationRequestDTO caseEventDTO = new CaseEventCreationRequestDTO();
     caseEventDTO.setCategory(actionCategory);
     caseEventDTO.setCreatedBy(action.getCreatedBy());
     caseEventDTO.setSubCategory(action.getActionType().getName());
@@ -203,17 +207,17 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
       caseEventDTO.setDescription(action.getActionType().getDescription());
     }
 
-    HttpEntity<CaseEventCreationRequestDTO> httpEntity = restUtility.createHttpEntity(caseEventDTO);
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity,
+    final HttpEntity<CaseEventCreationRequestDTO> httpEntity = restUtility.createHttpEntity(caseEventDTO);
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity,
         String.class);
 
     CreatedCaseEventDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, CreatedCaseEventDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }

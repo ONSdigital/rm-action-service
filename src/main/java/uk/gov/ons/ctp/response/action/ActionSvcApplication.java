@@ -1,7 +1,5 @@
 package uk.gov.ons.ctp.response.action;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -22,7 +20,14 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
-import uk.gov.ons.ctp.common.distributed.*;
+import uk.gov.ons.ctp.common.distributed.DistributedInstanceManager;
+import uk.gov.ons.ctp.common.distributed.DistributedInstanceManagerRedissonImpl;
+import uk.gov.ons.ctp.common.distributed.DistributedLatchManager;
+import uk.gov.ons.ctp.common.distributed.DistributedLatchManagerRedissonImpl;
+import uk.gov.ons.ctp.common.distributed.DistributedListManager;
+import uk.gov.ons.ctp.common.distributed.DistributedListManagerRedissonImpl;
+import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
+import uk.gov.ons.ctp.common.distributed.DistributedLockManagerRedissonImpl;
 import uk.gov.ons.ctp.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.common.rest.RestUtility;
@@ -67,9 +72,9 @@ public class ActionSvcApplication {
    * @return the Distributed List Manager
    */
   @Bean
-  public DistributedListManager<BigInteger> actionDistributionListManager(RedissonClient redissonClient) {
+  public DistributedListManager<BigInteger> actionDistributionListManager(final RedissonClient redissonClient) {
     return new DistributedListManagerRedissonImpl<BigInteger>(ActionSvcApplication.ACTION_DISTRIBUTION_LIST,
-            redissonClient,
+        redissonClient,
         appConfig.getDataGrid().getListTimeToWaitSeconds(),
         appConfig.getDataGrid().getListTimeToLiveSeconds());
   }
@@ -81,7 +86,7 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedLockManager actionPlanExecutionLockManager(RedissonClient redissonClient) {
+  public DistributedLockManager actionPlanExecutionLockManager(final RedissonClient redissonClient) {
     return new DistributedLockManagerRedissonImpl(ActionSvcApplication.ACTION_EXECUTION_LOCK, redissonClient,
         appConfig.getDataGrid().getLockTimeToLiveSeconds());
   }
@@ -93,7 +98,7 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedInstanceManager reportDistributedInstanceManager(RedissonClient redissonClient) {
+  public DistributedInstanceManager reportDistributedInstanceManager(final RedissonClient redissonClient) {
     return new DistributedInstanceManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient);
   }
 
@@ -104,9 +109,9 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedLatchManager reportDistributedLatchManager(RedissonClient redissonClient) {
+  public DistributedLatchManager reportDistributedLatchManager(final RedissonClient redissonClient) {
     return new DistributedLatchManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient,
-            appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
+        appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
   }
 
   /**
@@ -116,9 +121,9 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedLockManager reportDistributedLockManager(RedissonClient redissonClient) {
+  public DistributedLockManager reportDistributedLockManager(final RedissonClient redissonClient) {
     return new DistributedLockManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient,
-            appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
+        appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
   }
 
   /**
@@ -128,13 +133,13 @@ public class ActionSvcApplication {
    */
   @Bean
   public RedissonClient redissonClient() {
-    Config config = new Config();
+    final Config config = new Config();
     config.useSingleServer()
         .setAddress(appConfig.getDataGrid().getAddress())
         .setPassword(appConfig.getDataGrid().getPassword());
     return Redisson.create(config);
   }
-  
+
   /**
    * The restTemplate bean injected in REST client classes
    *
@@ -153,7 +158,7 @@ public class ActionSvcApplication {
   @Bean
   @Qualifier("caseSvcClient")
   public RestUtility caseClient() {
-    RestUtility restUtility = new RestUtility(appConfig.getCaseSvc().getConnectionConfig());
+    final RestUtility restUtility = new RestUtility(appConfig.getCaseSvc().getConnectionConfig());
     return restUtility;
   }
 
@@ -165,7 +170,7 @@ public class ActionSvcApplication {
   @Bean
   @Qualifier("collectionExerciseSvcClient")
   public RestUtility collectionClient() {
-    RestUtility restUtility = new RestUtility(appConfig.getCollectionExerciseSvc().getConnectionConfig());
+    final RestUtility restUtility = new RestUtility(appConfig.getCollectionExerciseSvc().getConnectionConfig());
     return restUtility;
   }
 
@@ -177,7 +182,7 @@ public class ActionSvcApplication {
   @Bean
   @Qualifier("partySvcClient")
   public RestUtility partyClient() {
-    RestUtility restUtility = new RestUtility(appConfig.getPartySvc().getConnectionConfig());
+    final RestUtility restUtility = new RestUtility(appConfig.getPartySvc().getConnectionConfig());
     return restUtility;
   }
 
@@ -189,7 +194,7 @@ public class ActionSvcApplication {
   @Bean
   @Qualifier("surveySvcClient")
   public RestUtility surveyClient() {
-    RestUtility restUtility = new RestUtility(appConfig.getSurveySvc().getConnectionConfig());
+    final RestUtility restUtility = new RestUtility(appConfig.getSurveySvc().getConnectionConfig());
     return restUtility;
   }
 
@@ -219,9 +224,10 @@ public class ActionSvcApplication {
    *
    * @return a customer object mapper
    */
-  @Bean @Primary
+  @Bean
+  @Primary
   public CustomObjectMapper customObjectMapper() {
-    CustomObjectMapper mapper = new CustomObjectMapper();
+    final CustomObjectMapper mapper = new CustomObjectMapper();
 
     return mapper;
   }

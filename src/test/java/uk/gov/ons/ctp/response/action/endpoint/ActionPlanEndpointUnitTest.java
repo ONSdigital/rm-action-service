@@ -26,12 +26,14 @@ import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.ons.ctp.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.common.MvcHelper.putJson;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
@@ -73,6 +75,7 @@ public class ActionPlanEndpointUnitTest {
 
   /**
    * Initialises Mockito and loads Class Fixtures
+   *
    * @throws Exception exception thrown
    */
   @Before
@@ -95,7 +98,7 @@ public class ActionPlanEndpointUnitTest {
    */
   @Test
   public void findActionPlansNoneFound() throws Exception {
-    ResultActions actions = mockMvc.perform(getJson("/actionplans"));
+    final ResultActions actions = mockMvc.perform(getJson("/actionplans"));
 
     actions.andExpect(status().isNoContent())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
@@ -111,7 +114,7 @@ public class ActionPlanEndpointUnitTest {
   public void findActionPlansUnCheckedException() throws Exception {
     when(actionPlanService.findActionPlans()).thenThrow(new IllegalArgumentException(OUR_EXCEPTION_MESSAGE));
 
-    ResultActions actions = mockMvc.perform(getJson("/actionplans"));
+    final ResultActions actions = mockMvc.perform(getJson("/actionplans"));
 
     actions.andExpect(status().is5xxServerError())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
@@ -130,7 +133,7 @@ public class ActionPlanEndpointUnitTest {
   public void findActionPlansFound() throws Exception {
     when(actionPlanService.findActionPlans()).thenReturn(actionPlans);
 
-    ResultActions actions = mockMvc.perform(getJson("/actionplans"));
+    final ResultActions actions = mockMvc.perform(getJson("/actionplans"));
 
     actions.andExpect(status().isOk())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
@@ -154,7 +157,7 @@ public class ActionPlanEndpointUnitTest {
    */
   @Test
   public void findActionPlanNotFound() throws Exception {
-    ResultActions actions = mockMvc.perform(getJson(String.format("/actionplans/%s", NON_EXISTING_ACTION_PLAN_ID)));
+    final ResultActions actions = mockMvc.perform(getJson(String.format("/actionplans/%s", NON_EXISTING_ACTION_PLAN_ID)));
 
     actions.andExpect(status().isNotFound())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
@@ -174,7 +177,7 @@ public class ActionPlanEndpointUnitTest {
     when(actionPlanService.findActionPlanById(NON_EXISTING_ACTION_PLAN_ID)).thenThrow(
         new IllegalArgumentException(OUR_EXCEPTION_MESSAGE));
 
-    ResultActions actions = mockMvc.perform(getJson(String.format("/actionplans/%s", NON_EXISTING_ACTION_PLAN_ID)));
+    final ResultActions actions = mockMvc.perform(getJson(String.format("/actionplans/%s", NON_EXISTING_ACTION_PLAN_ID)));
 
     actions.andExpect(status().is5xxServerError())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
@@ -193,7 +196,7 @@ public class ActionPlanEndpointUnitTest {
   public void findActionPlanFound() throws Exception {
     when(actionPlanService.findActionPlanById(ACTION_PLAN_1_ID)).thenReturn(actionPlans.get(0));
 
-    ResultActions actions = mockMvc.perform(getJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID)));
+    final ResultActions actions = mockMvc.perform(getJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID)));
 
     actions.andExpect(status().isOk())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
@@ -236,7 +239,7 @@ public class ActionPlanEndpointUnitTest {
   public void updateActionPlan() throws Exception {
     when(actionPlanService.updateActionPlan(any(UUID.class), any(ActionPlan.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions actions = mockMvc
+    final ResultActions actions = mockMvc
         .perform(putJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID), ACTION_PLAN_JSON));
 
     actions.andExpect(status().isOk())

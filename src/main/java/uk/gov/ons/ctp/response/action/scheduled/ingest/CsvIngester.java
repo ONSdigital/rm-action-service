@@ -23,7 +23,14 @@ import javax.validation.ValidatorFactory;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +42,6 @@ import java.util.stream.Collectors;
  * handler will be sent. The CSV file may contain actions for multiple handlers,
  * and even multiple action types for each handler. The generation of the CSV
  * file is outside the remit of the action service.
- *
  */
 @MessageEndpoint
 @Slf4j
@@ -79,13 +85,12 @@ public class CsvIngester extends CsvToBean<CsvLine> {
 
   private static final String[] COLUMNS = new String[] {HANDLER, ACTION_TYPE, INSTRUCTION_TYPE, ADDRESS_TYPE,
       ESTAB_TYPE, LOCALITY, ORGANISATION_NAME, CATEGORY, LINE1, LINE2, TOWN_NAME, POSTCODE, LADCODE, LATITUDE,
-          LONGITUDE, UPRN, CASE_ID, CASE_REF, PRIORITY, IAC, EVENTS, ACTION_PLAN, QUESTION_SET, TITLE, FORENAME,
-          SURNAME, EMAIL, TELEPHONE};
+      LONGITUDE, UPRN, CASE_ID, CASE_REF, PRIORITY, IAC, EVENTS, ACTION_PLAN, QUESTION_SET, TITLE, FORENAME,
+      SURNAME, EMAIL, TELEPHONE};
 
   /**
    * Inner class to encapsulate the request and cancel data as they do not have
    * common parentage
-   *
    */
   @Data
   private class InstructionBucket {
@@ -108,7 +113,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    */
   @Cacheable(cacheNames = "csvIngestValidator")
   private Validator getValidator() {
-    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     return factory.getValidator();
   }
 
@@ -128,10 +133,10 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    * @param csvFile the file to ingest
    */
   @ServiceActivator(inputChannel = CHANNEL)
-  public void ingest(File csvFile) {
+  public void ingest(final File csvFile) {
     log.debug("INGESTED {}", csvFile.toString());
     CSVReader reader = null;
-    Map<String, InstructionBucket> handlerInstructionBuckets = new HashMap<>();
+    final Map<String, InstructionBucket> handlerInstructionBuckets = new HashMap<>();
 
     try {
       reader = new CSVReader(new FileReader(csvFile));
@@ -140,8 +145,8 @@ public class CsvIngester extends CsvToBean<CsvLine> {
       try {
         while ((nextLine = reader.readNext()) != null) {
           if (lineNum++ > 0) {
-            CsvLine csvLine = (CsvLine) processLine(columnPositionMappingStrategy, nextLine);
-            Optional<String> namesOfInvalidColumns = validateLine(csvLine);
+            final CsvLine csvLine = (CsvLine) processLine(columnPositionMappingStrategy, nextLine);
+            final Optional<String> namesOfInvalidColumns = validateLine(csvLine);
             if (namesOfInvalidColumns.isPresent()) {
               log.error("Problem parsing {} due to {} - entire ingest aborted", Arrays.toString(nextLine),
                   namesOfInvalidColumns.get());
@@ -150,10 +155,10 @@ public class CsvIngester extends CsvToBean<CsvLine> {
               return;
             }
             // first - which handler is it for?
-            String handler = csvLine.getHandler();
+            final String handler = csvLine.getHandler();
 
             // get the handlers bucket
-            InstructionBucket handlerInstructionBucket = getHandlerBucket(handlerInstructionBuckets, handler);
+            final InstructionBucket handlerInstructionBucket = getHandlerBucket(handlerInstructionBuckets, handler);
 
             // parse the line
             if (csvLine.getInstructionType().equals(REQUEST_INSTRUCTION)) {
@@ -166,7 +171,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
             }
           }
         }
-      } catch (Exception e) {
+      } catch (final Exception e) {
         log.error("Problem parsing {} - entire ingest aborted", nextLine);
         log.error("Stacktrace: ", e);
         csvFile.renameTo(new File(csvFile.getPath() + ".fix_line_" + lineNum));
@@ -180,7 +185,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
 
       // all lines parsed successfully - now send out bucket contents
       publishBuckets(handlerInstructionBuckets);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       log.error("Problem reading ingest file {}", csvFile.getPath());
       log.error("Stacktrace: ", e);
     }
@@ -191,10 +196,10 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    * store if not already stored
    *
    * @param handlerInstructionBuckets the bucket store keyed by handler
-   * @param handler get the bucket for this handler
+   * @param handler                   get the bucket for this handler
    * @return the bucket
    */
-  private InstructionBucket getHandlerBucket(Map<String, InstructionBucket> handlerInstructionBuckets, String handler) {
+  private InstructionBucket getHandlerBucket(final Map<String, InstructionBucket> handlerInstructionBuckets, final String handler) {
     InstructionBucket handlerInstructionBucket = handlerInstructionBuckets.get(handler);
     if (handlerInstructionBucket == null) {
       handlerInstructionBucket = new InstructionBucket();
@@ -211,9 +216,9 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    * @param csvLine the line
    * @return the errored column names separated by '_'
    */
-  private Optional<String> validateLine(CsvLine csvLine) {
-    Set<ConstraintViolation<CsvLine>> violations = getValidator().validate(csvLine);
-    String invalidColumns = violations.stream().map(v -> v.getPropertyPath().toString())
+  private Optional<String> validateLine(final CsvLine csvLine) {
+    final Set<ConstraintViolation<CsvLine>> violations = getValidator().validate(csvLine);
+    final String invalidColumns = violations.stream().map(v -> v.getPropertyPath().toString())
         .collect(Collectors.joining("_"));
     return (invalidColumns.length() == 0) ? Optional.empty() : Optional.ofNullable(invalidColumns);
   }
@@ -236,7 +241,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    * @param csvLine the line
    * @return the built request
    */
-  private ActionRequest buildRequest(CsvLine csvLine) {
+  private ActionRequest buildRequest(final CsvLine csvLine) {
     return ActionRequest.builder()
         .withActionId(UUID.randomUUID().toString())
         .withActionType(csvLine.getActionType())
@@ -280,13 +285,13 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    *
    * @param buckets the map of buckets keyed by handler
    */
-  private void publishBuckets(Map<String, InstructionBucket> buckets) {
+  private void publishBuckets(final Map<String, InstructionBucket> buckets) {
     buckets.forEach((handler, handlerInstructionBucket) -> {
-      for (ActionRequest actionRequest : handlerInstructionBucket.actionRequests) {
+      for (final ActionRequest actionRequest : handlerInstructionBucket.actionRequests) {
         actionInstructionPublisher.sendActionInstruction(handler, actionRequest);
       }
 
-      for (ActionCancel actionCancel :handlerInstructionBucket.actionCancels) {
+      for (final ActionCancel actionCancel : handlerInstructionBucket.actionCancels) {
         actionInstructionPublisher.sendActionInstruction(handler, actionCancel);
       }
     });
