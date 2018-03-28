@@ -91,7 +91,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
 
       ActionRequest actionRequest = prepareActionRequest(action);
 
-      if (actionRequest != null) {
+      if (actionRequest != null & validator.validate(actionRequest)) {
         actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
       }
 

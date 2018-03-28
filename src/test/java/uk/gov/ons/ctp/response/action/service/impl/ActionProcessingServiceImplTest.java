@@ -229,7 +229,7 @@ public class ActionProcessingServiceImplTest {
         thenThrow(new RuntimeException(REST_ERROR_MSG));
 
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
-      when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
+      when(validator.validate(any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     try {
@@ -282,7 +282,7 @@ public class ActionProcessingServiceImplTest {
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
 
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
+    when(validator.validate(any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
@@ -372,7 +372,7 @@ public class ActionProcessingServiceImplTest {
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
+    when(validator.validate(any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
