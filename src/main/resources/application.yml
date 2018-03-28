@@ -89,7 +89,7 @@ data-grid:
 # the thread that sends actions to handlers
 action-distribution:
   # how many actions should we read each time we wake
-  retrieval-max: 1
+  retrieval-max: 200
   # when we fail to send to rabbit how long should we pause for before retry
   retry-sleep-seconds: 30
   # how long to pause after each distribution exercise 
