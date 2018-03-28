@@ -90,35 +90,6 @@ public class ActionDistributorTest {
   }
 
   /**
-   * Test that when we fail at first hurdle to load ActionTypes, we do not go on to call anything else. In reality, the
-   * wakeup method would then be called again after a sleep interval by Spring but we cannot test that here.
-   *
-   * @throws Exception oops
-   */
-  @Test
-  public void testFailToGetAnyActionType() throws Exception {
-    when(actionTypeRepo.findAll()).thenThrow(new RuntimeException("Database access failed"));
-
-    DistributionInfo info = actionDistributor.distribute();
-    List<InstructionCount> countList = info.getInstructionCounts();
-    assertTrue(countList.isEmpty());
-
-    verify(actionTypeRepo).findAll();
-
-    // Assertions for calls in method retrieveActions
-    verify(actionDistributionListManager, times(0)).findList(any(String.class),
-        any(Boolean.class));
-    verify(actionRepo, times(0)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        any(String.class), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionDistributionListManager, times(0)).saveList(any(String.class), any(List.class),
-        any(Boolean.class));
-
-    // Assertions for calls in actionProcessingService
-    verify(actionProcessingService, times(0)).processActionRequest(any(Action.class));
-    verify(actionProcessingService, times(0)).processActionCancel(any(Action.class));
-  }
-
-  /**
    * We retrieve actionTypes but then exception thrown when retrieving actions.
    *
    * @throws Exception oops

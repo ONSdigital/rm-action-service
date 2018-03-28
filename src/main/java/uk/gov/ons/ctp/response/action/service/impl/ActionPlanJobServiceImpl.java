@@ -1,19 +1,11 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
@@ -23,9 +15,14 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 
-/**
- * Implementation
- */
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
+
 @Service
 @Slf4j
 public class ActionPlanJobServiceImpl implements ActionPlanJobService {
@@ -71,84 +68,64 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
   public List<ActionPlanJob> createAndExecuteAllActionPlanJobs() {
     List<ActionPlanJob> executedJobs = new ArrayList<>();
     actionPlanRepo.findAll().forEach(actionPlan -> {
-      ActionPlanJob job = new ActionPlanJob();
-      job.setActionPlanFK(actionPlan.getActionPlanPK());
-      job.setCreatedBy(CREATED_BY_SYSTEM);
-      job = createAndExecuteActionPlanJob(job, false);
-      if (job != null) {
-        executedJobs.add(job);
+      Date lastExecutionTime = new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
+      if (actionPlan.getLastRunDateTime() == null || actionPlan.getLastRunDateTime().before(lastExecutionTime)) {
+        ActionPlanJob job = ActionPlanJob.builder()
+                .actionPlanFK(actionPlan.getActionPlanPK())
+                .createdBy(CREATED_BY_SYSTEM)
+                .build();
+        job = createAndExecuteActionPlanJob(job);
+        if (job !=  null) {
+          executedJobs.add(job);
+        }
+      } else {
+        log.debug("Job for plan {} has been run since last wake up - skipping", actionPlan.getActionPlanPK());
       }
     });
     return executedJobs;
   }
 
+  /**
+   * Create a new ActionPlanJob record and execute createActions stored procedure.
+   *
+   * @param actionPlanJobTemplate template {@link ActionPlanJob} to create and execute.
+   * @return ActionPlanJob that was created or null if it has not been created.
+   */
   @Override
-  public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJob) {
-    return createAndExecuteActionPlanJob(actionPlanJob, true);
+  public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
+    Integer actionPlanPK = actionPlanJobTemplate.getActionPlanFK();
+    ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
+    if (actionPlan == null) {
+      log.debug("Action plan {} is null", actionPlanPK);
+    } else if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
+      log.debug("No open cases for action plan {}", actionPlanPK);
+    } else if (actionPlanExecutionLockManager.lock(actionPlan.getName())) {
+      try {
+        ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
+        // createActions needs to be executed after actionPlanJob has been created and committed.
+        // createActions invokes a database procedure which won't be able to see the actionPlanJob if not committed.
+        // This also means an actionPlanJob could be left with state SUBMITTED if createActions failed.
+        actionCaseRepo.createActions(job.getActionPlanJobPK());
+        return job;
+      } finally {
+        log.debug("Releasing lock on action plan {}", actionPlanPK);
+        actionPlanExecutionLockManager.unlock(actionPlan.getName());
+      }
+    } else {
+      log.debug("Could not get lock on action plan {}", actionPlanPK);
+    }
+    return null;
   }
 
-  /**
-   * The root method for executing an action plan - called indirectly by the
-   * restful endpoint when executing a single plan manually and by the scheduled
-   * execution of all plans in sequence. See the other createAndExecute plan
-   * methods in this class.
-   *
-   * @param actionPlanJob the plan to execute.
-   * @param forcedExecution true when called indirectly for manual execution -
-   *          the plan lock is still used (we don't want more than one
-   *          concurrent plan execution), but we skip the last run time check.
-   * @return the plan job if it was run or null if not.
-   */
-  private ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJob, boolean forcedExecution) {
-    ActionPlanJob createdJob = null;
-
-    Integer actionPlanPK = actionPlanJob.getActionPlanFK();
-    ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
-    if (actionPlan != null) {
-      if (actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-        try {
-          Timestamp now = DateTimeUtil.nowUTC();
-          if (!forcedExecution) {
-            Date lastExecutionTime = new Date(now.getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
-            if (actionPlan.getLastRunDateTime() != null && actionPlan.getLastRunDateTime().after(lastExecutionTime)) {
-              log.debug("Job for plan {} has been run since last wake up - skipping", actionPlanPK);
-              return createdJob;
-            }
-          }
-
-          // If no cases for actionplan why bother?
-          if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
-            log.debug("No open cases for action plan {} - skipping", actionPlanPK);
-            return createdJob;
-          }
-
-          // Enrich and save the job.
-          actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
-          actionPlanJob.setCreatedDateTime(now);
-          actionPlanJob.setUpdatedDateTime(now);
-          actionPlanJob.setId(UUID.randomUUID());
-          // Please note it is not possible to place the saving of the
-          // actionPlanJob and call to createActions SQL function in the same
-          // transaction. The createActions function uses the actionPlanJob row
-          // which will not be visible to it until the transaction is committed.
-          // The function creates all the actions in one transaction block
-          // however, and needs the actionPlanJob row to be there to work. A
-          // actionPlanJob could be left with state SUBMITTED if the function
-          // failed.
-          createdJob = actionPlanJobRepo.save(actionPlanJob);
-          log.info("Running actionplanjobid {} actionplanid {}", createdJob.getActionPlanJobPK(),
-              createdJob.getActionPlanFK());
-          // Get the repo to call SQL function to create actions.
-          actionCaseRepo.createActions(createdJob.getActionPlanJobPK());
-        } finally {
-          log.debug("Releasing lock on action plan {}", actionPlanPK);
-          actionPlanExecutionLockManager.unlock(actionPlan.getName());
-        }
-      } else {
-        log.debug("Could not get lock on action plan {}", actionPlanPK);
-      }
-    }
-
+  private ActionPlanJob createActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
+    Timestamp now = nowUTC();
+    actionPlanJobTemplate.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
+    actionPlanJobTemplate.setCreatedDateTime(now);
+    actionPlanJobTemplate.setUpdatedDateTime(now);
+    actionPlanJobTemplate.setId(UUID.randomUUID());
+    ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJobTemplate);
+    log.info("Running actionplanjobid {} actionplanid {}", createdJob.getActionPlanJobPK(),
+        createdJob.getActionPlanFK());
     return createdJob;
   }
 }

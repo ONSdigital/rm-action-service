@@ -53,7 +53,6 @@ public class ActionPlanJobServiceImplTest {
 
   /**
    * Initialises Mockito
-   * @throws Exception exception thrown
    */
   @Before
   public void setUp() throws Exception {
@@ -67,7 +66,6 @@ public class ActionPlanJobServiceImplTest {
 
   /**
    * Test the service method called by the endpoint where exec is forced ie the service should disregard last exec times
-   * @throws Exception oops
    */
   @Test
   public void testCreateAndExecuteActionPlanJobForcedExecutionBlueSky() throws Exception {
@@ -101,7 +99,6 @@ public class ActionPlanJobServiceImplTest {
 
   /**
    * Test that the endpoint forced exec method gracefully handles the failure to lock an action plan
-   * @throws Exception oops
    */
   @Test
   public void testCreateAndExecuteActionPlanJobForcedExecutionFailedLock() throws Exception {
@@ -120,8 +117,6 @@ public class ActionPlanJobServiceImplTest {
     ActionPlanJob executedJob = actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
   
     // assert the right calls were made
-    verify(actionPlanRepo).findOne(1);
-    verify(actionCaseRepo, times(0)).countByActionPlanFK(1);
     verify(actionPlanJobRepo, times(0)).save(actionPlanJobs.get(0));
     verify(actionCaseRepo, times(0)).createActions(1);
     Assert.assertNull(executedJob);
@@ -129,7 +124,6 @@ public class ActionPlanJobServiceImplTest {
 
   /**
    * Test the endpoint forced exec method handles no open cases for an action plan gracefully
-   * @throws Exception oops
    */
   @Test
   public void testCreateAndExecuteActionPlanJobForcedExecutionNoCases() throws Exception {
@@ -158,7 +152,6 @@ public class ActionPlanJobServiceImplTest {
   /**
    * Test that the service method that execs ALL plans works when all plans require running due to expired
    * last run times
-   * @throws Exception oops
    */
   @Test
   public void testCreateAndExecuteActionPlanJobUnForcedExecutionPlanDoesRun() throws Exception {
@@ -198,12 +191,8 @@ public class ActionPlanJobServiceImplTest {
     Assert.assertTrue(executedJobs.size() > 0);
   }
 
-  /**
-   * Test that the service method that execs ALL plans works when all plans require running due to expired last run times
-   * @throws Exception oops
-   */
   @Test
-  public void testCreateAndExecuteActionPlanJobUnForcedExecutionPlanDoesNotRun() throws Exception {
+  public void testCreateAndExecuteActionPlanJobPlanDoesNotRun() throws Exception {
 
     // load fixtures
     List<ActionPlan> actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
@@ -222,11 +211,6 @@ public class ActionPlanJobServiceImplTest {
     List<ActionPlanJob> executedJobs = actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
 
     // assert the right calls were made
-    verify(actionPlanRepo, times(1)).findAll();
-    verify(actionPlanRepo, times(1)).findOne(1);
-    verify(actionPlanRepo, times(1)).findOne(2);
-    verify(actionCaseRepo, times(0)).findByActionPlanId(1);
-    verify(actionCaseRepo, times(0)).findByActionPlanId(2);
     verify(actionPlanJobRepo, times(0)).save(any(ActionPlanJob.class));
     verify(actionCaseRepo, times(0)).createActions(any(Integer.class));
 
