@@ -81,10 +81,7 @@ class ActionDistributor {
 
     try {
       final List<Action> actions = retrieveActions(actionType);
-
-      if (!CollectionUtils.isEmpty(actions)) {
-        processActions(actions, requestCount, cancelCount);
-      }
+      processActions(actions, requestCount, cancelCount);
     } catch (final Exception e) {
       log.error("Failed to process action type {}", actionType, e);
     }
@@ -120,10 +117,8 @@ class ActionDistributor {
   private List<Action> retrieveActions(final ActionType actionType) {
     List<Action> actions = actionRepo.findSubmittedOrCancelledByActionTypeName(actionType.getName(),
             appConfig.getActionDistribution().getRetrievalMax());
-    if (CollectionUtils.isNotEmpty(actions)) {
-      log.debug("RETRIEVED action ids {}", actions.stream().map(a -> a.getActionPK().toString())
-          .collect(Collectors.joining(",")));
-    }
+    log.debug("RETRIEVED action ids {}", actions.stream().map(a -> a.getActionPK().toString())
+        .collect(Collectors.joining(",")));
     return actions;
   }
 }
