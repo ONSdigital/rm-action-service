@@ -44,7 +44,7 @@ public class CsvLine {
   // either at runtime or with some sort of XSD definition about Party attributes?
   // the following were all lifted from the old ContactDTO ? how do we determine these now with PartySvc?
   public static final String EMAIL_RE = "^$|[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)"
-          + "*(\\.[A-Za-z]{2,})";
+      + "*(\\.[A-Za-z]{2,})";
   public static final String TELEPHONE_RE = "[\\d]{0,11}";
   public static final int TITLE_MAX_LEN = 20;
   public static final int FORENAME_MAX_LEN = 35;

@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface ActionCaseService extends CTPService {
   /**
    * Find the action service case entry for the given id
+   *
    * @param caseId the given id
    * @return the case
    */

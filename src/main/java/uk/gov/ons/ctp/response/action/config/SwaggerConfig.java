@@ -24,7 +24,7 @@ import uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint;
 @Configuration
 @EnableSwagger2
 @ComponentScan(basePackageClasses = {
-        ActionEndpoint.class, ActionPlanEndpoint.class, ActionPlanJobEndpoint.class
+    ActionEndpoint.class, ActionPlanEndpoint.class, ActionPlanJobEndpoint.class
 })
 public class SwaggerConfig {
 
@@ -33,20 +33,21 @@ public class SwaggerConfig {
 
   /**
    * Initialises Swagger settings and set properties.
+   *
    * @return Docket docket SwaggerUI object
    */
   @Bean
   public Docket postsApi() {
 
-    SwaggerSettings swaggerSettings = appConfig.getSwaggerSettings();
+    final SwaggerSettings swaggerSettings = appConfig.getSwaggerSettings();
 
-    ApiInfo apiInfo = new ApiInfoBuilder()
-            .title(swaggerSettings.getTitle())
-            .description(swaggerSettings.getDescription())
-            .version(swaggerSettings.getVersion())
-            .build();
+    final ApiInfo apiInfo = new ApiInfoBuilder()
+        .title(swaggerSettings.getTitle())
+        .description(swaggerSettings.getDescription())
+        .version(swaggerSettings.getVersion())
+        .build();
 
-    java.util.function.Predicate<String> pathSelector;
+    final java.util.function.Predicate<String> pathSelector;
 
     if (swaggerSettings.getSwaggerUiActive()) {
       pathSelector = PathSelectors.any()::apply;
@@ -55,12 +56,12 @@ public class SwaggerConfig {
     }
 
     return new Docket(DocumentationType.SWAGGER_2)
-            .groupName(swaggerSettings.getGroupName())
-            .apiInfo(apiInfo)
-            .select()
-            .apis(RequestHandlerSelectors.basePackage("uk.gov.ons.ctp.response.action.endpoint"))
-            .paths(pathSelector::test)
-            .build();
+        .groupName(swaggerSettings.getGroupName())
+        .apiInfo(apiInfo)
+        .select()
+        .apis(RequestHandlerSelectors.basePackage("uk.gov.ons.ctp.response.action.endpoint"))
+        .paths(pathSelector::test)
+        .build();
   }
 
 }

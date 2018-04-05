@@ -56,14 +56,14 @@ public class ActionPlanServiceImpl implements ActionPlanService {
     if (existingActionPlan != null) {
       boolean needsUpdate = false;
 
-      String newDescription = actionPlan.getDescription();
+      final String newDescription = actionPlan.getDescription();
       log.debug("newDescription = {}", newDescription);
       if (newDescription != null) {
         needsUpdate = true;
         existingActionPlan.setDescription(newDescription);
       }
 
-      Date newLastRunDateTime = actionPlan.getLastRunDateTime();
+      final Date newLastRunDateTime = actionPlan.getLastRunDateTime();
       log.debug("newLastRunDatetime = {}", newLastRunDateTime);
       if (newLastRunDateTime != null) {
         needsUpdate = true;

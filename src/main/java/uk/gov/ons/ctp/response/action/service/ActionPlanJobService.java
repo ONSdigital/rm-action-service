@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface ActionPlanJobService extends CTPService {
   /**
    * This method returns the action plan job for the specified action plan job id.
+   *
    * @param actionPlanJobId This is the action plan job id
    * @return ActionPlanJob This returns the associated action plan job.
    */
@@ -20,6 +21,7 @@ public interface ActionPlanJobService extends CTPService {
 
   /**
    * Returns all action plan jobs for the given action plan id.
+   *
    * @param actionPlanId This is the action plan id
    * @return Returns all action plan jobs for the given action plan id.
    * @throws CTPException if no actionPlan found for actionPlanId
@@ -29,6 +31,7 @@ public interface ActionPlanJobService extends CTPService {
   /**
    * Will be called by the endpoint when a manual execution of an action plan is requested
    * Create an action plan job and execute it
+   *
    * @param actionPlanJob This is the actionPlanJob for the action plan job to be created
    * @return ActionPlanJob This returns the newly created action plan job.
    */
@@ -36,6 +39,7 @@ public interface ActionPlanJobService extends CTPService {
 
   /**
    * Will be called by the endpoint when a manual execution of an action plan is requested
+   *
    * @return list of action plan jobs.
    */
   List<ActionPlanJob> createAndExecuteAllActionPlanJobs();

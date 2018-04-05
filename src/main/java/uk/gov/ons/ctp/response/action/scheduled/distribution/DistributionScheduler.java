@@ -32,15 +32,13 @@ public class DistributionScheduler implements HealthIndicator {
 
   /**
    * Scheduled execution of the Action Distributor
-   *
    */
   @Scheduled(fixedDelayString = "#{appConfig.actionDistribution.delayMilliSeconds}")
   public void run() {
     try {
       distributionInfo = actionDistributorImpl.distribute();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       log.error("Exception in action distributor", e);
-      log.error("Stacktrace: ", e);
 
     }
   }

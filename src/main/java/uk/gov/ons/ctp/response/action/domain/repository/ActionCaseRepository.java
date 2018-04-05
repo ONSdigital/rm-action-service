@@ -19,6 +19,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
 
   /**
    * trigger creation of actions from the population of the action.case and action.actionjobplan tables
+   *
    * @param actionplanjobid the id of the action plan job
    * @return true if successful
    */
@@ -28,6 +29,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
 
   /**
    * find cases (by virtue open) for actionplanid
+   *
    * @param actionPlanId the action plan
    * @return the list of (open) cases assoc with that plan
    */
@@ -35,6 +37,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
 
   /**
    * find a case by its id - the uuid which is not the primary key btw
+   *
    * @param caseId the UUID of the case to retrieve
    * @return the case
    */
@@ -42,6 +45,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
 
   /**
    * just count cases for an actionplan
+   *
    * @param actionPlanKey the plan id
    * @return how many cases for that plan
    */

@@ -7,7 +7,17 @@ import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Version;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.Timestamp;
@@ -46,32 +56,35 @@ public class Action implements Serializable {
     private static Map<Integer, ActionPriority> map = new HashMap<Integer, ActionPriority>();
 
     static {
-        for (ActionPriority priority : ActionPriority.values()) {
-            map.put(priority.level, priority);
-        }
+      for (final ActionPriority priority : ActionPriority.values()) {
+        map.put(priority.level, priority);
+      }
     }
 
     /**
      * return the enum for an integer level arg
+     *
      * @param priorityLevel the int value
      * @return the enum
      */
-    public static ActionPriority valueOf(int priorityLevel) {
-        return map.get(priorityLevel);
+    public static ActionPriority valueOf(final int priorityLevel) {
+      return map.get(priorityLevel);
     }
 
     /**
      * Create an instance of the enum
+     *
      * @param value priority as integer
      * @param label verbage
      */
-    ActionPriority(int value, String label) {
+    ActionPriority(final int value, final String label) {
       this.level = value;
       this.name = label;
     }
 
     /**
      * Getter
+     *
      * @return gotten
      */
     public int getLevel() {
@@ -80,6 +93,7 @@ public class Action implements Serializable {
 
     /**
      * Getter
+     *
      * @return gotten
      */
     public String getName() {

@@ -3,7 +3,11 @@ package uk.gov.ons.ctp.response.action.service.impl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -17,6 +21,7 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
@@ -25,15 +30,24 @@ import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.ons.ctp.response.action.service.impl.ActionProcessingServiceImpl.CANCELLATION_REASON;
 
 /**
@@ -52,6 +66,12 @@ public class ActionProcessingServiceImplTest {
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_H = "H";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
+  private static final Integer B_PARTY = 4;
+  private static final Integer ACTIVE_BI = 5;
+  private static final Integer SUSPENDED_BI = 6;
+  private static final Integer CREATED_BI = 7;
+  private static final Integer NO_ASSOCIATIONS_BI = 8;
+
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
@@ -88,6 +108,9 @@ public class ActionProcessingServiceImplTest {
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
 
+  @Mock
+  private ActionRequestValidator validator;
+
   @InjectMocks
   private ActionProcessingServiceImpl actionProcessingService;
 
@@ -101,7 +124,7 @@ public class ActionProcessingServiceImplTest {
    */
   @Before
   public void setUp() throws Exception {
-    CaseSvc caseSvcConfig = new CaseSvc();
+    final CaseSvc caseSvcConfig = new CaseSvc();
     appConfig.setCaseSvc(caseSvcConfig);
 
     partyDTOs = FixtureHelper.loadClassFixtures(PartyDTO[].class);
@@ -114,7 +137,7 @@ public class ActionProcessingServiceImplTest {
 
   @Test
   public void testProcessActionRequestNoActionType() throws CTPException {
-    Action action = new Action();
+    final Action action = new Action();
     actionProcessingService.processActionRequest(action);
 
     verify(actionSvcStateTransitionManager, never()).transition(any(ActionDTO.ActionState.class),
@@ -128,7 +151,7 @@ public class ActionProcessingServiceImplTest {
 
   @Test
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
-    Action action = new Action();
+    final Action action = new Action();
     action.setActionType(ActionType.builder().build());
     actionProcessingService.processActionRequest(action);
 
@@ -149,12 +172,12 @@ public class ActionProcessingServiceImplTest {
     when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenThrow(new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
-    Action action = new Action();
+    final Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
-    try{
+    try {
       actionProcessingService.processActionRequest(action);
       fail();
-    } catch (CTPException e) {
+    } catch (final CTPException e) {
       assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
       assertEquals(ACTION_STATE_TRANSITION_ERROR_MSG, e.getMessage());
     }
@@ -175,12 +198,12 @@ public class ActionProcessingServiceImplTest {
   public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
-    Action action = new Action();
+    final Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     try {
       actionProcessingService.processActionRequest(action);
       fail();
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       assertEquals(DB_ERROR_MSG, e.getMessage());
     }
 
@@ -199,12 +222,13 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestCaseEventCreationThrowsException() throws CTPException {
     // Start of section to mock responses
-    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
     when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
 
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS))
+        .thenReturn(partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
@@ -213,10 +237,13 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     try {
-      Action action = new Action();
+      final Action action = new Action();
       action.setId(ACTION_ID);
       action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
       action.setActionPlanFK(ACTION_PLAN_FK);
@@ -224,7 +251,7 @@ public class ActionProcessingServiceImplTest {
       action.setPriority(1);
       actionProcessingService.processActionRequest(action);
       fail();
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       assertEquals(REST_ERROR_MSG, e.getMessage());
     }
 
@@ -233,7 +260,8 @@ public class ActionProcessingServiceImplTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
+    verify(partySvcClientService, times(1)).getPartyWithAssociationsFilteredBySurvey(
+        SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS);
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
@@ -251,21 +279,24 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestHappyPathParentUnit() throws CTPException {
     // Start of section to mock responses
-    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
     when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
 
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID)).thenReturn(partyDTOs.get(0));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS)).thenReturn(partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
-    Action action = new Action();
+    final Action action = new Action();
     action.setId(ACTION_ID);
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setActionPlanFK(ACTION_PLAN_FK);
@@ -282,8 +313,8 @@ public class ActionProcessingServiceImplTest {
         eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID);
-    verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
+    verify(partySvcClientService, times(1)).getPartyWithAssociationsFilteredBySurvey(
+        SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS);
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
     verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
@@ -299,14 +330,14 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestForActionLinkedToInvalidSampleUnitType() throws CTPException {
     // Start of section to mock responses
-    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
     when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1)).thenReturn(caseDetailsDTOs.get(1)); // the returned case has a sample unit type of Z
     // End of section to mock responses
 
     // Start of section to run the test
-    Action action = new Action();
+    final Action action = new Action();
     action.setId(ACTION_ID);
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setActionPlanFK(ACTION_PLAN_FK);
@@ -337,23 +368,25 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestHappyPathChildUnit() throws CTPException {
     // Start of section to mock responses
-    ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
+    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
     when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2)).thenReturn(caseDetailsDTOs.get(2));
 
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_HI, PARTY_ID)).thenReturn(partyDTOs.get(1));
-    when(partySvcClientService.getParty(SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2)).thenReturn(
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_HI, PARTY_ID, CENSUS)).thenReturn(partyDTOs.get(1));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS)).thenReturn(
         partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS)).thenReturn(surveyDTOs.get(0));
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
     // Start of section to run the test
-    Action action = new Action();
+    final Action action = new Action();
     action.setId(ACTION_ID);
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setActionPlanFK(ACTION_PLAN_FK);
@@ -370,9 +403,8 @@ public class ActionProcessingServiceImplTest {
         eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
     verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_2);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_HI, PARTY_ID);
-    verify(partySvcClientService, times(1)).getParty(SAMPLE_UNIT_TYPE_H,
-        PARTY_ID_PARENT_FOR_CASE_ID_2);
+    verify(partySvcClientService, times(1)).getPartyWithAssociationsFilteredBySurvey(
+        SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS);
     verify(collectionExerciseClientService, times(1)).
         getCollectionExercise(COLLECTION_EXERCISE_ID);
     verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS);
@@ -391,10 +423,10 @@ public class ActionProcessingServiceImplTest {
         ACTION_STATE_TRANSITION_ERROR_MSG));
 
     try {
-      Action action = new Action();
+      final Action action = new Action();
       actionProcessingService.processActionCancel(action);
       fail();
-    } catch (CTPException e) {
+    } catch (final CTPException e) {
       assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
       assertEquals(ACTION_STATE_TRANSITION_ERROR_MSG, e.getMessage());
     }
@@ -416,10 +448,10 @@ public class ActionProcessingServiceImplTest {
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
     try {
-      Action action = new Action();
+      final Action action = new Action();
       actionProcessingService.processActionCancel(action);
       fail();
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       assertEquals(DB_ERROR_MSG, e.getMessage());
     }
 
@@ -441,23 +473,23 @@ public class ActionProcessingServiceImplTest {
         thenThrow(new RuntimeException(REST_ERROR_MSG));
 
     try {
-      Action action = new Action();
+      final Action action = new Action();
       action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
       action.setId(ACTION_ID);
       actionProcessingService.processActionCancel(action);
       fail();
-    } catch (RuntimeException e) {
+    } catch (final RuntimeException e) {
       assertEquals(REST_ERROR_MSG, e.getMessage());
     }
 
     verify(actionSvcStateTransitionManager, times(1)).transition(
         any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
+    final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
         ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         actionCaptor.capture());
-    uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel = (ActionCancel)actionCaptor.
+    final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel = (ActionCancel) actionCaptor.
         getValue();
     assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
     assertTrue(publishedActionCancel.isResponseRequired());
@@ -468,7 +500,7 @@ public class ActionProcessingServiceImplTest {
 
   @Test
   public void testProcessActionCancelHappyPath() throws CTPException {
-    Action action = new Action();
+    final Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setId(ACTION_ID);
     actionProcessingService.processActionCancel(action);
@@ -479,14 +511,121 @@ public class ActionProcessingServiceImplTest {
     verify(caseSvcClientService, times(1)).createNewCaseEvent(any(Action.class),
         eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
 
-    ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
+    final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
         ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
     verify(actionInstructionPublisher, times(1)).sendActionInstruction(eq(ACTIONEXPORTER),
         actionCaptor.capture());
-    uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel = (ActionCancel)actionCaptor.
+    final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel = (ActionCancel) actionCaptor.
         getValue();
     assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
     assertTrue(publishedActionCancel.isResponseRequired());
     assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
+  }
+
+  @Test
+  public void testGenerateChildPartyMap() {
+    final PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
+    final PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
+
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentSuspendedBI);
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
+
+    final Map<String, PartyDTO> expectedChildPartyMap = new HashMap<>();
+    expectedChildPartyMap.put("SUSPENDED", respondentSuspendedBI);
+    expectedChildPartyMap.put(actionProcessingService.CREATED, respondentCreatedBI);
+
+    final Map<String, PartyDTO> actualChildPartyMap = actionProcessingService.getChildParties(partyDTOs.get(B_PARTY), "B");
+
+    assertEquals(expectedChildPartyMap, actualChildPartyMap);
+  }
+
+  @Test
+  public void testParseRespondentStatusCreated() {
+    final Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put("SUSPENDED", partyDTOs.get(SUSPENDED_BI));
+
+    final String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(actionProcessingService.CREATED, respondentStatus);
+  }
+
+  @Test
+  public void testParseRespondentStatusActive() {
+    final Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put(actionProcessingService.ACTIVE, partyDTOs.get(ACTIVE_BI));
+
+    final String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(actionProcessingService.ACTIVE, respondentStatus);
+  }
+
+  @Test
+  public void testParseRespondentStatusesEmpty() {
+    final Map<String, PartyDTO> childPartyMap = new HashMap<>();
+    final String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+
+    assertEquals(null, respondentStatus);
+  }
+
+  @Test
+  public void testGetEnrolmentStatusEnabled() {
+    final PartyDTO partyDTO = partyDTOs.get(0);
+    assertEquals(actionProcessingService.ENABLED, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusPending() {
+    final PartyDTO partyDTO = partyDTOs.get(1);
+    assertEquals(actionProcessingService.PENDING, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusDefault() {
+    final PartyDTO partyDTO = partyDTOs.get(2);
+    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGetEnrolmentStatusNoEnrolments() {
+    final PartyDTO partyDTO = partyDTOs.get(2);
+    partyDTO.setAssociations(null);
+    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+  }
+
+  @Test
+  public void testGenerateTradingStyle() {
+    final Attributes businessAttributes = new Attributes();
+    businessAttributes.setTradstyle1("TRADSTYLE1");
+    businessAttributes.setTradstyle2("TRADSTYLE2");
+    businessAttributes.setTradstyle3("TRADSTYLE3");
+
+    final String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    final String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE2 TRADSTYLE3";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
+
+  @Test
+  public void testGenerateTradingStyleWithEmptyValues() {
+    final Attributes businessAttributes = new Attributes();
+
+    final String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    final String expectedTradingStyle = "";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
+  }
+
+  @Test
+  public void testGenerateTradingStyleWithSubsetOfTradingStyles() {
+    final Attributes businessAttributes = new Attributes();
+    businessAttributes.setTradstyle1("TRADSTYLE1");
+    businessAttributes.setTradstyle3("TRADSTYLE3");
+
+    final String generatedTradingStyle = actionProcessingService.generateTradingStyle(businessAttributes);
+    final String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE3";
+
+    assertEquals(expectedTradingStyle, generatedTradingStyle);
   }
 }

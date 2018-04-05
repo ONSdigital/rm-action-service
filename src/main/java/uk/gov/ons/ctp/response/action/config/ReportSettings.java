@@ -9,5 +9,5 @@ import net.sourceforge.cobertura.CoverageIgnore;
 @CoverageIgnore
 @Data
 public class ReportSettings {
-    private String cronExpression;
+  private String cronExpression;
 }

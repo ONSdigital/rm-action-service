@@ -3,7 +3,11 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Pageable;
 import uk.gov.ons.ctp.common.FixtureHelper;
@@ -29,17 +33,20 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test the ActionDistributor
- *
+ * <p>
  * Important reminder on the standing data held in json files:
- *  - case 3382981d-3df0-464e-9c95-aea7aee80c81 is linked with a SUBMITTED action so expect 1 ActionRequest
- *  - case 3382981d-3df0-464e-9c95-aea7aee80c82 is linked with a CANCEL_SUBMITTED action so expect 1 ActionCancel
- *  - case 3382981d-3df0-464e-9c95-aea7aee80c83 is linked with a SUBMITTED action so expect 1 ActionRequest
- *  - case 3382981d-3df0-464e-9c95-aea7aee80c84 is linked with a CANCEL_SUBMITTED action so expect 1 ActionCancel
- *  - all actions have responseRequired = true
+ * - case 3382981d-3df0-464e-9c95-aea7aee80c81 is linked with a SUBMITTED action so expect 1 ActionRequest
+ * - case 3382981d-3df0-464e-9c95-aea7aee80c82 is linked with a CANCEL_SUBMITTED action so expect 1 ActionCancel
+ * - case 3382981d-3df0-464e-9c95-aea7aee80c83 is linked with a SUBMITTED action so expect 1 ActionRequest
+ * - case 3382981d-3df0-464e-9c95-aea7aee80c84 is linked with a CANCEL_SUBMITTED action so expect 1 ActionCancel
+ * - all actions have responseRequired = true
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionDistributorTest {
@@ -76,7 +83,7 @@ public class ActionDistributorTest {
    */
   @Before
   public void setUp() throws Exception {
-    ActionDistribution actionDistributionConfig = new ActionDistribution();
+    final ActionDistribution actionDistributionConfig = new ActionDistribution();
     actionDistributionConfig.setDelayMilliSeconds(TEN);
     actionDistributionConfig.setRetrievalMax(TEN);
     actionDistributionConfig.setRetrySleepSeconds(TEN);
@@ -90,35 +97,6 @@ public class ActionDistributorTest {
   }
 
   /**
-   * Test that when we fail at first hurdle to load ActionTypes, we do not go on to call anything else. In reality, the
-   * wakeup method would then be called again after a sleep interval by Spring but we cannot test that here.
-   *
-   * @throws Exception oops
-   */
-  @Test
-  public void testFailToGetAnyActionType() throws Exception {
-    when(actionTypeRepo.findAll()).thenThrow(new RuntimeException("Database access failed"));
-
-    DistributionInfo info = actionDistributor.distribute();
-    List<InstructionCount> countList = info.getInstructionCounts();
-    assertTrue(countList.isEmpty());
-
-    verify(actionTypeRepo).findAll();
-
-    // Assertions for calls in method retrieveActions
-    verify(actionDistributionListManager, times(0)).findList(any(String.class),
-        any(Boolean.class));
-    verify(actionRepo, times(0)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        any(String.class), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionDistributionListManager, times(0)).saveList(any(String.class), any(List.class),
-        any(Boolean.class));
-
-    // Assertions for calls in actionProcessingService
-    verify(actionProcessingService, times(0)).processActionRequest(any(Action.class));
-    verify(actionProcessingService, times(0)).processActionCancel(any(Action.class));
-  }
-
-  /**
    * We retrieve actionTypes but then exception thrown when retrieving actions.
    *
    * @throws Exception oops
@@ -129,10 +107,10 @@ public class ActionDistributorTest {
     when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(any(String.class), any(List.class),
         any(List.class), any(Pageable.class))).thenThrow(new RuntimeException("Database access failed"));
 
-    DistributionInfo info = actionDistributor.distribute();
-    List<InstructionCount> countList = info.getInstructionCounts();
+    final DistributionInfo info = actionDistributor.distribute();
+    final List<InstructionCount> countList = info.getInstructionCounts();
     assertEquals(4, countList.size());
-    List<InstructionCount> expectedCountList = new ArrayList<>();
+    final List<InstructionCount> expectedCountList = new ArrayList<>();
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
         DistributionInfo.Instruction.REQUEST, 0));
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
@@ -168,15 +146,15 @@ public class ActionDistributorTest {
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
     when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
-            householdInitialContactActions);
+        householdInitialContactActions);
     when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
         anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
         householdUploadIACActions);
 
-    DistributionInfo info = actionDistributor.distribute();
-    List<InstructionCount> countList = info.getInstructionCounts();
+    final DistributionInfo info = actionDistributor.distribute();
+    final List<InstructionCount> countList = info.getInstructionCounts();
     assertEquals(4, countList.size());
-    List<InstructionCount> expectedCountList = new ArrayList<>();
+    final List<InstructionCount> expectedCountList = new ArrayList<>();
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
         DistributionInfo.Instruction.REQUEST, 1));
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
@@ -200,7 +178,7 @@ public class ActionDistributorTest {
     verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
 
     // Assertions for calls to actionProcessingService & processActionRequest
-    ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
+    final ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
     verify(actionProcessingService, times(2)).processActionRequest(
         actionCaptorForActionRequest.capture());
     List<Action> actionsList = actionCaptorForActionRequest.getAllValues();
@@ -211,7 +189,7 @@ public class ActionDistributorTest {
     assertTrue(expectedActionsList.equals(actionsList));
 
     // Assertions for calls to actionProcessingService & processActionCancel
-    ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
+    final ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
     verify(actionProcessingService, times(2)).processActionCancel(
         actionCaptorForActionCancel.capture());
     actionsList = actionCaptorForActionCancel.getAllValues();
@@ -242,10 +220,10 @@ public class ActionDistributorTest {
     doThrow(new RuntimeException("Database access failed")).when(actionProcessingService).processActionCancel(
         any(Action.class));
 
-    DistributionInfo info = actionDistributor.distribute();
-    List<InstructionCount> countList = info.getInstructionCounts();
+    final DistributionInfo info = actionDistributor.distribute();
+    final List<InstructionCount> countList = info.getInstructionCounts();
     assertEquals(4, countList.size());
-    List<InstructionCount> expectedCountList = new ArrayList<>();
+    final List<InstructionCount> expectedCountList = new ArrayList<>();
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
         DistributionInfo.Instruction.REQUEST, 0));
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
@@ -269,7 +247,7 @@ public class ActionDistributorTest {
     verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
 
     // Assertions for calls to actionProcessingService & processActionRequest
-    ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
+    final ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
     verify(actionProcessingService, times(2)).processActionRequest(
         actionCaptorForActionRequest.capture());
     List<Action> actionsList = actionCaptorForActionRequest.getAllValues();
@@ -280,7 +258,7 @@ public class ActionDistributorTest {
     assertTrue(expectedActionsList.equals(actionsList));
 
     // Assertions for calls to actionProcessingService & processActionCancel
-    ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
+    final ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
     verify(actionProcessingService, times(2)).processActionCancel(
         actionCaptorForActionCancel.capture());
     actionsList = actionCaptorForActionCancel.getAllValues();
@@ -294,10 +272,10 @@ public class ActionDistributorTest {
   /**
    * Test with 2 ActionRequests and 2 ActionCancels for a H case (ie parent case) where ActionProcessingService throws
    * an Exception intermittently when processActionRequest and when processActionCancel
-   *    - processActionRequest KO for actionPK = 1 (HOUSEHOLD_INITIAL_CONTACT)
-   *    - processActionRequest OK for actionPK = 3 (HOUSEHOLD_UPLOAD_IAC)
-   *    - processActionCancel OK for actionPK = 2 (HOUSEHOLD_INITIAL_CONTACT)
-   *    - processActionCancel KO for actionPK = 4 (HOUSEHOLD_UPLOAD_IAC)
+   * - processActionRequest KO for actionPK = 1 (HOUSEHOLD_INITIAL_CONTACT)
+   * - processActionRequest OK for actionPK = 3 (HOUSEHOLD_UPLOAD_IAC)
+   * - processActionCancel OK for actionPK = 2 (HOUSEHOLD_INITIAL_CONTACT)
+   * - processActionCancel KO for actionPK = 4 (HOUSEHOLD_UPLOAD_IAC)
    *
    * @throws Exception oops
    */
@@ -315,10 +293,10 @@ public class ActionDistributorTest {
     doThrow(new RuntimeException("Database access failed")).when(actionProcessingService).processActionCancel(
         eq(householdUploadIACActions.get(1)));
 
-    DistributionInfo info = actionDistributor.distribute();
-    List<InstructionCount> countList = info.getInstructionCounts();
+    final DistributionInfo info = actionDistributor.distribute();
+    final List<InstructionCount> countList = info.getInstructionCounts();
     assertEquals(4, countList.size());
-    List<InstructionCount> expectedCountList = new ArrayList<>();
+    final List<InstructionCount> expectedCountList = new ArrayList<>();
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
         DistributionInfo.Instruction.REQUEST, 0));
     expectedCountList.add(new InstructionCount(HOUSEHOLD_INITIAL_CONTACT,
@@ -342,7 +320,7 @@ public class ActionDistributorTest {
     verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
 
     // Assertions for calls to actionProcessingService & processActionRequest
-    ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
+    final ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
     verify(actionProcessingService, times(2)).processActionRequest(
         actionCaptorForActionRequest.capture());
     List<Action> actionsList = actionCaptorForActionRequest.getAllValues();
@@ -353,7 +331,7 @@ public class ActionDistributorTest {
     assertTrue(expectedActionsList.equals(actionsList));
 
     // Assertions for calls to actionProcessingService & processActionCancel
-    ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
+    final ArgumentCaptor<Action> actionCaptorForActionCancel = ArgumentCaptor.forClass(Action.class);
     verify(actionProcessingService, times(2)).processActionCancel(
         actionCaptorForActionCancel.capture());
     actionsList = actionCaptorForActionCancel.getAllValues();

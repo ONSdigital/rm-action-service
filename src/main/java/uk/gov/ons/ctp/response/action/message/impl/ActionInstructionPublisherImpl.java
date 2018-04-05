@@ -26,17 +26,17 @@ public class ActionInstructionPublisherImpl implements ActionInstructionPublishe
   public static final String ACTION = "Action.";
   public static final String BINDING = ".binding";
 
-  public void sendActionInstruction(@Header("HANDLER") String handler, Action action) {
+  public void sendActionInstruction(@Header("HANDLER") final String handler, final Action action) {
     log.debug("Entering sendActionInstruction with handler {} and action {}", handler, action);
 
-    ActionInstruction instruction = new ActionInstruction();
+    final ActionInstruction instruction = new ActionInstruction();
     if (action instanceof ActionRequest) {
-      instruction.setActionRequest((ActionRequest)action);
+      instruction.setActionRequest((ActionRequest) action);
     } else if (action instanceof ActionCancel) {
-      instruction.setActionCancel((ActionCancel)action);
+      instruction.setActionCancel((ActionCancel) action);
     }
 
-    String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
+    final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
     rabbitTemplate.convertAndSend(routingKey, instruction);
   }
 }

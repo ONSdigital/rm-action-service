@@ -7,7 +7,6 @@ import uk.gov.ons.ctp.common.rest.RestUtilityConfig;
 /**
  * App config POJO for collection exercise service access - host location and endpoint
  * locations
- *
  */
 @CoverageIgnore
 @Data

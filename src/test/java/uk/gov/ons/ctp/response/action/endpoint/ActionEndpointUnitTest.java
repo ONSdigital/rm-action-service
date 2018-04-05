@@ -16,6 +16,7 @@ import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
+import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
@@ -32,19 +33,21 @@ import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.isA;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.ons.ctp.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.common.MvcHelper.postJson;
 import static uk.gov.ons.ctp.common.MvcHelper.putJson;
-import static uk.gov.ons.ctp.common.TestHelper.createTestDate;
 import static uk.gov.ons.ctp.common.error.RestExceptionHandler.INVALID_JSON;
-import static uk.gov.ons.ctp.common.error.RestExceptionHandler.PROVIDED_JSON_INCORRECT;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_UPDATED;
@@ -114,55 +117,56 @@ public final class ActionEndpointUnitTest {
   private static final String ACTION2_ACTIONTYPENAME = "actiontypename2";
   private static final String ACTION1_SITUATION = "Assigned";
   private static final String ACTION_CREATEDBY = "Unit Tester";
-  private static final String ALL_ACTIONS_CREATEDDATE_VALUE = createTestDate("2017-05-15T10:00:00.000+0000");
-  private static final String ALL_ACTIONS_UPDATEDDATE_VALUE = createTestDate("2017-05-15T11:00:00.000+0000");
+  private static final String ALL_ACTIONS_CREATEDDATE_VALUE = "2017-05-15T11:00:00.000+01:00";
+  private static final String ALL_ACTIONS_UPDATEDDATE_VALUE = "2017-05-15T12:00:00.000+01:00";
   private static final String ACTION_TYPE_NOTFOUND = "NotFound";
   private static final String NON_EXISTING_ID = "e1c26bf2-eaa8-4a8a-b44f-3b8f004ef271";
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
   private static final String UPDATED_OUTCOME = "REQUEST_COMPLETED";
-  private static final String UPDATED_SITUATION =  "new situation";
+  private static final String UPDATED_SITUATION = "new situation";
 
   private static final String ACTION_UPDATE_VALID_JSON = "{"
-          + "\"priority\": " + ACTION1_PRIORITY + ","
-          + "\"situation\": \"" + ACTION1_SITUATION + "\"}";
+      + "\"priority\": " + ACTION1_PRIORITY + ","
+      + "\"situation\": \"" + ACTION1_SITUATION + "\"}";
 
   private static final String ACTION_CREATE_VALID_JSON = "{"
-          + "\"caseId\": \"" + ACTION_ID_2_CASE_ID + "\","
-          + "\"priority\": " + ACTION1_PRIORITY + ","
-          + "\"createdBy\": \"" + CREATED_BY_SYSTEM + "\","
-          + "\"actionTypeName\": \"" + ACTION_ACTIONTYPENAME_1 + "\"}";
+      + "\"caseId\": \"" + ACTION_ID_2_CASE_ID + "\","
+      + "\"priority\": " + ACTION1_PRIORITY + ","
+      + "\"createdBy\": \"" + CREATED_BY_SYSTEM + "\","
+      + "\"actionTypeName\": \"" + ACTION_ACTIONTYPENAME_1 + "\"}";
 
   // Note actionTypename instead of actionTypeName
   private static final String ACTION_INVALID_JSON_BAD_PROP = "{"
-          + "\"id\": \"" + ACTIONID_1 + "\","
-          + "\"caseId\": \"" + ACTION_ID_1_CASE_ID + "\","
-          + "\"actionTypename\": \"" + ACTION_ACTIONTYPENAME_1 + "\","
-          + "\"createdBy\": \"" + ACTION_CREATEDBY + "\","
-          + "\"manuallyCreated\": \"" + ACTION1_MANUALLY_CREATED + "\","
-          + "\"priority\": " + ACTION1_PRIORITY + ","
-          + "\"createdBy\": \"" + ACTION_CREATEDBY + "\","
-          + "\"situation\": \"" + ACTION1_SITUATION + "\","
-          + "\"state\": \"" + ActionDTO.ActionState.ACTIVE.name() + "\"}";
+      + "\"id\": \"" + ACTIONID_1 + "\","
+      + "\"caseId\": \"" + ACTION_ID_1_CASE_ID + "\","
+      + "\"actionTypename\": \"" + ACTION_ACTIONTYPENAME_1 + "\","
+      + "\"createdBy\": \"" + ACTION_CREATEDBY + "\","
+      + "\"manuallyCreated\": \"" + ACTION1_MANUALLY_CREATED + "\","
+      + "\"priority\": " + ACTION1_PRIORITY + ","
+      + "\"createdBy\": \"" + ACTION_CREATEDBY + "\","
+      + "\"situation\": \"" + ACTION1_SITUATION + "\","
+      + "\"state\": \"" + ActionDTO.ActionState.ACTIVE.name() + "\"}";
 
   // Note actionTypeName is missing
   private static final String ACTION_INVALID_JSON_MISSING_PROP = "{"
-          + "\"caseId\": \"" + ACTION_ID_1_CASE_ID + "\","
-          + "\"createdBy\": \"" + ACTION_CREATEDBY + "\","
-          + "\"priority\": " + ACTION1_PRIORITY + ","
-          + "\"createdBy\": \"" + ACTION_CREATEDBY + "\"}";
+      + "\"caseId\": \"" + ACTION_ID_1_CASE_ID + "\","
+      + "\"createdBy\": \"" + ACTION_CREATEDBY + "\","
+      + "\"priority\": " + ACTION1_PRIORITY + ","
+      + "\"createdBy\": \"" + ACTION_CREATEDBY + "\"}";
 
   private static final String ACTION_FEEDBACK_VALID_JSON = "{"
-          + "\"situation\": \"" + UPDATED_SITUATION + "\","
-          + "\"outcome\": \"" + UPDATED_OUTCOME + "\"}";
+      + "\"situation\": \"" + UPDATED_SITUATION + "\","
+      + "\"outcome\": \"" + UPDATED_OUTCOME + "\"}";
 
   private static final String ACTION_FEEDBACK_INVALID_JSON = "{"
-          + "\"actionId\": \"" + ACTIONID_1 + "\","
-          + "\"badsituation\": \"" + UPDATED_SITUATION + "\","
-          + "\"outcome\": \"" + UPDATED_OUTCOME + "\"}";
+      + "\"actionId\": \"" + ACTIONID_1 + "\","
+      + "\"badsituation\": \"" + UPDATED_SITUATION + "\","
+      + "\"outcome\": \"" + UPDATED_OUTCOME + "\"}";
 
 
   /**
    * Initialises Mockito and loads Class Fixtures
+   *
    * @throws Exception exception thrown
    */
   @Before
@@ -170,10 +174,10 @@ public final class ActionEndpointUnitTest {
     MockitoAnnotations.initMocks(this);
 
     this.mockMvc = MockMvcBuilders
-            .standaloneSetup(actionEndpoint)
-            .setHandlerExceptionResolvers(mockAdviceFor(RestExceptionHandler.class))
-            .setMessageConverters(new MappingJackson2HttpMessageConverter(new CustomObjectMapper()))
-            .build();
+        .standaloneSetup(actionEndpoint)
+        .setHandlerExceptionResolvers(mockAdviceFor(RestExceptionHandler.class))
+        .setMessageConverters(new MappingJackson2HttpMessageConverter(new CustomObjectMapper()))
+        .build();
 
     actions = FixtureHelper.loadClassFixtures(Action[].class);
     actionCases = FixtureHelper.loadClassFixtures(ActionCase[].class);
@@ -189,11 +193,11 @@ public final class ActionEndpointUnitTest {
   public void findActionsNoneFound() throws Exception {
     when(actionService.findAllActionsOrderedByCreatedDateTimeDescending()).thenReturn(new ArrayList<>());
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions")));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions")));
 
     resultActions.andExpect(status().isNoContent())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"));
   }
 
   /**
@@ -203,47 +207,47 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void findActions() throws Exception {
-    List<Action> results = new ArrayList<>();
+    final List<Action> results = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       results.add((actions.get(i)));
     }
     when(actionService.findAllActionsOrderedByCreatedDateTimeDescending()).thenReturn(results);
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions")));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions")));
 
     resultActions.andExpect(status().is2xxSuccessful())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"))
-            .andExpect(jsonPath("$", Matchers.hasSize(5)))
-            .andExpect(jsonPath("$[0].*", hasSize(12)))
-            .andExpect(jsonPath("$[*].*", hasSize(60)))
-            .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_ID_1.toString(), ACTION_ID_2.toString(),
-                    ACTION_ID_3.toString(), ACTION_ID_4.toString(), ACTION_ID_5.toString())))
-            .andExpect(jsonPath("$[*].caseId", containsInAnyOrder(ACTION_ID_1_CASE_ID.toString(),
-                    ACTION_ID_2_CASE_ID.toString(), ACTION_ID_3_CASE_ID.toString(), ACTION_ID_4_CASE_ID.toString(),
-                    ACTION_ID_5_CASE_ID.toString())))
-            .andExpect(jsonPath("$[*].actionPlanId", containsInAnyOrder(ACTION_PLAN_ID_1.toString(),
-                    ACTION_PLAN_ID_1.toString(), ACTION_PLAN_ID_1.toString(), ACTION_PLAN_ID_1.toString(),
-                    ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(ACTION_ACTIONTYPENAME_1,
-                    ACTION_ACTIONTYPENAME_2, ACTION_ACTIONTYPENAME_3, ACTION_ACTIONTYPENAME_4,
-                    ACTION_ACTIONTYPENAME_5)))
-            .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM,
-                    CREATED_BY_SYSTEM, CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$[*].manuallyCreated", containsInAnyOrder(false, false, false, false, false)))
-            .andExpect(jsonPath("$[*].priority", containsInAnyOrder(1, 2, 3, 4, 5)))
-            .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_1, ACTION_SITUATION_2,
-                    ACTION_SITUATION_3, ACTION_SITUATION_4, ACTION_SITUATION_5)))
-            .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ACTIVE.name(),
-                    ActionDTO.ActionState.SUBMITTED.name(), ActionDTO.ActionState.COMPLETED.name(),
-                    ActionDTO.ActionState.CANCELLED.name(), ActionDTO.ActionState.ABORTED.name())))
-            .andExpect(jsonPath("$[*].createdDateTime", containsInAnyOrder(ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE, ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE, ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[*].updatedDateTime", containsInAnyOrder(ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE, ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE, ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"))
+        .andExpect(jsonPath("$", Matchers.hasSize(5)))
+        .andExpect(jsonPath("$[0].*", hasSize(12)))
+        .andExpect(jsonPath("$[*].*", hasSize(60)))
+        .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_ID_1.toString(), ACTION_ID_2.toString(),
+            ACTION_ID_3.toString(), ACTION_ID_4.toString(), ACTION_ID_5.toString())))
+        .andExpect(jsonPath("$[*].caseId", containsInAnyOrder(ACTION_ID_1_CASE_ID.toString(),
+            ACTION_ID_2_CASE_ID.toString(), ACTION_ID_3_CASE_ID.toString(), ACTION_ID_4_CASE_ID.toString(),
+            ACTION_ID_5_CASE_ID.toString())))
+        .andExpect(jsonPath("$[*].actionPlanId", containsInAnyOrder(ACTION_PLAN_ID_1.toString(),
+            ACTION_PLAN_ID_1.toString(), ACTION_PLAN_ID_1.toString(), ACTION_PLAN_ID_1.toString(),
+            ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(ACTION_ACTIONTYPENAME_1,
+            ACTION_ACTIONTYPENAME_2, ACTION_ACTIONTYPENAME_3, ACTION_ACTIONTYPENAME_4,
+            ACTION_ACTIONTYPENAME_5)))
+        .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM,
+            CREATED_BY_SYSTEM, CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$[*].manuallyCreated", containsInAnyOrder(false, false, false, false, false)))
+        .andExpect(jsonPath("$[*].priority", containsInAnyOrder(1, 2, 3, 4, 5)))
+        .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_1, ACTION_SITUATION_2,
+            ACTION_SITUATION_3, ACTION_SITUATION_4, ACTION_SITUATION_5)))
+        .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ACTIVE.name(),
+            ActionDTO.ActionState.SUBMITTED.name(), ActionDTO.ActionState.COMPLETED.name(),
+            ActionDTO.ActionState.CANCELLED.name(), ActionDTO.ActionState.ABORTED.name())))
+        .andExpect(jsonPath("$[*].createdDateTime", contains(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$[*].updatedDateTime", contains(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE), new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -254,14 +258,14 @@ public final class ActionEndpointUnitTest {
   @Test
   public void findActionsByActionTypeAndStateNotFound() throws Exception {
     when(actionService.findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(ACTION_TYPE_NOTFOUND,
-            ActionDTO.ActionState.COMPLETED)).thenReturn(new ArrayList<>());
+        ActionDTO.ActionState.COMPLETED)).thenReturn(new ArrayList<>());
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s&state=%s",
-            ACTION_TYPE_NOTFOUND, ActionDTO.ActionState.COMPLETED)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s&state=%s",
+        ACTION_TYPE_NOTFOUND, ActionDTO.ActionState.COMPLETED)));
 
     resultActions.andExpect(status().isNoContent())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"));
   }
 
   /**
@@ -271,31 +275,31 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void findActionsByActionTypeAndStateFound() throws Exception {
-    List<Action> result = new ArrayList<Action>();
+    final List<Action> result = new ArrayList<Action>();
     result.add(actions.get(0));
     when(actionService.findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(ACTION2_ACTIONTYPENAME,
-            ActionDTO.ActionState.COMPLETED)).thenReturn(result);
+        ActionDTO.ActionState.COMPLETED)).thenReturn(result);
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s&state=%s",
-            ACTION2_ACTIONTYPENAME, ActionDTO.ActionState.COMPLETED)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s&state=%s",
+        ACTION2_ACTIONTYPENAME, ActionDTO.ActionState.COMPLETED)));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"))
-            .andExpect(jsonPath("$", Matchers.hasSize(1)))
-            .andExpect(jsonPath("$[0].*", hasSize(12)))
-            .andExpect(jsonPath("$[0].id", is(ACTION_ID_1.toString())))
-            .andExpect(jsonPath("$[0].caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$[0].actionPlanId", is(ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$[0].actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$[0].createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$[0].manuallyCreated", is(false)))
-            .andExpect(jsonPath("$[0].priority", is(1)))
-            .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
-            .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$[0].createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[0].updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"))
+        .andExpect(jsonPath("$", Matchers.hasSize(1)))
+        .andExpect(jsonPath("$[0].*", hasSize(12)))
+        .andExpect(jsonPath("$[0].id", is(ACTION_ID_1.toString())))
+        .andExpect(jsonPath("$[0].caseId", is(ACTION_ID_1_CASE_ID.toString())))
+        .andExpect(jsonPath("$[0].actionPlanId", is(ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$[0].actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
+        .andExpect(jsonPath("$[0].createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$[0].manuallyCreated", is(false)))
+        .andExpect(jsonPath("$[0].priority", is(1)))
+        .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
+        .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
+        .andExpect(jsonPath("$[0].createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$[0].updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -305,30 +309,30 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void findActionsByActionTypeFound() throws Exception {
-    List<Action> result = new ArrayList<Action>();
+    final List<Action> result = new ArrayList<Action>();
     result.add(actions.get(0));
     when(actionService.findActionsByType(ACTION2_ACTIONTYPENAME)).thenReturn(result);
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s",
-            ACTION2_ACTIONTYPENAME)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s",
+        ACTION2_ACTIONTYPENAME)));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"))
-            .andExpect(jsonPath("$", Matchers.hasSize(1)))
-            .andExpect(jsonPath("$[0].*", hasSize(12)))
-            .andExpect(jsonPath("$[0].id", is(ACTION_ID_1.toString())))
-            .andExpect(jsonPath("$[0].caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$[0].actionPlanId", is(ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$[0].actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$[0].createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$[0].manuallyCreated", is(false)))
-            .andExpect(jsonPath("$[0].priority", is(1)))
-            .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
-            .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$[0].createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[0].updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"))
+        .andExpect(jsonPath("$", Matchers.hasSize(1)))
+        .andExpect(jsonPath("$[0].*", hasSize(12)))
+        .andExpect(jsonPath("$[0].id", is(ACTION_ID_1.toString())))
+        .andExpect(jsonPath("$[0].caseId", is(ACTION_ID_1_CASE_ID.toString())))
+        .andExpect(jsonPath("$[0].actionPlanId", is(ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$[0].actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
+        .andExpect(jsonPath("$[0].createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$[0].manuallyCreated", is(false)))
+        .andExpect(jsonPath("$[0].priority", is(1)))
+        .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
+        .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
+        .andExpect(jsonPath("$[0].createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$[0].updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
 
@@ -341,44 +345,45 @@ public final class ActionEndpointUnitTest {
   public void findActionsByActionTypeNotFound() throws Exception {
     when(actionService.findActionsByType(ACTION_TYPE_NOTFOUND)).thenReturn(new ArrayList<Action>());
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s",
-            ACTION_TYPE_NOTFOUND)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?actiontype=%s",
+        ACTION_TYPE_NOTFOUND)));
 
     resultActions.andExpect(status().isNoContent())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"));
   }
 
   /**
    * Test requesting Actions filtered by action state found.
+   *
    * @throws Exception when getJson does
    */
   @Test
   public void findActionsByStateFound() throws Exception {
-    List<Action> result = new ArrayList<Action>();
+    final List<Action> result = new ArrayList<Action>();
     result.add(actions.get(0));
     when(actionService.findActionsByState(ActionDTO.ActionState.COMPLETED)).thenReturn(result);
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?state=%s",
-            ActionDTO.ActionState.COMPLETED.name())));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions?state=%s",
+        ActionDTO.ActionState.COMPLETED.name())));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActions"))
-            .andExpect(jsonPath("$", Matchers.hasSize(1)))
-            .andExpect(jsonPath("$[0].*", hasSize(12)))
-            .andExpect(jsonPath("$[0].id", is(ACTION_ID_1.toString())))
-            .andExpect(jsonPath("$[0].caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$[0].actionPlanId", is(ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$[0].actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$[0].createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$[0].manuallyCreated", is(false)))
-            .andExpect(jsonPath("$[0].priority", is(1)))
-            .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
-            .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$[0].createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[0].updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActions"))
+        .andExpect(jsonPath("$", Matchers.hasSize(1)))
+        .andExpect(jsonPath("$[0].*", hasSize(12)))
+        .andExpect(jsonPath("$[0].id", is(ACTION_ID_1.toString())))
+        .andExpect(jsonPath("$[0].caseId", is(ACTION_ID_1_CASE_ID.toString())))
+        .andExpect(jsonPath("$[0].actionPlanId", is(ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$[0].actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
+        .andExpect(jsonPath("$[0].createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$[0].manuallyCreated", is(false)))
+        .andExpect(jsonPath("$[0].priority", is(1)))
+        .andExpect(jsonPath("$[0].situation", is(ACTION_SITUATION_1)))
+        .andExpect(jsonPath("$[0].state", is(ActionDTO.ActionState.ACTIVE.name())))
+        .andExpect(jsonPath("$[0].createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$[0].updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -388,14 +393,14 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void findActionByActionIdNotFound() throws Exception {
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/%s", NON_EXISTING_ID)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/%s", NON_EXISTING_ID)));
 
     resultActions.andExpect(status().isNotFound())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActionByActionId"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
-            .andExpect(jsonPath("$.error.message", is(String.format(ACTION_NOT_FOUND, NON_EXISTING_ID))))
-            .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActionByActionId"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
+        .andExpect(jsonPath("$.error.message", is(String.format(ACTION_NOT_FOUND, NON_EXISTING_ID))))
+        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
   }
 
 
@@ -408,14 +413,14 @@ public final class ActionEndpointUnitTest {
   public void findActionByActionIdUnCheckedException() throws Exception {
     when(actionService.findActionById(ACTIONID_1)).thenThrow(new IllegalArgumentException(OUR_EXCEPTION_MESSAGE));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/%s", ACTIONID_1)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/%s", ACTIONID_1)));
 
     resultActions.andExpect(status().is5xxServerError())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActionByActionId"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.SYSTEM_ERROR.name())))
-            .andExpect(jsonPath("$.error.message", is(OUR_EXCEPTION_MESSAGE)))
-            .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActionByActionId"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.SYSTEM_ERROR.name())))
+        .andExpect(jsonPath("$.error.message", is(OUR_EXCEPTION_MESSAGE)))
+        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
   }
 
   /**
@@ -428,23 +433,23 @@ public final class ActionEndpointUnitTest {
     when(actionService.findActionById(ACTION_ID_1)).thenReturn(actions.get(0));
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/%s", ACTION_ID_1)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/%s", ACTION_ID_1)));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActionByActionId"))
-            .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
-            .andExpect(jsonPath("$.id", is(ACTION_ID_1.toString())))
-            .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$.actionPlanId", is(ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$.manuallyCreated", is(false)))
-            .andExpect(jsonPath("$.priority", is(1)))
-            .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
-            .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$.createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$.updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActionByActionId"))
+        .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
+        .andExpect(jsonPath("$.id", is(ACTION_ID_1.toString())))
+        .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
+        .andExpect(jsonPath("$.actionPlanId", is(ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
+        .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$.manuallyCreated", is(false)))
+        .andExpect(jsonPath("$.priority", is(1)))
+        .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
+        .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
+        .andExpect(jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -454,37 +459,37 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void findActionsByCaseIdFound() throws Exception {
-    List<Action> result = new ArrayList<Action>();
+    final List<Action> result = new ArrayList<Action>();
     result.add(actions.get(5));
     result.add(actions.get(6));
     when(actionService.findActionsByCaseId(ACTION_ID_6_AND_7_CASEID)).thenReturn(result);
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/case/%s", ACTION_ID_6_AND_7_CASEID)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/case/%s", ACTION_ID_6_AND_7_CASEID)));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActionsByCaseId"))
-            .andExpect(jsonPath("$", Matchers.hasSize(2)))
-            .andExpect(jsonPath("$[0].*", hasSize(12)))
-            .andExpect(jsonPath("$[1].*", hasSize(12)))
-            .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_ID_6.toString(), ACTION_ID_7.toString())))
-            .andExpect(jsonPath("$[*].caseId", containsInAnyOrder(ACTION_ID_6_AND_7_CASEID.toString(),
-                    ACTION_ID_6_AND_7_CASEID.toString())))
-            .andExpect(jsonPath("$[*].actionPlanId", containsInAnyOrder(ACTION_PLAN_ID_1.toString(),
-                    ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(ACTION_ACTIONTYPENAME_6,
-                    ACTION_ACTIONTYPENAME_7)))
-            .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$[*].manuallyCreated", containsInAnyOrder(false, true)))
-            .andExpect(jsonPath("$[*].priority", containsInAnyOrder(6, 7)))
-            .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_6, ACTION_SITUATION_7)))
-            .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ABORTED.name(),
-                    ActionDTO.ActionState.CANCELLED.name())))
-            .andExpect(jsonPath("$[*].createdDateTime", containsInAnyOrder(ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[*].updatedDateTime", containsInAnyOrder(ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActionsByCaseId"))
+        .andExpect(jsonPath("$", Matchers.hasSize(2)))
+        .andExpect(jsonPath("$[0].*", hasSize(12)))
+        .andExpect(jsonPath("$[1].*", hasSize(12)))
+        .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_ID_6.toString(), ACTION_ID_7.toString())))
+        .andExpect(jsonPath("$[*].caseId", containsInAnyOrder(ACTION_ID_6_AND_7_CASEID.toString(),
+            ACTION_ID_6_AND_7_CASEID.toString())))
+        .andExpect(jsonPath("$[*].actionPlanId", containsInAnyOrder(ACTION_PLAN_ID_1.toString(),
+            ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(ACTION_ACTIONTYPENAME_6,
+            ACTION_ACTIONTYPENAME_7)))
+        .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$[*].manuallyCreated", containsInAnyOrder(false, true)))
+        .andExpect(jsonPath("$[*].priority", containsInAnyOrder(6, 7)))
+        .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_6, ACTION_SITUATION_7)))
+        .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ABORTED.name(),
+            ActionDTO.ActionState.CANCELLED.name())))
+        .andExpect(jsonPath("$[*].createdDateTime", contains(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$[*].updatedDateTime", contains(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -494,32 +499,34 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void findActionByCaseIdNotFound() throws Exception {
-    ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/case/%s", NON_EXISTING_ID)));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actions/case/%s", NON_EXISTING_ID)));
 
     resultActions.andExpect(status().isNoContent())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("findActionsByCaseId"));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("findActionsByCaseId"));
   }
 
   /**
    * Test updating action not found
+   *
    * @throws Exception when putJson does
    */
   @Test
   public void updateActionByActionIdNotFound() throws Exception {
-    ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s", NON_EXISTING_ID),
-            ACTION_UPDATE_VALID_JSON));
+    final ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s", NON_EXISTING_ID),
+        ACTION_UPDATE_VALID_JSON));
 
     resultActions.andExpect(status().isNotFound())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("updateAction"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
-            .andExpect(jsonPath("$.error.message", is(String.format(ACTION_NOT_UPDATED, NON_EXISTING_ID))))
-            .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("updateAction"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
+        .andExpect(jsonPath("$.error.message", is(String.format(ACTION_NOT_UPDATED, NON_EXISTING_ID))))
+        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
   }
 
   /**
    * Test updating action
+   *
    * @throws Exception when putJson does
    */
   @Test
@@ -527,24 +534,24 @@ public final class ActionEndpointUnitTest {
     when(actionService.updateAction(any(Action.class))).thenReturn(actions.get(0));
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s", ACTION_ID_1),
-            ACTION_UPDATE_VALID_JSON));
+    final ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s", ACTION_ID_1),
+        ACTION_UPDATE_VALID_JSON));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("updateAction"))
-            .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
-            .andExpect(jsonPath("$.id", is(ACTION_ID_1.toString())))
-            .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$.actionPlanId", is(ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$.manuallyCreated", is(false)))
-            .andExpect(jsonPath("$.priority", is(1)))
-            .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
-            .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$.createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$.updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("updateAction"))
+        .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
+        .andExpect(jsonPath("$.id", is(ACTION_ID_1.toString())))
+        .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
+        .andExpect(jsonPath("$.actionPlanId", is(ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
+        .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$.manuallyCreated", is(false)))
+        .andExpect(jsonPath("$.priority", is(1)))
+        .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
+        .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
+        .andExpect(jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -569,19 +576,20 @@ public final class ActionEndpointUnitTest {
 
   /**
    * Test updating action feedback for action not found
+   *
    * @throws Exception when putJson does
    */
   @Test
   public void updateActionFeedbackByActionIdNotFound() throws Exception {
-    ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s/feedback", NON_EXISTING_ID),
-            ACTION_FEEDBACK_VALID_JSON));
+    final ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s/feedback", NON_EXISTING_ID),
+        ACTION_FEEDBACK_VALID_JSON));
 
     resultActions.andExpect(status().isNotFound())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("feedbackAction"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
-            .andExpect(jsonPath("$.error.message", is(String.format(ACTION_NOT_FOUND, NON_EXISTING_ID))))
-            .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("feedbackAction"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
+        .andExpect(jsonPath("$.error.message", is(String.format(ACTION_NOT_FOUND, NON_EXISTING_ID))))
+        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
   }
 
   /**
@@ -603,6 +611,7 @@ public final class ActionEndpointUnitTest {
 
   /**
    * Test updating action feedback for action found
+   *
    * @throws Exception when putJson does
    */
   @Test
@@ -610,24 +619,24 @@ public final class ActionEndpointUnitTest {
     when(actionService.feedBackAction(any(ActionFeedback.class))).thenReturn(actions.get(0));
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s/feedback", ACTION_ID_1),
-            ACTION_FEEDBACK_VALID_JSON));
+    final ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/%s/feedback", ACTION_ID_1),
+        ACTION_FEEDBACK_VALID_JSON));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("feedbackAction"))
-            .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
-            .andExpect(jsonPath("$.id", is(ACTION_ID_1.toString())))
-            .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
-            .andExpect(jsonPath("$.actionPlanId", is(ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
-            .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$.manuallyCreated", is(false)))
-            .andExpect(jsonPath("$.priority", is(1)))
-            .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
-            .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
-            .andExpect(jsonPath("$.createdDateTime", is(ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$.updatedDateTime", is(ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("feedbackAction"))
+        .andExpect(jsonPath("$.*", Matchers.hasSize(12)))
+        .andExpect(jsonPath("$.id", is(ACTION_ID_1.toString())))
+        .andExpect(jsonPath("$.caseId", is(ACTION_ID_1_CASE_ID.toString())))
+        .andExpect(jsonPath("$.actionPlanId", is(ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$.actionTypeName", is(ACTION_ACTIONTYPENAME_1)))
+        .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$.manuallyCreated", is(false)))
+        .andExpect(jsonPath("$.priority", is(1)))
+        .andExpect(jsonPath("$.situation", is(ACTION_SITUATION_1)))
+        .andExpect(jsonPath("$.state", is(ActionDTO.ActionState.ACTIVE.name())))
+        .andExpect(jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
@@ -637,7 +646,7 @@ public final class ActionEndpointUnitTest {
    */
   @Test
   public void createActionGoodJsonProvidedButNoParentCase() throws Exception {
-    ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
+    final ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
 
     resultActions.andExpect(status().isNotFound())
         .andExpect(handler().handlerType(ActionEndpoint.class))
@@ -660,7 +669,7 @@ public final class ActionEndpointUnitTest {
     when(actionCaseService.findActionCase(ACTION_ID_2_CASE_ID)).thenReturn(actionCases.get(0));
     when(actionService.createAction(any(Action.class))).thenReturn(actions.get(1));
 
-    ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
+    final ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
 
     resultActions.andExpect(status().isCreated())
         .andExpect(handler().handlerType(ActionEndpoint.class))
@@ -697,76 +706,79 @@ public final class ActionEndpointUnitTest {
 
   /**
    * Test creating an Action with missing JSON Property.
+   *
    * @throws Exception when postJson does
    */
   @Test
   public void createActionMissingPropJsonProvided() throws Exception {
-    ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_INVALID_JSON_MISSING_PROP));
+    final ResultActions resultActions = mockMvc.perform(postJson("/actions", ACTION_INVALID_JSON_MISSING_PROP));
 
     resultActions.andExpect(status().isBadRequest())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("createAdhocAction"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
-            .andExpect(jsonPath("$.error.message", is(INVALID_JSON)))
-            .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("createAdhocAction"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
+        .andExpect(jsonPath("$.error.message", is(INVALID_JSON)))
+        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
 
     verify(actionCaseService, never()).findActionCase(any(UUID.class));
   }
 
   /**
    * Test cancelling an Action.
+   *
    * @throws Exception when putJson does
    */
   @Test
   public void cancelActions() throws Exception {
     when(actionCaseService.findActionCase(ACTION_ID_6_AND_7_CASEID)).thenReturn(new ActionCase());
 
-    List<Action> result = new ArrayList<>();
+    final List<Action> result = new ArrayList<>();
     result.add(actions.get(5));
     result.add(actions.get(6));
     when(actionService.cancelActions(ACTION_ID_6_AND_7_CASEID)).thenReturn(result);
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
-    ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/case/%s/cancel",
-            ACTION_ID_6_AND_7_CASEID), ""));
+    final ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/case/%s/cancel",
+        ACTION_ID_6_AND_7_CASEID), ""));
 
     resultActions.andExpect(status().isOk())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("cancelActions"))
-            .andExpect(jsonPath("$", Matchers.hasSize(2)))
-            .andExpect(jsonPath("$[0].*", hasSize(12)))
-            .andExpect(jsonPath("$[1].*", hasSize(12)))
-            .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_ID_6.toString(), ACTION_ID_7.toString())))
-            .andExpect(jsonPath("$[*].caseId", containsInAnyOrder(ACTION_ID_6_AND_7_CASEID.toString(),
-                    ACTION_ID_6_AND_7_CASEID.toString())))
-            .andExpect(jsonPath("$[*].actionPlanId", containsInAnyOrder(ACTION_PLAN_ID_1.toString(),
-                    ACTION_PLAN_ID_1.toString())))
-            .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(ACTION_ACTIONTYPENAME_6,
-                    ACTION_ACTIONTYPENAME_7)))
-            .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
-            .andExpect(jsonPath("$[*].manuallyCreated", containsInAnyOrder(false, true)))
-            .andExpect(jsonPath("$[*].priority", containsInAnyOrder(6, 7)))
-            .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_6, ACTION_SITUATION_7)))
-            .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ABORTED.name(),
-                    ActionDTO.ActionState.CANCELLED.name())))
-            .andExpect(jsonPath("$[*].createdDateTime", containsInAnyOrder(ALL_ACTIONS_CREATEDDATE_VALUE,
-                    ALL_ACTIONS_CREATEDDATE_VALUE)))
-            .andExpect(jsonPath("$[*].updatedDateTime", containsInAnyOrder(ALL_ACTIONS_UPDATEDDATE_VALUE,
-                    ALL_ACTIONS_UPDATEDDATE_VALUE)));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("cancelActions"))
+        .andExpect(jsonPath("$", Matchers.hasSize(2)))
+        .andExpect(jsonPath("$[0].*", hasSize(12)))
+        .andExpect(jsonPath("$[1].*", hasSize(12)))
+        .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_ID_6.toString(), ACTION_ID_7.toString())))
+        .andExpect(jsonPath("$[*].caseId", containsInAnyOrder(ACTION_ID_6_AND_7_CASEID.toString(),
+            ACTION_ID_6_AND_7_CASEID.toString())))
+        .andExpect(jsonPath("$[*].actionPlanId", containsInAnyOrder(ACTION_PLAN_ID_1.toString(),
+            ACTION_PLAN_ID_1.toString())))
+        .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(ACTION_ACTIONTYPENAME_6,
+            ACTION_ACTIONTYPENAME_7)))
+        .andExpect(jsonPath("$[*].createdBy", containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
+        .andExpect(jsonPath("$[*].manuallyCreated", containsInAnyOrder(false, true)))
+        .andExpect(jsonPath("$[*].priority", containsInAnyOrder(6, 7)))
+        .andExpect(jsonPath("$[*].situation", containsInAnyOrder(ACTION_SITUATION_6, ACTION_SITUATION_7)))
+        .andExpect(jsonPath("$[*].state", containsInAnyOrder(ActionDTO.ActionState.ABORTED.name(),
+            ActionDTO.ActionState.CANCELLED.name())))
+        .andExpect(jsonPath("$[*].createdDateTime", contains(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
+        .andExpect(jsonPath("$[*].updatedDateTime", contains(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE),
+            new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
   }
 
   /**
    * Test cancelling an Action for a Case Not Found.
+   *
    * @throws Exception when putJson does
    */
   @Test
   public void cancelActionsCaseNotFound() throws Exception {
-    ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/case/%s/cancel", NON_EXISTING_ID),
-            ""));
+    final ResultActions resultActions = mockMvc.perform(putJson(String.format("/actions/case/%s/cancel", NON_EXISTING_ID),
+        ""));
 
     resultActions.andExpect(status().isNotFound())
-            .andExpect(handler().handlerType(ActionEndpoint.class))
-            .andExpect(handler().methodName("cancelActions"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())));
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("cancelActions"))
+        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())));
   }
 }

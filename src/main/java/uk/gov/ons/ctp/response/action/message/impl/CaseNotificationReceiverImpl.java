@@ -23,7 +23,7 @@ public class CaseNotificationReceiverImpl implements CaseNotificationReceiver {
 
   @Override
   @ServiceActivator(inputChannel = "caseNotificationTransformed", adviceChain = "caseNotificationRetryAdvice")
-  public void acceptNotification(CaseNotification caseNotification) throws CTPException {
+  public void acceptNotification(final CaseNotification caseNotification) throws CTPException {
     log.debug("Receiving case notification for case id {}", caseNotification.getCaseId());
     caseNotificationService.acceptNotification(caseNotification);
   }

@@ -9,7 +9,6 @@ import org.springframework.retry.annotation.EnableRetry;
 /**
  * The apps main holder for centralized config read from application.yml or env
  * vars
- *
  */
 @CoverageIgnore
 @EnableRetry

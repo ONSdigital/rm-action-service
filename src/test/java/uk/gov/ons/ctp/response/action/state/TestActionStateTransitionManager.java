@@ -18,7 +18,6 @@ import java.util.Map;
  * and a single bad transition - all it is testing is the underlying mechanism,
  * not a real implementation, where we will want to assert all of the valid and
  * invalid transitions
- *
  */
 public class TestActionStateTransitionManager {
 
@@ -32,13 +31,13 @@ public class TestActionStateTransitionManager {
    */
   @BeforeClass
   public void setup() {
-    Map<ActionEvent, ActionState> submittedTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> submittedTransitions = new HashMap<>();
     submittedTransitions.put(ActionEvent.REQUEST_DISTRIBUTED, ActionState.PENDING);
     submittedTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
     submittedTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.ABORTED);
     validTransitions.put(ActionState.SUBMITTED, submittedTransitions);
 
-    Map<ActionEvent, ActionState> pendingTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> pendingTransitions = new HashMap<>();
     pendingTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
     pendingTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
     pendingTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.ACTIVE);
@@ -48,7 +47,7 @@ public class TestActionStateTransitionManager {
     pendingTransitions.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
     validTransitions.put(ActionState.PENDING, pendingTransitions);
 
-    Map<ActionEvent, ActionState> activeTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> activeTransitions = new HashMap<>();
     activeTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
     activeTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
     activeTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
@@ -56,11 +55,11 @@ public class TestActionStateTransitionManager {
     activeTransitions.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
     validTransitions.put(ActionState.ACTIVE, activeTransitions);
 
-    Map<ActionEvent, ActionState> completedTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> completedTransitions = new HashMap<>();
     completedTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.COMPLETED);
     validTransitions.put(ActionState.COMPLETED, completedTransitions);
 
-    Map<ActionEvent, ActionState> cancelSubmittedTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> cancelSubmittedTransitions = new HashMap<>();
     cancelSubmittedTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_SUBMITTED);
     cancelSubmittedTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
     cancelSubmittedTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_SUBMITTED);
@@ -71,7 +70,7 @@ public class TestActionStateTransitionManager {
     cancelSubmittedTransitions.put(ActionEvent.CANCELLATION_DISTRIBUTED, ActionState.CANCEL_PENDING);
     validTransitions.put(ActionState.CANCEL_SUBMITTED, cancelSubmittedTransitions);
 
-    Map<ActionEvent, ActionState> cancelPendingTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> cancelPendingTransitions = new HashMap<>();
     cancelPendingTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_PENDING);
     cancelPendingTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_PENDING);
     cancelPendingTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_PENDING);
@@ -84,13 +83,13 @@ public class TestActionStateTransitionManager {
     cancelPendingTransitions.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
     validTransitions.put(ActionState.CANCEL_PENDING, cancelPendingTransitions);
 
-    Map<ActionEvent, ActionState> cancellingTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> cancellingTransitions = new HashMap<>();
     cancellingTransitions.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
     cancellingTransitions.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
     cancellingTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLING);
     validTransitions.put(ActionState.CANCELLING, cancellingTransitions);
 
-    Map<ActionEvent, ActionState> cancelledTransitions = new HashMap<>();
+    final Map<ActionEvent, ActionState> cancelledTransitions = new HashMap<>();
     cancelledTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLED);
     validTransitions.put(ActionState.CANCELLED, cancelledTransitions);
   }
@@ -100,15 +99,15 @@ public class TestActionStateTransitionManager {
    */
   @Test(threadPoolSize = THREAD_POOL_SIZE, invocationCount = INVOCATIONS, timeOut = TIMEOUT)
   public void testActionTransitions() {
-    StateTransitionManagerFactory stmFactory = new ActionSvcStateTransitionManagerFactory();
-    StateTransitionManager<ActionState, ActionEvent> stm = stmFactory
+    final StateTransitionManagerFactory stmFactory = new ActionSvcStateTransitionManagerFactory();
+    final StateTransitionManager<ActionState, ActionEvent> stm = stmFactory
         .getStateTransitionManager(ActionSvcStateTransitionManagerFactory.ACTION_ENTITY);
 
     validTransitions.forEach((sourceState, transitions) -> {
       transitions.forEach((actionEvent, actionState) -> {
         try {
           Assert.assertEquals(actionState, stm.transition(sourceState, actionEvent));
-        } catch (CTPException re) {
+        } catch (final CTPException re) {
           Assert.fail("bad transition!", re);
         }
       });
@@ -118,7 +117,7 @@ public class TestActionStateTransitionManager {
           boolean caught = false;
           try {
             stm.transition(sourceState, event);
-          } catch (CTPException re) {
+          } catch (final CTPException re) {
             caught = true;
           }
           Assert.assertTrue(caught, "Transition " + sourceState + "(" + event + ") should be invalid");

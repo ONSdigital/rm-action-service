@@ -43,22 +43,22 @@ public class SurveySvcClientServiceImpl implements SurveySvcClientService {
   @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public SurveyDTO requestDetailsForSurvey(String surveyId) throws RestClientException {
-    UriComponents uriComponents = restUtility.createUriComponents(appConfig.getSurveySvc().getRequestSurveyPath(),
+  public SurveyDTO requestDetailsForSurvey(final String surveyId) throws RestClientException {
+    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getSurveySvc().getRequestSurveyPath(),
         null, surveyId);
-    
-    HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+
+    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
         String.class);
-    
+
     SurveyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      String responseBody = responseEntity.getBody();
+      final String responseBody = responseEntity.getBody();
       try {
         result = objectMapper.readValue(responseBody, SurveyDTO.class);
-      } catch (IOException e) {
-        String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
+      } catch (final IOException e) {
+        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);
         log.error("Stacktrace: ", e);
       }

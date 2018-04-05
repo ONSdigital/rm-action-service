@@ -15,26 +15,26 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * This is the 'service' class that distributes actions to downstream services, ie services outside of Response
  * Management (ActionExporterSvc, NotifyGW, etc.).
- *
+ * <p>
  * This class has a self scheduled method wakeUp(), which looks for Actions in SUBMITTED state to send to
  * downstream handlers. On each wake cycle, it fetches the first n actions of each type, by createddatatime, and
  * forwards them to ActionProcessingService.
  */
 @Component
 @Slf4j
-public class ActionDistributor {
+class ActionDistributor {
 
   // WILL NOT WORK WITHOUT THIS NEXT LINE
   private static final long IMPOSSIBLE_ACTION_ID = 999999999999L;
@@ -58,74 +58,68 @@ public class ActionDistributor {
    *
    * @return the info for the health endpoint regarding the distribution just performed
    */
-  public final DistributionInfo distribute() {
+  final DistributionInfo distribute() throws LockingException {
     log.debug("ActionDistributor awoken...");
-    DistributionInfo distInfo = new DistributionInfo();
+    final DistributionInfo distInfo = new DistributionInfo();
 
-    try {
-      List<ActionType> actionTypes = actionTypeRepo.findAll();
+    final List<ActionType> actionTypes = actionTypeRepo.findAll();
 
-      if (!CollectionUtils.isEmpty(actionTypes)) {
-        for (ActionType actionType : actionTypes) {
-          log.debug("Dealing with actionType {}", actionType.getName());
-          int successesForActionRequests = 0;
-          int successesForActionCancels = 0;
-
-          List<Action> actions = null;
-          try {
-            actions = retrieveActions(actionType);
-          } catch (Exception e) {
-            log.error("Failed to obtain actions - error msg {} - cause {}", e.getMessage(), e.getCause());
-            log.error("Stacktrace: ", e);
-          }
-
-          if (!CollectionUtils.isEmpty(actions)) {
-            log.debug("Dealing with actions {}", actions.stream().map(a -> a.getActionPK().toString()).collect(
-                Collectors.joining(",")));
-            for (Action action : actions) {
-              try {
-                if (action.getState().equals(ActionDTO.ActionState.SUBMITTED)) {
-                  actionProcessingService.processActionRequest(action);
-                  successesForActionRequests++;
-                } else if (action.getState().equals(ActionDTO.ActionState.CANCEL_SUBMITTED)) {
-                  actionProcessingService.processActionCancel(action);
-                  successesForActionCancels++;
-                }
-              } catch (Exception e) {
-                log.error("Exception {} thrown processing action {}. Processing will be retried at next scheduled "
-                        + "distribution", e.getMessage(), action.getId());
-                log.error("Stacktrace: ", e);
-              }
-            }
-
-            try {
-              actionDistributionListManager.deleteList(actionType.getName(), true);
-            } catch (LockingException e) {
-              log.error("Failed to remove the list of actions just processed from distributed list - "
-                  + "actions distributed OK, but underlying problem may remain");
-              log.error("Stacktrace: ", e);
-            }
-          }
-
-          try {
-            actionDistributionListManager.unlockContainer();
-          } catch (LockingException e) {
-            // oh well - it will unlock soon enough
-          }
-
-          distInfo.getInstructionCounts().add(new InstructionCount(actionType.getName(),
-              DistributionInfo.Instruction.REQUEST, successesForActionRequests));
-          distInfo.getInstructionCounts().add(new InstructionCount(actionType.getName(),
-              DistributionInfo.Instruction.CANCEL_REQUEST, successesForActionCancels));
-        }
+    if (!CollectionUtils.isEmpty(actionTypes)) {
+      for (final ActionType actionType : actionTypes) {
+        final List<InstructionCount> instructionCounts = processActionType(actionType);
+        distInfo.getInstructionCounts().addAll(instructionCounts);
       }
-    } catch (Exception e) {
-      log.error("Failed to process actions because {}", e.getMessage());
-      log.error("Stacktrace: ", e);
     }
 
     log.debug("ActionDistributor going back to sleep");
     return distInfo;
+  }
+
+  private List<InstructionCount> processActionType(final ActionType actionType) throws LockingException {
+    log.debug("Dealing with actionType {}", actionType.getName());
+    final InstructionCount requestCount = InstructionCount.builder()
+        .actionTypeName(actionType.getName())
+        .instruction(DistributionInfo.Instruction.REQUEST)
+        .count(0)
+        .build();
+    final InstructionCount cancelCount = InstructionCount.builder()
+        .actionTypeName(actionType.getName())
+        .instruction(DistributionInfo.Instruction.CANCEL_REQUEST)
+        .count(0)
+        .build();
+
+    try {
+      final List<Action> actions = retrieveActions(actionType);
+
+      if (!CollectionUtils.isEmpty(actions)) {
+        processActions(actions, requestCount, cancelCount);
+      }
+    } catch (final Exception e) {
+      log.error("Failed to process action type {}", actionType, e);
+    } finally {
+      actionDistributionListManager.deleteList(actionType.getName(), true);
+    }
+    return Arrays.asList(requestCount, cancelCount);
+  }
+
+  private void processActions(final List<Action> actions, final InstructionCount requestCount, final InstructionCount cancelCount) {
+    log.debug("Dealing with actions {}", actions.stream()
+        .map(Objects::toString)
+        .collect(Collectors.joining(",")));
+    for (final Action action : actions) {
+      try {
+        if (action.getState().equals(ActionState.SUBMITTED)) {
+          actionProcessingService.processActionRequest(action);
+          requestCount.increment();
+        } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
+          actionProcessingService.processActionCancel(action);
+          cancelCount.increment();
+        }
+      } catch (final Exception e) {
+        log.error("Could not processing action {}. Processing will be retried at next scheduled distribution",
+            action.getId(), e);
+      }
+    }
   }
 
   /**
@@ -136,18 +130,18 @@ public class ActionDistributor {
    * @return list of actions
    * @throws LockingException LockingException thrown
    */
-  private List<Action> retrieveActions(ActionType actionType) throws LockingException {
-    Pageable pageable = new PageRequest(0, appConfig.getActionDistribution().getRetrievalMax(), new Sort(
+  private List<Action> retrieveActions(final ActionType actionType) throws LockingException {
+    final Pageable pageable = new PageRequest(0, appConfig.getActionDistribution().getRetrievalMax(), new Sort(
         new Sort.Order(Direction.ASC, "updatedDateTime")));
 
-    List<BigInteger> excludedActionIds = actionDistributionListManager.findList(actionType.getName(), false);
+    final List<BigInteger> excludedActionIds = actionDistributionListManager.findList(actionType.getName(), false);
     if (!excludedActionIds.isEmpty()) {
       log.debug("Excluding actions {}", excludedActionIds);
     }
     // DO NOT REMOVE THIS NEXT LINE
     excludedActionIds.add(BigInteger.valueOf(IMPOSSIBLE_ACTION_ID));
 
-    List<Action> actions = actionRepo
+    final List<Action> actions = actionRepo
         .findByActionTypeNameAndStateInAndActionPKNotIn(actionType.getName(),
             Arrays.asList(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED), excludedActionIds, pageable);
     if (!CollectionUtils.isEmpty(actions)) {
@@ -155,7 +149,7 @@ public class ActionDistributor {
           .collect(Collectors.joining(",")));
       // try and save our list to the distributed store
       actionDistributionListManager.saveList(actionType.getName(), actions.stream()
-          .map(action -> action.getActionPK())
+          .map(Action::getActionPK)
           .collect(Collectors.toList()), true);
     }
     return actions;

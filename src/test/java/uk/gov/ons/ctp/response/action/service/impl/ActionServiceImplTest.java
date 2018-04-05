@@ -21,12 +21,16 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import java.util.List;
 import java.util.UUID;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for ActionServiceImpl
@@ -57,6 +61,7 @@ public class ActionServiceImplTest {
 
   /**
    * Initialises Mockito and loads Class Fixtures
+   *
    * @throws Exception exception thrown
    */
   @Before
@@ -77,22 +82,22 @@ public class ActionServiceImplTest {
     when(actionSvcStateTransitionManager.transition(ActionState.ACTIVE, ActionEvent.REQUEST_CANCELLED))
         .thenReturn(ActionState.CANCELLED);
 
-    List<Action> flushedActions = actionServiceImpl.cancelActions(ACTION_CASEID);
+    final List<Action> flushedActions = actionServiceImpl.cancelActions(ACTION_CASEID);
 
-    for (Action action : actions) {
+    for (final Action action : actions) {
       if (action.getActionType().getCanCancel()) {
         assertThat(action.getState(), is(ActionState.CANCELLED));
       } else {
         assertThat(action.getState(), is(not(ActionState.CANCELLED)));
       }
     }
-    List<Action> originalActions = FixtureHelper.loadClassFixtures(Action[].class);
+    final List<Action> originalActions = FixtureHelper.loadClassFixtures(Action[].class);
 
     verify(actionRepo, times(1)).findByCaseId(ACTION_CASEID);
     verify(actionSvcStateTransitionManager, times(1)).transition(
-            originalActions.get(0).getState(), ActionEvent.REQUEST_CANCELLED);
+        originalActions.get(0).getState(), ActionEvent.REQUEST_CANCELLED);
     verify(actionSvcStateTransitionManager, times(1)).transition(
-            originalActions.get(1).getState(), ActionEvent.REQUEST_CANCELLED);
+        originalActions.get(1).getState(), ActionEvent.REQUEST_CANCELLED);
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
     verify(actionRepo, times(1)).saveAndFlush(actions.get(1));
 
@@ -108,13 +113,13 @@ public class ActionServiceImplTest {
 
     actionServiceImpl.feedBackAction(actionFeedback.get(0));
 
-    ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
-    Action originalAction = FixtureHelper.loadClassFixtures(Action[].class).get(0);
+    final ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
+    final Action originalAction = FixtureHelper.loadClassFixtures(Action[].class).get(0);
 
     verify(actionRepo, times(1)).findById(ACTION_ID_0);
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
     verify(actionSvcStateTransitionManager, times(1)).transition(originalAction.getState(),
-            event);
+        event);
 
   }
 
@@ -129,7 +134,7 @@ public class ActionServiceImplTest {
 
   @Test
   public void whenFeedbackActionWithNullActionIdVerifySaveIsntCalled() throws Exception {
-    ActionFeedback actionFeedbackWithNullActionId = new ActionFeedback();
+    final ActionFeedback actionFeedbackWithNullActionId = new ActionFeedback();
     actionServiceImpl.feedBackAction(actionFeedbackWithNullActionId);
 
     verify(actionRepo, times(0)).findById(any());
@@ -146,7 +151,7 @@ public class ActionServiceImplTest {
 
   @Test
   public void testUpdateActionCallsSaveEvent() throws Exception {
-    Action action = actions.get(0);
+    final Action action = actions.get(0);
     when(actionRepo.findById(ACTION_ID_0)).thenReturn(action);
     when(actionRepo.saveAndFlush(any())).then(returnsFirstArg());
 
@@ -157,7 +162,7 @@ public class ActionServiceImplTest {
 
   @Test
   public void testUpdateActionNoActionFound() throws Exception {
-    Action existingAction = actionServiceImpl.updateAction(actions.get(0));
+    final Action existingAction = actionServiceImpl.updateAction(actions.get(0));
 
     verify(actionRepo, times(0)).saveAndFlush(any());
     assertThat(existingAction, is(nullValue()));
@@ -166,7 +171,7 @@ public class ActionServiceImplTest {
   @Test
   public void testUpdateActionNoUpdate() throws Exception {
     when(actionRepo.findById(ACTION_ID_3)).thenReturn(actions.get(3));
-    Action existingAction = actionServiceImpl.updateAction(actions.get(3));
+    final Action existingAction = actionServiceImpl.updateAction(actions.get(3));
 
     verify(actionRepo, times(0)).saveAndFlush(any());
     assertThat(existingAction, is(actions.get(3)));

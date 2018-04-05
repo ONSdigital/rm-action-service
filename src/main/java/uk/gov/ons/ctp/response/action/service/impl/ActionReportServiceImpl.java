@@ -13,13 +13,13 @@ import uk.gov.ons.ctp.response.action.service.ActionReportService;
 @Slf4j
 public class ActionReportServiceImpl implements ActionReportService {
 
-    @Autowired
-    private ActionReportRepository actionReportRepository;
+  @Autowired
+  private ActionReportRepository actionReportRepository;
 
-    @Override
-    public void createReport() {
-        log.debug("Entering createReport...");
-        boolean reportResult = actionReportRepository.miStoredProcedure();
-        log.debug("Just ran the mi report and result is {}", reportResult);
-    }
+  @Override
+  public void createReport() {
+    log.debug("Entering createReport...");
+    final boolean reportResult = actionReportRepository.miStoredProcedure();
+    log.debug("Just ran the mi report and result is {}", reportResult);
+  }
 }
