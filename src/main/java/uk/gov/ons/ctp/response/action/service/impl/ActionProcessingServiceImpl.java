@@ -255,6 +255,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     final SurveyDTO surveyDTO = surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
     actionRequest.setSurveyName(surveyDTO.getLongName());
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
+    actionRequest.setUserDescription(collectionExercise.getUserDescription());
 
     final Attributes businessUnitAttributes = parentParty.getAttributes();
 
