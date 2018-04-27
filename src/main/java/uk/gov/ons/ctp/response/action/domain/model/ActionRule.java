@@ -13,9 +13,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.UUID;
 
 /**
  * Domain model object.
@@ -26,35 +23,37 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-@Table(name = "actionplan", schema = "action")
-public class ActionPlan implements Serializable {
-
-  private static final long serialVersionUID = 3621028547635970347L;
+@Table(name = "actionrule", schema = "action")
+public class ActionRule {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "actionplanseq_gen")
+  @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "actionruleseq_gen")
   @GenericGenerator(
-          name = "actionplanseq_gen",
+          name = "actionruleseq_gen",
           strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
           parameters = {
-                  @org.hibernate.annotations.Parameter(name = "sequence_name", value = "action.actionplanseq"),
+                  @org.hibernate.annotations.Parameter(name = "sequence_name", value = "action.actionruleseq"),
                   @org.hibernate.annotations.Parameter(name = "initial_value", value = "1000"),
                   @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
           }
   )
-  @Column(name = "actionplanpk")
-  private Integer actionPlanPK;
 
-  private UUID id;
+  @Column(name = "actionrulepk")
+  private Integer actionRulePK;
+
+  @Column(name = "actionplanfk")
+  private Integer actionPlanFK;
+
+  @Column(name = "actiontypefk")
+  private Integer actionTypeFK;
 
   private String name;
 
   private String description;
 
-  @Column(name = "createdby")
-  private String createdBy;
+  @Column(name = "daysoffset")
+  private Integer daysOffSet;
 
-  @Column(name = "lastrundatetime")
-  private Timestamp lastRunDateTime;
+  private Integer priority;
 
 }

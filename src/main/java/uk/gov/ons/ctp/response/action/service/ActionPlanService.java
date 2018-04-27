@@ -35,6 +35,14 @@ public interface ActionPlanService extends CTPService {
   ActionPlan findActionPlanById(UUID actionPlanId);
 
   /**
+   * This method returns the action plan for the specified action plan id.
+   *
+   * @param name This is the action plan name
+   * @return ActionPlan This returns the associated action plan.
+   */
+  ActionPlan findActionPlanByName(String name);
+
+  /**
    * This method returns the action plan after it has been updated. Note that only the description and
    * the lastGoodRunDatetime can be updated.
    *
@@ -43,4 +51,12 @@ public interface ActionPlanService extends CTPService {
    * @return ActionPlan This returns the updated action plan.
    */
   ActionPlan updateActionPlan(UUID actionPlanId, ActionPlan actionPlan);
+
+  /**
+   * This method returns the action plan after it has been created.
+   *
+   * @param actionPlan   This is the new action plan to be created.
+   * @return ActionPlan This returns the created action plan.
+   */
+  ActionPlan createActionPlan(ActionPlan actionPlan);
 }

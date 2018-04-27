@@ -12,15 +12,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,6 +59,37 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   }
 
   /**
+   * This method returns the associated action plan after it has been created.
+   *
+   * @param request       The object created by ActionPlanPostRequestDTO from the json found in
+   *                      the request body
+   * @param bindingResult collects errors thrown by create
+   * @return ActionPlanDTO This returns the updated action plan.
+   * @throws InvalidRequestException if binding errors
+   */
+  @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
+  public final ResponseEntity<ActionPlanDTO> createActionPlan(@RequestBody @Valid final ActionPlanPostRequestDTO request,
+                                                          final BindingResult bindingResult)
+          throws CTPException, InvalidRequestException {
+    log.info("Create action plan - action plan {}", request);
+    if (bindingResult.hasErrors()) {
+      throw new InvalidRequestException("Binding errors for create action plan: ", bindingResult);
+    }
+
+    ActionPlan existingActionPlan = actionPlanService.findActionPlanByName(request.getName());
+    if (existingActionPlan != null) {
+      final String message = "Action plan with name " + request.getName() + " already exists";
+      throw new CTPException(CTPException.Fault.BAD_REQUEST, message);
+    }
+
+    ActionPlan actionPlan = actionPlanService.createActionPlan(mapperFacade.map(request, ActionPlan.class));
+    final ActionPlanDTO actionPlanDTO = mapperFacade.map(actionPlan, ActionPlanDTO.class);
+    final String newResourceUrl = ServletUriComponentsBuilder
+            .fromCurrentRequest().buildAndExpand(actionPlanDTO.getId()).toUri().toString();
+    return ResponseEntity.created(URI.create(newResourceUrl)).body(actionPlanDTO);
+  }
+
+  /**
    * This method returns the associated action plan for the specified action plan id.
    *
    * @param actionPlanId This is the action plan id
@@ -87,7 +121,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
    */
   @RequestMapping(value = "/{actionplanid}", method = RequestMethod.PUT, consumes = "application/json")
   public final ActionPlanDTO updateActionPlanByActionPlanId(@PathVariable("actionplanid") final UUID actionPlanId,
-                                                            @RequestBody(required = false) @Valid final ActionPlanRequestDTO request,
+                                                            @RequestBody(required = false) @Valid final ActionPlanPutRequestDTO request,
                                                             final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
     log.info("UpdateActionPlanByActionPlanId with actionplanid {} - actionPlan {}", actionPlanId, request);
@@ -102,3 +136,5 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     return mapperFacade.map(actionPlan, ActionPlanDTO.class);
   }
 }
+
+
