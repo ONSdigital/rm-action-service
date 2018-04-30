@@ -48,6 +48,24 @@ public class ActionPlanServiceImpl implements ActionPlanService {
     return actionPlanRepo.findById(actionPlanId);
   }
 
+  @CoverageIgnore
+  @Override
+  public ActionPlan findActionPlanByName(final String name) {
+    log.debug("Entering findActionPlanByName with name {}", name);
+    return actionPlanRepo.findByName(name);
+  }
+
+  @Override
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  public ActionPlan createActionPlan(final ActionPlan actionPlan) {
+    log.debug("Entering createActionPlan with {}", actionPlan);
+
+    actionPlan.setActionPlanPK(null);
+    actionPlan.setId(UUID.randomUUID());
+
+    return actionPlanRepo.saveAndFlush(actionPlan);
+  }
+
   @Override
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   public ActionPlan updateActionPlan(final UUID actionPlanId, final ActionPlan actionPlan) {

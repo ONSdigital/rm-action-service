@@ -9,3 +9,13 @@ databaseChangeLog:
             path: change_action_plan_names.sql
             relativeToChangelogFile: true
             splitStatements: false
+
+  - changeSet:
+      id: 10.49.0-2
+      author: Tejas Patel
+      changes:
+        - sqlFile:
+            comment: Add sequence tables for ActionPlanPK, ActionRulePK and ActionTypePK
+            path: add_sequence_tables.sql
+            relativeToChangelogFile: true
+            splitStatements: false
