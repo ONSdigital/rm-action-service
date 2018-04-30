@@ -230,7 +230,9 @@ An `HTTP 404 Not Found` status code is returned if the action plan with the spec
 
 ## Create Action Plan
 * `POST /actionplans` will create an action plan.
-
+* Returns 201 Created if the resource is created
+* Returns 400 Bad Request
+* Returns 409 Conflict
 ### Example JSON POST
 ```json
 {
