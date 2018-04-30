@@ -228,6 +228,32 @@ An `HTTP 204 No Content` status code is returned if there are no action plans.
 
 An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found.
 
+## Create Action Plan
+* `POST /actionplans` will create an action.
+
+### Example JSON POST
+```json
+{
+	"name": "notification",
+	"description": "bres enrolment notification",
+	"createdBy": "SYSTEM"
+}
+```
+
+### Example JSON Response
+```json
+{
+  "id": "5381731e-e386-41a1-8462-26373744dc55",
+  "name": "notification",
+  "description": "bres enrolment notification",
+  "createdBy": "SYSTEM",
+  "lastRunDateTime": "2017-06-15T10:00:00Z"
+}
+```
+
+An `HTTP 201 Created` status code is returned if the action creation was a success. An `HTTP 400 Bad Request` is returned if any of the required parameters are missing.
+
+
 ## Update Action Plan
 * `PUT /actionplans/{actionplanId}` will update the details of the action plan with the given ID.
 
