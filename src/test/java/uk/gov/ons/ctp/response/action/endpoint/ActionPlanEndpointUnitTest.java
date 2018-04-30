@@ -285,7 +285,7 @@ public class ActionPlanEndpointUnitTest {
             .andExpect(handler().handlerType(ActionPlanEndpoint.class))
             .andExpect(handler().methodName("createActionPlan"))
             .andExpect(jsonPath("$.*", Matchers.hasSize(5)))
-            .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME.toString())))
+            .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME)))
             .andExpect(jsonPath("$.description", is(ACTION_PLAN_3_DESC)))
             .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
             .andExpect(jsonPath("$.lastRunDateTime", is(IsNull.nullValue())));

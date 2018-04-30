@@ -55,8 +55,8 @@ public class ActionPlanServiceImpl implements ActionPlanService {
     return actionPlanRepo.findByName(name);
   }
 
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   @Override
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   public ActionPlan createActionPlan(final ActionPlan actionPlan) {
     log.debug("Entering createActionPlan with {}", actionPlan);
 
