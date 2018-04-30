@@ -229,7 +229,7 @@ An `HTTP 204 No Content` status code is returned if there are no action plans.
 An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found.
 
 ## Create Action Plan
-* `POST /actionplans` will create an action.
+* `POST /actionplans` will create an action plan.
 
 ### Example JSON POST
 ```json
