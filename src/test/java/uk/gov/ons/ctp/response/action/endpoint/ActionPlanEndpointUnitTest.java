@@ -306,10 +306,10 @@ public class ActionPlanEndpointUnitTest {
 
     final ResultActions resultActions = mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));
 
-    resultActions.andExpect(status().isBadRequest())
+    resultActions.andExpect(status().isConflict())
             .andExpect(handler().handlerType(ActionPlanEndpoint.class))
             .andExpect(handler().methodName("createActionPlan"))
-            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.BAD_REQUEST.name())))
+            .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_VERSION_CONFLICT.name())))
             .andExpect(jsonPath("$.error.message",
                     is("Action plan with name " + actionPlans.get(2).getName() + " already exists")));
 

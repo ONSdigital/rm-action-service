@@ -79,7 +79,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     ActionPlan existingActionPlan = actionPlanService.findActionPlanByName(request.getName());
     if (existingActionPlan != null) {
       final String message = "Action plan with name " + request.getName() + " already exists";
-      throw new CTPException(CTPException.Fault.BAD_REQUEST, message);
+      throw new CTPException(CTPException.Fault.RESOURCE_VERSION_CONFLICT, message);
     }
 
     ActionPlan actionPlan = actionPlanService.createActionPlan(mapperFacade.map(request, ActionPlan.class));
