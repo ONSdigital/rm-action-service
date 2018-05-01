@@ -81,7 +81,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
       final int actionTypeFK = actionRule.getActionTypeFK();
       final String actionTypeName = actionTypeService.findActionType(actionTypeFK).getName();
       actionRulesDTOs.get(index).setActionTypeName(actionTypeName);
-      index = index + 1;
+      index++;
     }
 
     return actionRulesDTOs;
