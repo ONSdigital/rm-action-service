@@ -10,10 +10,10 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 public interface ActionTypeService extends CTPService {
 
   /**
-   * This method returns the action plan for the specified action plan primary key.
+   * This method returns the action type for the specified action type primary key.
    *
    * @param actionTypeKey This is the action plan primary key
-   * @return ActionPlan This returns the associated action plan.
+   * @return ActionType This returns the associated action type.
    */
   ActionType findActionType(Integer actionTypeKey);
 
