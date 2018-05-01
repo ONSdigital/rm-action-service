@@ -24,7 +24,6 @@ public class ActionTypeServiceImpl implements ActionTypeService {
   @CoverageIgnore
   @Override
   public ActionType findActionType(final Integer actionTypeKey) {
-    log.debug("Entering findActionRules");
     return actionTypeRepo.findOne(actionTypeKey);
   }
 }
