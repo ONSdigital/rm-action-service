@@ -1,0 +1,10 @@
+[
+  {
+    "actionTypePK": 2,
+    "name": "BSNOT",
+    "description": "Enrolment Invitation Letter",
+    "handler": "Printer",
+    "canCancel": true,
+    "responseRequired": true
+  }
+]

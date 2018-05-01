@@ -328,3 +328,20 @@ An `HTTP 404 Not Found` status code is returned if the action plan job with the 
 ```
 
 An `HTTP 201 Created` status code is returned if the action plan job creation was a success. An `HTTP 404 Not Found` status code is returned if the action plan with the specified ID could not be found. An `HTTP 400 Bad Request` is returned if any of the required parameters are missing.
+
+## List Action Rules for Action Plan
+* `GET /actionrules/actionplan/{actionPlanId}` will return a list of action rules for the action plan with the given ID.
+
+### Example JSON Response
+```json
+[
+  {
+    "id":"35fe06af-d16b-47b0-92a3-099805c65c9d",
+    "name":"BSREM+45",
+    "description":"Enrolment Reminder Letter(+45 days)",
+    "daysOffset":45,"priority":3,"actionTypeName":"BSREM"
+  }
+]
+```
+
+An `HTTP 404 Not Found` status code is returned if an action plan with the specified ID could not be found.
