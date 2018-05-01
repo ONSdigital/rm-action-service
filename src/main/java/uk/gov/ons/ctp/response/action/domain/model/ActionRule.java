@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.util.UUID;
 
 /**
  * Domain model object.
@@ -25,6 +26,8 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Table(name = "actionrule", schema = "action")
 public class ActionRule {
+
+  private UUID id;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "actionruleseq_gen")
@@ -52,7 +55,7 @@ public class ActionRule {
   private String description;
 
   @Column(name = "daysoffset")
-  private Integer daysOffSet;
+  private Integer daysOffset;
 
   private Integer priority;
 
