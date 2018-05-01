@@ -19,3 +19,13 @@ databaseChangeLog:
             path: add_sequence_tables.sql
             relativeToChangelogFile: true
             splitStatements: false
+
+  - changeSet:
+      id: 10.49.0-3
+      author: Tejas Patel
+      changes:
+        - sqlFile:
+            comment: Add uuid column to action rule table
+            path: add_action_rule_uuid_column.sql
+            relativeToChangelogFile: true
+            splitStatements: false
