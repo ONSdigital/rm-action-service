@@ -26,4 +26,10 @@ public class ActionTypeServiceImpl implements ActionTypeService {
   public ActionType findActionType(final Integer actionTypeKey) {
     return actionTypeRepo.findOne(actionTypeKey);
   }
+
+  @CoverageIgnore
+  @Override
+  public ActionType findActionTypeByName(final String name) {
+    return actionTypeRepo.findByName(name);
+  }
 }

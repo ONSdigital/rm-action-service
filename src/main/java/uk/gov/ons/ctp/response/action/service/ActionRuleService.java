@@ -19,4 +19,19 @@ public interface ActionRuleService extends CTPService {
    */
   List<ActionRule> findActionRulesByActionPlanId(UUID actionPlanId);
 
+  /**
+   * This method returns the action rule after it has been created.
+   *
+   * @param actionRule  This is the new action rule to be created.
+   * @return ActionRule This returns the created action rule.
+   */
+  ActionRule createActionRule(ActionRule actionRule);
+
+  /**
+   * Update an action rule.
+   *
+   * @param actionRule ActionRule with update information
+   * @return ActionRule Returns updated Action Rule.
+   */
+  ActionRule updateActionRule(ActionRule actionRule);
 }

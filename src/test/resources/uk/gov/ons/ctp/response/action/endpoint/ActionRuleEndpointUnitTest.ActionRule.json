@@ -5,7 +5,7 @@
     "description": "description one",
     "daysOffset": 0,
     "actionTypeFK": 2,
-    "name": "﻿BSNOT+0"
+    "name": "BSNOT+0"
   },
   {
     "id": "d24b3f17-bbf8-4c71-b2f0-a4334125d78b",
@@ -13,7 +13,7 @@
     "description": "description two",
     "daysOffset": 0,
     "actionTypeFK": 2,
-    "name": "﻿BSREM+0"
+    "name": "BSREM+0"
   },
   {
     "id": "d24b3f17-bbf8-4c71-b2f0-a4334125d78c",
@@ -21,6 +21,6 @@
     "description": "description three",
     "daysOffset": 0,
     "actionTypeFK": 2,
-    "name": "﻿BSREM+45"
+    "name": "BSREM+45"
   }
 ]
