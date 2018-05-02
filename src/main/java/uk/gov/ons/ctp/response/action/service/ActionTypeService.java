@@ -17,4 +17,12 @@ public interface ActionTypeService extends CTPService {
    */
   ActionType findActionType(Integer actionTypeKey);
 
+  /**
+   * This method returns the action type for the specified action type name.
+   *
+   * @param name This is the action type name
+   * @return ActionType This returns the associated action type.
+   */
+  ActionType findActionTypeByName(String name);
+
 }

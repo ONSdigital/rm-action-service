@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -64,7 +65,12 @@ public final class ActionRuleEndpointUnitTest {
   private static final UUID ACTION_RULE_ID_2 = UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d78b");
   private static final UUID ACTION_RULE_ID_3 = UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d78c");
 
-  private static final UUID ACTION_ID_3 = UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
+  private static final UUID ACTION_PLAN_ID_1 = UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
+  private static final String ACTION_TYPE_NAME_1 = "BSNOT";
+
+  private static final String ACTION_RULE_CREATE_VALID_JSON = "{ \"actionPlanId\": \"" + ACTION_PLAN_ID_1.toString()
+          + "\", \"actionTypeName\": \"" + ACTION_TYPE_NAME_1 + "\", \"name\": \"BSREM+45\", \"description\": \"Enrolment Reminder Letter(+45 days)\", "
+          + "\"daysOffset\": 45, \"priority\": 3 }";
 
 
 
@@ -95,9 +101,9 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void findActionRulesByActionPlanNotFound() throws Exception {
-    when(actionPlanService.findActionPlanById(ACTION_ID_3)).thenReturn(null);
+    when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(null);
 
-    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actionrules/actionplan/" + ACTION_ID_3.toString())));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString())));
 
     resultActions.andExpect(status().isNotFound())
             .andExpect(handler().handlerType(ActionRuleEndpoint.class))
@@ -111,10 +117,10 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void findActionRulesByActionPlanNoRules() throws Exception {
-    when(actionRuleService.findActionRulesByActionPlanId(ACTION_ID_3)).thenReturn(Collections.emptyList());
-    when(actionPlanService.findActionPlanById(ACTION_ID_3)).thenReturn(actionPlans.get(0));
+    when(actionRuleService.findActionRulesByActionPlanId(ACTION_PLAN_ID_1)).thenReturn(Collections.emptyList());
+    when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
 
-    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actionrules/actionplan/" + ACTION_ID_3.toString())));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString())));
 
     resultActions.andExpect(status().is2xxSuccessful())
         .andExpect(handler().handlerType(ActionRuleEndpoint.class))
@@ -133,11 +139,11 @@ public final class ActionRuleEndpointUnitTest {
     for (int i = 0; i < 3; i++) {
       results.add((actionRules.get(i)));
     }
-    when(actionRuleService.findActionRulesByActionPlanId(ACTION_ID_3)).thenReturn(results);
-    when(actionPlanService.findActionPlanById(ACTION_ID_3)).thenReturn(actionPlans.get(0));
+    when(actionRuleService.findActionRulesByActionPlanId(ACTION_PLAN_ID_1)).thenReturn(results);
+    when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
     when(actionTypeService.findActionType(any(Integer.class))).thenReturn(actionTypes.get(0));
 
-    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actionrules/actionplan/" + ACTION_ID_3.toString())));
+    final ResultActions resultActions = mockMvc.perform(getJson(String.format("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString())));
 
     resultActions.andExpect(status().is2xxSuccessful())
         .andExpect(handler().handlerType(ActionRuleEndpoint.class))
@@ -149,4 +155,78 @@ public final class ActionRuleEndpointUnitTest {
         .andExpect(jsonPath("$[*].actionTypeName", containsInAnyOrder(actionTypes.get(0).getName(),
                 actionTypes.get(0).getName(), actionTypes.get(0).getName())));
   }
+
+  /**
+   * Test creating an Action rule with valid JSON.
+   *
+   * @throws Exception when postJson does
+   */
+  @Test
+  public void createActionRuleGoodJsonProvided() throws Exception {
+    when(actionRuleService.createActionRule(any(ActionRule.class))).thenReturn(actionRules.get(2));
+    when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
+    when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(actionTypes.get(0));
+
+    final ResultActions resultActions = mockMvc.perform(postJson("/actionrules", ACTION_RULE_CREATE_VALID_JSON));
+
+    resultActions.andExpect(status().isCreated())
+            .andExpect(handler().handlerType(ActionRuleEndpoint.class))
+            .andExpect(handler().methodName("createActionRule"))
+            .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
+            .andExpect(jsonPath("$.actionTypeName", is(ACTION_TYPE_NAME_1)));
+
+    verify(actionTypeService, times(1)).findActionTypeByName(any(String.class));
+    verify(actionPlanService, times(1)).findActionPlanById(any(UUID.class));
+    verify(actionRuleService, times(1)).createActionRule(any(ActionRule.class));
+  }
+
+
+  /**
+   * Test creating an Action rule with bad JSON.
+   *
+   * @throws Exception when postJson does
+   */
+  @Test
+  public void createActionRuleBadJsonProvided() throws Exception {
+
+    final ResultActions resultActions = mockMvc.perform(postJson("/actionrules", "{}"));
+
+    resultActions.andExpect(status().isBadRequest());
+
+  }
+
+  /**
+   * Test creating an Action rule with valid JSON but action rule does not exist .
+   *
+   * @throws Exception when postJson does
+   */
+  @Test
+  public void createActionRuleActionPlanNotFound() throws Exception {
+    when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(null);
+
+    final ResultActions resultActions = mockMvc.perform(postJson("/actionrules", ACTION_RULE_CREATE_VALID_JSON));
+
+    resultActions.andExpect(status().isNotFound());
+
+    verify(actionPlanService, times(1)).findActionPlanById(any(UUID.class));
+  }
+
+  /**
+   * Test creating an Action rule with valid JSON but action type does not exist .
+   *
+   * @throws Exception when postJson does
+   */
+  @Test
+  public void createActionRuleActionType() throws Exception {
+    when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
+    when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(null);
+
+    final ResultActions resultActions = mockMvc.perform(postJson("/actionrules", ACTION_RULE_CREATE_VALID_JSON));
+
+    resultActions.andExpect(status().isNotFound());
+
+    verify(actionTypeService, times(1)).findActionTypeByName(any(String.class));
+    verify(actionPlanService, times(1)).findActionPlanById(any(UUID.class));
+  }
+
 }

@@ -336,12 +336,33 @@ An `HTTP 201 Created` status code is returned if the action plan job creation wa
 ```json
 [
   {
-    "id":"35fe06af-d16b-47b0-92a3-099805c65c9d",
-    "name":"BSREM+45",
-    "description":"Enrolment Reminder Letter(+45 days)",
-    "daysOffset":45,"priority":3,"actionTypeName":"BSREM"
+    "id": "35fe06af-d16b-47b0-92a3-099805c65c9d",
+    "name": "BSREM+45",
+    "description": "Enrolment Reminder Letter(+45 days)",
+    "daysOffset": 45,
+    "priority": 3,
+    "actionTypeName": "BSREM"
   }
 ]
 ```
 
 An `HTTP 404 Not Found` status code is returned if an action plan with the specified ID could not be found.
+
+## Create Action Rule
+* `POST /actionrules` will create an action rule.
+
+### Example JSON Response
+```json
+{
+  "actionPlanId": "714356ba-7236-4179-8007-f09190eed323",
+  "actionTypeName": "BSREM",
+  "name": "BSREM+45",
+  "description": "Enrolment Reminder Letter(+45 days)",
+  "daysOffset": 45,
+  "priority": 3
+}
+```
+
+* An `HTTP 201 Created` status code is returned if the action rule creation was a success.
+* An `HTTP 404 Not Found` status code is returned if the action plan or action type with the specified ID could not be found.
+* An `HTTP 400 Bad Request` is returned if any of the required parameters are missing.
