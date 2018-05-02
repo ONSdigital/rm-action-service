@@ -17,6 +17,14 @@ import java.util.UUID;
 public interface ActionRuleRepository extends JpaRepository<ActionRule, Integer> {
 
   /**
+   * Find action by UUID
+   *
+   * @param actionRuleId the action uuid
+   * @return the actionRule found
+   */
+  ActionRule findById(UUID actionRuleId);
+
+  /**
    * Return all action rules for the specified action plan id.
    *
    * @param actionPlanId This is the case id
