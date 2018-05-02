@@ -1,0 +1,11 @@
+---
+applications:
+- name: actionsvc
+  instances: 1
+  memory: 1024M
+  path: target/actionsvc.jar
+  timeout: 180
+  services:
+    - rm-pg-db
+    - rm-redis
+    - rm-rabbitmq
