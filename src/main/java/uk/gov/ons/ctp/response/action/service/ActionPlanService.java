@@ -35,7 +35,7 @@ public interface ActionPlanService extends CTPService {
   ActionPlan findActionPlanById(UUID actionPlanId);
 
   /**
-   * This method returns the action plan for the specified action plan id.
+   * This method returns the action plan for the specified action plan name.
    *
    * @param name This is the action plan name
    * @return ActionPlan This returns the associated action plan.

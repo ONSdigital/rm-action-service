@@ -13,15 +13,16 @@ import java.util.UUID;
 public interface ActionPlanRepository extends JpaRepository<ActionPlan, Integer> {
 
   /**
-   * Return all actions for the specified actionTypeName.
+   * Return ActionPlan for the specified action plan id.
    *
    * @param id UUID id for ActionPlan
    * @return ActionPlan returns ActionPlan for associated id
    */
   ActionPlan findById(UUID id);
 
+
   /**
-   * Return all actions for the specified actionTypeName.
+   * Return ActionPlan for the specified action plan name.
    *
    * @param name UUID id for ActionPlan
    * @return ActionPlan returns ActionPlan for associated id
