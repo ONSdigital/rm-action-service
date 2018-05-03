@@ -20,6 +20,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionRulePutRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
@@ -40,6 +41,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan with id %s not found";
   public static final String ACTION_TYPE_NOT_FOUND = "ActionType with name %s not found";
+  public static final String ACTION_RULE_NOT_FOUND = "ActionRule with id %s not found";
 
   @Autowired
   private ActionRuleService actionRuleService;
@@ -117,6 +119,38 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     final String newResourceUrl = ServletUriComponentsBuilder
             .fromCurrentRequest().buildAndExpand(actionRuleDTO.getId()).toUri().toString();
     return ResponseEntity.created(URI.create(newResourceUrl)).body(actionRuleDTO);
+  }
+
+  /**
+   * PUT to update the specified Action Rule.
+   *
+   * @param actionRuleId            Id of the Action Rule to update
+   * @param actionRulePutRequestDTO Incoming ActionRuleDTO with details to update
+   * @param bindingResult       collects errors thrown by update
+   * @return ActionRuleDTO Returns the updated Action Rule details
+   * @throws CTPException            if update operation fails
+   * @throws InvalidRequestException if binding errors
+   */
+  @RequestMapping(value = "/{actionRuleId}", method = RequestMethod.PUT, consumes = "application/json")
+  public ActionRuleDTO updateActionRule(@PathVariable("actionRuleId") final UUID actionRuleId,
+                                @RequestBody(required = false) @Valid final ActionRulePutRequestDTO actionRulePutRequestDTO,
+                                final BindingResult bindingResult) throws CTPException, InvalidRequestException {
+    log.info("Updating Action Rule with {} - {}", actionRuleId, actionRulePutRequestDTO);
+    if (bindingResult.hasErrors()) {
+      throw new InvalidRequestException("Binding errors for update action rule: ", bindingResult);
+    }
+
+    ActionRule actionRuleToUpdate = mapperFacade.map(actionRulePutRequestDTO, ActionRule.class);
+    actionRuleToUpdate.setId(actionRuleId);
+    final ActionRule updatedActionRule = actionRuleService.updateActionRule(actionRuleToUpdate);
+    if (updatedActionRule == null) {
+      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_RULE_NOT_FOUND, actionRuleId);
+    }
+
+    final ActionRuleDTO resultDTO = mapperFacade.map(updatedActionRule, ActionRuleDTO.class);
+    final String actionTypeName = actionTypeService.findActionType(updatedActionRule.getActionTypeFK()).getName();
+    resultDTO.setActionTypeName(actionTypeName);
+    return resultDTO;
   }
 
   /**

@@ -26,4 +26,12 @@ public interface ActionRuleService extends CTPService {
    * @return ActionRule This returns the created action rule.
    */
   ActionRule createActionRule(ActionRule actionRule);
+
+  /**
+   * Update an action rule.
+   *
+   * @param actionRule ActionRule with update information
+   * @return ActionRule Returns updated Action Rule.
+   */
+  ActionRule updateActionRule(ActionRule actionRule);
 }
