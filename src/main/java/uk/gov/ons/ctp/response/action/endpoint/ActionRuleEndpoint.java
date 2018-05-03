@@ -142,13 +142,13 @@ public class ActionRuleEndpoint implements CTPEndpoint {
 
     ActionRule actionRuleToUpdate = mapperFacade.map(actionRulePutRequestDTO, ActionRule.class);
     actionRuleToUpdate.setId(actionRuleId);
-    actionRuleToUpdate = actionRuleService.updateActionRule(actionRuleToUpdate);
-    if (actionRuleToUpdate == null) {
+    final ActionRule updatedActionRule = actionRuleService.updateActionRule(actionRuleToUpdate);
+    if (updatedActionRule == null) {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_RULE_NOT_FOUND, actionRuleId);
     }
 
-    final ActionRuleDTO resultDTO = mapperFacade.map(actionRuleToUpdate, ActionRuleDTO.class);
-    final String actionTypeName = actionTypeService.findActionType(actionRuleToUpdate.getActionTypeFK()).getName();
+    final ActionRuleDTO resultDTO = mapperFacade.map(updatedActionRule, ActionRuleDTO.class);
+    final String actionTypeName = actionTypeService.findActionType(updatedActionRule.getActionTypeFK()).getName();
     resultDTO.setActionTypeName(actionTypeName);
     return resultDTO;
   }

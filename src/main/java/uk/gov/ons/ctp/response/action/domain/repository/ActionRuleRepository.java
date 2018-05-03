@@ -20,7 +20,7 @@ public interface ActionRuleRepository extends JpaRepository<ActionRule, Integer>
    * Find action by UUID
    *
    * @param actionRuleId the action uuid
-   * @return the actionRule found
+   * @return the ActionRule found
    */
   ActionRule findById(UUID actionRuleId);
 

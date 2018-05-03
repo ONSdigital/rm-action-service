@@ -50,38 +50,41 @@ public class ActionRuleServiceImpl implements ActionRuleService {
     final UUID actionRuleId = actionRule.getId();
 
     ActionRule existingActionRule = actionRuleRepo.findById(actionRuleId);
-    if (existingActionRule != null) {
-      boolean needsUpdate = false;
-
-      final Integer newPriority = actionRule.getPriority();
-      if (newPriority != null) {
-        needsUpdate = true;
-        existingActionRule.setPriority(newPriority);
-      }
-
-      final String newName = actionRule.getName();
-      if (newName != null) {
-        needsUpdate = true;
-        existingActionRule.setName(newName);
-      }
-
-      final String newDescription = actionRule.getDescription();
-      if (newDescription != null) {
-        needsUpdate = true;
-        existingActionRule.setDescription(newDescription);
-      }
-
-      final Integer newDaysOffset = actionRule.getDaysOffset();
-      if (newDaysOffset != null) {
-        needsUpdate = true;
-        existingActionRule.setDaysOffset(newDaysOffset);
-      }
-
-      if (needsUpdate) {
-        log.debug("updating action with {}", existingActionRule);
-        existingActionRule = actionRuleRepo.saveAndFlush(existingActionRule);
-      }
+    if (existingActionRule == null) {
+      return null;
     }
+
+    boolean needsUpdate = false;
+
+    final Integer newPriority = actionRule.getPriority();
+    if (newPriority != null) {
+      needsUpdate = true;
+      existingActionRule.setPriority(newPriority);
+    }
+
+    final String newName = actionRule.getName();
+    if (newName != null) {
+      needsUpdate = true;
+      existingActionRule.setName(newName);
+    }
+
+    final String newDescription = actionRule.getDescription();
+    if (newDescription != null) {
+      needsUpdate = true;
+      existingActionRule.setDescription(newDescription);
+    }
+
+    final Integer newDaysOffset = actionRule.getDaysOffset();
+    if (newDaysOffset != null) {
+      needsUpdate = true;
+      existingActionRule.setDaysOffset(newDaysOffset);
+    }
+
+    if (needsUpdate) {
+      log.debug("updating action with {}", existingActionRule);
+      existingActionRule = actionRuleRepo.saveAndFlush(existingActionRule);
+    }
+
     return existingActionRule;
   }
 }
