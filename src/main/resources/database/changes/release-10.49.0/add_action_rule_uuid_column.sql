@@ -5,7 +5,7 @@ ALTER TABLE action.actionrule
 ADD COLUMN id uuid;
 
 UPDATE action.actionrule
-SET id = gen_random_uuid();
+SET id = public.gen_random_uuid();
 
 ALTER TABLE action.actionrule
 ALTER COLUMN id SET NOT NULL,
