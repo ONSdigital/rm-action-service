@@ -23,6 +23,9 @@ databaseChangeLog:
   - changeSet:
       id: 10.49.0-3
       author: Tejas Patel
+      validCheckSum:
+        - 7:e5c7665df4e4722fcd9d77076d201d59
+        - 7:9eaf8f2eab7ce5141a96043c9dfe9b8f
       changes:
         - sqlFile:
             comment: Add uuid column to action rule table
