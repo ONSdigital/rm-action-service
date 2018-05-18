@@ -14,9 +14,15 @@ It is upto the handler to pick out what information is relevant to it from the i
 
 ## Running
 
+There are two ways of running this service
+
+* The easiest way is via docker (https://github.com/ONSdigital/ras-rm-docker-dev)
+* Alternatively running the service up in isolation
+    ```bash
+    cp .maven.settings.xml ~/.m2/settings.xml  # This only needs to be done once to set up mavens settings file
     mvn clean install
-    cd actionsvc
-    ./mvnw spring-boot:run
+    mvn spring-boot:run
+    ```
 
 ## API
 See [API.md](https://github.com/ONSdigital/rm-action-service/blob/master/API.md) for API documentation.
