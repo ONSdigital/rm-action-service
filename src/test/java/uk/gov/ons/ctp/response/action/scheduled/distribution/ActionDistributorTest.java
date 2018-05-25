@@ -9,7 +9,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.support.TransactionTemplate;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.distributed.DistributedListManager;
 import uk.gov.ons.ctp.response.action.config.ActionDistribution;
@@ -18,7 +18,6 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
 import java.math.BigInteger;
@@ -29,8 +28,8 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -62,9 +61,6 @@ public class ActionDistributorTest {
 
   @Spy
   private AppConfig appConfig = new AppConfig();
-
-  @Mock
-  private DistributedListManager<BigInteger> actionDistributionListManager;
 
   @Mock
   private ActionRepository actionRepo;
@@ -104,8 +100,8 @@ public class ActionDistributorTest {
   @Test
   public void testFailToGetAnyAction() throws Exception {
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(any(String.class), any(List.class),
-        any(List.class), any(Pageable.class))).thenThrow(new RuntimeException("Database access failed"));
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(any(String.class), anyInt()))
+            .thenThrow(new RuntimeException("Database access failed"));
 
     final DistributionInfo info = actionDistributor.distribute();
     final List<InstructionCount> countList = info.getInstructionCounts();
@@ -122,14 +118,10 @@ public class ActionDistributorTest {
     assertTrue(countList.equals(expectedCountList));
 
     // Assertions for calls in method retrieveActions
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionDistributionListManager, times(0)).saveList(anyString(), anyList(),
-        anyBoolean());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
 
     // Assertions for calls in actionProcessingService
     verify(actionProcessingService, times(0)).processActionRequest(any(Action.class));
@@ -144,11 +136,11 @@ public class ActionDistributorTest {
   @Test
   public void testHappyPathParentCase() throws Exception {
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
-        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_INITIAL_CONTACT),
+        anyInt())).thenReturn(
         householdInitialContactActions);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
-        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC),
+        anyInt())).thenReturn(
         householdUploadIACActions);
 
     final DistributionInfo info = actionDistributor.distribute();
@@ -168,14 +160,10 @@ public class ActionDistributorTest {
     verify(actionTypeRepo).findAll();
 
     // Assertions for calls in method retrieveActions
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
-    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
 
     // Assertions for calls to actionProcessingService & processActionRequest
     final ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
@@ -209,11 +197,11 @@ public class ActionDistributorTest {
   @Test
   public void testActionProcessingServiceThrowsException() throws Exception {
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
-        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_INITIAL_CONTACT),
+        anyInt())).thenReturn(
         householdInitialContactActions);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
-        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC),
+        anyInt())).thenReturn(
         householdUploadIACActions);
     doThrow(new RuntimeException("Database access failed")).when(actionProcessingService).processActionRequest(
         any(Action.class));
@@ -237,14 +225,10 @@ public class ActionDistributorTest {
     verify(actionTypeRepo).findAll();
 
     // Assertions for calls in method retrieveActions
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
-    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
 
     // Assertions for calls to actionProcessingService & processActionRequest
     final ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);
@@ -282,11 +266,11 @@ public class ActionDistributorTest {
   @Test
   public void testActionProcessingServiceThrowsExceptionIntermittently() throws Exception {
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_INITIAL_CONTACT),
-        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_INITIAL_CONTACT),
+        anyInt())).thenReturn(
         householdInitialContactActions);
-    when(actionRepo.findByActionTypeNameAndStateInAndActionPKNotIn(eq(HOUSEHOLD_UPLOAD_IAC),
-        anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class))).thenReturn(
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC),
+        anyInt())).thenReturn(
         householdUploadIACActions);
     doThrow(new RuntimeException("Database access failed")).when(actionProcessingService).processActionRequest(
         eq(householdInitialContactActions.get(0)));
@@ -310,14 +294,10 @@ public class ActionDistributorTest {
     verify(actionTypeRepo).findAll();
 
     // Assertions for calls in method retrieveActions
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_INITIAL_CONTACT), eq(false));
-    verify(actionDistributionListManager).findList(eq(HOUSEHOLD_UPLOAD_IAC), eq(false));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_INITIAL_CONTACT), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionRepo, times(1)).findByActionTypeNameAndStateInAndActionPKNotIn(
-        eq(HOUSEHOLD_UPLOAD_IAC), anyListOf(ActionState.class), anyListOf(BigInteger.class), any(Pageable.class));
-    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_INITIAL_CONTACT), anyList(), anyBoolean());
-    verify(actionDistributionListManager).saveList(eq(HOUSEHOLD_UPLOAD_IAC), anyList(), anyBoolean());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
+    verify(actionRepo, times(1)).findSubmittedOrCancelledByActionTypeName(
+        eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
 
     // Assertions for calls to actionProcessingService & processActionRequest
     final ArgumentCaptor<Action> actionCaptorForActionRequest = ArgumentCaptor.forClass(Action.class);

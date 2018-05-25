@@ -1,7 +1,8 @@
 package uk.gov.ons.ctp.response.action.domain.repository;
 
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
@@ -59,20 +60,23 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
                                                                       ActionDTO.ActionState state);
 
   /**
-   * Return all actions for the specified actionTypeName and states according to
-   * the page specification
-   *
    * @param actionTypeName ActionTypeName filter criteria
-   * @param states         States of Action
-   * @param actionPKs      the actionPKs
-   * @param pageable       the paging info for the query
-   * @return List<Action> returns all actions for actionTypeName and states, for
-   * the given page
+   * @param limit          how many actions to return at most
+   * @return Return all SUBMITTED or CANCEL_SUBMITTE Dactions for the specified actionTypeName
    */
-  List<Action> findByActionTypeNameAndStateInAndActionPKNotIn(String actionTypeName,
-                                                              List<ActionDTO.ActionState> states,
-                                                              List<BigInteger> actionPKs,
-                                                              Pageable pageable);
+  @Query(value = "SELECT "
+      + " a.* "
+      + "FROM action.action a "
+      + " LEFT OUTER JOIN action.actionType at "
+      + " ON a.actiontypefk = actiontypepk "
+      + "WHERE "
+      + " at.name = :actionTypeName "
+      + " AND (a.statefk in ('SUBMITTED', 'CANCEL_SUBMITTED')) "
+      + "ORDER BY updatedDateTime asc "
+      + "LIMIT :limit "
+      + "FOR UPDATE SKIP LOCKED", nativeQuery = true)
+  List<Action> findSubmittedOrCancelledByActionTypeName(@Param("actionTypeName") String actionTypeName,
+                                                        @Param("limit") int limit);
 
   /**
    * Return all actions for the specified actionTypeName.
