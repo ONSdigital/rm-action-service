@@ -29,3 +29,13 @@ databaseChangeLog:
             path: add_action_rule_uuid_column.sql
             relativeToChangelogFile: true
             splitStatements: false
+
+  - changeSet:
+      id: 10.49.0-4
+      author: Gemma Irving
+      changes:
+        - sqlFile:
+            comment: Add business action types
+            path: add_additional_business_action_types.sql
+            relativeToChangelogFile: true
+            splitStatements: false
