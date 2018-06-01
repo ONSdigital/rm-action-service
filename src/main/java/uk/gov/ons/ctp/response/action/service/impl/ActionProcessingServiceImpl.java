@@ -238,7 +238,7 @@ public class ActionProcessingServiceImpl implements ActionProcessingService {
     actionRequest.setActionType(action.getActionType().getName());
     actionRequest.setResponseRequired(action.getActionType().getResponseRequired());
     actionRequest.setCaseId(action.getCaseId().toString());
-
+    actionRequest.setCaseRef(caseDTO.getCaseRef());
     actionRequest.setExerciseRef(collectionExercise.getExerciseRef());
 
     final ActionEvent actionEvent = new ActionEvent();
