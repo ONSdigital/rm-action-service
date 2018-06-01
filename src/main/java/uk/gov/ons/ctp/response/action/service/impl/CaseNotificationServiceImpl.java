@@ -12,10 +12,8 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
-import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
 import java.sql.Timestamp;
@@ -41,27 +39,29 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
   private ActionService actionService;
 
   @Autowired
-  private CaseSvcClientService caseSvcClientServiceImpl;
-
-  @Autowired
   private CollectionExerciseClientService collectionSvcClientServiceImpl;
 
   @Override
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   public void acceptNotification(final CaseNotification notification) throws CTPException {
+    log.info(notification.toString());
     final String actionPlanIdStr = notification.getActionPlanId();
     final UUID actionPlanId = UUID.fromString(actionPlanIdStr);
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+    final UUID caseId = UUID.fromString(notification.getCaseId());
+    final UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
+    final UUID partyId = UUID.fromString(notification.getPartyId());
 
     if (actionPlan != null) {
-      final UUID caseId = UUID.fromString(notification.getCaseId());
-      final ActionCase actionCase = ActionCase.builder().id(caseId).actionPlanId(actionPlanId).actionPlanFK(
-          actionPlan.getActionPlanPK()).build();
+      final ActionCase actionCase = ActionCase.builder().id(caseId)
+              .actionPlanId(actionPlanId).actionPlanFK(actionPlan.getActionPlanPK())
+              .collectionExerciseId(collectionExerciseId).partyId(partyId).build();
 
       switch (notification.getNotificationType()) {
         case REPLACED:
         case ACTIVATED:
-          final CollectionExerciseDTO collectionExercise = getCollectionExercise(notification);
+          final CollectionExerciseDTO collectionExercise = collectionSvcClientServiceImpl.getCollectionExercise(
+                  collectionExerciseId);
           actionCase.setActionPlanStartDate(new Timestamp(collectionExercise.getScheduledStartDateTime().getTime()));
           actionCase.setActionPlanEndDate(new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
           checkAndSaveCase(actionCase);
@@ -93,18 +93,6 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
     }
 
     actionCaseRepo.flush();
-  }
-
-  /**
-   * This method is to retrive the survey start date from the collection excerise
-   *
-   * @param notification CaseNotification containing caseId
-   * @return CollectionExercise collectionExerciseDTO
-   */
-  private CollectionExerciseDTO getCollectionExercise(final CaseNotification notification) {
-    final CaseDetailsDTO caseDTO = caseSvcClientServiceImpl.getCase(UUID.fromString(notification.getCaseId()));
-    return collectionSvcClientServiceImpl
-        .getCollectionExercise(caseDTO.getCaseGroup().getCollectionExerciseId());
   }
 
   /**
