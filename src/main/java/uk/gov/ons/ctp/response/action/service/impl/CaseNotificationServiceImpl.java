@@ -44,7 +44,6 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
   @Override
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
   public void acceptNotification(final CaseNotification notification) throws CTPException {
-    log.info(notification.toString());
     final String actionPlanIdStr = notification.getActionPlanId();
     final UUID actionPlanId = UUID.fromString(actionPlanIdStr);
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
