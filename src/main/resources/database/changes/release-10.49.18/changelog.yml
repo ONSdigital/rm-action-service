@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 10.49.18-1
+      author: Andrew Millar
+      changes:
+        - sqlFile:
+            comment: Add collectionexerciseid and partyid column to case table
+            path: add_additional_columns_to_case.sql
+            relativeToChangelogFile: true
+            splitStatements: false

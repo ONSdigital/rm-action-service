@@ -60,4 +60,10 @@ public class ActionCase implements Serializable {
 
   @Column(name = "actionplanenddate")
   private Timestamp actionPlanEndDate;
+
+  @Column(name = "collectionexerciseid")
+  private UUID collectionExerciseId;
+
+  @Column(name = "partyid")
+  private UUID partyId;
 }

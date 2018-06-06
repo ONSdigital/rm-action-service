@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -81,6 +81,8 @@ public class CaseNotificationServiceImplTest {
     caseNotification.setActionPlanId(DUMMY_UUID);
     caseNotification.setCaseId(DUMMY_UUID);
     caseNotification.setNotificationType(NotificationType.ACTIVATED);
+    caseNotification.setExerciseId(DUMMY_UUID);
+    caseNotification.setPartyId(DUMMY_UUID);
 
     final ActionPlan actionPlan = new ActionPlan();
     actionPlan.setActionPlanPK(1);
@@ -93,8 +95,8 @@ public class CaseNotificationServiceImplTest {
 
 
     when(caseSvcClientServiceImpl.getCase(UUID.fromString(DUMMY_UUID))).thenReturn(caseJson.get(0));
-    when(collectionSvcClientServiceImpl.getCollectionExercise(caseJson.get(0).getCaseGroup()
-        .getCollectionExerciseId())).thenReturn(collectionExerciseJson.get(0));
+    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
+            .thenReturn(collectionExerciseJson.get(0));
 
     caseNotificationService.acceptNotification(caseNotification);
 
@@ -107,8 +109,8 @@ public class CaseNotificationServiceImplTest {
     verify(actionCaseRepo, times(1)).flush();
 
     assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getActionPlanId());
-    assertTrue(caze.get(0).getActionPlanStartDate() != null);
-    assertTrue(caze.get(0).getActionPlanEndDate() != null);
+    assertNotNull(caze.get(0).getActionPlanStartDate());
+    assertNotNull(caze.get(0).getActionPlanEndDate());
     assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
   }
 }
