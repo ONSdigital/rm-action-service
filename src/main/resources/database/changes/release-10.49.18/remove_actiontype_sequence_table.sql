@@ -1,1 +1,1 @@
-DROP SEQUENCE action.actionplanseq;
+DROP SEQUENCE action.actiontypeseq;
