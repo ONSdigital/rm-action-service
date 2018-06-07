@@ -392,7 +392,6 @@ public class ActionProcessingServiceImplTest {
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID_2);
     action.setPriority(1);
-
     actionProcessingService.processActionRequest(action);
     // End of section to run the test
 
