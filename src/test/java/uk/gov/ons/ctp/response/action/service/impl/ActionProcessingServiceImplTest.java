@@ -80,6 +80,7 @@ public class ActionProcessingServiceImplTest {
   private static final UUID COLLECTION_EXERCISE_ID = UUID.fromString("c2124abc-10c6-4c7c-885a-779d185a03a4");
   private static final UUID PARTY_ID = UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c86");
   private static final UUID PARTY_ID_PARENT_FOR_CASE_ID_2 = UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c81");
+  private static final String CASE_REF = "1000000000000001";
 
   @Spy
   private AppConfig appConfig = new AppConfig();
@@ -244,10 +245,12 @@ public class ActionProcessingServiceImplTest {
 
     try {
       final Action action = new Action();
+      final CaseDetailsDTO caseDTO = new CaseDetailsDTO();
       action.setId(ACTION_ID);
       action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
       action.setActionPlanFK(ACTION_PLAN_FK);
       action.setCaseId(CASE_ID);
+      caseDTO.setCaseRef(CASE_REF);
       action.setPriority(1);
       actionProcessingService.processActionRequest(action);
       fail();
@@ -297,10 +300,12 @@ public class ActionProcessingServiceImplTest {
 
     // Start of section to run the test
     final Action action = new Action();
+    final CaseDetailsDTO caseDTO = new CaseDetailsDTO();
     action.setId(ACTION_ID);
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID);
+    caseDTO.setCaseRef(CASE_REF);
     action.setPriority(1);
     actionProcessingService.processActionRequest(action);
     // End of section to run the test
@@ -338,10 +343,12 @@ public class ActionProcessingServiceImplTest {
 
     // Start of section to run the test
     final Action action = new Action();
+    final CaseDetailsDTO caseDTO = new CaseDetailsDTO();
     action.setId(ACTION_ID);
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID_1);
+    caseDTO.setCaseRef(CASE_REF);
     action.setPriority(1);
     actionProcessingService.processActionRequest(action);
     // End of section to run the test
@@ -387,10 +394,12 @@ public class ActionProcessingServiceImplTest {
 
     // Start of section to run the test
     final Action action = new Action();
+    final CaseDetailsDTO caseDTO = new CaseDetailsDTO();
     action.setId(ACTION_ID);
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID_2);
+    caseDTO.setCaseRef(CASE_REF);
     action.setPriority(1);
     actionProcessingService.processActionRequest(action);
     // End of section to run the test
