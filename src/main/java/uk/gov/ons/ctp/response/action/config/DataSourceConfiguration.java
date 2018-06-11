@@ -19,16 +19,15 @@ import net.sourceforge.cobertura.CoverageIgnore;
 @Configuration
 @Profile("cloud")
 public class DataSourceConfiguration {
+  @Bean
+  public Cloud cloud() {
+    return new CloudFactory().getCloud();
+  }
 
-    @Bean
-    public Cloud cloud() {
-        return new CloudFactory().getCloud();
-    }
-
-    @Bean
-    @ConfigurationProperties(prefix="spring.datasource.tomcat")
-    public DataSource dataSource() {
-        return cloud().getSingletonServiceConnector(DataSource.class, null);
-    }
+  @Bean
+  @ConfigurationProperties(prefix = "spring.datasource.tomcat")
+  public DataSource dataSource() {
+    return cloud().getSingletonServiceConnector(DataSource.class, null);
+  }
 
 }
