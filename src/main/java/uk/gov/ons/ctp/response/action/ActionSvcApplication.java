@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action;
 
 import net.sourceforge.cobertura.CoverageIgnore;
-import org.apache.tomcat.jdbc.pool.DataSource;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -62,9 +61,6 @@ public class ActionSvcApplication {
 
   @Autowired
   private AppConfig appConfig;
-
-  @Autowired
-  private DataSource dataSource;
 
   @Autowired
   private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
