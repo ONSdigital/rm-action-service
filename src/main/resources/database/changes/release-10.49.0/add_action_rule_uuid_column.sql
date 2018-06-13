@@ -1,5 +1,5 @@
 -- create postgres extension to allow generation of v4 UUID
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 ALTER TABLE action.actionrule
 ADD COLUMN id uuid;
