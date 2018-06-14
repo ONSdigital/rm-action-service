@@ -3,5 +3,7 @@ CREATE USER actionsvc PASSWORD 'actionsvc'
 
 CREATE SCHEMA action;
 
+SET search_path TO action, public;
+
 -- create postgres extension to allow generation of v4 UUID
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
