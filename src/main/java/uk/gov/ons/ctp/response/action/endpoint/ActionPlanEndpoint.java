@@ -59,6 +59,24 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   }
 
   /**
+   * This method returns the associated action plan for the specified action plan id.
+   *
+   * @param actionPlanId This is the action plan id
+   * @return ActionPlanDTO This returns the associated action plan for the specified action plan id.
+   * @throws CTPException if no action plan found for the specified action plan id.
+   */
+  @RequestMapping(value = "/{actionplanid}", method = RequestMethod.GET)
+  public final ActionPlanDTO findActionPlanByActionPlanId(@PathVariable("actionplanid") final UUID actionPlanId)
+          throws CTPException {
+    log.info("Entering findActionPlanByActionPlanId with {}", actionPlanId);
+    final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
+    if (actionPlan == null) {
+      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
+    }
+    return mapperFacade.map(actionPlan, ActionPlanDTO.class);
+  }
+
+  /**
    * This method returns the associated action plan after it has been created.
    *
    * @param request       The object created by ActionPlanPostRequestDTO from the json found in
@@ -68,8 +86,8 @@ public class ActionPlanEndpoint implements CTPEndpoint {
    * @throws InvalidRequestException if binding errors
    */
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
-  public final ResponseEntity<ActionPlanDTO> createActionPlan(@RequestBody @Valid final ActionPlanPostRequestDTO request,
-                                                          final BindingResult bindingResult)
+  public final ResponseEntity<ActionPlanDTO> createActionPlan(
+          @RequestBody @Valid final ActionPlanPostRequestDTO request, final BindingResult bindingResult)
           throws CTPException, InvalidRequestException {
     log.info("Create action plan - action plan {}", request);
     if (bindingResult.hasErrors()) {
@@ -87,24 +105,6 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     final String newResourceUrl = ServletUriComponentsBuilder
             .fromCurrentRequest().buildAndExpand(actionPlanDTO.getId()).toUri().toString();
     return ResponseEntity.created(URI.create(newResourceUrl)).body(actionPlanDTO);
-  }
-
-  /**
-   * This method returns the associated action plan for the specified action plan id.
-   *
-   * @param actionPlanId This is the action plan id
-   * @return ActionPlanDTO This returns the associated action plan for the specified action plan id.
-   * @throws CTPException if no action plan found for the specified action plan id.
-   */
-  @RequestMapping(value = "/{actionplanid}", method = RequestMethod.GET)
-  public final ActionPlanDTO findActionPlanByActionPlanId(@PathVariable("actionplanid") final UUID actionPlanId)
-      throws CTPException {
-    log.info("Entering findActionPlanByActionPlanId with {}", actionPlanId);
-    final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
-    if (actionPlan == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
-    }
-    return mapperFacade.map(actionPlan, ActionPlanDTO.class);
   }
 
   /**

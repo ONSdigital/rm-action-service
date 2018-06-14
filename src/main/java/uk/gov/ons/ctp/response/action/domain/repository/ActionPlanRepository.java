@@ -7,7 +7,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import java.util.UUID;
 
 /**
- * JPA Data Repository.
+ * JPA data repository for action plans
  */
 @Repository
 public interface ActionPlanRepository extends JpaRepository<ActionPlan, Integer> {
