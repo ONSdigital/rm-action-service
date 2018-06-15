@@ -20,8 +20,11 @@ import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -151,8 +154,8 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("findActionPlans"))
         .andExpect(jsonPath("$", Matchers.hasSize(3)))
-        .andExpect(jsonPath("$[0].*", hasSize(5)))
-        .andExpect(jsonPath("$[1].*", hasSize(5)))
+        .andExpect(jsonPath("$[0].*", hasSize(6)))
+        .andExpect(jsonPath("$[1].*", hasSize(6)))
         .andExpect(jsonPath("$[*].id", containsInAnyOrder(ACTION_PLAN_1_ID.toString(),
             ACTION_PLAN_2_ID.toString(), ACTION_PLAN_3_ID.toString())))
         .andExpect(jsonPath("$[*].name", containsInAnyOrder(ACTION_PLAN_1_NAME, ACTION_PLAN_2_NAME,
@@ -216,7 +219,7 @@ public class ActionPlanEndpointUnitTest {
     actions.andExpect(status().isOk())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("findActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.*", hasSize(5)))
+        .andExpect(jsonPath("$.*", hasSize(6)))
         .andExpect(jsonPath("$.id", is(ACTION_PLAN_1_ID.toString())))
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
@@ -260,7 +263,7 @@ public class ActionPlanEndpointUnitTest {
     actions.andExpect(status().isOk())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("updateActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.*", hasSize(5)))
+        .andExpect(jsonPath("$.*", hasSize(6)))
         .andExpect(jsonPath("$.id", is(ACTION_PLAN_1_ID.toString())))
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
@@ -270,29 +273,62 @@ public class ActionPlanEndpointUnitTest {
 
 
   /**
-   * Test creating an Action plan with valid JSON.
+   * Test creating an Action plan
    *
    * @throws Exception when postJson does
    */
   @Test
-  public void createActionPlanGoodJsonProvided() throws Exception {
-    when(actionPlanService.createActionPlan(any(ActionPlan.class))).thenReturn(actionPlans.get(2));
+  public void createActionPlan() throws Exception {
     when(actionPlanService.findActionPlanByName(any(String.class))).thenReturn(null);
+    ActionPlanDTO actionPlanDTO = mapperFacade.map(actionPlans.get(2), ActionPlanDTO.class);
+    when(actionPlanService.createActionPlan(any(ActionPlan.class), any(ActionPlanSelector.class)))
+            .thenReturn(actionPlanDTO);
 
     final ResultActions resultActions = mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));
 
     resultActions.andExpect(status().isCreated())
             .andExpect(handler().handlerType(ActionPlanEndpoint.class))
             .andExpect(handler().methodName("createActionPlan"))
-            .andExpect(jsonPath("$.*", Matchers.hasSize(5)))
+            .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
             .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME)))
             .andExpect(jsonPath("$.description", is(ACTION_PLAN_3_DESC)))
             .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
             .andExpect(jsonPath("$.lastRunDateTime", is(IsNull.nullValue())));
 
     verify(actionPlanService, times(1)).findActionPlanByName(any(String.class));
-    verify(actionPlanService, times(1)).createActionPlan(any(ActionPlan.class));
+    verify(actionPlanService, times(1)).createActionPlan(any(ActionPlan.class),
+                                                                                 any(ActionPlanSelector.class));
   }
+
+//  /**
+//   * Test creating an Action plan with selectors
+//   *
+//   * @throws Exception when postJson does
+//   */
+//  @Test
+//  public void createActionPlanWithSelectors() throws Exception {
+//    when(actionPlanService.findActionPlanByName(any(String.class))).thenReturn(null);
+//    ActionPlanDTO actionPlanDTOWithSelectors = mapperFacade.map(actionPlans.get(0), ActionPlanDTO.class);
+//    HashMap<String, String>
+//    actionPlanDTOWithSelectors.setSelectors();
+//    when(actionPlanService.createActionPlan(any(ActionPlan.class), any(ActionPlanSelector.class)))
+//            .thenReturn(mapperFacade.map(actionPlans.get(0), ActionPlanDTO.class));
+//
+//    final ResultActions resultActions = mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));
+//
+//    resultActions.andExpect(status().isCreated())
+//            .andExpect(handler().handlerType(ActionPlanEndpoint.class))
+//            .andExpect(handler().methodName("createActionPlan"))
+//            .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
+//            .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME)))
+//            .andExpect(jsonPath("$.description", is(ACTION_PLAN_3_DESC)))
+//            .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
+//            .andExpect(jsonPath("$.lastRunDateTime", is(IsNull.nullValue())));
+//
+//    verify(actionPlanService, times(1)).findActionPlanByName(any(String.class));
+//    verify(actionPlanService, times(1)).createActionPlan(any(ActionPlan.class),
+//            any(ActionPlanSelector.class));
+//  }
 
   /**
    * Test creating an Action plan with valid JSON but name already exists.
@@ -301,7 +337,6 @@ public class ActionPlanEndpointUnitTest {
    */
   @Test
   public void createActionNameExists() throws Exception {
-    when(actionPlanService.createActionPlan(any(ActionPlan.class))).thenReturn(actionPlans.get(2));
     when(actionPlanService.findActionPlanByName(any(String.class))).thenReturn(actionPlans.get(2));
 
     final ResultActions resultActions = mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));
@@ -314,7 +349,7 @@ public class ActionPlanEndpointUnitTest {
                     is("Action plan with name " + actionPlans.get(2).getName() + " already exists")));
 
     verify(actionPlanService, times(1)).findActionPlanByName(any(String.class));
-    verify(actionPlanService, never()).createActionPlan(any(ActionPlan.class));
+    verify(actionPlanService, never()).createActionPlan(any(), any());
   }
 
 
@@ -332,7 +367,7 @@ public class ActionPlanEndpointUnitTest {
             .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
             .andExpect(jsonPath("$.error.message", is(INVALID_JSON)));
 
-    verify(actionPlanService, never()).createActionPlan(any(ActionPlan.class));
+    verify(actionPlanService, never()).createActionPlan(any(), any());
   }
 
 }

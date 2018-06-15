@@ -17,6 +17,8 @@ import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanSelectorRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
@@ -37,12 +39,20 @@ public class ActionPlanEndpoint implements CTPEndpoint {
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";
 
-  @Autowired
   private ActionPlanService actionPlanService;
 
-  @Qualifier("actionBeanMapper")
-  @Autowired
+  private ActionPlanSelectorRepository actionPlanSelectorRepository;
+
   private MapperFacade mapperFacade;
+
+  @Autowired
+  public ActionPlanEndpoint(final ActionPlanService actionPlanService,
+                            final ActionPlanSelectorRepository actionPlanSelectorRepository,
+                            final @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
+    this.actionPlanService = actionPlanService;
+    this.actionPlanSelectorRepository = actionPlanSelectorRepository;
+    this.mapperFacade = mapperFacade;
+  }
 
   /**
    * This method returns all action plans.
@@ -89,19 +99,22 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   public final ResponseEntity<ActionPlanDTO> createActionPlan(
           @RequestBody @Valid final ActionPlanPostRequestDTO request, final BindingResult bindingResult)
           throws CTPException, InvalidRequestException {
-    log.info("Create action plan - action plan {}", request);
+    log.info("Creating action plan, Name: {}, Selectors: {}", request.getName(), request.getSelectors());
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action plan: ", bindingResult);
     }
 
+    // Check if action plan with same name already exists
     ActionPlan existingActionPlan = actionPlanService.findActionPlanByName(request.getName());
     if (existingActionPlan != null) {
       final String message = "Action plan with name " + request.getName() + " already exists";
       throw new CTPException(CTPException.Fault.RESOURCE_VERSION_CONFLICT, message);
     }
 
-    ActionPlan actionPlan = actionPlanService.createActionPlan(mapperFacade.map(request, ActionPlan.class));
-    final ActionPlanDTO actionPlanDTO = mapperFacade.map(actionPlan, ActionPlanDTO.class);
+    ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
+    ActionPlanSelector actionPlanSelectors = mapperFacade.map(request, ActionPlanSelector.class);
+    ActionPlanDTO actionPlanDTO = actionPlanService.createActionPlan(actionPlan, actionPlanSelectors);
+
     final String newResourceUrl = ServletUriComponentsBuilder
             .fromCurrentRequest().buildAndExpand(actionPlanDTO.getId()).toUri().toString();
     return ResponseEntity.created(URI.create(newResourceUrl)).body(actionPlanDTO);

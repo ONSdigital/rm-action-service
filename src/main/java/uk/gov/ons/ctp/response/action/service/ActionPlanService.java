@@ -2,6 +2,8 @@ package uk.gov.ons.ctp.response.action.service;
 
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -55,8 +57,9 @@ public interface ActionPlanService extends CTPService {
   /**
    * This method returns the action plan after it has been created.
    *
-   * @param actionPlan   This is the new action plan to be created.
+   * @param actionPlan action plan to be created
+   * @param actionPlanSelector selectors for the given action plan
    * @return ActionPlan This returns the created action plan.
    */
-  ActionPlan createActionPlan(ActionPlan actionPlan);
+  ActionPlanDTO createActionPlan(ActionPlan actionPlan, ActionPlanSelector actionPlanSelector);
 }

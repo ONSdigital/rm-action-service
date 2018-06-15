@@ -15,8 +15,8 @@ logging:
   profile: DEV
 
 liquibase:
-  user: actionsvc
-  password: actionsvc
+  user: postgres
+  password: postgres
   default-schema: action
   url: jdbc:postgresql://localhost:6432/postgres
   changeLog: classpath:/database/changelog-master.yml
@@ -56,8 +56,8 @@ spring:
     
   datasource:
     url: jdbc:postgresql://localhost:6432/postgres
-    username: actionsvc
-    password: actionsvc
+    username: postgres
+    password: postgres
     driverClassName: org.postgresql.Driver
     continue-on-error: true
     tomcat:

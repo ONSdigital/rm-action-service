@@ -37,7 +37,7 @@
     <dependency>
       <groupId>uk.gov.ons.ctp.product</groupId>
       <artifactId>actionsvc-api</artifactId>
-      <version>10.49.10</version>
+      <version>10.49.12-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -151,6 +151,12 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-cloudfoundry-connector</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.vladmihalcea</groupId>
+      <artifactId>hibernate-types-52</artifactId>
+      <version>2.2.2</version>
     </dependency>
 
     <dependency>

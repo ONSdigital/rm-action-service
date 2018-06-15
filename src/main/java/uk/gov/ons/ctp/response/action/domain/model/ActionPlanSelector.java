@@ -1,11 +1,15 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,7 +18,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Table;
 import java.util.HashMap;
-import java.util.UUID;
 
 /**
  * Domain model object.
@@ -25,6 +28,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
+@TypeDefs({@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)})
 @Table(name = "actionplanselector", schema = "action")
 public class ActionPlanSelector {
 
@@ -42,9 +46,10 @@ public class ActionPlanSelector {
   private Integer actionPlanSelectorPK;
 
   @Column(name = "actionplanfk")
-  private UUID actionPlanFk;
+  private Integer actionPlanFk;
 
-  @Column(name = "selectors")
+  @Type(type = "jsonb")
+  @Column(name = "selectors", columnDefinition = "jsonb")
   private HashMap<String, String> selectors;
 
 }
