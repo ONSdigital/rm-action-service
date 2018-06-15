@@ -43,7 +43,11 @@
     <dependency>
       <groupId>uk.gov.ons.ctp.product</groupId>
       <artifactId>casesvc-api</artifactId>
+<<<<<<< HEAD
       <version>10.49.15</version>
+=======
+      <version>10.49.16</version>
+>>>>>>> Removing snapshot version
     </dependency>
 
     <dependency>
