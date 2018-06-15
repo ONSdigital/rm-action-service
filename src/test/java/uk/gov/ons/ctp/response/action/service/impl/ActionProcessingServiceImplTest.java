@@ -20,12 +20,8 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionEvent;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.message.instruction.Priority;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
@@ -247,7 +243,8 @@ public class ActionProcessingServiceImplTest {
     when(caseSvcClientService.createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class))).
         thenThrow(new RuntimeException(REST_ERROR_MSG));
 
-    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+        .thenReturn(ActionDTO.ActionState.PENDING);
     when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
@@ -293,14 +290,16 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).thenReturn(caseDetailsDTOs.get(0));
 
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID)).thenReturn(partyDTOs.get(0));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID))
+        .thenReturn(partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS_SURVEY_ID)).thenReturn(surveyDTOs.get(0));
 
-    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+        .thenReturn(ActionDTO.ActionState.PENDING);
     when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
@@ -342,7 +341,8 @@ public class ActionProcessingServiceImplTest {
     final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
     when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
 
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1)).thenReturn(caseDetailsDTOs.get(1)); // the returned case has a sample unit type of Z
+    // the returned case has a sample unit type of Z
+    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1)).thenReturn(caseDetailsDTOs.get(1));
     // End of section to mock responses
 
     // Start of section to run the test
@@ -382,15 +382,18 @@ public class ActionProcessingServiceImplTest {
 
     when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2)).thenReturn(caseDetailsDTOs.get(2));
 
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_HI, PARTY_ID, CENSUS_SURVEY_ID)).thenReturn(partyDTOs.get(1));
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS_SURVEY_ID)).thenReturn(
-        partyDTOs.get(0));
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_HI, PARTY_ID, CENSUS_SURVEY_ID))
+        .thenReturn(partyDTOs.get(1));
+    when(partySvcClientService
+        .getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS_SURVEY_ID))
+        .thenReturn(partyDTOs.get(0));
 
     when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID)).
         thenReturn(collectionExerciseDTOs.get(0));
 
     when(surveySvcClientService.requestDetailsForSurvey(CENSUS_SURVEY_ID)).thenReturn(surveyDTOs.get(0));
-    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class))).thenReturn(ActionDTO.ActionState.PENDING);
+    when(actionSvcStateTransitionManager.transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+        .thenReturn(ActionDTO.ActionState.PENDING);
     when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     // End of section to mock responses
 
@@ -536,8 +539,10 @@ public class ActionProcessingServiceImplTest {
     final PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
     final PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
 
-    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())).thenReturn(respondentSuspendedBI);
-    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())).thenReturn(respondentCreatedBI);
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId()))
+        .thenReturn(respondentSuspendedBI);
+    when(partySvcClientService.getParty("BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId()))
+        .thenReturn(respondentCreatedBI);
 
     final Map<String, PartyDTO> expectedChildPartyMap = new HashMap<>();
     expectedChildPartyMap.put("SUSPENDED", respondentSuspendedBI);
