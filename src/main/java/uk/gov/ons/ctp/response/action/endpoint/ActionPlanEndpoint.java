@@ -26,7 +26,7 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,7 +57,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
    * @return List<ActionPlanDTO> This returns all action plans.
    */
   @RequestMapping(method = RequestMethod.GET)
-  public final ResponseEntity<List<ActionPlanDTO>> findActionPlans(final @RequestParam Map<String, String> selectors) {
+  public final ResponseEntity<List<ActionPlanDTO>> findActionPlans(final @RequestParam HashMap<String, String> selectors) {
     log.info("Retrieving action plans, Selectors: {}", selectors);
 
     final List<ActionPlan> actionPlans;
