@@ -142,11 +142,14 @@ public class ActionPlanEndpoint implements CTPEndpoint {
       throw new InvalidRequestException("Binding errors for update action plan: ", bindingResult);
     }
 
-    final ActionPlan actionPlan = actionPlanService.updateActionPlan(actionPlanId, mapperFacade.map(request, ActionPlan.class));
+    ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
+    ActionPlanSelector actionPlanSelectors = mapperFacade.map(request, ActionPlanSelector.class);
+
+    final ActionPlan updatedActionPlan = actionPlanService.updateActionPlan(actionPlanId, actionPlan, actionPlanSelectors);
     if (actionPlan == null) {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
     }
-    return mapperFacade.map(actionPlan, ActionPlanDTO.class);
+    return mapperFacade.map(updatedActionPlan, ActionPlanDTO.class);
   }
 }
 

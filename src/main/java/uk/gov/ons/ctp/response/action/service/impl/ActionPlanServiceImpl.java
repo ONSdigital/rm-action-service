@@ -16,6 +16,7 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -105,29 +106,38 @@ public class ActionPlanServiceImpl implements ActionPlanService {
 
   @Override
   @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
-  public ActionPlan updateActionPlan(final UUID actionPlanId, final ActionPlan actionPlan) {
-    log.debug("Entering updateActionPlan with id {}", actionPlanId);
+  public ActionPlan updateActionPlan(
+          final UUID actionPlanId, final ActionPlan actionPlan, final ActionPlanSelector actionPlanSelector) {
+    log.debug("Updating action plan, ActionPlanId: {}", actionPlanId);
     ActionPlan existingActionPlan = this.actionPlanRepo.findById(actionPlanId);
     if (existingActionPlan != null) {
       boolean needsUpdate = false;
 
       final String newDescription = actionPlan.getDescription();
-      log.debug("newDescription = {}", newDescription);
       if (newDescription != null) {
         needsUpdate = true;
         existingActionPlan.setDescription(newDescription);
       }
 
       final Date newLastRunDateTime = actionPlan.getLastRunDateTime();
-      log.debug("newLastRunDatetime = {}", newLastRunDateTime);
       if (newLastRunDateTime != null) {
         needsUpdate = true;
         existingActionPlan.setLastRunDateTime(new Timestamp(newLastRunDateTime.getTime()));
       }
 
       if (needsUpdate) {
-        log.debug("about to update the action plan with id {}", actionPlanId);
         existingActionPlan = this.actionPlanRepo.save(existingActionPlan);
+      }
+
+      final HashMap<String, String> selectors = actionPlanSelector.getSelectors();
+      if (selectors != null) {
+        log.debug("Updating action plan selectors, ActionPlanId: {}, Selectors: {}", actionPlanId, selectors);
+        ActionPlanSelector existingActionPlanSelector = this.actionPlanSelectorRepository.findFirstByActionPlanFk(
+                existingActionPlan.getActionPlanPK());
+        existingActionPlanSelector.setSelectors(selectors);
+        this.actionPlanSelectorRepository.saveAndFlush(existingActionPlanSelector);
+        log.debug("Successfully updated action plan selectors, ActionPlanId: {}, Selectors: {}",
+                actionPlanId, selectors);
       }
     }
     return existingActionPlan;

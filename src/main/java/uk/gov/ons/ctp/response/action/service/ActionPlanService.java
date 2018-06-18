@@ -52,7 +52,7 @@ public interface ActionPlanService extends CTPService {
    * @param actionPlan   This is the action plan containing the potentially new description and lastGoodRunDatetime
    * @return ActionPlan This returns the updated action plan.
    */
-  ActionPlan updateActionPlan(UUID actionPlanId, ActionPlan actionPlan);
+  ActionPlan updateActionPlan(UUID actionPlanId, ActionPlan actionPlan, ActionPlanSelector actionPlanSelector);
 
   /**
    * This method returns the action plan after it has been created.

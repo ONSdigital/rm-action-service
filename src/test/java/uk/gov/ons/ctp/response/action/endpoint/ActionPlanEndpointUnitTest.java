@@ -255,7 +255,8 @@ public class ActionPlanEndpointUnitTest {
    */
   @Test
   public void updateActionPlan() throws Exception {
-    when(actionPlanService.updateActionPlan(any(UUID.class), any(ActionPlan.class))).thenReturn(actionPlans.get(0));
+    when(actionPlanService.updateActionPlan(any(UUID.class), any(ActionPlan.class), any(ActionPlanSelector.class)))
+            .thenReturn(actionPlans.get(0));
 
     final ResultActions actions = mockMvc
         .perform(putJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID), ACTION_PLAN_JSON));

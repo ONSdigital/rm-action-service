@@ -4,8 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 
-import java.util.List;
-
 /**
  * JPA data repository for action plan selectors
  */
@@ -13,10 +11,10 @@ import java.util.List;
 public interface ActionPlanSelectorRepository extends JpaRepository<ActionPlanSelector, Integer> {
 
   /**
-   * Return ActionPlan for the specified action plan id.
+   * Return ActionPlanSelectors for the specified action plan fk
    *
-   * @return List of all ActionPlanSelectors
+   * @return Matching action plan selector if it exists
    */
-  List<ActionPlanSelector> findAll();
+  ActionPlanSelector findFirstByActionPlanFk(Integer actionPlanFk);
 
 }
