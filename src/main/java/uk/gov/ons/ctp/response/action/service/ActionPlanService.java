@@ -24,6 +24,7 @@ public interface ActionPlanService extends CTPService {
   /**
    * This method returns all action plans with the given selectors
    *
+   * @param selectors HashMap of selectors used to find matching action plans
    * @return List<ActionPlan> This returns all action plans.
    */
   List<ActionPlan> findActionPlansBySelectors(HashMap<String, String> selectors);

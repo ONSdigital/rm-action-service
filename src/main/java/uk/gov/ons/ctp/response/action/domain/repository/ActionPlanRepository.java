@@ -20,6 +20,12 @@ public interface ActionPlanRepository extends JpaRepository<ActionPlan, Integer>
    */
   ActionPlan findById(UUID id);
 
+  /**
+   * Return ActionPlan for the specified action plan id.
+   *
+   * @param actionPlanPK Integer identified for action plan to return
+   * @return ActionPlan returns ActionPlan for associated id
+   */
   ActionPlan findFirstByActionPlanPK(Integer actionPlanPK);
 
   /**
