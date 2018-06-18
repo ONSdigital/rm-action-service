@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 10.50.0-1
+      author: Emilio Ward
+      changes:
+        - sqlFile:
+            comment: Add new social action type
+            path: update_action_plan_add_social.sql
+            relativeToChangelogFile: true
+            splitStatements: false
