@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
@@ -18,7 +19,6 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanSelectorRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
@@ -26,6 +26,7 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,16 +42,12 @@ public class ActionPlanEndpoint implements CTPEndpoint {
 
   private ActionPlanService actionPlanService;
 
-  private ActionPlanSelectorRepository actionPlanSelectorRepository;
-
   private MapperFacade mapperFacade;
 
   @Autowired
   public ActionPlanEndpoint(final ActionPlanService actionPlanService,
-                            final ActionPlanSelectorRepository actionPlanSelectorRepository,
                             final @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
     this.actionPlanService = actionPlanService;
-    this.actionPlanSelectorRepository = actionPlanSelectorRepository;
     this.mapperFacade = mapperFacade;
   }
 
@@ -60,9 +57,15 @@ public class ActionPlanEndpoint implements CTPEndpoint {
    * @return List<ActionPlanDTO> This returns all action plans.
    */
   @RequestMapping(method = RequestMethod.GET)
-  public final ResponseEntity<List<ActionPlanDTO>> findActionPlans() {
+  public final ResponseEntity<List<ActionPlanDTO>> findActionPlans(final @RequestParam Map<String, String> selectors) {
     log.info("Entering findActionPlans...");
-    final List<ActionPlan> actionPlans = actionPlanService.findActionPlans();
+    log.info(selectors.toString());
+    final List<ActionPlan> actionPlans;
+    if (!selectors.isEmpty()) {
+      actionPlans = actionPlanService.findActionPlansBySelectors(selectors);
+    } else {
+      actionPlans = actionPlanService.findActionPlans();
+    }
     final List<ActionPlanDTO> actionPlanDTOs = mapperFacade.mapAsList(actionPlans, ActionPlanDTO.class);
     return CollectionUtils.isEmpty(actionPlanDTOs)
         ? ResponseEntity.noContent().build() : ResponseEntity.ok(actionPlanDTOs);

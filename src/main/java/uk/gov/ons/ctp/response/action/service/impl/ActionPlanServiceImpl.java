@@ -18,7 +18,9 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Implementation
@@ -50,6 +52,27 @@ public class ActionPlanServiceImpl implements ActionPlanService {
   public List<ActionPlan> findActionPlans() {
     log.debug("Entering findActionPlans");
     return this.actionPlanRepo.findAll();
+  }
+
+  @CoverageIgnore
+  @Override
+  public List<ActionPlan> findActionPlansBySelectors(final Map<String, String> selectors) {
+    log.debug("Entering findActionPlans");
+    // Get all action plan selectors which match given selectors
+    List<ActionPlanSelector> actionPlanSelectors = this.actionPlanSelectorRepository.findAll();
+    List<ActionPlanSelector> filteredAPSelectors = actionPlanSelectors.stream()
+            .filter(s -> isMatchingSelectors(selectors, s.getSelectors()))
+            .collect(Collectors.toList());
+
+    // Return all action plans for these selectors
+    return filteredAPSelectors.stream()
+            .map(s -> this.actionPlanRepo.findFirstByActionPlanPK(s.getActionPlanFk()))
+            .collect(Collectors.toList());
+  }
+
+  private boolean isMatchingSelectors(final Map<String, String> searchSelectors,
+                                      final HashMap<String, String> itemSelectors) {
+    return searchSelectors.entrySet().stream().allMatch((s -> itemSelectors.get(s.getKey()).equals(s.getValue())));
   }
 
   @CoverageIgnore

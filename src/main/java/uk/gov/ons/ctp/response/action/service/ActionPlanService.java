@@ -6,6 +6,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -19,6 +20,13 @@ public interface ActionPlanService extends CTPService {
    * @return List<ActionPlan> This returns all action plans.
    */
   List<ActionPlan> findActionPlans();
+
+  /**
+   * This method returns all action plans with the given selectors
+   *
+   * @return List<ActionPlan> This returns all action plans.
+   */
+  List<ActionPlan> findActionPlansBySelectors(Map<String, String> selectors);
 
   /**
    * This method returns the action plan for the specified action plan primary key.
