@@ -57,7 +57,7 @@ public class ActionPlanServiceImpl implements ActionPlanService {
   @CoverageIgnore
   @Override
   public List<ActionPlan> findActionPlansBySelectors(final Map<String, String> selectors) {
-    log.debug("Entering findActionPlans");
+    log.debug("Finding action plans by selectors, Selectors: {}", selectors);
     // Get all action plan selectors which match given selectors
     List<ActionPlanSelector> actionPlanSelectors = this.actionPlanSelectorRepository.findAll();
     List<ActionPlanSelector> filteredAPSelectors = actionPlanSelectors.stream()
@@ -72,7 +72,8 @@ public class ActionPlanServiceImpl implements ActionPlanService {
 
   private boolean isMatchingSelectors(final Map<String, String> searchSelectors,
                                       final HashMap<String, String> itemSelectors) {
-    return searchSelectors.entrySet().stream().allMatch((s -> itemSelectors.get(s.getKey()).equals(s.getValue())));
+    return searchSelectors.entrySet().stream()
+            .allMatch((s -> itemSelectors.getOrDefault(s.getKey(), "DEFAULTSTRING").equals(s.getValue())));
   }
 
   @CoverageIgnore
