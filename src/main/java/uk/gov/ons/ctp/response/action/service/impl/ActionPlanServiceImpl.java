@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,22 +14,14 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-/**
- * Implementation
- */
+/** Implementation */
 @Service
 @Slf4j
 public class ActionPlanServiceImpl implements ActionPlanService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  @Autowired
-  private ActionPlanRepository actionPlanRepo;
+  @Autowired private ActionPlanRepository actionPlanRepo;
 
   @CoverageIgnore
   @Override
@@ -56,7 +52,10 @@ public class ActionPlanServiceImpl implements ActionPlanService {
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   public ActionPlan createActionPlan(final ActionPlan actionPlan) {
     log.debug("Entering createActionPlan with {}", actionPlan);
 
@@ -67,7 +66,10 @@ public class ActionPlanServiceImpl implements ActionPlanService {
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   public ActionPlan updateActionPlan(final UUID actionPlanId, final ActionPlan actionPlan) {
     log.debug("Entering updateActionPlan with id {}", actionPlanId);
     ActionPlan existingActionPlan = actionPlanRepo.findById(actionPlanId);

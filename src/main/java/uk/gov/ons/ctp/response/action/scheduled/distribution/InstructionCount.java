@@ -6,9 +6,7 @@ import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.response.action.scheduled.distribution.DistributionInfo.Instruction;
 
-/**
- * Simple pojo for health info re instructions of a type sent
- */
+/** Simple pojo for health info re instructions of a type sent */
 @CoverageIgnore
 @Data
 @Builder

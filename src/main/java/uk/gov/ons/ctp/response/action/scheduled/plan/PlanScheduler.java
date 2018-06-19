@@ -9,22 +9,21 @@ import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 
 /**
- * This bean will have the actionPlanJobService injected into it by spring on
- * constructions. It will then schedule the running of the actionPlanJobService
- * createAndExecuteAllActionPlanJobs using details from the AppConfig
+ * This bean will have the actionPlanJobService injected into it by spring on constructions. It will
+ * then schedule the running of the actionPlanJobService createAndExecuteAllActionPlanJobs using
+ * details from the AppConfig
  */
 @Component
 @Slf4j
 public class PlanScheduler implements HealthIndicator {
 
-  @Autowired
-  private ActionPlanJobService actionPlanJobServiceImpl;
+  @Autowired private ActionPlanJobService actionPlanJobServiceImpl;
 
   private PlanExecutionInfo executionInfo = new PlanExecutionInfo();
 
   /**
-   * schedule the Execution of Action Plans It is simply a scheduled trigger for
-   * the service layer method.
+   * schedule the Execution of Action Plans It is simply a scheduled trigger for the service layer
+   * method.
    */
   @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void run() {
@@ -40,8 +39,6 @@ public class PlanScheduler implements HealthIndicator {
 
   @Override
   public Health health() {
-    return Health.up()
-        .withDetail("planExecutionInfo", executionInfo)
-        .build();
+    return Health.up().withDetail("planExecutionInfo", executionInfo).build();
   }
 }

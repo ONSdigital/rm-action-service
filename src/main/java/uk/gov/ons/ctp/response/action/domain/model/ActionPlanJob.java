@@ -1,5 +1,15 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import java.sql.Timestamp;
+import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,20 +19,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.sql.Timestamp;
-import java.util.UUID;
-
-/**
- * Domain model object.
- */
+/** Domain model object. */
 @CoverageIgnore
 @Entity
 @Data
@@ -38,11 +35,10 @@ public class ActionPlanJob {
       name = "actionplanjobseq_gen",
       strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
       parameters = {
-          @Parameter(name = "sequence_name", value = "action.actionplanjobseq"),
-          @Parameter(name = "initial_value", value = "0"),
-          @Parameter(name = "increment_size", value = "1")
-      }
-  )
+        @Parameter(name = "sequence_name", value = "action.actionplanjobseq"),
+        @Parameter(name = "initial_value", value = "0"),
+        @Parameter(name = "increment_size", value = "1")
+      })
   @Column(name = "actionplanjobpk")
   private Integer actionPlanJobPK;
 

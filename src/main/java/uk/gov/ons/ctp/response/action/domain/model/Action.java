@@ -1,12 +1,11 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import net.sourceforge.cobertura.CoverageIgnore;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -18,16 +17,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import java.io.Serializable;
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.sourceforge.cobertura.CoverageIgnore;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 
-/**
- * Domain model object.
- */
+/** Domain model object. */
 @CoverageIgnore
 @Entity
 @Data
@@ -39,10 +36,7 @@ public class Action implements Serializable {
 
   private static final long serialVersionUID = 8539984354009320104L;
 
-  /**
-   * Priority of action
-   * NOTE: the names need to match those in the outbound xsd
-   */
+  /** Priority of action NOTE: the names need to match those in the outbound xsd */
   public enum ActionPriority {
     HIGHEST(1, "highest"),
     HIGHER(2, "higher"),
@@ -50,7 +44,7 @@ public class Action implements Serializable {
     LOWER(4, "lower"),
     LOWEST(5, "lowest");
 
-    private final int level;   // numeric level
+    private final int level; // numeric level
     private final String name; // the level name
 
     private static Map<Integer, ActionPriority> map = new HashMap<Integer, ActionPriority>();

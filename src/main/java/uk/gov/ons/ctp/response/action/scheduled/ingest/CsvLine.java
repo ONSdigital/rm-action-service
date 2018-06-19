@@ -1,19 +1,17 @@
 package uk.gov.ons.ctp.response.action.scheduled.ingest;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import lombok.Data;
 import lombok.Getter;
 import net.sourceforge.cobertura.CoverageIgnore;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-
 /**
- * Each line in the ingested CSV is initially mapped to this POJO, whose primary
- * purpose is to perform the up front validation of each field. The fields are
- * deliberately all String type - the csv loader will try and convert "" into
- * Integer and throw an InvalidFormatException otherwise, and we want to
- * validate the fields with more finesse using the javax.validation framework
+ * Each line in the ingested CSV is initially mapped to this POJO, whose primary purpose is to
+ * perform the up front validation of each field. The fields are deliberately all String type - the
+ * csv loader will try and convert "" into Integer and throw an InvalidFormatException otherwise,
+ * and we want to validate the fields with more finesse using the javax.validation framework
  */
 @CoverageIgnore
 @Data
@@ -42,9 +40,11 @@ public class CsvLine {
 
   // TODO BRES - can we incorporate these into PartySvc API somehow - can PartySvc tell us these?
   // either at runtime or with some sort of XSD definition about Party attributes?
-  // the following were all lifted from the old ContactDTO ? how do we determine these now with PartySvc?
-  public static final String EMAIL_RE = "^$|[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)"
-      + "*(\\.[A-Za-z]{2,})";
+  // the following were all lifted from the old ContactDTO ? how do we determine these now with
+  // PartySvc?
+  public static final String EMAIL_RE =
+      "^$|[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)"
+          + "*(\\.[A-Za-z]{2,})";
   public static final String TELEPHONE_RE = "[\\d]{0,11}";
   public static final int TITLE_MAX_LEN = 20;
   public static final int FORENAME_MAX_LEN = 35;
@@ -123,7 +123,7 @@ public class CsvLine {
   private String uprn;
 
   // TODO BRES - regex for UUID needed
-  //@Pattern(regexp = NON_BLANK_INTEGER_RE)
+  // @Pattern(regexp = NON_BLANK_INTEGER_RE)
   private String caseId;
 
   @Pattern(regexp = NON_BLANK_ALPHANUM_RE)

@@ -1,5 +1,13 @@
 package uk.gov.ons.ctp.response.action.message.impl;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static uk.gov.ons.ctp.response.action.message.impl.ActionInstructionPublisherImpl.ACTION;
+import static uk.gov.ons.ctp.response.action.message.impl.ActionInstructionPublisherImpl.BINDING;
+
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -13,26 +21,13 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 
-import java.util.List;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static uk.gov.ons.ctp.response.action.message.impl.ActionInstructionPublisherImpl.ACTION;
-import static uk.gov.ons.ctp.response.action.message.impl.ActionInstructionPublisherImpl.BINDING;
-
-/**
- * Tests for ActionInstructionPublisherImpl
- */
+/** Tests for ActionInstructionPublisherImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionInstructionPublisherImplTest {
 
-  @Mock
-  private RabbitTemplate rabbitTemplate;
+  @Mock private RabbitTemplate rabbitTemplate;
 
-  @InjectMocks
-  private ActionInstructionPublisherImpl actionInstructionPublisherImpl;
+  @InjectMocks private ActionInstructionPublisherImpl actionInstructionPublisherImpl;
 
   /**
    * Build an ActionInstruction with One ActionRequest and send to queue.
@@ -42,16 +37,18 @@ public class ActionInstructionPublisherImplTest {
   @Test
   public void sendActionInstructionWithOneActionRequest() throws Exception {
     final String handler = "test";
-    final List<ActionRequest> actionRequests = FixtureHelper.loadClassFixtures(ActionRequest[].class);
+    final List<ActionRequest> actionRequests =
+        FixtureHelper.loadClassFixtures(ActionRequest[].class);
     final ActionRequest requestToSend = actionRequests.get(0);
 
     actionInstructionPublisherImpl.sendActionInstruction(handler, requestToSend);
 
     final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
+    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor =
+        ArgumentCaptor.forClass(ActionInstruction.class);
 
-    verify(rabbitTemplate, times(1)).convertAndSend(routingKeyCaptor.capture(),
-        actionInstructionCaptor.capture());
+    verify(rabbitTemplate, times(1))
+        .convertAndSend(routingKeyCaptor.capture(), actionInstructionCaptor.capture());
     assertEquals(String.format("%s%s%s", ACTION, handler, BINDING), routingKeyCaptor.getValue());
     final ActionInstruction instructionSent = actionInstructionCaptor.getValue();
     assertNull(instructionSent.getActionCancel());
@@ -73,10 +70,11 @@ public class ActionInstructionPublisherImplTest {
     actionInstructionPublisherImpl.sendActionInstruction(handler, cancelToSend);
 
     final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
+    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor =
+        ArgumentCaptor.forClass(ActionInstruction.class);
 
-    verify(rabbitTemplate, times(1)).convertAndSend(routingKeyCaptor.capture(),
-        actionInstructionCaptor.capture());
+    verify(rabbitTemplate, times(1))
+        .convertAndSend(routingKeyCaptor.capture(), actionInstructionCaptor.capture());
     assertEquals(String.format("%s%s%s", ACTION, handler, BINDING), routingKeyCaptor.getValue());
     final ActionInstruction instructionSent = actionInstructionCaptor.getValue();
     assertNull(instructionSent.getActionRequest());
@@ -96,10 +94,11 @@ public class ActionInstructionPublisherImplTest {
     actionInstructionPublisherImpl.sendActionInstruction(handler, new Action());
 
     final ArgumentCaptor<String> routingKeyCaptor = ArgumentCaptor.forClass(String.class);
-    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor = ArgumentCaptor.forClass(ActionInstruction.class);
+    final ArgumentCaptor<ActionInstruction> actionInstructionCaptor =
+        ArgumentCaptor.forClass(ActionInstruction.class);
 
-    verify(rabbitTemplate, times(1)).convertAndSend(routingKeyCaptor.capture(),
-        actionInstructionCaptor.capture());
+    verify(rabbitTemplate, times(1))
+        .convertAndSend(routingKeyCaptor.capture(), actionInstructionCaptor.capture());
     assertEquals(String.format("%s%s%s", ACTION, handler, BINDING), routingKeyCaptor.getValue());
     final ActionInstruction instructionSent = actionInstructionCaptor.getValue();
     assertNull(instructionSent.getActionRequest());

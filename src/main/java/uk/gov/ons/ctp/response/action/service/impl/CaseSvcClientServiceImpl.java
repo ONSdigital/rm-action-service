@@ -1,6 +1,10 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,42 +31,35 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-/**
- * Impl of the service that centralizes all REST calls to the Case service
- */
+/** Impl of the service that centralizes all REST calls to the Case service */
 @Slf4j
 @Service
 public class CaseSvcClientServiceImpl implements CaseSvcClientService {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
-  @Autowired
-  private RestTemplate restTemplate;
+  @Autowired private RestTemplate restTemplate;
 
   @Autowired
   @Qualifier("caseSvcClient")
   private RestUtility restUtility;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCase(final UUID caseId) {
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
-        null, caseId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getCaseByCaseGetPath(), null, caseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     CaseDetailsDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -78,17 +75,20 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseGroupDTO getCaseGroup(final UUID caseGroupId) {
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseGroupPath(), null,
-        caseGroupId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getCaseGroupPath(), null, caseGroupId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     CaseGroupDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -104,17 +104,20 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public List<CaseEventDTO> getCaseEvents(final UUID caseId) {
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCaseGetPath(),
-        null, caseId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getCaseEventsByCaseGetPath(), null, caseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     CaseEventDTO[] result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -130,19 +133,22 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return Arrays.asList(result);
   }
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCaseWithIAC(final UUID caseId) {
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.add("iac", "true");
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
-        queryParams, caseId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getCaseByCaseGetPath(), queryParams, caseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     CaseDetailsDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -158,20 +164,23 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CaseDetailsDTO getCaseWithIACandCaseEvents(final UUID caseId) {
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.add("iac", "true");
     queryParams.add("caseevents", "true");
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseByCaseGetPath(),
-        queryParams, caseId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getCaseByCaseGetPath(), queryParams, caseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     CaseDetailsDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -187,29 +196,36 @@ public class CaseSvcClientServiceImpl implements CaseSvcClientService {
     return result;
   }
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
-  public CreatedCaseEventDTO createNewCaseEvent(final Action action, final CategoryDTO.CategoryName actionCategory) {
-    log.debug("posting caseEvent for actionId {} to casesvc for category {} ", action.getId(),
+  public CreatedCaseEventDTO createNewCaseEvent(
+      final Action action, final CategoryDTO.CategoryName actionCategory) {
+    log.debug(
+        "posting caseEvent for actionId {} to casesvc for category {} ",
+        action.getId(),
         actionCategory);
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getCaseSvc().getCaseEventsByCasePostPath(),
-        null, action.getCaseId());
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getCaseEventsByCasePostPath(), null, action.getCaseId());
     final CaseEventCreationRequestDTO caseEventDTO = new CaseEventCreationRequestDTO();
     caseEventDTO.setCategory(actionCategory);
     caseEventDTO.setCreatedBy(action.getCreatedBy());
     caseEventDTO.setSubCategory(action.getActionType().getName());
 
     if (!StringUtils.isEmpty(action.getSituation())) {
-      caseEventDTO.setDescription(String.format("%s (%s)",
-          action.getActionType().getDescription(), action.getSituation()));
+      caseEventDTO.setDescription(
+          String.format("%s (%s)", action.getActionType().getDescription(), action.getSituation()));
     } else {
       caseEventDTO.setDescription(action.getActionType().getDescription());
     }
 
-    final HttpEntity<CaseEventCreationRequestDTO> httpEntity = restUtility.createHttpEntity(caseEventDTO);
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity,
-        String.class);
+    final HttpEntity<CaseEventCreationRequestDTO> httpEntity =
+        restUtility.createHttpEntity(caseEventDTO);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity, String.class);
 
     CreatedCaseEventDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {

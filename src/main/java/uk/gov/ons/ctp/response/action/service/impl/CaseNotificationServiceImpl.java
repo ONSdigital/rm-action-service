@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.sql.Timestamp;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,12 +18,9 @@ import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
-import java.sql.Timestamp;
-import java.util.UUID;
-
 /**
- * Save to Action.Case table for case creation life cycle events, delete for
- * case close life cycle events.
+ * Save to Action.Case table for case creation life cycle events, delete for case close life cycle
+ * events.
  */
 @Service
 @Slf4j
@@ -29,20 +28,19 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  @Autowired
-  private ActionCaseRepository actionCaseRepo;
+  @Autowired private ActionCaseRepository actionCaseRepo;
 
-  @Autowired
-  private ActionPlanRepository actionPlanRepo;
+  @Autowired private ActionPlanRepository actionPlanRepo;
 
-  @Autowired
-  private ActionService actionService;
+  @Autowired private ActionService actionService;
 
-  @Autowired
-  private CollectionExerciseClientService collectionSvcClientServiceImpl;
+  @Autowired private CollectionExerciseClientService collectionSvcClientServiceImpl;
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   public void acceptNotification(final CaseNotification notification) throws CTPException {
     final String actionPlanIdStr = notification.getActionPlanId();
     final UUID actionPlanId = UUID.fromString(actionPlanIdStr);
@@ -52,17 +50,24 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
     final UUID partyId = UUID.fromString(notification.getPartyId());
 
     if (actionPlan != null) {
-      final ActionCase actionCase = ActionCase.builder().id(caseId)
-              .actionPlanId(actionPlanId).actionPlanFK(actionPlan.getActionPlanPK())
-              .collectionExerciseId(collectionExerciseId).partyId(partyId).build();
+      final ActionCase actionCase =
+          ActionCase.builder()
+              .id(caseId)
+              .actionPlanId(actionPlanId)
+              .actionPlanFK(actionPlan.getActionPlanPK())
+              .collectionExerciseId(collectionExerciseId)
+              .partyId(partyId)
+              .build();
 
       switch (notification.getNotificationType()) {
         case REPLACED:
         case ACTIVATED:
-          final CollectionExerciseDTO collectionExercise = collectionSvcClientServiceImpl.getCollectionExercise(
-                  collectionExerciseId);
-          actionCase.setActionPlanStartDate(new Timestamp(collectionExercise.getScheduledStartDateTime().getTime()));
-          actionCase.setActionPlanEndDate(new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
+          final CollectionExerciseDTO collectionExercise =
+              collectionSvcClientServiceImpl.getCollectionExercise(collectionExerciseId);
+          actionCase.setActionPlanStartDate(
+              new Timestamp(collectionExercise.getScheduledStartDateTime().getTime()));
+          actionCase.setActionPlanEndDate(
+              new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
           checkAndSaveCase(actionCase);
           break;
 
@@ -95,16 +100,18 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
   }
 
   /**
-   * In the event that the actions service is incorrectly sent a notification that indicates we should create a case
-   * for an already existing caseid, quietly error else save it as a new entry.
-   * If we were to allow the save to go ahead we would get a JPA exception, which would result in the notification
-   * going back to the queue and us retrying again and again
+   * In the event that the actions service is incorrectly sent a notification that indicates we
+   * should create a case for an already existing caseid, quietly error else save it as a new entry.
+   * If we were to allow the save to go ahead we would get a JPA exception, which would result in
+   * the notification going back to the queue and us retrying again and again
    *
    * @param actionCase the case to check and save
    */
   private void checkAndSaveCase(final ActionCase actionCase) {
     if (actionCaseRepo.findById(actionCase.getId()) != null) {
-      log.error("CaseNotification illiciting case creation for an existing case id {}", actionCase.getId());
+      log.error(
+          "CaseNotification illiciting case creation for an existing case id {}",
+          actionCase.getId());
     } else {
       actionCaseRepo.save(actionCase);
     }

@@ -3,10 +3,7 @@ package uk.gov.ons.ctp.response.action.service;
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 
-
-/**
- * The service for ActionTypes
- */
+/** The service for ActionTypes */
 public interface ActionTypeService extends CTPService {
 
   /**
@@ -24,5 +21,4 @@ public interface ActionTypeService extends CTPService {
    * @return ActionType This returns the associated action type.
    */
   ActionType findActionTypeByName(String name);
-
 }

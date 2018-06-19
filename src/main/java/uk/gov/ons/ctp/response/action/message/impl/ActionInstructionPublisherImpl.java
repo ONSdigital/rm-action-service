@@ -12,9 +12,7 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 
-/**
- * This class is used to publish ActionInstructions to the downstream handlers.
- */
+/** This class is used to publish ActionInstructions to the downstream handlers. */
 @Slf4j
 @MessageEndpoint
 public class ActionInstructionPublisherImpl implements ActionInstructionPublisher {

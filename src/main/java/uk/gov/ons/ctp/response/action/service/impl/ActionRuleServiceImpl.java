@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,21 +12,14 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 
-import java.util.List;
-import java.util.UUID;
-
-
-/**
- * Implementation
- */
+/** Implementation */
 @Service
 @Slf4j
 public class ActionRuleServiceImpl implements ActionRuleService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  @Autowired
-  private ActionRuleRepository actionRuleRepo;
+  @Autowired private ActionRuleRepository actionRuleRepo;
 
   @CoverageIgnore
   @Override

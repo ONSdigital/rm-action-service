@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,38 +17,29 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 /**
- * This is the 'service' class that distributes actions to downstream services, ie services outside of Response
- * Management (ActionExporterSvc, NotifyGW, etc.).
- * <p>
- * This class has a self scheduled method wakeUp(), which looks for Actions in SUBMITTED state to send to
- * downstream handlers. On each wake cycle, it fetches the first n actions of each type, by createddatatime, and
- * forwards them to ActionProcessingService.
+ * This is the 'service' class that distributes actions to downstream services, ie services outside
+ * of Response Management (ActionExporterSvc, NotifyGW, etc.).
+ *
+ * <p>This class has a self scheduled method wakeUp(), which looks for Actions in SUBMITTED state to
+ * send to downstream handlers. On each wake cycle, it fetches the first n actions of each type, by
+ * createddatatime, and forwards them to ActionProcessingService.
  */
 @Component
 @Slf4j
 class ActionDistributor {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
-  @Autowired
-  private ActionRepository actionRepo;
+  @Autowired private ActionRepository actionRepo;
 
-  @Autowired
-  private ActionTypeRepository actionTypeRepo;
+  @Autowired private ActionTypeRepository actionTypeRepo;
 
-  @Autowired
-  private ActionProcessingService actionProcessingService;
-
+  @Autowired private ActionProcessingService actionProcessingService;
 
   /**
-   * wake up on schedule and check for submitted actions, enrich and distribute them to spring integration channels
+   * wake up on schedule and check for submitted actions, enrich and distribute them to spring
+   * integration channels
    *
    * @return the info for the health endpoint regarding the distribution just performed
    */
@@ -68,16 +63,18 @@ class ActionDistributor {
 
   private List<InstructionCount> processActionType(final ActionType actionType) {
     log.debug("Dealing with actionType {}", actionType.getName());
-    final InstructionCount requestCount = InstructionCount.builder()
-        .actionTypeName(actionType.getName())
-        .instruction(DistributionInfo.Instruction.REQUEST)
-        .count(0)
-        .build();
-    final InstructionCount cancelCount = InstructionCount.builder()
-        .actionTypeName(actionType.getName())
-        .instruction(DistributionInfo.Instruction.CANCEL_REQUEST)
-        .count(0)
-        .build();
+    final InstructionCount requestCount =
+        InstructionCount.builder()
+            .actionTypeName(actionType.getName())
+            .instruction(DistributionInfo.Instruction.REQUEST)
+            .count(0)
+            .build();
+    final InstructionCount cancelCount =
+        InstructionCount.builder()
+            .actionTypeName(actionType.getName())
+            .instruction(DistributionInfo.Instruction.CANCEL_REQUEST)
+            .count(0)
+            .build();
 
     try {
       final List<Action> actions = retrieveActions(actionType);
@@ -88,10 +85,13 @@ class ActionDistributor {
     return Arrays.asList(requestCount, cancelCount);
   }
 
-  private void processActions(final List<Action> actions, final InstructionCount requestCount, final InstructionCount cancelCount) {
-    log.debug("Dealing with actions {}", actions.stream()
-        .map(Objects::toString)
-        .collect(Collectors.joining(",")));
+  private void processActions(
+      final List<Action> actions,
+      final InstructionCount requestCount,
+      final InstructionCount cancelCount) {
+    log.debug(
+        "Dealing with actions {}",
+        actions.stream().map(Objects::toString).collect(Collectors.joining(",")));
     for (final Action action : actions) {
       try {
         if (action.getState().equals(ActionState.SUBMITTED)) {
@@ -102,8 +102,11 @@ class ActionDistributor {
           cancelCount.increment();
         }
       } catch (final Exception e) {
-        log.error("Could not processing action {}. Processing will be retried at next scheduled distribution",
-            action.getId(), e);
+        log.error(
+            "Could not processing action {}."
+                + " Processing will be retried at next scheduled distribution",
+            action.getId(),
+            e);
       }
     }
   }
@@ -115,10 +118,12 @@ class ActionDistributor {
    * @return list of actions
    */
   private List<Action> retrieveActions(final ActionType actionType) {
-    List<Action> actions = actionRepo.findSubmittedOrCancelledByActionTypeName(actionType.getName(),
-            appConfig.getActionDistribution().getRetrievalMax());
-    log.debug("RETRIEVED action ids {}", actions.stream().map(a -> a.getActionPK().toString())
-        .collect(Collectors.joining(",")));
+    List<Action> actions =
+        actionRepo.findSubmittedOrCancelledByActionTypeName(
+            actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
+    log.debug(
+        "RETRIEVED action ids {}",
+        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(",")));
     return actions;
   }
 }
