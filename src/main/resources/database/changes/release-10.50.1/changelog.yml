@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 10.50.1-1
+      author: Adam Hawtin
+      changes:
+        - sqlFile:
+            comment: Add social pre-notification action type
+            path: update_action_type_add_social_pre_notification.sql
+            relativeToChangelogFile: true
+            splitStatements: false
