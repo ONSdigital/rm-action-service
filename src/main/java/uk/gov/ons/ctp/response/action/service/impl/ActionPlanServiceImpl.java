@@ -149,20 +149,36 @@ public class ActionPlanServiceImpl implements ActionPlanService {
       }
 
       if (needsUpdate) {
-        existingActionPlan = this.actionPlanRepo.save(existingActionPlan);
+        existingActionPlan = this.actionPlanRepo.saveAndFlush(existingActionPlan);
       }
 
       final HashMap<String, String> selectors = actionPlanSelector.getSelectors();
       if (selectors != null) {
-        log.debug("Updating action plan selectors, ActionPlanId: {}, Selectors: {}", actionPlanId, selectors);
-        ActionPlanSelector existingActionPlanSelector = this.actionPlanSelectorRepository.findFirstByActionPlanFk(
-                existingActionPlan.getActionPlanPK());
-        existingActionPlanSelector.setSelectors(selectors);
-        this.actionPlanSelectorRepository.saveAndFlush(existingActionPlanSelector);
-        log.debug("Successfully updated action plan selectors, ActionPlanId: {}, Selectors: {}",
-                actionPlanId, selectors);
+        ActionPlanSelector savedActionPlanSelector = updateActionPlanSelectors(existingActionPlan, selectors);
       }
     }
     return existingActionPlan;
+  }
+
+  private ActionPlanSelector updateActionPlanSelectors(
+          final ActionPlan actionPlan, final HashMap<String, String> selectors) {
+    log.debug("Updating action plan selectors, ActionPlanId: {}, Selectors: {}", actionPlan.getId(), selectors);
+
+    ActionPlanSelector savedActionPlanSelector;
+    ActionPlanSelector existingActionPlanSelector = this.actionPlanSelectorRepository.findFirstByActionPlanFk(
+            actionPlan.getActionPlanPK());
+    if (existingActionPlanSelector != null) {
+      existingActionPlanSelector.setSelectors(selectors);
+      savedActionPlanSelector = this.actionPlanSelectorRepository.saveAndFlush(existingActionPlanSelector);
+    } else {
+      ActionPlanSelector newActionPlanSelector = new ActionPlanSelector();
+      newActionPlanSelector.setActionPlanFk(actionPlan.getActionPlanPK());
+      newActionPlanSelector.setSelectors(selectors);
+      savedActionPlanSelector = this.actionPlanSelectorRepository.saveAndFlush(newActionPlanSelector);
+    }
+
+    log.debug("Successfully updated action plan selectors, ActionPlanId: {}, Selectors: {}",
+            actionPlan.getId(), selectors);
+    return savedActionPlanSelector;
   }
 }

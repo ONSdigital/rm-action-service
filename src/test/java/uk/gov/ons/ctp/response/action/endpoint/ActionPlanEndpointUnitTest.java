@@ -24,7 +24,6 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -300,36 +299,6 @@ public class ActionPlanEndpointUnitTest {
     verify(actionPlanService, times(1)).createActionPlan(any(ActionPlan.class),
                                                                                  any(ActionPlanSelector.class));
   }
-
-//  /**
-//   * Test creating an Action plan with selectors
-//   *
-//   * @throws Exception when postJson does
-//   */
-//  @Test
-//  public void createActionPlanWithSelectors() throws Exception {
-//    when(actionPlanService.findActionPlanByName(any(String.class))).thenReturn(null);
-//    ActionPlanDTO actionPlanDTOWithSelectors = mapperFacade.map(actionPlans.get(0), ActionPlanDTO.class);
-//    HashMap<String, String>
-//    actionPlanDTOWithSelectors.setSelectors();
-//    when(actionPlanService.createActionPlan(any(ActionPlan.class), any(ActionPlanSelector.class)))
-//            .thenReturn(mapperFacade.map(actionPlans.get(0), ActionPlanDTO.class));
-//
-//    final ResultActions resultActions = mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));
-//
-//    resultActions.andExpect(status().isCreated())
-//            .andExpect(handler().handlerType(ActionPlanEndpoint.class))
-//            .andExpect(handler().methodName("createActionPlan"))
-//            .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
-//            .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME)))
-//            .andExpect(jsonPath("$.description", is(ACTION_PLAN_3_DESC)))
-//            .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-//            .andExpect(jsonPath("$.lastRunDateTime", is(IsNull.nullValue())));
-//
-//    verify(actionPlanService, times(1)).findActionPlanByName(any(String.class));
-//    verify(actionPlanService, times(1)).createActionPlan(any(ActionPlan.class),
-//            any(ActionPlanSelector.class));
-//  }
 
   /**
    * Test creating an Action plan with valid JSON but name already exists.
