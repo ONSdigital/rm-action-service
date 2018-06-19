@@ -17,6 +17,17 @@ import net.sourceforge.cobertura.CoverageIgnore;
 @Data
 @Getter
 public class CsvLine {
+  // TODO BRES - can we incorporate these into PartySvc API somehow - can PartySvc tell us these?
+  // either at runtime or with some sort of XSD definition about Party attributes?
+  // the following were all lifted from the old ContactDTO ? how do we determine these now with
+  // PartySvc?
+  public static final String EMAIL_RE =
+      "^$|[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)"
+          + "*(\\.[A-Za-z]{2,})";
+  public static final String TELEPHONE_RE = "[\\d]{0,11}";
+  public static final int TITLE_MAX_LEN = 20;
+  public static final int FORENAME_MAX_LEN = 35;
+  public static final int SURNAME_MAX_LEN = 35;
   private static final int ESTAB_TYPE_MAX_LEN = 6;
   private static final int TOWN_MAX_LEN = 30;
   private static final int LINE2_MAX_LEN = 60;
@@ -37,18 +48,6 @@ public class CsvLine {
   private static final String ADDRESS_TYPE_RE = "|HH|CE";
   private static final String INSTRUCTION_TYPE_RE = "Request|Cancel";
   private static final String HANDLER_TYPE_RE = "HotelSurvey|HHSurvey|Printer|Field|CensusSupport";
-
-  // TODO BRES - can we incorporate these into PartySvc API somehow - can PartySvc tell us these?
-  // either at runtime or with some sort of XSD definition about Party attributes?
-  // the following were all lifted from the old ContactDTO ? how do we determine these now with
-  // PartySvc?
-  public static final String EMAIL_RE =
-      "^$|[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)"
-          + "*(\\.[A-Za-z]{2,})";
-  public static final String TELEPHONE_RE = "[\\d]{0,11}";
-  public static final int TITLE_MAX_LEN = 20;
-  public static final int FORENAME_MAX_LEN = 35;
-  public static final int SURNAME_MAX_LEN = 35;
 
   @Pattern(regexp = HANDLER_TYPE_RE)
   private String handler;

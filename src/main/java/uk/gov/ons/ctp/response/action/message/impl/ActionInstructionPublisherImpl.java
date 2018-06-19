@@ -17,12 +17,12 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 @MessageEndpoint
 public class ActionInstructionPublisherImpl implements ActionInstructionPublisher {
 
+  public static final String ACTION = "Action.";
+  public static final String BINDING = ".binding";
+
   @Qualifier("actionInstructionRabbitTemplate")
   @Autowired
   private RabbitTemplate rabbitTemplate;
-
-  public static final String ACTION = "Action.";
-  public static final String BINDING = ".binding";
 
   public void sendActionInstruction(@Header("HANDLER") final String handler, final Action action) {
     log.debug("Entering sendActionInstruction with handler {} and action {}", handler, action);

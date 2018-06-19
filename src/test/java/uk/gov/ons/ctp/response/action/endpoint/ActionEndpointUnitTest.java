@@ -56,26 +56,8 @@ import uk.gov.ons.ctp.response.action.service.ActionService;
 /** ActionEndpoint Unit tests */
 public final class ActionEndpointUnitTest {
 
-  @InjectMocks private ActionEndpoint actionEndpoint;
-
-  @Mock private ActionService actionService;
-
-  @Mock private ActionPlanService actionPlanService;
-
-  @Mock private ActionCaseService actionCaseService;
-
-  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
-
-  private MockMvc mockMvc;
-
-  private List<Action> actions;
-  private List<ActionCase> actionCases;
-  private List<ActionPlan> actionPlans;
-
   private static final Boolean ACTION1_MANUALLY_CREATED = true;
-
   private static final Integer ACTION1_PRIORITY = 1;
-
   private static final UUID ACTION_ID_1 = UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d78a");
   private static final UUID ACTION_ID_1_CASE_ID =
       UUID.fromString("7bc5d41b-0549-40b3-ba76-42f6d4cf3fda");
@@ -98,7 +80,6 @@ public final class ActionEndpointUnitTest {
   private static final UUID ACTION_ID_6_AND_7_CASEID =
       UUID.fromString("E39202CE-D9A2-4BDD-92F9-E5E0852AF023");
   private static final UUID ACTIONID_1 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
-
   private static final String ACTION_ACTIONTYPENAME_1 = "action type one";
   private static final String ACTION_ACTIONTYPENAME_2 = "action type two";
   private static final String ACTION_ACTIONTYPENAME_3 = "action type three";
@@ -123,7 +104,6 @@ public final class ActionEndpointUnitTest {
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
   private static final String UPDATED_OUTCOME = "REQUEST_COMPLETED";
   private static final String UPDATED_SITUATION = "new situation";
-
   private static final String ACTION_UPDATE_VALID_JSON =
       "{"
           + "\"priority\": "
@@ -132,7 +112,6 @@ public final class ActionEndpointUnitTest {
           + "\"situation\": \""
           + ACTION1_SITUATION
           + "\"}";
-
   private static final String ACTION_CREATE_VALID_JSON =
       "{"
           + "\"caseId\": \""
@@ -147,7 +126,6 @@ public final class ActionEndpointUnitTest {
           + "\"actionTypeName\": \""
           + ACTION_ACTIONTYPENAME_1
           + "\"}";
-
   // Note actionTypename instead of actionTypeName
   private static final String ACTION_INVALID_JSON_BAD_PROP =
       "{"
@@ -178,7 +156,6 @@ public final class ActionEndpointUnitTest {
           + "\"state\": \""
           + ActionDTO.ActionState.ACTIVE.name()
           + "\"}";
-
   // Note actionTypeName is missing
   private static final String ACTION_INVALID_JSON_MISSING_PROP =
       "{"
@@ -194,7 +171,6 @@ public final class ActionEndpointUnitTest {
           + "\"createdBy\": \""
           + ACTION_CREATEDBY
           + "\"}";
-
   private static final String ACTION_FEEDBACK_VALID_JSON =
       "{"
           + "\"situation\": \""
@@ -203,7 +179,6 @@ public final class ActionEndpointUnitTest {
           + "\"outcome\": \""
           + UPDATED_OUTCOME
           + "\"}";
-
   private static final String ACTION_FEEDBACK_INVALID_JSON =
       "{"
           + "\"actionId\": \""
@@ -215,6 +190,15 @@ public final class ActionEndpointUnitTest {
           + "\"outcome\": \""
           + UPDATED_OUTCOME
           + "\"}";
+  @InjectMocks private ActionEndpoint actionEndpoint;
+  @Mock private ActionService actionService;
+  @Mock private ActionPlanService actionPlanService;
+  @Mock private ActionCaseService actionCaseService;
+  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
+  private MockMvc mockMvc;
+  private List<Action> actions;
+  private List<ActionCase> actionCases;
+  private List<ActionPlan> actionPlans;
 
   /**
    * Initialises Mockito and loads Class Fixtures

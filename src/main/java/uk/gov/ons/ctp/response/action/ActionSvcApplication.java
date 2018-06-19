@@ -61,6 +61,15 @@ public class ActionSvcApplication {
   @Autowired private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
 
   /**
+   * This method is the entry point to the Spring Boot application.
+   *
+   * @param args These are the optional command line arguments
+   */
+  public static void main(final String[] args) {
+    SpringApplication.run(ActionSvcApplication.class, args);
+  }
+
+  /**
    * Bean used to access Distributed List Manager
    *
    * @param redissonClient Redisson Client
@@ -239,14 +248,5 @@ public class ActionSvcApplication {
     final CustomObjectMapper mapper = new CustomObjectMapper();
 
     return mapper;
-  }
-
-  /**
-   * This method is the entry point to the Spring Boot application.
-   *
-   * @param args These are the optional command line arguments
-   */
-  public static void main(final String[] args) {
-    SpringApplication.run(ActionSvcApplication.class, args);
   }
 }

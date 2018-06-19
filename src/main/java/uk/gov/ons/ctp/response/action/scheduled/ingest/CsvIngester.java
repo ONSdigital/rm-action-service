@@ -112,19 +112,16 @@ public class CsvIngester extends CsvToBean<CsvLine> {
         EMAIL,
         TELEPHONE
       };
-
-  /** Inner class to encapsulate the request and cancel data as they do not have common parentage */
-  @Data
-  private class InstructionBucket {
-    private List<ActionRequest> actionRequests = new ArrayList<>();
-    private List<ActionCancel> actionCancels = new ArrayList<>();
-  }
-
   @Autowired private AppConfig appConfig;
-
   @Autowired private ActionInstructionPublisher actionInstructionPublisher;
-
   private ColumnPositionMappingStrategy<CsvLine> columnPositionMappingStrategy;
+
+  /** Create this ingester */
+  public CsvIngester() {
+    columnPositionMappingStrategy = new ColumnPositionMappingStrategy<>();
+    columnPositionMappingStrategy.setType(CsvLine.class);
+    columnPositionMappingStrategy.setColumnMapping(COLUMNS);
+  }
 
   /**
    * Lazy create a reusable validator
@@ -135,13 +132,6 @@ public class CsvIngester extends CsvToBean<CsvLine> {
   private Validator getValidator() {
     final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     return factory.getValidator();
-  }
-
-  /** Create this ingester */
-  public CsvIngester() {
-    columnPositionMappingStrategy = new ColumnPositionMappingStrategy<>();
-    columnPositionMappingStrategy.setType(CsvLine.class);
-    columnPositionMappingStrategy.setColumnMapping(COLUMNS);
   }
 
   /**
@@ -325,5 +315,12 @@ public class CsvIngester extends CsvToBean<CsvLine> {
             actionInstructionPublisher.sendActionInstruction(handler, actionCancel);
           }
         });
+  }
+
+  /** Inner class to encapsulate the request and cancel data as they do not have common parentage */
+  @Data
+  private class InstructionBucket {
+    private List<ActionRequest> actionRequests = new ArrayList<>();
+    private List<ActionCancel> actionCancels = new ArrayList<>();
   }
 }

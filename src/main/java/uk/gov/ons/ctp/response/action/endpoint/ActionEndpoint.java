@@ -38,19 +38,16 @@ import uk.gov.ons.ctp.response.action.service.ActionService;
 @Slf4j
 public final class ActionEndpoint implements CTPEndpoint {
 
+  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
+  public static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
+  public static final String CASE_NOT_FOUND = "Case not found for id %s";
   @Autowired private ActionService actionService;
-
   @Autowired private ActionPlanService actionPlanService;
-
   @Autowired private ActionCaseService actionCaseService;
 
   @Qualifier("actionBeanMapper")
   @Autowired
   private MapperFacade mapperFacade;
-
-  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
-  public static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
-  public static final String CASE_NOT_FOUND = "Case not found for id %s";
 
   /**
    * GET the Action for the specified action id.

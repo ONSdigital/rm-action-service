@@ -2,9 +2,16 @@ package uk.gov.ons.ctp.response.action.endpoint;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static uk.gov.ons.ctp.common.MvcHelper.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.ons.ctp.common.MvcHelper.getJson;
+import static uk.gov.ons.ctp.common.MvcHelper.postJson;
+import static uk.gov.ons.ctp.common.MvcHelper.putJson;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_PLAN_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_RULE_NOT_FOUND;
@@ -41,21 +48,6 @@ import uk.gov.ons.ctp.response.action.service.ActionTypeService;
 /** ActionEndpoint Unit tests */
 public final class ActionRuleEndpointUnitTest {
 
-  @InjectMocks private ActionRuleEndpoint actionRuleEndpoint;
-
-  @Mock private ActionRuleService actionRuleService;
-
-  @Mock private ActionPlanService actionPlanService;
-
-  @Mock private ActionTypeService actionTypeService;
-
-  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
-
-  private MockMvc mockMvc;
-  private List<ActionRule> actionRules;
-  private List<ActionPlan> actionPlans;
-  private List<ActionType> actionTypes;
-
   private static final UUID ACTION_RULE_ID_1 =
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d78a");
   private static final UUID ACTION_RULE_ID_2 =
@@ -64,11 +56,9 @@ public final class ActionRuleEndpointUnitTest {
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d78c");
   private static final UUID NON_EXISTING_ID =
       UUID.fromString("a0b9fe16-4e08-11e8-9c2d-fa7ae01bbebc");
-
   private static final UUID ACTION_PLAN_ID_1 =
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
   private static final String ACTION_TYPE_NAME_1 = "BSNOT";
-
   private static final String ACTION_RULE_CREATE_VALID_JSON =
       "{ \"actionPlanId\": \""
           + ACTION_PLAN_ID_1.toString()
@@ -80,6 +70,15 @@ public final class ActionRuleEndpointUnitTest {
       "{ \"name\": \"BSREM+45\", "
           + "\"description\": \"Enrolment Reminder Letter(+45 days)\", "
           + "\"daysOffset\": 45, \"priority\": 3 }";
+  @InjectMocks private ActionRuleEndpoint actionRuleEndpoint;
+  @Mock private ActionRuleService actionRuleService;
+  @Mock private ActionPlanService actionPlanService;
+  @Mock private ActionTypeService actionTypeService;
+  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
+  private MockMvc mockMvc;
+  private List<ActionRule> actionRules;
+  private List<ActionPlan> actionPlans;
+  private List<ActionType> actionTypes;
 
   /**
    * Initialises Mockito and loads Class Fixtures

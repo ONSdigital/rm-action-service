@@ -15,11 +15,11 @@ import uk.gov.ons.ctp.common.health.ScheduledHealthInfo;
 @EqualsAndHashCode(callSuper = true)
 public class DistributionInfo extends ScheduledHealthInfo {
 
+  private List<InstructionCount> instructionCounts = new ArrayList<>();
+
   /** the type of instruction */
   public enum Instruction {
     REQUEST,
     CANCEL_REQUEST
   }
-
-  private List<InstructionCount> instructionCounts = new ArrayList<>();
 }

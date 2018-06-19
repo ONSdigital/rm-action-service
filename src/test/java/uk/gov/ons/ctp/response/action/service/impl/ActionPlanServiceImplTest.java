@@ -24,14 +24,11 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionPlanServiceImplTest {
 
-  @Mock private AppConfig appConfig;
-
-  @Mock private ActionPlanRepository actionPlanRepo;
-
-  @InjectMocks private ActionPlanServiceImpl actionPlanServiceImpl;
-
   private static final UUID ACTION_PLAN_1_ID =
       UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
+  @Mock private AppConfig appConfig;
+  @Mock private ActionPlanRepository actionPlanRepo;
+  @InjectMocks private ActionPlanServiceImpl actionPlanServiceImpl;
 
   /** Before the test */
   @Before
