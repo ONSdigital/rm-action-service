@@ -9,3 +9,23 @@ databaseChangeLog:
             path: add_additional_columns_to_case.sql
             relativeToChangelogFile: true
             splitStatements: false
+
+  - changeSet:
+        id: 10.49.18-2
+        author: Gemma Irving
+        changes:
+          - sqlFile:
+              comment: Add missing business action types
+              path: add_additional_business_action_types.sql
+              relativeToChangelogFile: true
+              splitStatements: false
+
+  - changeSet:
+          id: 10.49.18-3
+          author: Gemma Irving
+          changes:
+            - sqlFile:
+                comment: Remove unused action type sequence table
+                path: remove_actiontype_sequence_table.sql
+                relativeToChangelogFile: true
+                splitStatements: false

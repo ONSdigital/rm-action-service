@@ -24,6 +24,7 @@ local.properties
 .idea/
 out/
 tools/addend/target/classes/
+.DS_Store
 
 # External tool builders
 .externalToolBuilders/
