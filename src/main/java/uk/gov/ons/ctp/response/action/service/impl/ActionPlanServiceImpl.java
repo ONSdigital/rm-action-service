@@ -107,8 +107,7 @@ public class ActionPlanServiceImpl implements ActionPlanService {
 
     // If selectors are provided create a row in the ActionPlanSelectors column
     if (actionPlanSelector.getSelectors() != null) {
-      ActionPlanSelector savedActionPlanSelectors = saveActionPlanSelectors(savedActionPlan, actionPlanSelector);
-      actionPlanDTO.setSelectors(savedActionPlanSelectors.getSelectors());
+      saveActionPlanSelectors(savedActionPlan, actionPlanSelector);
     }
 
     log.debug("Successfully created action plan, Name: {}, ActionPlanId: {}, Selectors: {}",

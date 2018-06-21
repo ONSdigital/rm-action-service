@@ -94,7 +94,6 @@ public class ActionPlanServiceImplTest {
     verify(actionPlanRepo, times(1)).saveAndFlush(actionPlan);
     verify(actionPlanSelectorRepo, times(1)).saveAndFlush(actionPlanSelector);
     assertEquals(actionPlanDTO.getName(), actionPlans.get(0).getName());
-    assertEquals(actionPlanDTO.getSelectors(), selectors);
   }
 
   @Test
