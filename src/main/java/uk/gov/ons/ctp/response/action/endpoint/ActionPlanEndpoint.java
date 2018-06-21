@@ -67,7 +67,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
       actionPlans = actionPlanService.findActionPlans();
     }
 
-    log.info("Successfully retrieved action plans, Selectors={}");
+    log.info("Successfully retrieved action plans, Selectors={}", selectors);
     final List<ActionPlanDTO> actionPlanDTOs = mapperFacade.mapAsList(actionPlans, ActionPlanDTO.class);
     return CollectionUtils.isEmpty(actionPlanDTOs)
         ? ResponseEntity.noContent().build() : ResponseEntity.ok(actionPlanDTOs);
