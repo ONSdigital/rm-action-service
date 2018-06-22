@@ -1,12 +1,11 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import net.sourceforge.cobertura.CoverageIgnore;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -18,16 +17,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import java.io.Serializable;
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.sourceforge.cobertura.CoverageIgnore;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 
-/**
- * Domain model object.
- */
+/** Domain model object. */
 @CoverageIgnore
 @Entity
 @Data
@@ -38,68 +35,6 @@ import java.util.UUID;
 public class Action implements Serializable {
 
   private static final long serialVersionUID = 8539984354009320104L;
-
-  /**
-   * Priority of action
-   * NOTE: the names need to match those in the outbound xsd
-   */
-  public enum ActionPriority {
-    HIGHEST(1, "highest"),
-    HIGHER(2, "higher"),
-    MEDIUM(3, "medium"),
-    LOWER(4, "lower"),
-    LOWEST(5, "lowest");
-
-    private final int level;   // numeric level
-    private final String name; // the level name
-
-    private static Map<Integer, ActionPriority> map = new HashMap<Integer, ActionPriority>();
-
-    static {
-      for (final ActionPriority priority : ActionPriority.values()) {
-        map.put(priority.level, priority);
-      }
-    }
-
-    /**
-     * return the enum for an integer level arg
-     *
-     * @param priorityLevel the int value
-     * @return the enum
-     */
-    public static ActionPriority valueOf(final int priorityLevel) {
-      return map.get(priorityLevel);
-    }
-
-    /**
-     * Create an instance of the enum
-     *
-     * @param value priority as integer
-     * @param label verbage
-     */
-    ActionPriority(final int value, final String label) {
-      this.level = value;
-      this.name = label;
-    }
-
-    /**
-     * Getter
-     *
-     * @return gotten
-     */
-    public int getLevel() {
-      return this.level;
-    }
-
-    /**
-     * Getter
-     *
-     * @return gotten
-     */
-    public String getName() {
-      return this.name;
-    }
-  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -131,7 +66,6 @@ public class Action implements Serializable {
   private ActionType actionType;
 
   private Integer priority;
-
   private String situation;
 
   @Enumerated(EnumType.STRING)
@@ -147,4 +81,63 @@ public class Action implements Serializable {
   @Version
   @Column(name = "optlockversion")
   private int optLockVersion;
+
+  /** Priority of action NOTE: the names need to match those in the outbound xsd */
+  public enum ActionPriority {
+    HIGHEST(1, "highest"),
+    HIGHER(2, "higher"),
+    MEDIUM(3, "medium"),
+    LOWER(4, "lower"),
+    LOWEST(5, "lowest");
+
+    private static Map<Integer, ActionPriority> map = new HashMap<Integer, ActionPriority>();
+
+    static {
+      for (final ActionPriority priority : ActionPriority.values()) {
+        map.put(priority.level, priority);
+      }
+    }
+
+    private final int level; // numeric level
+    private final String name; // the level name
+
+    /**
+     * Create an instance of the enum
+     *
+     * @param value priority as integer
+     * @param label verbage
+     */
+    ActionPriority(final int value, final String label) {
+      this.level = value;
+      this.name = label;
+    }
+
+    /**
+     * return the enum for an integer level arg
+     *
+     * @param priorityLevel the int value
+     * @return the enum
+     */
+    public static ActionPriority valueOf(final int priorityLevel) {
+      return map.get(priorityLevel);
+    }
+
+    /**
+     * Getter
+     *
+     * @return gotten
+     */
+    public int getLevel() {
+      return this.level;
+    }
+
+    /**
+     * Getter
+     *
+     * @return gotten
+     */
+    public String getName() {
+      return this.name;
+    }
+  }
 }

@@ -1,7 +1,16 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import ma.glasnost.orika.MapperFacade;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,44 +28,23 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanSelectorRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
-/**
- * Tests for the ActionPlanJobServiceImpl
- */
+/** Tests for the ActionPlanJobServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionPlanServiceImplTest {
 
-  @InjectMocks
-  private ActionPlanServiceImpl actionPlanServiceImpl;
-
-  @Mock
-  private ActionPlanRepository actionPlanRepo;
-
-  @Mock
-  private ActionPlanSelectorRepository actionPlanSelectorRepo;
-
-  @Spy
-  private MapperFacade mapperFacade = new ActionBeanMapper();
+  @Mock private ActionPlanRepository actionPlanRepo;
+  @Mock private ActionPlanSelectorRepository actionPlanSelectorRepo;
+  @InjectMocks private ActionPlanServiceImpl actionPlanServiceImpl;
+  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
 
   private List<ActionPlan> actionPlans;
-
-  private static final UUID ACTION_PLAN_ID = UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
+  private static final UUID ACTION_PLAN_ID =
+      UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
   private static final String UPDATED_DESCRIPTION = "New description";
   private static final Date UPDATED_DATE = new Date();
   private static final Timestamp UPDATED_TIMESTAMP = new Timestamp(UPDATED_DATE.getTime());
 
-  /**
-   * Before the test
-   */
+  /** Before the test */
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
@@ -68,7 +56,8 @@ public class ActionPlanServiceImplTest {
     ActionPlan actionPlan = actionPlans.get(0);
     when(actionPlanRepo.saveAndFlush(any())).thenReturn(actionPlan);
 
-    ActionPlanDTO actionPlanDTO = actionPlanServiceImpl.createActionPlan(actionPlan, new ActionPlanSelector());
+    ActionPlanDTO actionPlanDTO =
+        actionPlanServiceImpl.createActionPlan(actionPlan, new ActionPlanSelector());
 
     verify(actionPlanRepo, times(1)).saveAndFlush(actionPlan);
     verify(actionPlanSelectorRepo, times(0)).saveAndFlush(any());
@@ -88,7 +77,8 @@ public class ActionPlanServiceImplTest {
     when(actionPlanSelectorRepo.saveAndFlush(any())).thenReturn(actionPlanSelector);
 
     // When
-    ActionPlanDTO actionPlanDTO = actionPlanServiceImpl.createActionPlan(actionPlan, actionPlanSelector);
+    ActionPlanDTO actionPlanDTO =
+        actionPlanServiceImpl.createActionPlan(actionPlan, actionPlanSelector);
 
     // Then
     verify(actionPlanRepo, times(1)).saveAndFlush(actionPlan);
@@ -109,7 +99,8 @@ public class ActionPlanServiceImplTest {
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
     actionPlanUpdate.setDescription(UPDATED_DESCRIPTION);
-    ActionPlan updatedActionPlan = actionPlanServiceImpl.updateActionPlan(
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(
             ACTION_PLAN_ID, actionPlanUpdate, new ActionPlanSelector());
 
     // Then
@@ -131,7 +122,8 @@ public class ActionPlanServiceImplTest {
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
     actionPlanUpdate.setLastRunDateTime(UPDATED_TIMESTAMP);
-    ActionPlan updatedActionPlan = actionPlanServiceImpl.updateActionPlan(
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(
             ACTION_PLAN_ID, actionPlanUpdate, new ActionPlanSelector());
 
     // Then
@@ -147,9 +139,11 @@ public class ActionPlanServiceImplTest {
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
     ActionPlanSelector actionPlanSelector = new ActionPlanSelector();
-    when(actionPlanSelectorRepo.findFirstByActionPlanFk(actionPlan.getActionPlanPK())).thenReturn(actionPlanSelector);
+    when(actionPlanSelectorRepo.findFirstByActionPlanFk(actionPlan.getActionPlanPK()))
+        .thenReturn(actionPlanSelector);
 
-    ActionPlanSelector savedActionPlanSelector = mapperFacade.map(actionPlanSelector, ActionPlanSelector.class);
+    ActionPlanSelector savedActionPlanSelector =
+        mapperFacade.map(actionPlanSelector, ActionPlanSelector.class);
     HashMap<String, String> selectors = new HashMap<>();
     selectors.put("testKey", "testValue");
     savedActionPlanSelector.setSelectors(selectors);
@@ -158,7 +152,8 @@ public class ActionPlanServiceImplTest {
     // When
     ActionPlanSelector actionPlanSelectorUpdate = new ActionPlanSelector();
     actionPlanSelectorUpdate.setSelectors(selectors);
-    ActionPlan updatedActionPlan = actionPlanServiceImpl.updateActionPlan(
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(
             ACTION_PLAN_ID, new ActionPlan(), actionPlanSelectorUpdate);
 
     // Then
@@ -174,7 +169,8 @@ public class ActionPlanServiceImplTest {
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
     ActionPlanSelector actionPlanSelector = new ActionPlanSelector();
-    when(actionPlanSelectorRepo.findFirstByActionPlanFk(actionPlan.getActionPlanPK())).thenReturn(actionPlanSelector);
+    when(actionPlanSelectorRepo.findFirstByActionPlanFk(actionPlan.getActionPlanPK()))
+        .thenReturn(actionPlanSelector);
     when(actionPlanSelectorRepo.saveAndFlush(any())).thenReturn(null);
 
     // When
@@ -182,7 +178,8 @@ public class ActionPlanServiceImplTest {
     HashMap<String, String> selectors = new HashMap<>();
     selectors.put("testKey", "testValue");
     actionPlanSelectorUpdate.setSelectors(selectors);
-    ActionPlan updatedActionPlan = actionPlanServiceImpl.updateActionPlan(
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(
             ACTION_PLAN_ID, new ActionPlan(), actionPlanSelectorUpdate);
 
     // Then
@@ -190,5 +187,4 @@ public class ActionPlanServiceImplTest {
     verify(actionPlanSelectorRepo, times(1)).saveAndFlush(any());
     assertEquals(updatedActionPlan.getName(), actionPlan.getName());
   }
-
 }

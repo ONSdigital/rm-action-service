@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,39 +19,35 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
-import java.io.IOException;
-
-/**
- * Impl of the service that centralizes all REST calls to the Survey service
- */
+/** Impl of the service that centralizes all REST calls to the Survey service */
 @Slf4j
 @Service
 public class SurveySvcClientServiceImpl implements SurveySvcClientService {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
-  @Autowired
-  private RestTemplate restTemplate;
+  @Autowired private RestTemplate restTemplate;
 
   @Autowired
   @Qualifier("surveySvcClient")
   private RestUtility restUtility;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public SurveyDTO requestDetailsForSurvey(final String surveyId) throws RestClientException {
-    final UriComponents uriComponents = restUtility.createUriComponents(appConfig.getSurveySvc().getRequestSurveyPath(),
-        null, surveyId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getSurveySvc().getRequestSurveyPath(), null, surveyId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     SurveyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {

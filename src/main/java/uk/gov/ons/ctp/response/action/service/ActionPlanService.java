@@ -1,17 +1,14 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 
-import java.util.List;
-import java.util.HashMap;
-import java.util.UUID;
-
-/**
- * The service for ActionPlans
- */
+/** The service for ActionPlans */
 public interface ActionPlanService extends CTPService {
 
   /**
@@ -54,14 +51,16 @@ public interface ActionPlanService extends CTPService {
   ActionPlan findActionPlanByName(String name);
 
   /**
-   * This method returns the action plan after it has been updated. Note that only the description and
-   * the lastGoodRunDatetime can be updated.
+   * This method returns the action plan after it has been updated. Note that only the description
+   * and the lastGoodRunDatetime can be updated.
    *
    * @param actionPlanId This is the action plan id of the action plan to be updated
-   * @param actionPlan   This is the action plan containing the potentially new description and lastGoodRunDatetime
+   * @param actionPlan This is the action plan containing the potentially new description and
+   *     lastGoodRunDatetime
    * @return ActionPlan This returns the updated action plan.
    */
-  ActionPlan updateActionPlan(UUID actionPlanId, ActionPlan actionPlan, ActionPlanSelector actionPlanSelector);
+  ActionPlan updateActionPlan(
+      UUID actionPlanId, ActionPlan actionPlan, ActionPlanSelector actionPlanSelector);
 
   /**
    * This method returns the action plan after it has been created.

@@ -1,20 +1,17 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import java.io.Serializable;
-
-/**
- * Domain model object.
- */
+/** Domain model object. */
 @CoverageIgnore
 @Data
 @Builder

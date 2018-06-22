@@ -1,6 +1,9 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,55 +23,35 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
-
-/**
- * Impl of the service that centralizes all REST calls to the Party service
- */
+/** Impl of the service that centralizes all REST calls to the Party service */
 @Slf4j
 @Service
 public class PartySvcClientServiceImpl implements PartySvcClientService {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
-  @Autowired
-  private RestTemplate restTemplate;
+  @Autowired private RestTemplate restTemplate;
 
   @Autowired
   @Qualifier("partySvcClient")
   private RestUtility restUtility;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    log.debug("Retrieving party with sampleUnitType {} - partyId {}", sampleUnitType, partyId.toString());
-    final UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
-
-    return makePartyServiceRequest(uriComponents);
-  }
-
-  @Retryable(value = {
-      RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
-      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
-  @Override
-  public PartyDTO getPartyWithAssociationsFilteredBySurvey(final String sampleUnitType, final UUID partyId, final String surveyId) {
-    log.debug("Retrieving party with sampleUnitType {} - partyId {}, with associations filtered by surveyId - {}",
-        sampleUnitType, partyId.toString(), surveyId);
-
-    final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
-    queryParams.put("survey_id", Arrays.asList(surveyId));
-
-    final UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), queryParams, sampleUnitType, partyId);
+    log.debug(
+        "Retrieving party with sampleUnitType {} - partyId {}", sampleUnitType, partyId.toString());
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
+            null,
+            sampleUnitType,
+            partyId);
 
     return makePartyServiceRequest(uriComponents);
   }
@@ -76,8 +59,39 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
   @Override
   public PartyDTO getParty(final String sampleUnitType, final String partyId) {
     log.debug("entering party with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
-    final UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, sampleUnitType, partyId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
+            null,
+            sampleUnitType,
+            partyId);
+
+    return makePartyServiceRequest(uriComponents);
+  }
+
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+  @Override
+  public PartyDTO getPartyWithAssociationsFilteredBySurvey(
+      final String sampleUnitType, final UUID partyId, final String surveyId) {
+    log.debug(
+        "Retrieving party with sampleUnitType {}"
+            + " - partyId {}, with associations filtered by surveyId - {}",
+        sampleUnitType,
+        partyId.toString(),
+        surveyId);
+
+    final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+    queryParams.put("survey_id", Arrays.asList(surveyId));
+
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
+            queryParams,
+            sampleUnitType,
+            partyId);
 
     return makePartyServiceRequest(uriComponents);
   }
@@ -85,8 +99,8 @@ public class PartySvcClientServiceImpl implements PartySvcClientService {
   private PartyDTO makePartyServiceRequest(final UriComponents uriComponents) {
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
     log.debug("responseEntity is {}", responseEntity);
 
     PartyDTO result = null;

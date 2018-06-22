@@ -1,5 +1,8 @@
 package uk.gov.ons.ctp.response.action.state;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -9,15 +12,10 @@ import uk.gov.ons.ctp.common.state.StateTransitionManagerFactory;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * A test of the state transition manager It simply has to test a single good
- * and a single bad transition - all it is testing is the underlying mechanism,
- * not a real implementation, where we will want to assert all of the valid and
- * invalid transitions
+ * A test of the state transition manager It simply has to test a single good and a single bad
+ * transition - all it is testing is the underlying mechanism, not a real implementation, where we
+ * will want to assert all of the valid and invalid transitions
  */
 public class TestActionStateTransitionManager {
 
@@ -26,9 +24,7 @@ public class TestActionStateTransitionManager {
   private static final int THREAD_POOL_SIZE = 10;
   private Map<ActionState, Map<ActionEvent, ActionState>> validTransitions = new HashMap<>();
 
-  /**
-   * Setup the transitions
-   */
+  /** Setup the transitions */
   @BeforeClass
   public void setup() {
     final Map<ActionEvent, ActionState> submittedTransitions = new HashMap<>();
@@ -65,9 +61,12 @@ public class TestActionStateTransitionManager {
     cancelSubmittedTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_SUBMITTED);
     cancelSubmittedTransitions.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_SUBMITTED);
     cancelSubmittedTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.CANCELLATION_DISTRIBUTED, ActionState.CANCEL_PENDING);
+    cancelSubmittedTransitions.put(
+        ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_SUBMITTED);
+    cancelSubmittedTransitions.put(
+        ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_SUBMITTED);
+    cancelSubmittedTransitions.put(
+        ActionEvent.CANCELLATION_DISTRIBUTED, ActionState.CANCEL_PENDING);
     validTransitions.put(ActionState.CANCEL_SUBMITTED, cancelSubmittedTransitions);
 
     final Map<ActionEvent, ActionState> cancelPendingTransitions = new HashMap<>();
@@ -76,7 +75,8 @@ public class TestActionStateTransitionManager {
     cancelPendingTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_PENDING);
     cancelPendingTransitions.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_PENDING);
     cancelPendingTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_PENDING);
+    cancelPendingTransitions.put(
+        ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_PENDING);
     cancelPendingTransitions.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_PENDING);
     cancelPendingTransitions.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
     cancelPendingTransitions.put(ActionEvent.CANCELLATION_ACCEPTED, ActionState.CANCELLING);
@@ -94,35 +94,39 @@ public class TestActionStateTransitionManager {
     validTransitions.put(ActionState.CANCELLED, cancelledTransitions);
   }
 
-  /**
-   * test a valid transition
-   */
+  /** test a valid transition */
   @Test(threadPoolSize = THREAD_POOL_SIZE, invocationCount = INVOCATIONS, timeOut = TIMEOUT)
   public void testActionTransitions() {
     final StateTransitionManagerFactory stmFactory = new ActionSvcStateTransitionManagerFactory();
-    final StateTransitionManager<ActionState, ActionEvent> stm = stmFactory
-        .getStateTransitionManager(ActionSvcStateTransitionManagerFactory.ACTION_ENTITY);
+    final StateTransitionManager<ActionState, ActionEvent> stm =
+        stmFactory.getStateTransitionManager(ActionSvcStateTransitionManagerFactory.ACTION_ENTITY);
 
-    validTransitions.forEach((sourceState, transitions) -> {
-      transitions.forEach((actionEvent, actionState) -> {
-        try {
-          Assert.assertEquals(actionState, stm.transition(sourceState, actionEvent));
-        } catch (final CTPException re) {
-          Assert.fail("bad transition!", re);
-        }
-      });
+    validTransitions.forEach(
+        (sourceState, transitions) -> {
+          transitions.forEach(
+              (actionEvent, actionState) -> {
+                try {
+                  Assert.assertEquals(actionState, stm.transition(sourceState, actionEvent));
+                } catch (final CTPException re) {
+                  Assert.fail("bad transition!", re);
+                }
+              });
 
-      Arrays.asList(ActionEvent.values()).forEach(event -> {
-        if (!transitions.keySet().contains(event)) {
-          boolean caught = false;
-          try {
-            stm.transition(sourceState, event);
-          } catch (final CTPException re) {
-            caught = true;
-          }
-          Assert.assertTrue(caught, "Transition " + sourceState + "(" + event + ") should be invalid");
-        }
-      });
-    });
+          Arrays.asList(ActionEvent.values())
+              .forEach(
+                  event -> {
+                    if (!transitions.keySet().contains(event)) {
+                      boolean caught = false;
+                      try {
+                        stm.transition(sourceState, event);
+                      } catch (final CTPException re) {
+                        caught = true;
+                      }
+                      Assert.assertTrue(
+                          caught,
+                          "Transition " + sourceState + "(" + event + ") should be invalid");
+                    }
+                  });
+        });
   }
 }

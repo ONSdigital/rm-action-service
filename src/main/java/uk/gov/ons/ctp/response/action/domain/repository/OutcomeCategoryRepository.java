@@ -5,10 +5,7 @@ import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.OutcomeCategory;
 import uk.gov.ons.ctp.response.action.domain.model.OutcomeHandlerId;
 
-/**
- * JPA Data Repository.
- */
+/** JPA Data Repository. */
 @Repository
-public interface OutcomeCategoryRepository extends JpaRepository<OutcomeCategory, OutcomeHandlerId> {
-
-}
+public interface OutcomeCategoryRepository
+    extends JpaRepository<OutcomeCategory, OutcomeHandlerId> {}

@@ -1,6 +1,13 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import java.util.HashMap;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,17 +18,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.GenerationType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Table;
-import java.util.HashMap;
-
-/**
- * Domain model object.
- */
+/** Domain model object. */
 @CoverageIgnore
 @Entity
 @Data
@@ -35,13 +32,14 @@ public class ActionPlanSelector {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "actionplanselectorseq_gen")
   @GenericGenerator(
-          name = "actionplanselectorseq_gen",
-          strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-          parameters = {
-                  @org.hibernate.annotations.Parameter(name = "sequence_name", value = "action.actionplanselectorseq"),
-                  @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
-          }
-  )
+      name = "actionplanselectorseq_gen",
+      strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+      parameters = {
+        @org.hibernate.annotations.Parameter(
+            name = "sequence_name",
+            value = "action.actionplanselectorseq"),
+        @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
+      })
   @Column(name = "actionplanselectorpk")
   private Integer actionPlanSelectorPK;
 
@@ -51,5 +49,4 @@ public class ActionPlanSelector {
   @Type(type = "jsonb")
   @Column(name = "selectors", columnDefinition = "jsonb")
   private HashMap<String, String> selectors;
-
 }

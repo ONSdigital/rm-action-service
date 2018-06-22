@@ -1,5 +1,11 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -14,16 +20,7 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanSelectorReposi
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-/**
- * Implementation
- */
+/** Implementation */
 @Service
 @Slf4j
 public class ActionPlanServiceImpl implements ActionPlanService {
@@ -37,14 +34,14 @@ public class ActionPlanServiceImpl implements ActionPlanService {
   private MapperFacade mapperFacade;
 
   @Autowired
-  public ActionPlanServiceImpl(final ActionPlanRepository actionPlanRepo,
-                               final ActionPlanSelectorRepository actionPlanSelectorRepository,
-                               final MapperFacade mapperFacade) {
+  public ActionPlanServiceImpl(
+      final ActionPlanRepository actionPlanRepo,
+      final ActionPlanSelectorRepository actionPlanSelectorRepository,
+      final MapperFacade mapperFacade) {
     this.actionPlanRepo = actionPlanRepo;
     this.actionPlanSelectorRepository = actionPlanSelectorRepository;
     this.mapperFacade = mapperFacade;
   }
-
 
   @CoverageIgnore
   @Override
@@ -59,20 +56,26 @@ public class ActionPlanServiceImpl implements ActionPlanService {
     log.debug("Finding action plans by selectors, Selectors: {}", selectors);
     // Get all action plan selectors which match given selectors
     List<ActionPlanSelector> actionPlanSelectors = this.actionPlanSelectorRepository.findAll();
-    List<ActionPlanSelector> filteredAPSelectors = actionPlanSelectors.stream()
+    List<ActionPlanSelector> filteredAPSelectors =
+        actionPlanSelectors
+            .stream()
             .filter(s -> isMatchingSelectors(selectors, s.getSelectors()))
             .collect(Collectors.toList());
 
     // Return all action plans for these selectors
-    return filteredAPSelectors.stream()
-            .map(s -> this.actionPlanRepo.findFirstByActionPlanPK(s.getActionPlanFk()))
-            .collect(Collectors.toList());
+    return filteredAPSelectors
+        .stream()
+        .map(s -> this.actionPlanRepo.findFirstByActionPlanPK(s.getActionPlanFk()))
+        .collect(Collectors.toList());
   }
 
-  private boolean isMatchingSelectors(final HashMap<String, String> searchSelectors,
-                                      final HashMap<String, String> itemSelectors) {
-    return searchSelectors.entrySet().stream()
-            .allMatch((s -> itemSelectors.getOrDefault(s.getKey(), "DEFAULTSTRING").equals(s.getValue())));
+  private boolean isMatchingSelectors(
+      final HashMap<String, String> searchSelectors, final HashMap<String, String> itemSelectors) {
+    return searchSelectors
+        .entrySet()
+        .stream()
+        .allMatch(
+            (s -> itemSelectors.getOrDefault(s.getKey(), "DEFAULTSTRING").equals(s.getValue())));
   }
 
   @CoverageIgnore
@@ -97,10 +100,16 @@ public class ActionPlanServiceImpl implements ActionPlanService {
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
-  public ActionPlanDTO createActionPlan(final ActionPlan actionPlan, final ActionPlanSelector actionPlanSelector) {
-    log.debug("Creating action plan, Name: {}, Selectors: {}",
-            actionPlan.getName(), actionPlanSelector.getSelectors());
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
+  public ActionPlanDTO createActionPlan(
+      final ActionPlan actionPlan, final ActionPlanSelector actionPlanSelector) {
+    log.debug(
+        "Creating action plan, Name: {}, Selectors: {}",
+        actionPlan.getName(),
+        actionPlanSelector.getSelectors());
 
     ActionPlan savedActionPlan = saveActionPlan(actionPlan);
     ActionPlanDTO actionPlanDTO = mapperFacade.map(savedActionPlan, ActionPlanDTO.class);
@@ -110,8 +119,11 @@ public class ActionPlanServiceImpl implements ActionPlanService {
       saveActionPlanSelectors(savedActionPlan, actionPlanSelector);
     }
 
-    log.debug("Successfully created action plan, Name: {}, ActionPlanId: {}, Selectors: {}",
-            actionPlan.getName(), actionPlan.getId(), actionPlanSelector.getSelectors());
+    log.debug(
+        "Successfully created action plan, Name: {}, ActionPlanId: {}, Selectors: {}",
+        actionPlan.getName(),
+        actionPlan.getId(),
+        actionPlanSelector.getSelectors());
     return actionPlanDTO;
   }
 
@@ -121,15 +133,21 @@ public class ActionPlanServiceImpl implements ActionPlanService {
     return this.actionPlanRepo.saveAndFlush(actionPlan);
   }
 
-  private ActionPlanSelector saveActionPlanSelectors(final ActionPlan actionPlan, final ActionPlanSelector actionPlanSelector) {
+  private ActionPlanSelector saveActionPlanSelectors(
+      final ActionPlan actionPlan, final ActionPlanSelector actionPlanSelector) {
     actionPlanSelector.setActionPlanFk(actionPlan.getActionPlanPK());
     return this.actionPlanSelectorRepository.saveAndFlush(actionPlanSelector);
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   public ActionPlan updateActionPlan(
-          final UUID actionPlanId, final ActionPlan actionPlan, final ActionPlanSelector actionPlanSelector) {
+      final UUID actionPlanId,
+      final ActionPlan actionPlan,
+      final ActionPlanSelector actionPlanSelector) {
     log.debug("Updating action plan, ActionPlanId: {}", actionPlanId);
     ActionPlan existingActionPlan = this.actionPlanRepo.findById(actionPlanId);
     if (existingActionPlan != null) {
@@ -153,31 +171,39 @@ public class ActionPlanServiceImpl implements ActionPlanService {
 
       final HashMap<String, String> selectors = actionPlanSelector.getSelectors();
       if (selectors != null) {
-        ActionPlanSelector savedActionPlanSelector = updateActionPlanSelectors(existingActionPlan, selectors);
+        ActionPlanSelector savedActionPlanSelector =
+            updateActionPlanSelectors(existingActionPlan, selectors);
       }
     }
     return existingActionPlan;
   }
 
   private ActionPlanSelector updateActionPlanSelectors(
-          final ActionPlan actionPlan, final HashMap<String, String> selectors) {
-    log.debug("Updating action plan selectors, ActionPlanId: {}, Selectors: {}", actionPlan.getId(), selectors);
+      final ActionPlan actionPlan, final HashMap<String, String> selectors) {
+    log.debug(
+        "Updating action plan selectors, ActionPlanId: {}, Selectors: {}",
+        actionPlan.getId(),
+        selectors);
 
     ActionPlanSelector savedActionPlanSelector;
-    ActionPlanSelector existingActionPlanSelector = this.actionPlanSelectorRepository.findFirstByActionPlanFk(
-            actionPlan.getActionPlanPK());
+    ActionPlanSelector existingActionPlanSelector =
+        this.actionPlanSelectorRepository.findFirstByActionPlanFk(actionPlan.getActionPlanPK());
     if (existingActionPlanSelector != null) {
       existingActionPlanSelector.setSelectors(selectors);
-      savedActionPlanSelector = this.actionPlanSelectorRepository.saveAndFlush(existingActionPlanSelector);
+      savedActionPlanSelector =
+          this.actionPlanSelectorRepository.saveAndFlush(existingActionPlanSelector);
     } else {
       ActionPlanSelector newActionPlanSelector = new ActionPlanSelector();
       newActionPlanSelector.setActionPlanFk(actionPlan.getActionPlanPK());
       newActionPlanSelector.setSelectors(selectors);
-      savedActionPlanSelector = this.actionPlanSelectorRepository.saveAndFlush(newActionPlanSelector);
+      savedActionPlanSelector =
+          this.actionPlanSelectorRepository.saveAndFlush(newActionPlanSelector);
     }
 
-    log.debug("Successfully updated action plan selectors, ActionPlanId: {}, Selectors: {}",
-            actionPlan.getId(), selectors);
+    log.debug(
+        "Successfully updated action plan selectors, ActionPlanId: {}, Selectors: {}",
+        actionPlan.getId(),
+        selectors);
     return savedActionPlanSelector;
   }
 }

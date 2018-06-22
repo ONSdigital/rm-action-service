@@ -3,9 +3,7 @@ package uk.gov.ons.ctp.response.action.config;
 import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
 
-/**
- * Config POJO for distribition params
- */
+/** Config POJO for distribition params */
 @CoverageIgnore
 @Data
 public class ActionDistribution {

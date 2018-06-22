@@ -8,18 +8,12 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
 
-
-
-/**
- * Implementation
- */
+/** Implementation */
 @Service
 @Slf4j
 public class ActionTypeServiceImpl implements ActionTypeService {
 
-
-  @Autowired
-  private ActionTypeRepository actionTypeRepo;
+  @Autowired private ActionTypeRepository actionTypeRepo;
 
   @CoverageIgnore
   @Override

@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action;
 
+import java.math.BigInteger;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
@@ -37,11 +38,7 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
 
-import java.math.BigInteger;
-
-/**
- * The main entry point into the Action Service SpringBoot Application.
- */
+/** The main entry point into the Action Service SpringBoot Application. */
 @CoverageIgnore
 @SpringBootApplication
 @EnableTransactionManagement
@@ -59,11 +56,18 @@ public class ActionSvcApplication {
   public static final String ACTION_EXECUTION_LOCK = "actionsvc.action.execution";
   public static final String REPORT_EXECUTION_LOCK = "actionsvc.report.execution";
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
-  @Autowired
-  private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
+  @Autowired private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
+
+  /**
+   * This method is the entry point to the Spring Boot application.
+   *
+   * @param args These are the optional command line arguments
+   */
+  public static void main(final String[] args) {
+    SpringApplication.run(ActionSvcApplication.class, args);
+  }
 
   /**
    * Bean used to access Distributed List Manager
@@ -72,8 +76,10 @@ public class ActionSvcApplication {
    * @return the Distributed List Manager
    */
   @Bean
-  public DistributedListManager<BigInteger> actionDistributionListManager(final RedissonClient redissonClient) {
-    return new DistributedListManagerRedissonImpl<BigInteger>(ActionSvcApplication.ACTION_DISTRIBUTION_LIST,
+  public DistributedListManager<BigInteger> actionDistributionListManager(
+      final RedissonClient redissonClient) {
+    return new DistributedListManagerRedissonImpl<BigInteger>(
+        ActionSvcApplication.ACTION_DISTRIBUTION_LIST,
         redissonClient,
         appConfig.getDataGrid().getListTimeToWaitSeconds(),
         appConfig.getDataGrid().getListTimeToLiveSeconds());
@@ -86,8 +92,11 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedLockManager actionPlanExecutionLockManager(final RedissonClient redissonClient) {
-    return new DistributedLockManagerRedissonImpl(ActionSvcApplication.ACTION_EXECUTION_LOCK, redissonClient,
+  public DistributedLockManager actionPlanExecutionLockManager(
+      final RedissonClient redissonClient) {
+    return new DistributedLockManagerRedissonImpl(
+        ActionSvcApplication.ACTION_EXECUTION_LOCK,
+        redissonClient,
         appConfig.getDataGrid().getLockTimeToLiveSeconds());
   }
 
@@ -98,7 +107,8 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedInstanceManager reportDistributedInstanceManager(final RedissonClient redissonClient) {
+  public DistributedInstanceManager reportDistributedInstanceManager(
+      final RedissonClient redissonClient) {
     return new DistributedInstanceManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient);
   }
 
@@ -109,8 +119,11 @@ public class ActionSvcApplication {
    * @return the Distributed Lock Manager
    */
   @Bean
-  public DistributedLatchManager reportDistributedLatchManager(final RedissonClient redissonClient) {
-    return new DistributedLatchManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient,
+  public DistributedLatchManager reportDistributedLatchManager(
+      final RedissonClient redissonClient) {
+    return new DistributedLatchManagerRedissonImpl(
+        REPORT_EXECUTION_LOCK,
+        redissonClient,
         appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
   }
 
@@ -122,7 +135,9 @@ public class ActionSvcApplication {
    */
   @Bean
   public DistributedLockManager reportDistributedLockManager(final RedissonClient redissonClient) {
-    return new DistributedLockManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient,
+    return new DistributedLockManagerRedissonImpl(
+        REPORT_EXECUTION_LOCK,
+        redissonClient,
         appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
   }
 
@@ -134,7 +149,8 @@ public class ActionSvcApplication {
   @Bean
   public RedissonClient redissonClient() {
     final Config config = new Config();
-    config.useSingleServer()
+    config
+        .useSingleServer()
         .setAddress(appConfig.getDataGrid().getAddress())
         .setPassword(appConfig.getDataGrid().getPassword());
     return Redisson.create(config);
@@ -170,7 +186,8 @@ public class ActionSvcApplication {
   @Bean
   @Qualifier("collectionExerciseSvcClient")
   public RestUtility collectionClient() {
-    final RestUtility restUtility = new RestUtility(appConfig.getCollectionExerciseSvc().getConnectionConfig());
+    final RestUtility restUtility =
+        new RestUtility(appConfig.getCollectionExerciseSvc().getConnectionConfig());
     return restUtility;
   }
 
@@ -204,7 +221,8 @@ public class ActionSvcApplication {
    * @return the state transition manager specifically for Actions
    */
   @Bean
-  public StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager() {
+  public StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager() {
     return actionSvcStateTransitionManagerFactory.getStateTransitionManager(
         ActionSvcStateTransitionManagerFactory.ACTION_ENTITY);
   }
@@ -230,14 +248,5 @@ public class ActionSvcApplication {
     final CustomObjectMapper mapper = new CustomObjectMapper();
 
     return mapper;
-  }
-
-  /**
-   * This method is the entry point to the Spring Boot application.
-   *
-   * @param args These are the optional command line arguments
-   */
-  public static void main(final String[] args) {
-    SpringApplication.run(ActionSvcApplication.class, args);
   }
 }

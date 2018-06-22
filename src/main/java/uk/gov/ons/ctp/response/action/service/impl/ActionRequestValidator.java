@@ -16,9 +16,9 @@ public class ActionRequestValidator {
   public static final String ACTIONEXPORTER = "PRINTER";
 
   /**
-   * Validates whether the ActionRequest should be sent to a handler service.
-   * Contains the business logic for deciding whether the recipient is to receive an email or letter,
-   * dependent on the status of their account and the response.
+   * Validates whether the ActionRequest should be sent to a handler service. Contains the business
+   * logic for deciding whether the recipient is to receive an email or letter, dependent on the
+   * status of their account and the response.
    *
    * @param actionType
    * @param actionRequest
@@ -39,29 +39,37 @@ public class ActionRequestValidator {
       return validateLetter(actionRequest);
     }
 
-    log.info("Invalid action request: handler = {} : respondentStatus {} :  enrolmentStatus {} : actionTypePK {}",
-        handler, actionRequest.getCaseGroupStatus(), actionRequest.getEnrolmentStatus(),
+    log.info(
+        "Invalid action request: handler = {} : respondentStatus {} :  enrolmentStatus {} :"
+            + " actionTypePK {}",
+        handler,
+        actionRequest.getCaseGroupStatus(),
+        actionRequest.getEnrolmentStatus(),
         actionType.getActionTypePK());
 
     return false;
   }
 
-
   private boolean validateEmail(final ActionType actionType, final ActionRequest actionRequest) {
     if (isNotificationEmail(actionType)) {
       return true;
     }
-    if (isReminderEmail(actionType) && (caseInProgress(actionRequest) || caseNotStarted(actionRequest))) {
+    if (isReminderEmail(actionType)
+        && (caseInProgress(actionRequest) || caseNotStarted(actionRequest))) {
       return true;
     }
     return false;
   }
 
   private boolean validateLetter(final ActionRequest actionRequest) {
-    if (hasNoRespondent(actionRequest) && hasNoEnrolment(actionRequest) && caseNotStarted(actionRequest)) {
+    if (hasNoRespondent(actionRequest)
+        && hasNoEnrolment(actionRequest)
+        && caseNotStarted(actionRequest)) {
       return true;
     }
-    if (enrolmentPending(actionRequest) && hasCreatedRespondent(actionRequest) && caseNotStarted(actionRequest)) {
+    if (enrolmentPending(actionRequest)
+        && hasCreatedRespondent(actionRequest)
+        && caseNotStarted(actionRequest)) {
       return true;
     }
     return false;
@@ -88,15 +96,21 @@ public class ActionRequestValidator {
   }
 
   private boolean caseCompletedByPhone(final ActionRequest actionRequest) {
-    return CaseGroupStatus.COMPLETEDBYPHONE.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
+    return CaseGroupStatus.COMPLETEDBYPHONE
+        .toString()
+        .equalsIgnoreCase(actionRequest.getCaseGroupStatus());
   }
 
   private boolean caseInProgress(final ActionRequest actionRequest) {
-    return CaseGroupStatus.INPROGRESS.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
+    return CaseGroupStatus.INPROGRESS
+        .toString()
+        .equalsIgnoreCase(actionRequest.getCaseGroupStatus());
   }
 
   private boolean caseNotStarted(final ActionRequest actionRequest) {
-    return CaseGroupStatus.NOTSTARTED.toString().equalsIgnoreCase(actionRequest.getCaseGroupStatus());
+    return CaseGroupStatus.NOTSTARTED
+        .toString()
+        .equalsIgnoreCase(actionRequest.getCaseGroupStatus());
   }
 
   private boolean enrolmentPending(final ActionRequest actionRequest) {
@@ -122,5 +136,4 @@ public class ActionRequestValidator {
   private boolean hasNoRespondent(final ActionRequest actionRequest) {
     return actionRequest.getRespondentStatus() == null;
   }
-
 }
