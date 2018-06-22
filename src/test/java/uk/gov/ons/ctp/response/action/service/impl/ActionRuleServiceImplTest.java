@@ -1,5 +1,16 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,29 +22,18 @@ import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
-/**
- * Tests for ActionServiceImpl
- */
+/** Tests for ActionServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionRuleServiceImplTest {
 
-  private static final UUID ACTION_RULE_ID_1 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
-  private static final UUID ACTION_RULE_ID_2 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72bd9");
+  private static final UUID ACTION_RULE_ID_1 =
+      UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
+  private static final UUID ACTION_RULE_ID_2 =
+      UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72bd9");
 
-  @InjectMocks
-  private ActionRuleServiceImpl actionRuleServiceImpl;
+  @InjectMocks private ActionRuleServiceImpl actionRuleServiceImpl;
 
-  @Mock
-  private ActionRuleRepository actionRuleRepo;
+  @Mock private ActionRuleRepository actionRuleRepo;
 
   private List<ActionRule> actionrules;
 

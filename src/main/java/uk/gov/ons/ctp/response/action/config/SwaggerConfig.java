@@ -16,20 +16,19 @@ import uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint;
 import uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint;
 import uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint;
 
-
-/**
- * Config POJO for Swagger UI
- */
+/** Config POJO for Swagger UI */
 @CoverageIgnore
 @Configuration
 @EnableSwagger2
-@ComponentScan(basePackageClasses = {
-    ActionEndpoint.class, ActionPlanEndpoint.class, ActionPlanJobEndpoint.class
-})
+@ComponentScan(
+    basePackageClasses = {
+      ActionEndpoint.class,
+      ActionPlanEndpoint.class,
+      ActionPlanJobEndpoint.class
+    })
 public class SwaggerConfig {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
   /**
    * Initialises Swagger settings and set properties.
@@ -41,11 +40,12 @@ public class SwaggerConfig {
 
     final SwaggerSettings swaggerSettings = appConfig.getSwaggerSettings();
 
-    final ApiInfo apiInfo = new ApiInfoBuilder()
-        .title(swaggerSettings.getTitle())
-        .description(swaggerSettings.getDescription())
-        .version(swaggerSettings.getVersion())
-        .build();
+    final ApiInfo apiInfo =
+        new ApiInfoBuilder()
+            .title(swaggerSettings.getTitle())
+            .description(swaggerSettings.getDescription())
+            .version(swaggerSettings.getVersion())
+            .build();
 
     final java.util.function.Predicate<String> pathSelector;
 
@@ -63,5 +63,4 @@ public class SwaggerConfig {
         .paths(pathSelector::test)
         .build();
   }
-
 }

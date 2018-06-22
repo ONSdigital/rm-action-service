@@ -4,7 +4,8 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 
 /**
- * Interface for the receipt of case lifecycle notification messages from the Spring Integration queue
+ * Interface for the receipt of case lifecycle notification messages from the Spring Integration
+ * queue
  */
 public interface CaseNotificationReceiver {
 

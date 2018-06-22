@@ -1,5 +1,12 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,17 +14,7 @@ import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.util.UUID;
-
-/**
- * Domain model object.
- */
+/** Domain model object. */
 @CoverageIgnore
 @Entity
 @Data
@@ -32,15 +29,15 @@ public class ActionRule {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "actionruleseq_gen")
   @GenericGenerator(
-          name = "actionruleseq_gen",
-          strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-          parameters = {
-                  @org.hibernate.annotations.Parameter(name = "sequence_name", value = "action.actionruleseq"),
-                  @org.hibernate.annotations.Parameter(name = "initial_value", value = "1000"),
-                  @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
-          }
-  )
-
+      name = "actionruleseq_gen",
+      strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+      parameters = {
+        @org.hibernate.annotations.Parameter(
+            name = "sequence_name",
+            value = "action.actionruleseq"),
+        @org.hibernate.annotations.Parameter(name = "initial_value", value = "1000"),
+        @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
+      })
   @Column(name = "actionrulepk")
   private Integer actionRulePK;
 
@@ -58,5 +55,4 @@ public class ActionRule {
   private Integer daysOffset;
 
   private Integer priority;
-
 }

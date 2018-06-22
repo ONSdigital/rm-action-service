@@ -16,9 +16,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
 
-/**
- * The bean mapper to go from Entity objects to Presentation objects.
- */
+/** The bean mapper to go from Entity objects to Presentation objects. */
 @Component
 @Primary
 public class ActionBeanMapper extends ConfigurableMapper {
@@ -47,15 +45,9 @@ public class ActionBeanMapper extends ConfigurableMapper {
         .byDefault()
         .register();
 
-    factory
-        .classMap(ActionPlanJob.class, ActionPlanJobDTO.class)
-        .byDefault()
-        .register();
+    factory.classMap(ActionPlanJob.class, ActionPlanJobDTO.class).byDefault().register();
 
-    factory
-        .classMap(ActionFeedback.class, ActionFeedbackDTO.class)
-        .byDefault()
-        .register();
+    factory.classMap(ActionFeedback.class, ActionFeedbackDTO.class).byDefault().register();
 
     factory
         .classMap(ActionPostRequestDTO.class, Action.class)

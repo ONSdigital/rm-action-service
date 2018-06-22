@@ -1,5 +1,18 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertThat;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,23 +31,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertThat;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-/**
- * Tests for ActionServiceImpl
- */
+/** Tests for ActionServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionServiceImplTest {
 
@@ -43,17 +40,15 @@ public class ActionServiceImplTest {
   private static final UUID ACTION_ID_3 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72bd9");
   private static final String ACTION_TYPENAME = "HouseholdInitialContact";
 
-  @InjectMocks
-  private ActionServiceImpl actionServiceImpl;
+  @InjectMocks private ActionServiceImpl actionServiceImpl;
+
+  @Mock private ActionRepository actionRepo;
+
+  @Mock private ActionTypeRepository actionTypeRepo;
 
   @Mock
-  private ActionRepository actionRepo;
-
-  @Mock
-  private ActionTypeRepository actionTypeRepo;
-
-  @Mock
-  private StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
+  private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager;
 
   private List<Action> actions;
   private List<ActionFeedback> actionFeedback;
@@ -73,13 +68,17 @@ public class ActionServiceImplTest {
   }
 
   @Test
-  public void cancelActionsForACaseAndVerifyActionsAreUpdatedAndFlushedActionsReturned() throws Exception {
+  public void cancelActionsForACaseAndVerifyActionsAreUpdatedAndFlushedActionsReturned()
+      throws Exception {
     when(actionRepo.findByCaseId(ACTION_CASEID)).thenReturn(actions);
-    when(actionSvcStateTransitionManager.transition(ActionState.PENDING, ActionEvent.REQUEST_CANCELLED))
+    when(actionSvcStateTransitionManager.transition(
+            ActionState.PENDING, ActionEvent.REQUEST_CANCELLED))
         .thenReturn(ActionState.CANCELLED);
-    when(actionSvcStateTransitionManager.transition(ActionState.SUBMITTED, ActionEvent.REQUEST_CANCELLED))
+    when(actionSvcStateTransitionManager.transition(
+            ActionState.SUBMITTED, ActionEvent.REQUEST_CANCELLED))
         .thenReturn(ActionState.CANCELLED);
-    when(actionSvcStateTransitionManager.transition(ActionState.ACTIVE, ActionEvent.REQUEST_CANCELLED))
+    when(actionSvcStateTransitionManager.transition(
+            ActionState.ACTIVE, ActionEvent.REQUEST_CANCELLED))
         .thenReturn(ActionState.CANCELLED);
 
     final List<Action> flushedActions = actionServiceImpl.cancelActions(ACTION_CASEID);
@@ -94,10 +93,10 @@ public class ActionServiceImplTest {
     final List<Action> originalActions = FixtureHelper.loadClassFixtures(Action[].class);
 
     verify(actionRepo, times(1)).findByCaseId(ACTION_CASEID);
-    verify(actionSvcStateTransitionManager, times(1)).transition(
-        originalActions.get(0).getState(), ActionEvent.REQUEST_CANCELLED);
-    verify(actionSvcStateTransitionManager, times(1)).transition(
-        originalActions.get(1).getState(), ActionEvent.REQUEST_CANCELLED);
+    verify(actionSvcStateTransitionManager, times(1))
+        .transition(originalActions.get(0).getState(), ActionEvent.REQUEST_CANCELLED);
+    verify(actionSvcStateTransitionManager, times(1))
+        .transition(originalActions.get(1).getState(), ActionEvent.REQUEST_CANCELLED);
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
     verify(actionRepo, times(1)).saveAndFlush(actions.get(1));
 
@@ -107,20 +106,20 @@ public class ActionServiceImplTest {
   @Test
   public void feedbackActionVerifyActionAreUpdatedAndStateHasChanged() throws Exception {
     when(actionRepo.findById(ACTION_ID_0)).thenReturn(actions.get(0));
-    when(actionSvcStateTransitionManager.transition(ActionState.PENDING, ActionEvent.REQUEST_COMPLETED))
+    when(actionSvcStateTransitionManager.transition(
+            ActionState.PENDING, ActionEvent.REQUEST_COMPLETED))
         .thenReturn(ActionState.COMPLETED);
     when(actionRepo.saveAndFlush(any())).then(returnsFirstArg());
 
     actionServiceImpl.feedBackAction(actionFeedback.get(0));
 
-    final ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
+    final ActionDTO.ActionEvent event =
+        ActionDTO.ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
     final Action originalAction = FixtureHelper.loadClassFixtures(Action[].class).get(0);
 
     verify(actionRepo, times(1)).findById(ACTION_ID_0);
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
-    verify(actionSvcStateTransitionManager, times(1)).transition(originalAction.getState(),
-        event);
-
+    verify(actionSvcStateTransitionManager, times(1)).transition(originalAction.getState(), event);
   }
 
   @Test

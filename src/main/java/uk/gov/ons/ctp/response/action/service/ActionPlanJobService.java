@@ -1,15 +1,12 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import java.util.List;
+import java.util.UUID;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 
-import java.util.List;
-import java.util.UUID;
-
-/**
- * The service for ActionPlanJobs
- */
+/** The service for ActionPlanJobs */
 public interface ActionPlanJobService extends CTPService {
   /**
    * This method returns the action plan job for the specified action plan job id.
@@ -29,8 +26,8 @@ public interface ActionPlanJobService extends CTPService {
   List<ActionPlanJob> findActionPlanJobsForActionPlan(UUID actionPlanId) throws CTPException;
 
   /**
-   * Will be called by the endpoint when a manual execution of an action plan is requested
-   * Create an action plan job and execute it
+   * Will be called by the endpoint when a manual execution of an action plan is requested Create an
+   * action plan job and execute it
    *
    * @param actionPlanJob This is the actionPlanJob for the action plan job to be created
    * @return ActionPlanJob This returns the newly created action plan job.

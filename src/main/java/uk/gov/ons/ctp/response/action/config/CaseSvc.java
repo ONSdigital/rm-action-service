@@ -4,10 +4,7 @@ import lombok.Data;
 import net.sourceforge.cobertura.CoverageIgnore;
 import uk.gov.ons.ctp.common.rest.RestUtilityConfig;
 
-/**
- * App config POJO for Case service access - host/location and endpoint
- * locations
- */
+/** App config POJO for Case service access - host/location and endpoint locations */
 @CoverageIgnore
 @Data
 public class CaseSvc {

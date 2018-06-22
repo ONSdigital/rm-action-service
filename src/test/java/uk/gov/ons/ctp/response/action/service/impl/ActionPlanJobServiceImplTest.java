@@ -1,5 +1,13 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,42 +31,23 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-/**
- * Tests for the ActionPlanJobServiceImpl
- */
+/** Tests for the ActionPlanJobServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionPlanJobServiceImplTest {
 
-  @Mock
-  private DistributedLockManager actionPlanExecutionLockManager;
+  @Mock private DistributedLockManager actionPlanExecutionLockManager;
 
-  @Spy
-  private AppConfig appConfig = new AppConfig();
+  @Spy private AppConfig appConfig = new AppConfig();
 
-  @Mock
-  private ActionPlanRepository actionPlanRepo;
+  @Mock private ActionPlanRepository actionPlanRepo;
 
-  @Mock
-  private ActionCaseRepository actionCaseRepo;
+  @Mock private ActionCaseRepository actionCaseRepo;
 
-  @Mock
-  private ActionPlanJobRepository actionPlanJobRepo;
+  @Mock private ActionPlanJobRepository actionPlanJobRepo;
 
-  @InjectMocks
-  private ActionPlanJobServiceImpl actionPlanJobServiceImpl;
+  @InjectMocks private ActionPlanJobServiceImpl actionPlanJobServiceImpl;
 
-  /**
-   * Initialises Mockito
-   */
+  /** Initialises Mockito */
   @Before
   public void setUp() throws Exception {
     final PlanExecution planExecution = new PlanExecution();
@@ -70,13 +59,15 @@ public class ActionPlanJobServiceImplTest {
   }
 
   /**
-   * Test the service method called by the endpoint where exec is forced ie the service should disregard last exec times
+   * Test the service method called by the endpoint where exec is forced ie the service should
+   * disregard last exec times
    */
   @Test
   public void testCreateAndExecuteActionPlanJobForcedExecutionBlueSky() throws Exception {
     // load fixtures
     final List<ActionPlan> actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    final List<ActionPlanJob> actionPlanJobs = FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
+    final List<ActionPlanJob> actionPlanJobs =
+        FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
     final List<ActionCase> actionCases = FixtureHelper.loadClassFixtures(ActionCase[].class);
 
     // wire up mock responses
@@ -86,13 +77,15 @@ public class ActionPlanJobServiceImplTest {
     Mockito.when(actionCaseRepo.createActions(1)).thenReturn(Boolean.TRUE);
 
     // let it roll
-    final ActionPlanJob executedJob = actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
+    final ActionPlanJob executedJob =
+        actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
 
     // assert the right calls were made
     verify(actionPlanRepo).findOne(1);
     verify(actionCaseRepo).countByActionPlanFK(1);
 
-    final ArgumentCaptor<ActionPlanJob> actionPlanJob = ArgumentCaptor.forClass(ActionPlanJob.class);
+    final ArgumentCaptor<ActionPlanJob> actionPlanJob =
+        ArgumentCaptor.forClass(ActionPlanJob.class);
     verify(actionPlanJobRepo).save(actionPlanJob.capture());
     final ActionPlanJob savedJob = actionPlanJob.getValue();
     assertEquals(actionPlanJobs.get(0), savedJob);
@@ -113,13 +106,15 @@ public class ActionPlanJobServiceImplTest {
 
     // load fixtures
     final List<ActionPlan> actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    final List<ActionPlanJob> actionPlanJobs = FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
+    final List<ActionPlanJob> actionPlanJobs =
+        FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
 
     // let it roll
-    final ActionPlanJob executedJob = actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
+    final ActionPlanJob executedJob =
+        actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
 
     // assert the right calls were made
     verify(actionPlanJobRepo, times(0)).save(actionPlanJobs.get(0));
@@ -127,23 +122,23 @@ public class ActionPlanJobServiceImplTest {
     Assert.assertNull(executedJob);
   }
 
-  /**
-   * Test the endpoint forced exec method handles no open cases for an action plan gracefully
-   */
+  /** Test the endpoint forced exec method handles no open cases for an action plan gracefully */
   @Test
   public void testCreateAndExecuteActionPlanJobForcedExecutionNoCases() throws Exception {
 
     // load fixtures
     final List<ActionPlan> actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    final List<ActionPlanJob> actionPlanJobs = FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
+    final List<ActionPlanJob> actionPlanJobs =
+        FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
     final List<ActionCase> actionCases = new ArrayList<>();
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
     Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
 
-    //let it roll
-    final ActionPlanJob executedJob = actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
+    // let it roll
+    final ActionPlanJob executedJob =
+        actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
 
     // assert the right calls were made
     verify(actionPlanRepo).findOne(1);
@@ -155,8 +150,8 @@ public class ActionPlanJobServiceImplTest {
   }
 
   /**
-   * Test that the service method that execs ALL plans works when all plans require running due to expired
-   * last run times
+   * Test that the service method that execs ALL plans works when all plans require running due to
+   * expired last run times
    */
   @Test
   public void testCreateAndExecuteActionPlanJobUnForcedExecutionPlanDoesRun() throws Exception {
@@ -169,7 +164,8 @@ public class ActionPlanJobServiceImplTest {
     final Timestamp lastExecutionTime = new Timestamp(now.getTime() - 10000);
     actionPlans.forEach(actionPlan -> actionPlan.setLastRunDateTime(lastExecutionTime));
 
-    final List<ActionPlanJob> actionPlanJobs = FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
+    final List<ActionPlanJob> actionPlanJobs =
+        FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findAll()).thenReturn(actionPlans);
@@ -177,12 +173,13 @@ public class ActionPlanJobServiceImplTest {
     Mockito.when(actionPlanRepo.findOne(2)).thenReturn(actionPlans.get(1));
     Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(1L);
     Mockito.when(actionCaseRepo.countByActionPlanFK(2)).thenReturn(1L);
-    Mockito.when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
+    Mockito.when(actionPlanJobRepo.save(any(ActionPlanJob.class)))
+        .thenReturn(actionPlanJobs.get(0));
     Mockito.when(actionCaseRepo.createActions(1)).thenReturn(Boolean.TRUE);
 
-
     // let it roll
-    final List<ActionPlanJob> executedJobs = actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
+    final List<ActionPlanJob> executedJobs =
+        actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
 
     // assert the right calls were made
     verify(actionPlanRepo, times(1)).findAll();
@@ -213,7 +210,8 @@ public class ActionPlanJobServiceImplTest {
     Mockito.when(actionPlanRepo.findOne(2)).thenReturn(actionPlans.get(1));
 
     // let it roll
-    final List<ActionPlanJob> executedJobs = actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
+    final List<ActionPlanJob> executedJobs =
+        actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
 
     // assert the right calls were made
     verify(actionPlanJobRepo, times(0)).save(any(ActionPlanJob.class));

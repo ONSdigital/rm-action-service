@@ -3,9 +3,7 @@ package uk.gov.ons.ctp.response.action.service;
 import org.springframework.web.client.RestClientException;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
-/**
- * Service responsible for making client calls to the Survey service
- */
+/** Service responsible for making client calls to the Survey service */
 public interface SurveySvcClientService {
 
   /**

@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,30 +24,23 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 /**
- * An ActionService implementation which encapsulates all business logic
- * operating on the Action entity model.
+ * An ActionService implementation which encapsulates all business logic operating on the Action
+ * entity model.
  */
-
 @Service
 @Slf4j
 public class ActionServiceImpl implements ActionService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  @Autowired
-  private ActionRepository actionRepo;
+  @Autowired private ActionRepository actionRepo;
+
+  @Autowired private ActionTypeRepository actionTypeRepo;
 
   @Autowired
-  private ActionTypeRepository actionTypeRepo;
-
-  @Autowired
-  private StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager;
+  private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager;
 
   @CoverageIgnore
   @Override
@@ -54,8 +51,8 @@ public class ActionServiceImpl implements ActionService {
 
   @CoverageIgnore
   @Override
-  public List<Action> findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(final String actionTypeName,
-                                                                                  final ActionDTO.ActionState state) {
+  public List<Action> findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(
+      final String actionTypeName, final ActionDTO.ActionState state) {
     log.debug("Entering findActionsByTypeAndState with {} {}", actionTypeName, state);
     return actionRepo.findByActionTypeNameAndStateOrderByCreatedDateTimeDesc(actionTypeName, state);
   }
@@ -95,7 +92,10 @@ public class ActionServiceImpl implements ActionService {
     return actionRepo.findByCaseIdOrderByCreatedDateTimeDesc(caseId);
   }
 
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   @Override
   public List<Action> cancelActions(final UUID caseId) throws CTPException {
     log.debug("Entering cancelAction with {}", caseId);
@@ -104,9 +104,11 @@ public class ActionServiceImpl implements ActionService {
     final List<Action> actions = actionRepo.findByCaseId(caseId);
     for (final Action action : actions) {
       if (action.getActionType().getCanCancel()) {
-        log.debug("Cancelling action {} of type {}", action.getId(), action.getActionType().getName());
-        final ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(),
-            ActionEvent.REQUEST_CANCELLED);
+        log.debug(
+            "Cancelling action {} of type {}", action.getId(), action.getActionType().getName());
+        final ActionDTO.ActionState nextState =
+            actionSvcStateTransitionManager.transition(
+                action.getState(), ActionEvent.REQUEST_CANCELLED);
         action.setState(nextState);
         action.setUpdatedDateTime(DateTimeUtil.nowUTC());
         actionRepo.saveAndFlush(action);
@@ -116,7 +118,10 @@ public class ActionServiceImpl implements ActionService {
     return flushedActions;
   }
 
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action feedBackAction(final ActionFeedback actionFeedback) throws CTPException {
     final String actionId = actionFeedback.getActionId();
@@ -126,10 +131,12 @@ public class ActionServiceImpl implements ActionService {
     if (!StringUtils.isEmpty(actionId)) {
       result = actionRepo.findById(UUID.fromString(actionId));
       if (result != null) {
-        final ActionDTO.ActionEvent event = ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
+        final ActionDTO.ActionEvent event =
+            ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
         result.setSituation(actionFeedback.getSituation());
         result.setUpdatedDateTime(DateTimeUtil.nowUTC());
-        final ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(result.getState(), event);
+        final ActionDTO.ActionState nextState =
+            actionSvcStateTransitionManager.transition(result.getState(), event);
         result.setState(nextState);
         result = actionRepo.saveAndFlush(result);
       }
@@ -138,7 +145,10 @@ public class ActionServiceImpl implements ActionService {
     return result;
   }
 
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action createAction(final Action action) {
     log.debug("Entering createAdhocAction with {}", action);
@@ -146,7 +156,8 @@ public class ActionServiceImpl implements ActionService {
     // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);
 
-    // the incoming action has a placeholder action type with the name as provided to the caller but we need the entire
+    // the incoming action has a placeholder action type with the name as provided to the caller but
+    // we need the entire
     // action type object for that action type name
     final ActionType actionType = actionTypeRepo.findByName(action.getActionType().getName());
     action.setActionType(actionType);
@@ -158,7 +169,10 @@ public class ActionServiceImpl implements ActionService {
     return actionRepo.saveAndFlush(action);
   }
 
-  @Transactional(propagation = Propagation.REQUIRED, readOnly = false, timeout = TRANSACTION_TIMEOUT)
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   @Override
   public Action updateAction(final Action action) {
     final UUID actionId = action.getId();
@@ -189,5 +203,4 @@ public class ActionServiceImpl implements ActionService {
     }
     return existingAction;
   }
-
 }

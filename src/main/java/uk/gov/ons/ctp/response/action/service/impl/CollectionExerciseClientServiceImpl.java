@@ -1,6 +1,8 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,42 +21,38 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
-import java.io.IOException;
-import java.util.UUID;
-
-/**
- * Impl of the service that centralizes all REST calls to the Collection
- * Exercise service
- */
+/** Impl of the service that centralizes all REST calls to the Collection Exercise service */
 @Slf4j
 @Service
 public class CollectionExerciseClientServiceImpl implements CollectionExerciseClientService {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
-  @Autowired
-  private RestTemplate restTemplate;
+  @Autowired private RestTemplate restTemplate;
 
   @Autowired
   @Qualifier("collectionExerciseSvcClient")
   private RestUtility restUtility;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
   @Cacheable("collectionExercise")
-  @Retryable(value = {RestClientException.class}, maxAttemptsExpression = "#{${retries.maxAttempts}}",
+  @Retryable(
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public CollectionExerciseDTO getCollectionExercise(final UUID collectionExcerciseId) {
-    final UriComponents uriComponents = restUtility.createUriComponents(
-        appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(), null, collectionExcerciseId);
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(),
+            null,
+            collectionExcerciseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity,
-        String.class);
+    final ResponseEntity<String> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     CollectionExerciseDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {

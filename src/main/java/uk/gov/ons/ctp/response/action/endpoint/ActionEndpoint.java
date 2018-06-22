@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import java.net.URI;
+import java.util.List;
+import java.util.UUID;
+import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,46 +32,33 @@ import uk.gov.ons.ctp.response.action.service.ActionCaseService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 
-import javax.validation.Valid;
-import java.net.URI;
-import java.util.List;
-import java.util.UUID;
-
-/**
- * The REST endpoint controller for Actions.
- */
+/** The REST endpoint controller for Actions. */
 @RestController
 @RequestMapping(value = "/actions", produces = "application/json")
 @Slf4j
 public final class ActionEndpoint implements CTPEndpoint {
 
-  @Autowired
-  private ActionService actionService;
-
-  @Autowired
-  private ActionPlanService actionPlanService;
-
-  @Autowired
-  private ActionCaseService actionCaseService;
+  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
+  public static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
+  public static final String CASE_NOT_FOUND = "Case not found for id %s";
+  @Autowired private ActionService actionService;
+  @Autowired private ActionPlanService actionPlanService;
+  @Autowired private ActionCaseService actionCaseService;
 
   @Qualifier("actionBeanMapper")
   @Autowired
   private MapperFacade mapperFacade;
-
-  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
-  public static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
-  public static final String CASE_NOT_FOUND = "Case not found for id %s";
 
   /**
    * GET the Action for the specified action id.
    *
    * @param actionId Action Id of requested Action
    * @return ActionDTO Returns the associated Action for the specified action
-   * @throws CTPException if no associated Action found for the specified action
-   *                      Id.
+   * @throws CTPException if no associated Action found for the specified action Id.
    */
   @RequestMapping(value = "/{actionid}", method = RequestMethod.GET)
-  public ActionDTO findActionByActionId(@PathVariable("actionid") final UUID actionId) throws CTPException {
+  public ActionDTO findActionByActionId(@PathVariable("actionid") final UUID actionId)
+      throws CTPException {
     log.info("Entering findActionByActionId with {}", actionId);
     final Action action = actionService.findActionById(actionId);
     if (action == null) {
@@ -84,11 +75,11 @@ public final class ActionEndpoint implements CTPEndpoint {
    * GET Actions for the specified case Id.
    *
    * @param caseId caseID to which Actions apply
-   * @return List<ActionDTO> Returns the associated actions for the specified
-   * case id.
+   * @return List<ActionDTO> Returns the associated actions for the specified case id.
    */
   @RequestMapping(value = "/case/{caseid}", method = RequestMethod.GET)
-  public ResponseEntity<List<ActionDTO>> findActionsByCaseId(@PathVariable("caseid") final UUID caseId) {
+  public ResponseEntity<List<ActionDTO>> findActionsByCaseId(
+      @PathVariable("caseid") final UUID caseId) {
     log.info("Entering findActionsByCaseId...");
     final List<Action> actions = actionService.findActionsByCaseId(caseId);
     if (CollectionUtils.isEmpty(actions)) {
@@ -102,18 +93,21 @@ public final class ActionEndpoint implements CTPEndpoint {
    * GET all Actions optionally filtered by ActionType and or state
    *
    * @param actionType Optional filter by ActionType
-   * @param state      Optional filter by Action state
+   * @param state Optional filter by Action state
    * @return List<ActionDTO> Actions for the specified filters
    */
   @RequestMapping(method = RequestMethod.GET)
-  public ResponseEntity<List<ActionDTO>> findActions(@RequestParam(value = "actiontype", required = false) final String actionType,
-                                                     @RequestParam(value = "state", required = false) final ActionDTO.ActionState state) {
+  public ResponseEntity<List<ActionDTO>> findActions(
+      @RequestParam(value = "actiontype", required = false) final String actionType,
+      @RequestParam(value = "state", required = false) final ActionDTO.ActionState state) {
     List<Action> actions = null;
 
     if (actionType != null) {
       if (state != null) {
         log.info("Entering findActionsByTypeAndState with {} {}", actionType, state);
-        actions = actionService.findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(actionType, state);
+        actions =
+            actionService.findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(
+                actionType, state);
       } else {
         log.info("Entering findActionsByType with {}", actionType);
         actions = actionService.findActionsByType(actionType);
@@ -138,16 +132,18 @@ public final class ActionEndpoint implements CTPEndpoint {
   /**
    * POST Create an adhoc Action.
    *
-   * @param actionPostRequestDTO Incoming ActionDTO with details to validate and from which
-   *                             to create Action
-   * @param bindingResult        collects errors thrown by update
+   * @param actionPostRequestDTO Incoming ActionDTO with details to validate and from which to
+   *     create Action
+   * @param bindingResult collects errors thrown by update
    * @return ActionDTO Created Action
-   * @throws CTPException            on failure to create Action
+   * @throws CTPException on failure to create Action
    * @throws InvalidRequestException if binding errors
    */
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
-  public ResponseEntity<ActionDTO> createAdhocAction(final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
-                                                     final BindingResult bindingResult) throws CTPException, InvalidRequestException {
+  public ResponseEntity<ActionDTO> createAdhocAction(
+      final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
+      final BindingResult bindingResult)
+      throws CTPException, InvalidRequestException {
     log.debug("Entering createAdhocAction with actionPostRequestDTO {}", actionPostRequestDTO);
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action: ", bindingResult);
@@ -161,8 +157,11 @@ public final class ActionEndpoint implements CTPEndpoint {
       action = actionService.createAction(action);
 
       final ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
-      final String newResourceUrl = ServletUriComponentsBuilder
-          .fromCurrentRequest().buildAndExpand(actionDTO.getId()).toUri().toString();
+      final String newResourceUrl =
+          ServletUriComponentsBuilder.fromCurrentRequest()
+              .buildAndExpand(actionDTO.getId())
+              .toUri()
+              .toString();
       return ResponseEntity.created(URI.create(newResourceUrl)).body(actionDTO);
     } else {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, CASE_NOT_FOUND, parentCaseId);
@@ -172,17 +171,19 @@ public final class ActionEndpoint implements CTPEndpoint {
   /**
    * PUT to update the specified Action.
    *
-   * @param actionId            Action Id of the Action to update
+   * @param actionId Action Id of the Action to update
    * @param actionPutRequestDTO Incoming ActionDTO with details to update
-   * @param bindingResult       collects errors thrown by update
+   * @param bindingResult collects errors thrown by update
    * @return ActionDTO Returns the updated Action details
-   * @throws CTPException            if update operation fails
+   * @throws CTPException if update operation fails
    * @throws InvalidRequestException if binding errors
    */
   @RequestMapping(value = "/{actionid}", method = RequestMethod.PUT, consumes = "application/json")
-  public ActionDTO updateAction(@PathVariable("actionid") final UUID actionId,
-                                @RequestBody(required = false) @Valid final ActionPutRequestDTO actionPutRequestDTO,
-                                final BindingResult bindingResult) throws CTPException, InvalidRequestException {
+  public ActionDTO updateAction(
+      @PathVariable("actionid") final UUID actionId,
+      @RequestBody(required = false) @Valid final ActionPutRequestDTO actionPutRequestDTO,
+      final BindingResult bindingResult)
+      throws CTPException, InvalidRequestException {
     log.info("Updating Action with {} - {}", actionId, actionPutRequestDTO);
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for update action: ", bindingResult);
@@ -196,7 +197,8 @@ public final class ActionEndpoint implements CTPEndpoint {
     }
 
     final ActionDTO resultDTO = mapperFacade.map(actionToUpdate, ActionDTO.class);
-    final UUID actionPlanUUID = actionPlanService.findActionPlan(actionToUpdate.getActionPlanFK()).getId();
+    final UUID actionPlanUUID =
+        actionPlanService.findActionPlan(actionToUpdate.getActionPlanFK()).getId();
     resultDTO.setActionPlanId(actionPlanUUID);
     return resultDTO;
   }
@@ -208,7 +210,10 @@ public final class ActionEndpoint implements CTPEndpoint {
    * @return List<ActionDTO> Returns a list of cancelled Actions
    * @throws CTPException if update operation fails
    */
-  @RequestMapping(value = "/case/{caseid}/cancel", method = RequestMethod.PUT, consumes = "application/json")
+  @RequestMapping(
+      value = "/case/{caseid}/cancel",
+      method = RequestMethod.PUT,
+      consumes = "application/json")
   public ResponseEntity<List<ActionDTO>> cancelActions(@PathVariable("caseid") final UUID caseId)
       throws CTPException {
     log.info("Cancelling Actions for {}", caseId);
@@ -229,23 +234,29 @@ public final class ActionEndpoint implements CTPEndpoint {
   /**
    * Allow feedback otherwise sent via JMS to be sent via endpoint
    *
-   * @param actionId                 the action
+   * @param actionId the action
    * @param actionFeedbackRequestDTO the feedback
-   * @param bindingResult            the bindingResult
+   * @param bindingResult the bindingResult
    * @return the modified action
-   * @throws CTPException            oops
+   * @throws CTPException oops
    * @throws InvalidRequestException if binding errors
    */
-  @RequestMapping(value = "/{actionid}/feedback", method = RequestMethod.PUT, consumes = {"application/json"})
-  public ActionDTO feedbackAction(@PathVariable("actionid") final UUID actionId,
-                                  @RequestBody @Valid final ActionFeedbackRequestDTO actionFeedbackRequestDTO,
-                                  final BindingResult bindingResult) throws CTPException, InvalidRequestException {
+  @RequestMapping(
+      value = "/{actionid}/feedback",
+      method = RequestMethod.PUT,
+      consumes = {"application/json"})
+  public ActionDTO feedbackAction(
+      @PathVariable("actionid") final UUID actionId,
+      @RequestBody @Valid final ActionFeedbackRequestDTO actionFeedbackRequestDTO,
+      final BindingResult bindingResult)
+      throws CTPException, InvalidRequestException {
     log.info("Feedback for Action {} - {}", actionId, actionFeedbackRequestDTO);
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for feedback action: ", bindingResult);
     }
 
-    final ActionFeedback actionFeedback = mapperFacade.map(actionFeedbackRequestDTO, ActionFeedback.class);
+    final ActionFeedback actionFeedback =
+        mapperFacade.map(actionFeedbackRequestDTO, ActionFeedback.class);
     actionFeedback.setActionId(actionId.toString());
     final Action action = actionService.feedBackAction(actionFeedback);
     if (action == null) {

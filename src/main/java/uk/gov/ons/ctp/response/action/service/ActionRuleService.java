@@ -1,15 +1,11 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import java.util.List;
+import java.util.UUID;
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 
-import java.util.List;
-import java.util.UUID;
-
-
-/**
- * The service for ActionRules
- */
+/** The service for ActionRules */
 public interface ActionRuleService extends CTPService {
 
   /**
@@ -22,7 +18,7 @@ public interface ActionRuleService extends CTPService {
   /**
    * This method returns the action rule after it has been created.
    *
-   * @param actionRule  This is the new action rule to be created.
+   * @param actionRule This is the new action rule to be created.
    * @return ActionRule This returns the created action rule.
    */
   ActionRule createActionRule(ActionRule actionRule);

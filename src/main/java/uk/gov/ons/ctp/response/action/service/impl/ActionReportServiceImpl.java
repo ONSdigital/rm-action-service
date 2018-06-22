@@ -6,15 +6,12 @@ import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionReportRepository;
 import uk.gov.ons.ctp.response.action.service.ActionReportService;
 
-/**
- * Create report via stored procedure
- */
+/** Create report via stored procedure */
 @Service
 @Slf4j
 public class ActionReportServiceImpl implements ActionReportService {
 
-  @Autowired
-  private ActionReportRepository actionReportRepository;
+  @Autowired private ActionReportRepository actionReportRepository;
 
   @Override
   public void createReport() {

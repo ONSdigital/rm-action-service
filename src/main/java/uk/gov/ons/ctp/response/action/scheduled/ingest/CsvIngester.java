@@ -1,5 +1,21 @@
 package uk.gov.ons.ctp.response.action.scheduled.ingest;
 
+import java.io.File;
+import java.io.FileReader;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import liquibase.util.csv.CSVReader;
 import liquibase.util.csv.opencsv.bean.ColumnPositionMappingStrategy;
 import liquibase.util.csv.opencsv.bean.CsvToBean;
@@ -16,32 +32,14 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.message.instruction.Priority;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import java.io.File;
-import java.io.FileReader;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 /**
- * The ingester is configured from the spring integration xml. It is called, by
- * virtue of the @ServiceActivator reference, whenever a candidate CSV file is
- * found in the ingest folder. The CSV file is a superset of all of the fields
- * in the ActionRequest/ActionCancel/ActionUpdate(tbd) messages which can be
- * sent to handlers, as well as the handler name and the action type that the
- * handler will be sent. The CSV file may contain actions for multiple handlers,
- * and even multiple action types for each handler. The generation of the CSV
- * file is outside the remit of the action service.
+ * The ingester is configured from the spring integration xml. It is called, by virtue of
+ * the @ServiceActivator reference, whenever a candidate CSV file is found in the ingest folder. The
+ * CSV file is a superset of all of the fields in the ActionRequest/ActionCancel/ActionUpdate(tbd)
+ * messages which can be sent to handlers, as well as the handler name and the action type that the
+ * handler will be sent. The CSV file may contain actions for multiple handlers, and even multiple
+ * action types for each handler. The generation of the CSV file is outside the remit of the action
+ * service.
  */
 @MessageEndpoint
 @Slf4j
@@ -83,28 +81,47 @@ public class CsvIngester extends CsvToBean<CsvLine> {
   private static final String EMAIL = "emailAddress";
   private static final String TELEPHONE = "telephoneNumber";
 
-  private static final String[] COLUMNS = new String[] {HANDLER, ACTION_TYPE, INSTRUCTION_TYPE, ADDRESS_TYPE,
-      ESTAB_TYPE, LOCALITY, ORGANISATION_NAME, CATEGORY, LINE1, LINE2, TOWN_NAME, POSTCODE, LADCODE, LATITUDE,
-      LONGITUDE, UPRN, CASE_ID, CASE_REF, PRIORITY, IAC, EVENTS, ACTION_PLAN, QUESTION_SET, TITLE, FORENAME,
-      SURNAME, EMAIL, TELEPHONE};
-
-  /**
-   * Inner class to encapsulate the request and cancel data as they do not have
-   * common parentage
-   */
-  @Data
-  private class InstructionBucket {
-    private List<ActionRequest> actionRequests = new ArrayList<>();
-    private List<ActionCancel> actionCancels = new ArrayList<>();
-  }
-
-  @Autowired
-  private AppConfig appConfig;
-
-  @Autowired
-  private ActionInstructionPublisher actionInstructionPublisher;
-
+  private static final String[] COLUMNS =
+      new String[] {
+        HANDLER,
+        ACTION_TYPE,
+        INSTRUCTION_TYPE,
+        ADDRESS_TYPE,
+        ESTAB_TYPE,
+        LOCALITY,
+        ORGANISATION_NAME,
+        CATEGORY,
+        LINE1,
+        LINE2,
+        TOWN_NAME,
+        POSTCODE,
+        LADCODE,
+        LATITUDE,
+        LONGITUDE,
+        UPRN,
+        CASE_ID,
+        CASE_REF,
+        PRIORITY,
+        IAC,
+        EVENTS,
+        ACTION_PLAN,
+        QUESTION_SET,
+        TITLE,
+        FORENAME,
+        SURNAME,
+        EMAIL,
+        TELEPHONE
+      };
+  @Autowired private AppConfig appConfig;
+  @Autowired private ActionInstructionPublisher actionInstructionPublisher;
   private ColumnPositionMappingStrategy<CsvLine> columnPositionMappingStrategy;
+
+  /** Create this ingester */
+  public CsvIngester() {
+    columnPositionMappingStrategy = new ColumnPositionMappingStrategy<>();
+    columnPositionMappingStrategy.setType(CsvLine.class);
+    columnPositionMappingStrategy.setColumnMapping(COLUMNS);
+  }
 
   /**
    * Lazy create a reusable validator
@@ -118,17 +135,8 @@ public class CsvIngester extends CsvToBean<CsvLine> {
   }
 
   /**
-   * Create this ingester
-   */
-  public CsvIngester() {
-    columnPositionMappingStrategy = new ColumnPositionMappingStrategy<>();
-    columnPositionMappingStrategy.setType(CsvLine.class);
-    columnPositionMappingStrategy.setColumnMapping(COLUMNS);
-  }
-
-  /**
-   * take the provided CSV file, found by spring integration and sent to the
-   * inputChannel, and ingest it, creating pseudo actions
+   * take the provided CSV file, found by spring integration and sent to the inputChannel, and
+   * ingest it, creating pseudo actions
    *
    * @param csvFile the file to ingest
    */
@@ -148,17 +156,25 @@ public class CsvIngester extends CsvToBean<CsvLine> {
             final CsvLine csvLine = (CsvLine) processLine(columnPositionMappingStrategy, nextLine);
             final Optional<String> namesOfInvalidColumns = validateLine(csvLine);
             if (namesOfInvalidColumns.isPresent()) {
-              log.error("Problem parsing {} due to {} - entire ingest aborted", Arrays.toString(nextLine),
+              log.error(
+                  "Problem parsing {} due to {} - entire ingest aborted",
+                  Arrays.toString(nextLine),
                   namesOfInvalidColumns.get());
               csvFile.renameTo(
-                  new File(csvFile.getPath() + ".error_LINE_" + lineNum + "_COLUMN_" + namesOfInvalidColumns.get()));
+                  new File(
+                      csvFile.getPath()
+                          + ".error_LINE_"
+                          + lineNum
+                          + "_COLUMN_"
+                          + namesOfInvalidColumns.get()));
               return;
             }
             // first - which handler is it for?
             final String handler = csvLine.getHandler();
 
             // get the handlers bucket
-            final InstructionBucket handlerInstructionBucket = getHandlerBucket(handlerInstructionBuckets, handler);
+            final InstructionBucket handlerInstructionBucket =
+                getHandlerBucket(handlerInstructionBuckets, handler);
 
             // parse the line
             if (csvLine.getInstructionType().equals(REQUEST_INSTRUCTION)) {
@@ -192,34 +208,36 @@ public class CsvIngester extends CsvToBean<CsvLine> {
   }
 
   /**
-   * get the bucket of instructions for this handler from the store, create and
-   * store if not already stored
+   * get the bucket of instructions for this handler from the store, create and store if not already
+   * stored
    *
    * @param handlerInstructionBuckets the bucket store keyed by handler
-   * @param handler                   get the bucket for this handler
+   * @param handler get the bucket for this handler
    * @return the bucket
    */
-  private InstructionBucket getHandlerBucket(final Map<String, InstructionBucket> handlerInstructionBuckets, final String handler) {
+  private InstructionBucket getHandlerBucket(
+      final Map<String, InstructionBucket> handlerInstructionBuckets, final String handler) {
     InstructionBucket handlerInstructionBucket = handlerInstructionBuckets.get(handler);
     if (handlerInstructionBucket == null) {
       handlerInstructionBucket = new InstructionBucket();
       handlerInstructionBuckets.put(handler, handlerInstructionBucket);
     }
     return handlerInstructionBucket;
-
   }
 
   /**
-   * validate the csv line and return the optional concatenated list of fields
-   * failing validation
+   * validate the csv line and return the optional concatenated list of fields failing validation
    *
    * @param csvLine the line
    * @return the errored column names separated by '_'
    */
   private Optional<String> validateLine(final CsvLine csvLine) {
     final Set<ConstraintViolation<CsvLine>> violations = getValidator().validate(csvLine);
-    final String invalidColumns = violations.stream().map(v -> v.getPropertyPath().toString())
-        .collect(Collectors.joining("_"));
+    final String invalidColumns =
+        violations
+            .stream()
+            .map(v -> v.getPropertyPath().toString())
+            .collect(Collectors.joining("_"));
     return (invalidColumns.length() == 0) ? Optional.empty() : Optional.ofNullable(invalidColumns);
   }
 
@@ -272,7 +290,8 @@ public class CsvIngester extends CsvToBean<CsvLine> {
         .withCaseId(csvLine.getCaseId())
         .withIac(csvLine.getIac())
         .withPriority(
-            Priority.fromValue(ActionPriority.valueOf(Integer.parseInt(csvLine.getPriority())).getName()))
+            Priority.fromValue(
+                ActionPriority.valueOf(Integer.parseInt(csvLine.getPriority())).getName()))
         .withCaseRef(csvLine.getCaseRef())
         .withEvents()
         .withEvents(csvLine.getEvents().split("\\|"))
@@ -286,14 +305,22 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    * @param buckets the map of buckets keyed by handler
    */
   private void publishBuckets(final Map<String, InstructionBucket> buckets) {
-    buckets.forEach((handler, handlerInstructionBucket) -> {
-      for (final ActionRequest actionRequest : handlerInstructionBucket.actionRequests) {
-        actionInstructionPublisher.sendActionInstruction(handler, actionRequest);
-      }
+    buckets.forEach(
+        (handler, handlerInstructionBucket) -> {
+          for (final ActionRequest actionRequest : handlerInstructionBucket.actionRequests) {
+            actionInstructionPublisher.sendActionInstruction(handler, actionRequest);
+          }
 
-      for (final ActionCancel actionCancel : handlerInstructionBucket.actionCancels) {
-        actionInstructionPublisher.sendActionInstruction(handler, actionCancel);
-      }
-    });
+          for (final ActionCancel actionCancel : handlerInstructionBucket.actionCancels) {
+            actionInstructionPublisher.sendActionInstruction(handler, actionCancel);
+          }
+        });
+  }
+
+  /** Inner class to encapsulate the request and cancel data as they do not have common parentage */
+  @Data
+  private class InstructionBucket {
+    private List<ActionRequest> actionRequests = new ArrayList<>();
+    private List<ActionCancel> actionCancels = new ArrayList<>();
   }
 }

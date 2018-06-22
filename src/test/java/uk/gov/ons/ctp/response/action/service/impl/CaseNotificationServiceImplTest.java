@@ -1,5 +1,14 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -21,54 +30,31 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-
-/**
- * Tests for the CaseNotificationServiceImpl
- */
+/** Tests for the CaseNotificationServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class CaseNotificationServiceImplTest {
 
   private static final String DUMMY_UUID = "7bc5d41b-0549-40b3-ba76-42f6d4cf3991";
 
-  @Mock
-  private ActionCaseRepository actionCaseRepo;
+  @Mock private ActionCaseRepository actionCaseRepo;
 
-  @Mock
-  private ActionPlanRepository actionPlanRepo;
+  @Mock private ActionPlanRepository actionPlanRepo;
 
-  @Mock
-  private ActionService actionService;
+  @Mock private ActionService actionService;
 
-  @Mock
-  private CaseSvcClientService caseService;
+  @Mock private CaseSvcClientService caseService;
 
-  @Mock
-  private CaseSvcClientService caseSvcClientServiceImpl;
+  @Mock private CaseSvcClientService caseSvcClientServiceImpl;
 
-  @Mock
-  private CollectionExerciseClientService collectionSvcClientServiceImpl;
+  @Mock private CollectionExerciseClientService collectionSvcClientServiceImpl;
 
-  @Mock
-  private CaseDTO caseDTO;
+  @Mock private CaseDTO caseDTO;
 
-  @Mock
-  private CaseGroupDTO caseGroupDTO;
+  @Mock private CaseGroupDTO caseGroupDTO;
 
-  @Mock
-  private CollectionExerciseDTO collectionExerciseDTO;
+  @Mock private CollectionExerciseDTO collectionExerciseDTO;
 
-  @InjectMocks
-  private CaseNotificationServiceImpl caseNotificationService;
+  @InjectMocks private CaseNotificationServiceImpl caseNotificationService;
 
   /**
    * Test calls repository correctly
@@ -90,13 +76,12 @@ public class CaseNotificationServiceImplTest {
     when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
 
     final List<CaseDetailsDTO> caseJson = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
-    final List<CollectionExerciseDTO> collectionExerciseJson = FixtureHelper.loadClassFixtures(
-        CollectionExerciseDTO[].class);
-
+    final List<CollectionExerciseDTO> collectionExerciseJson =
+        FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
 
     when(caseSvcClientServiceImpl.getCase(UUID.fromString(DUMMY_UUID))).thenReturn(caseJson.get(0));
     when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-            .thenReturn(collectionExerciseJson.get(0));
+        .thenReturn(collectionExerciseJson.get(0));
 
     caseNotificationService.acceptNotification(caseNotification);
 
