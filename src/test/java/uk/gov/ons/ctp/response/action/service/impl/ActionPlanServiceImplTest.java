@@ -186,10 +186,6 @@ public class ActionPlanServiceImplTest {
     // Given
     ActionPlan actionPlan = actionPlans.get(0);
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
-
-    ActionPlanSelector actionPlanSelector = new ActionPlanSelector();
-    when(actionPlanSelectorRepo.findFirstByActionPlanFk(actionPlan.getActionPlanPK()))
-        .thenReturn(actionPlanSelector);
     when(actionPlanSelectorRepo.saveAndFlush(any())).thenReturn(null);
 
     // When
