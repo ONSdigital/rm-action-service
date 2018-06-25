@@ -46,7 +46,7 @@ public class ActionPlanServiceImplTest {
 
   /** Before the test */
   @Before
-  public void setup() throws Exception {
+  public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
   }
