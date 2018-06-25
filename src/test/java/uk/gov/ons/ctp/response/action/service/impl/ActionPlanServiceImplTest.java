@@ -38,6 +38,7 @@ public class ActionPlanServiceImplTest {
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
 
   private List<ActionPlan> actionPlans;
+  private List<ActionPlanSelector> actionPlanSelectors;
   private static final UUID ACTION_PLAN_ID =
       UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
   private static final String UPDATED_DESCRIPTION = "New description";
@@ -49,6 +50,24 @@ public class ActionPlanServiceImplTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    actionPlanSelectors = FixtureHelper.loadClassFixtures(ActionPlanSelector[].class);
+  }
+
+  @Test
+  public void testFindActionPlansBySelectors() {
+    // Given
+    when(actionPlanSelectorRepo.findAll()).thenReturn(actionPlanSelectors);
+
+    ActionPlanSelector actionPlanSelector = actionPlanSelectors.get(0);
+    when(actionPlanRepo.findFirstByActionPlanPK(actionPlanSelector.getActionPlanFk()))
+        .thenReturn(actionPlans.get(0));
+
+    // When
+    List<ActionPlan> foundActionPlans =
+        actionPlanServiceImpl.findActionPlansBySelectors(actionPlanSelector.getSelectors());
+
+    // Then
+    assertEquals(foundActionPlans.get(0).getName(), actionPlans.get(0).getName());
   }
 
   @Test
