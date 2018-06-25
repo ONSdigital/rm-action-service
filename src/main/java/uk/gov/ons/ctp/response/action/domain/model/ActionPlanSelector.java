@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -23,7 +22,6 @@ import org.hibernate.annotations.TypeDefs;
 @Entity
 @Data
 @AllArgsConstructor
-@Builder
 @NoArgsConstructor
 @TypeDefs({@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)})
 @Table(name = "actionplanselector", schema = "action")
