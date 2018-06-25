@@ -21,6 +21,7 @@ import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAd
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.CREATED_BY_SYSTEM;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import ma.glasnost.orika.MapperFacade;
@@ -85,6 +86,9 @@ public class ActionPlanEndpointUnitTest {
           + CREATED_BY_SYSTEM
           + "\"}";
 
+  private static final String SELECTOR_KEY = "selector_key";
+  private static final String SELECTOR_VALUE = "selector_value";
+
   @InjectMocks private ActionPlanEndpoint actionPlanEndpoint;
 
   @Mock private ActionPlanService actionPlanService;
@@ -94,6 +98,8 @@ public class ActionPlanEndpointUnitTest {
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
 
   private List<ActionPlan> actionPlans;
+
+  private HashMap<String, String> selectors;
 
   /**
    * Initialises Mockito and loads Class Fixtures
@@ -111,6 +117,9 @@ public class ActionPlanEndpointUnitTest {
             .build();
 
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+
+    selectors = new HashMap<>();
+    selectors.put(SELECTOR_KEY, SELECTOR_VALUE);
   }
 
   /**
@@ -159,6 +168,53 @@ public class ActionPlanEndpointUnitTest {
     when(actionPlanService.findActionPlans()).thenReturn(actionPlans);
 
     final ResultActions actions = mockMvc.perform(getJson("/actionplans"));
+
+    actions
+        .andExpect(status().isOk())
+        .andExpect(handler().handlerType(ActionPlanEndpoint.class))
+        .andExpect(handler().methodName("findActionPlans"))
+        .andExpect(jsonPath("$", Matchers.hasSize(3)))
+        .andExpect(jsonPath("$[0].*", hasSize(5)))
+        .andExpect(jsonPath("$[1].*", hasSize(5)))
+        .andExpect(
+            jsonPath(
+                "$[*].id",
+                containsInAnyOrder(
+                    ACTION_PLAN_1_ID.toString(),
+                    ACTION_PLAN_2_ID.toString(),
+                    ACTION_PLAN_3_ID.toString())))
+        .andExpect(
+            jsonPath(
+                "$[*].name",
+                containsInAnyOrder(ACTION_PLAN_1_NAME, ACTION_PLAN_2_NAME, ACTION_PLAN_3_NAME)))
+        .andExpect(
+            jsonPath(
+                "$[*].description",
+                containsInAnyOrder(ACTION_PLAN_1_DESC, ACTION_PLAN_2_DESC, ACTION_PLAN_3_DESC)))
+        .andExpect(
+            jsonPath(
+                "$[*].createdBy",
+                containsInAnyOrder(CREATED_BY_SYSTEM, CREATED_BY_SYSTEM, CREATED_BY_SYSTEM)))
+        .andExpect(
+            jsonPath(
+                "$[*].lastRunDateTime",
+                contains(
+                    new DateMatcher(ACTION_PLAN_1_LAST_RUN_DATE_TIME),
+                    new DateMatcher(ACTION_PLAN_2_LAST_RUN_DATE_TIME),
+                    IsNull.nullValue())));
+  }
+
+  /**
+   * A Test to retrieve all action plans by selectors
+   *
+   * @throws Exception exception thrown when getJson does
+   */
+  @Test
+  public void findActionPlansBySelectorsFound() throws Exception {
+    when(actionPlanService.findActionPlansBySelectors(selectors)).thenReturn(actionPlans);
+
+    final ResultActions actions =
+        mockMvc.perform(getJson("/actionplans?selector_key=selector_value"));
 
     actions
         .andExpect(status().isOk())
