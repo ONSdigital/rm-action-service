@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 
 /** The service for ActionPlans */
@@ -59,15 +58,13 @@ public interface ActionPlanService extends CTPService {
    *     lastGoodRunDatetime
    * @return ActionPlan This returns the updated action plan.
    */
-  ActionPlan updateActionPlan(
-      UUID actionPlanId, ActionPlan actionPlan, ActionPlanSelector actionPlanSelector);
+  ActionPlan updateActionPlan(UUID actionPlanId, ActionPlan actionPlan);
 
   /**
    * This method returns the action plan after it has been created.
    *
    * @param actionPlan action plan to be created
-   * @param actionPlanSelector selectors for the given action plan
    * @return ActionPlan This returns the created action plan.
    */
-  ActionPlanDTO createActionPlan(ActionPlan actionPlan, ActionPlanSelector actionPlanSelector);
+  ActionPlanDTO createActionPlan(ActionPlan actionPlan);
 }

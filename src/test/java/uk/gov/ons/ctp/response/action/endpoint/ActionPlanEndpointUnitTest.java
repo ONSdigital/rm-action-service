@@ -44,7 +44,6 @@ import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
@@ -329,8 +328,7 @@ public class ActionPlanEndpointUnitTest {
    */
   @Test
   public void updateActionPlan() throws Exception {
-    when(actionPlanService.updateActionPlan(
-            any(UUID.class), any(ActionPlan.class), any(ActionPlanSelector.class)))
+    when(actionPlanService.updateActionPlan(any(UUID.class), any(ActionPlan.class)))
         .thenReturn(actionPlans.get(0));
 
     final ResultActions actions =
@@ -359,8 +357,7 @@ public class ActionPlanEndpointUnitTest {
   public void createActionPlan() throws Exception {
     when(actionPlanService.findActionPlanByName(any(String.class))).thenReturn(null);
     ActionPlanDTO actionPlanDTO = mapperFacade.map(actionPlans.get(2), ActionPlanDTO.class);
-    when(actionPlanService.createActionPlan(any(ActionPlan.class), any(ActionPlanSelector.class)))
-        .thenReturn(actionPlanDTO);
+    when(actionPlanService.createActionPlan(any(ActionPlan.class))).thenReturn(actionPlanDTO);
 
     final ResultActions resultActions =
         mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));
@@ -376,8 +373,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$.lastRunDateTime", is(IsNull.nullValue())));
 
     verify(actionPlanService, times(1)).findActionPlanByName(any(String.class));
-    verify(actionPlanService, times(1))
-        .createActionPlan(any(ActionPlan.class), any(ActionPlanSelector.class));
+    verify(actionPlanService, times(1)).createActionPlan(any(ActionPlan.class));
   }
 
   /**
@@ -404,7 +400,7 @@ public class ActionPlanEndpointUnitTest {
                 is("Action plan with name " + actionPlans.get(2).getName() + " already exists")));
 
     verify(actionPlanService, times(1)).findActionPlanByName(any(String.class));
-    verify(actionPlanService, never()).createActionPlan(any(), any());
+    verify(actionPlanService, never()).createActionPlan(any());
   }
 
   /**
@@ -424,6 +420,6 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
         .andExpect(jsonPath("$.error.message", is(INVALID_JSON)));
 
-    verify(actionPlanService, never()).createActionPlan(any(), any());
+    verify(actionPlanService, never()).createActionPlan(any());
   }
 }

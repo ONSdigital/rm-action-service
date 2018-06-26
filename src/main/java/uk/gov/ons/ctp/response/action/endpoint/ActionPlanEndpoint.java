@@ -23,7 +23,6 @@ import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlanSelector;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
@@ -120,9 +119,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     }
 
     ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
-    ActionPlanSelector actionPlanSelectors = mapperFacade.map(request, ActionPlanSelector.class);
-    ActionPlanDTO actionPlanDTO =
-        actionPlanService.createActionPlan(actionPlan, actionPlanSelectors);
+    ActionPlanDTO actionPlanDTO = actionPlanService.createActionPlan(actionPlan);
 
     final String newResourceUrl =
         ServletUriComponentsBuilder.fromCurrentRequest()
@@ -162,10 +159,9 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     }
 
     ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
-    ActionPlanSelector actionPlanSelectors = mapperFacade.map(request, ActionPlanSelector.class);
 
     final ActionPlan updatedActionPlan =
-        actionPlanService.updateActionPlan(actionPlanId, actionPlan, actionPlanSelectors);
+        actionPlanService.updateActionPlan(actionPlanId, actionPlan);
     if (actionPlan == null) {
       throw new CTPException(
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
