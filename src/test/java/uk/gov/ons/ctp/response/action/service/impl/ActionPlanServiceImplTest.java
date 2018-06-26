@@ -33,7 +33,6 @@ public class ActionPlanServiceImplTest {
   @InjectMocks private ActionPlanServiceImpl actionPlanServiceImpl;
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
 
-  private List<ActionPlan> actionPlans;
   private static final UUID ACTION_PLAN_ID =
       UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
   private static final String UPDATED_DESCRIPTION = "New description";
@@ -42,11 +41,16 @@ public class ActionPlanServiceImplTest {
   private static final String SELECTOR_KEY = "selectorKey";
   private static final String SELECTOR_VALUE = "selectorValue";
 
+  private List<ActionPlan> actionPlans;
+  private HashMap<String, String> selectors;
+
   /** Before the test */
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    selectors = new HashMap<>();
+    selectors.put(SELECTOR_KEY, SELECTOR_VALUE);
   }
 
   @Test
@@ -127,19 +131,17 @@ public class ActionPlanServiceImplTest {
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
     ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
-    savedActionPlan.setLastRunDateTime(UPDATED_TIMESTAMP);
+    savedActionPlan.setSelectors(selectors);
     when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
 
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
-    HashMap<String, String> selectors = new HashMap<>();
-    selectors.put(SELECTOR_KEY, SELECTOR_VALUE);
     actionPlanUpdate.setSelectors(selectors);
     ActionPlan updatedActionPlan =
         actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
 
     // Then
     verify(actionPlanRepo, times(1)).saveAndFlush(any());
-    assertEquals(updatedActionPlan.getName(), actionPlan.getName());
+    assertEquals(updatedActionPlan.getSelectors(), actionPlan.getSelectors());
   }
 }

@@ -170,8 +170,8 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("findActionPlans"))
         .andExpect(jsonPath("$", Matchers.hasSize(3)))
-        .andExpect(jsonPath("$[0].*", hasSize(5)))
-        .andExpect(jsonPath("$[1].*", hasSize(5)))
+        .andExpect(jsonPath("$[0].*", hasSize(6)))
+        .andExpect(jsonPath("$[1].*", hasSize(6)))
         .andExpect(
             jsonPath(
                 "$[*].id",
@@ -217,8 +217,8 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("findActionPlans"))
         .andExpect(jsonPath("$", Matchers.hasSize(3)))
-        .andExpect(jsonPath("$[0].*", hasSize(5)))
-        .andExpect(jsonPath("$[1].*", hasSize(5)))
+        .andExpect(jsonPath("$[0].*", hasSize(6)))
+        .andExpect(jsonPath("$[1].*", hasSize(6)))
         .andExpect(
             jsonPath(
                 "$[*].id",
@@ -307,7 +307,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(status().isOk())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("findActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.*", hasSize(5)))
+        .andExpect(jsonPath("$.*", hasSize(6)))
         .andExpect(jsonPath("$.id", is(ACTION_PLAN_1_ID.toString())))
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
@@ -336,7 +336,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(status().isOk())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("updateActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.*", hasSize(5)))
+        .andExpect(jsonPath("$.*", hasSize(6)))
         .andExpect(jsonPath("$.id", is(ACTION_PLAN_1_ID.toString())))
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
@@ -362,7 +362,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(status().isCreated())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("createActionPlan"))
-        .andExpect(jsonPath("$.*", Matchers.hasSize(5)))
+        .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_3_DESC)))
         .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
