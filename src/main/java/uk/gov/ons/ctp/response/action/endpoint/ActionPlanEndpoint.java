@@ -119,8 +119,9 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     }
 
     ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
-    ActionPlanDTO actionPlanDTO = actionPlanService.createActionPlan(actionPlan);
+    ActionPlan createdActionPlan = actionPlanService.createActionPlan(actionPlan);
 
+    ActionPlanDTO actionPlanDTO = mapperFacade.map(createdActionPlan, ActionPlanDTO.class);
     final String newResourceUrl =
         ServletUriComponentsBuilder.fromCurrentRequest()
             .buildAndExpand(actionPlanDTO.getId())

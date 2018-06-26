@@ -44,7 +44,6 @@ import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 /** Unit tests for ActionPlan endpoint */
@@ -62,20 +61,22 @@ public class ActionPlanEndpointUnitTest {
   private static final String ACTION_PLAN_1_NAME = "C1O331D10E";
   private static final String ACTION_PLAN_2_NAME = "C1O331D10F";
   private static final String ACTION_PLAN_3_NAME = "C1O331D10G";
+
   private static final String ACTION_PLAN_1_DESC =
       "Component 1 - England/online/field day ten/three reminders";
   private static final String ACTION_PLAN_2_DESC =
       "Component 2 - England/online/field day ten/three reminders";
   private static final String ACTION_PLAN_3_DESC =
       "Component 3 - England/online/field day ten/three reminders";
+
   private static final String ACTION_PLAN_1_LAST_RUN_DATE_TIME = "2016-04-15T16:03:26.544+01:00";
   private static final String ACTION_PLAN_2_LAST_RUN_DATE_TIME = "2016-04-15T16:03:26.644+01:00";
+
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
 
   private static final String ACTION_PLAN_JSON =
       "{\"description\":\"testing\",\"lastRunDateTime\":null}";
   private static final String ACTION_PLAN_INCORRECT_JSON = "{\"some\":\"joke\"}";
-
   private static final String ACTION_PLAN_CREATE_VALID_JSON =
       "{ \"name\": \""
           + ACTION_PLAN_3_NAME
@@ -89,15 +90,11 @@ public class ActionPlanEndpointUnitTest {
   private static final String SELECTOR_VALUE = "selector_value";
 
   @InjectMocks private ActionPlanEndpoint actionPlanEndpoint;
-
   @Mock private ActionPlanService actionPlanService;
-
-  private MockMvc mockMvc;
-
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
 
+  private MockMvc mockMvc;
   private List<ActionPlan> actionPlans;
-
   private HashMap<String, String> selectors;
 
   /**
@@ -356,8 +353,7 @@ public class ActionPlanEndpointUnitTest {
   @Test
   public void createActionPlan() throws Exception {
     when(actionPlanService.findActionPlanByName(any(String.class))).thenReturn(null);
-    ActionPlanDTO actionPlanDTO = mapperFacade.map(actionPlans.get(2), ActionPlanDTO.class);
-    when(actionPlanService.createActionPlan(any(ActionPlan.class))).thenReturn(actionPlanDTO);
+    when(actionPlanService.createActionPlan(any(ActionPlan.class))).thenReturn(actionPlans.get(2));
 
     final ResultActions resultActions =
         mockMvc.perform(postJson("/actionplans", ACTION_PLAN_CREATE_VALID_JSON));

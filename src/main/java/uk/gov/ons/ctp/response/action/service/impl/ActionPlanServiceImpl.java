@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import ma.glasnost.orika.MapperFacade;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 /** Implementation */
@@ -26,13 +24,9 @@ public class ActionPlanServiceImpl implements ActionPlanService {
 
   private ActionPlanRepository actionPlanRepo;
 
-  private MapperFacade mapperFacade;
-
   @Autowired
-  public ActionPlanServiceImpl(
-      final ActionPlanRepository actionPlanRepo, final MapperFacade mapperFacade) {
+  public ActionPlanServiceImpl(final ActionPlanRepository actionPlanRepo) {
     this.actionPlanRepo = actionPlanRepo;
-    this.mapperFacade = mapperFacade;
   }
 
   @CoverageIgnore
@@ -75,21 +69,20 @@ public class ActionPlanServiceImpl implements ActionPlanService {
       propagation = Propagation.REQUIRED,
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
-  public ActionPlanDTO createActionPlan(final ActionPlan actionPlan) {
+  public ActionPlan createActionPlan(final ActionPlan actionPlan) {
     log.debug(
         "Creating action plan, Name: {}, Selectors: {}",
         actionPlan.getName(),
         actionPlan.getSelectors());
 
     ActionPlan savedActionPlan = saveActionPlan(actionPlan);
-    ActionPlanDTO actionPlanDTO = mapperFacade.map(savedActionPlan, ActionPlanDTO.class);
 
     log.debug(
         "Successfully created action plan, Name: {}, ActionPlanId: {}, Selectors: {}",
         actionPlan.getName(),
         actionPlan.getId(),
         actionPlan.getSelectors());
-    return actionPlanDTO;
+    return savedActionPlan;
   }
 
   private ActionPlan saveActionPlan(final ActionPlan actionPlan) {
