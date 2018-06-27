@@ -16,6 +16,7 @@ def get_casetypeoverrides():
     engine = create_engine(Config.DATABASE_URI)
     connection = engine.connect()
 
+    # Query to retrieve casetypeoverrides with additional details about the collection exercise
     sql = "SELECT o.sampleunittypefk, o.actionplanid, c.exerciseref, c.survey_uuid " \
           "FROM collectionexercise.casetypeoverride o " \
           "INNER JOIN collectionexercise.collectionexercise c ON o.exercisefk = c.exercisepk"
