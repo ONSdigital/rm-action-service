@@ -21,10 +21,7 @@ import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAd
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.CREATED_BY_SYSTEM;
 
-<<<<<<< HEAD
-=======
 import java.util.HashMap;
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
 import java.util.List;
 import java.util.UUID;
 import ma.glasnost.orika.MapperFacade;
@@ -64,20 +61,14 @@ public class ActionPlanEndpointUnitTest {
   private static final String ACTION_PLAN_1_NAME = "C1O331D10E";
   private static final String ACTION_PLAN_2_NAME = "C1O331D10F";
   private static final String ACTION_PLAN_3_NAME = "C1O331D10G";
-<<<<<<< HEAD
-=======
 
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
   private static final String ACTION_PLAN_1_DESC =
       "Component 1 - England/online/field day ten/three reminders";
   private static final String ACTION_PLAN_2_DESC =
       "Component 2 - England/online/field day ten/three reminders";
   private static final String ACTION_PLAN_3_DESC =
       "Component 3 - England/online/field day ten/three reminders";
-<<<<<<< HEAD
-=======
 
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
   private static final String ACTION_PLAN_1_LAST_RUN_DATE_TIME = "2016-04-15T16:03:26.544+01:00";
   private static final String ACTION_PLAN_2_LAST_RUN_DATE_TIME = "2016-04-15T16:03:26.644+01:00";
 
@@ -86,10 +77,6 @@ public class ActionPlanEndpointUnitTest {
   private static final String ACTION_PLAN_JSON =
       "{\"description\":\"testing\",\"lastRunDateTime\":null}";
   private static final String ACTION_PLAN_INCORRECT_JSON = "{\"some\":\"joke\"}";
-<<<<<<< HEAD
-
-=======
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
   private static final String ACTION_PLAN_CREATE_VALID_JSON =
       "{ \"name\": \""
           + ACTION_PLAN_3_NAME
@@ -99,16 +86,6 @@ public class ActionPlanEndpointUnitTest {
           + CREATED_BY_SYSTEM
           + "\"}";
 
-<<<<<<< HEAD
-  @InjectMocks private ActionPlanEndpoint actionPlanEndpoint;
-
-  @Mock private ActionPlanService actionPlanService;
-
-  private MockMvc mockMvc;
-
-  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
-
-=======
   private static final String SELECTOR_KEY = "selector_key";
   private static final String SELECTOR_VALUE = "selector_value";
 
@@ -117,7 +94,6 @@ public class ActionPlanEndpointUnitTest {
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
 
   private MockMvc mockMvc;
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
   private List<ActionPlan> actionPlans;
   private HashMap<String, String> selectors;
 
@@ -194,10 +170,6 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("findActionPlans"))
         .andExpect(jsonPath("$", Matchers.hasSize(3)))
-<<<<<<< HEAD
-        .andExpect(jsonPath("$[0].*", hasSize(5)))
-        .andExpect(jsonPath("$[1].*", hasSize(5)))
-=======
         .andExpect(jsonPath("$[0].*", hasSize(6)))
         .andExpect(jsonPath("$[1].*", hasSize(6)))
         .andExpect(
@@ -247,7 +219,6 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(jsonPath("$", Matchers.hasSize(3)))
         .andExpect(jsonPath("$[0].*", hasSize(6)))
         .andExpect(jsonPath("$[1].*", hasSize(6)))
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
         .andExpect(
             jsonPath(
                 "$[*].id",
@@ -348,27 +319,6 @@ public class ActionPlanEndpointUnitTest {
   }
 
   /**
-<<<<<<< HEAD
-   * A Test to update an ActionPlan with incorrect json
-   *
-   * @throws Exception exception thrown when putJson does
-   */
-  /*  @Test
-  public void updateActionPlanIncorrectJson1() throws Exception {
-    ResultActions actions = mockMvc.perform(putJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID),
-        ACTION_PLAN_INCORRECT_JSON));
-
-    actions.andExpect(status().isBadRequest())
-        .andExpect(handler().handlerType(ActionPlanEndpoint.class))
-        .andExpect(handler().methodName("updateActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.VALIDATION_FAILED.name())))
-        .andExpect(jsonPath("$.error.message", is(PROVIDED_JSON_INCORRECT)))
-        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }*/
-
-  /**
-=======
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
    * A Test to update an ActionPlan with valid json
    *
    * @throws Exception exception thrown when putJson does
@@ -412,11 +362,7 @@ public class ActionPlanEndpointUnitTest {
         .andExpect(status().isCreated())
         .andExpect(handler().handlerType(ActionPlanEndpoint.class))
         .andExpect(handler().methodName("createActionPlan"))
-<<<<<<< HEAD
-        .andExpect(jsonPath("$.*", Matchers.hasSize(5)))
-=======
         .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
         .andExpect(jsonPath("$.name", is(ACTION_PLAN_3_NAME)))
         .andExpect(jsonPath("$.description", is(ACTION_PLAN_3_DESC)))
         .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))

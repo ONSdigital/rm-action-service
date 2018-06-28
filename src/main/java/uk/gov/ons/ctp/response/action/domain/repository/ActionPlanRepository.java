@@ -1,10 +1,7 @@
 package uk.gov.ons.ctp.response.action.domain.repository;
 
-<<<<<<< HEAD
-=======
 import java.util.HashMap;
 import java.util.List;
->>>>>>> 22b5db3ad1b54ca98e282d31988f24687d04d1d9
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

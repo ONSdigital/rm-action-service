@@ -1,7 +1,5 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -47,7 +45,7 @@ public class ActionPlan implements Serializable {
             name = "sequence_name",
             value = "action.actionplanseq"),
         @org.hibernate.annotations.Parameter(name = "initial_value", value = "1000"),
-        @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
+        @org.hibernate.annotations.Parameter(name = "increment_size", value = "1"),
         @Parameter(name = "sequence_name", value = "action.actionplanseq"),
       })
   @Column(name = "actionplanpk")
