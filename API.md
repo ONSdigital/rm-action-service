@@ -195,7 +195,7 @@ An `HTTP 404 Not Found` status code is returned if the action with the specified
 An `HTTP 404 Not Found` status code is returned if the action with the specified ID could not be found. An `HTTP 400 Bad Request` status code is returned if any of the parameters are invalid.
 
 ## List Action Plans
-* `GET /actionplans` will return a list of all action plans, most recent first.
+* `GET /actionplans?selector1=selector1&selector2=selector2...` will return a list of all action plans for the given optional selectors, most recent first.
 
 ### Example JSON Response
 ```json
@@ -238,7 +238,11 @@ An `HTTP 404 Not Found` status code is returned if the action plan with the spec
 {
 	"name": "notification",
 	"description": "bres enrolment notification",
-	"createdBy": "SYSTEM"
+	"createdBy": "SYSTEM",
+    "selectors": {
+      "selector1": "selector1",
+      "selector2": "selector2"
+    }
 }
 ```
 
@@ -259,7 +263,7 @@ An `HTTP 201 Created` status code is returned if the action creation was a succe
 ## Update Action Plan
 * `PUT /actionplans/{actionplanId}` will update the details of the action plan with the given ID.
 
-*Optional parameters:* `description` as the action plan description, `lastRunDateTime` as the date/time the action plan was last successfully run.
+*Optional parameters:* `description` as the action plan description, `lastRunDateTime` as the date/time the action plan was last successfully run, `selectors` dictionary of action plan selectors
 
 ### Example JSON Response
 ```json

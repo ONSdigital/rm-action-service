@@ -1,22 +1,27 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import ma.glasnost.orika.MapperFacade;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
-import uk.gov.ons.ctp.common.time.DateTimeUtil;
-import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 
@@ -24,74 +29,119 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionPlanServiceImplTest {
 
-  private static final UUID ACTION_PLAN_1_ID =
-      UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
-  @Mock private AppConfig appConfig;
   @Mock private ActionPlanRepository actionPlanRepo;
   @InjectMocks private ActionPlanServiceImpl actionPlanServiceImpl;
+  @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
+
+  private static final UUID ACTION_PLAN_ID =
+      UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
+  private static final String UPDATED_DESCRIPTION = "New description";
+  private static final Date UPDATED_DATE = new Date();
+  private static final Timestamp UPDATED_TIMESTAMP = new Timestamp(UPDATED_DATE.getTime());
+  private static final String SELECTOR_KEY = "selectorKey";
+  private static final String SELECTOR_VALUE = "selectorValue";
+
+  private List<ActionPlan> actionPlans;
+  private HashMap<String, String> selectors;
 
   /** Before the test */
   @Before
-  public void setup() {
+  public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    selectors = new HashMap<>();
+    selectors.put(SELECTOR_KEY, SELECTOR_VALUE);
   }
 
-  /** @throws Exception oops */
   @Test
-  public void testUpdateActionPlanNoChange() throws Exception {
-    // set up dummy data
-    final List<ActionPlan> persistedActionPlans =
-        FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    final ActionPlan blankActionPlan = ActionPlan.builder().build();
+  public void testFindActionPlansBySelectors() {
+    // Given
+    when(this.actionPlanRepo.findBySelectorsIn(any())).thenReturn(actionPlans);
 
-    // wire up mock responses
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(persistedActionPlans.get(0));
+    // When
+    ActionPlan actionPlan = actionPlans.get(0);
+    List<ActionPlan> foundActionPlans =
+        actionPlanServiceImpl.findActionPlansBySelectors(actionPlan.getSelectors());
 
-    // let it roll
-    actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_1_ID, blankActionPlan);
-
-    // assert the right calls were made
-    verify(actionPlanRepo).findById(ACTION_PLAN_1_ID);
-    verify(actionPlanRepo, times(0)).save(any(ActionPlan.class));
+    // Then
+    assertEquals(foundActionPlans.get(0).getSelectors(), actionPlan.getSelectors());
   }
 
-  /** @throws Exception oops */
   @Test
-  public void testUpdateActionPlanChangeDesc() throws Exception {
-    // set up dummy data
-    final List<ActionPlan> persistedActionPlans =
-        FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    final ActionPlan actionPlanWithDesc =
-        ActionPlan.builder().description("this is a test").build();
+  public void testCreateActionPlan() {
+    // Given
+    ActionPlan actionPlan = actionPlans.get(0);
+    when(actionPlanRepo.saveAndFlush(any())).thenReturn(actionPlan);
 
-    // wire up mock responses
-    Mockito.when(actionPlanRepo.findById(ACTION_PLAN_1_ID)).thenReturn(persistedActionPlans.get(0));
+    // When
+    ActionPlan createdActionPlan = actionPlanServiceImpl.createActionPlan(actionPlan);
 
-    // let it roll
-    actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_1_ID, actionPlanWithDesc);
-
-    // assert the right calls were made
-    verify(actionPlanRepo).findById(ACTION_PLAN_1_ID);
-    verify(actionPlanRepo, times(1)).save(any(ActionPlan.class));
+    // Then
+    verify(actionPlanRepo, times(1)).saveAndFlush(createdActionPlan);
+    assertEquals(createdActionPlan.getName(), createdActionPlan.getName());
+    assertEquals(createdActionPlan.getDescription(), createdActionPlan.getDescription());
   }
 
-  /** @throws Exception oops */
   @Test
-  public void testUpdateActionPlanChangeLastGoodRunDateTime() throws Exception {
-    // set up dummy data
-    final List<ActionPlan> persistedActionPlans =
-        FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    final ActionPlan actionPlanWithLastGoodRunDateTime =
-        ActionPlan.builder().lastRunDateTime(DateTimeUtil.nowUTC()).build();
+  public void testUpdateActionPlanDescription() {
+    // Given
+    ActionPlan actionPlan = actionPlans.get(0);
+    when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
-    // wire up mock responses
-    Mockito.when(actionPlanRepo.findById(ACTION_PLAN_1_ID)).thenReturn(persistedActionPlans.get(0));
+    ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
+    savedActionPlan.setDescription(UPDATED_DESCRIPTION);
+    when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
 
-    // let it roll
-    actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_1_ID, actionPlanWithLastGoodRunDateTime);
+    // When
+    ActionPlan actionPlanUpdate = new ActionPlan();
+    actionPlanUpdate.setDescription(UPDATED_DESCRIPTION);
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
 
-    // assert the right calls were made
-    verify(actionPlanRepo).findById(ACTION_PLAN_1_ID);
-    verify(actionPlanRepo, times(1)).save(any(ActionPlan.class));
+    // Then
+    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    assertEquals(updatedActionPlan.getDescription(), UPDATED_DESCRIPTION);
+  }
+
+  @Test
+  public void testUpdateActionPlanRunTime() {
+    // Given
+    ActionPlan actionPlan = actionPlans.get(0);
+    when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
+
+    ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
+    savedActionPlan.setLastRunDateTime(UPDATED_TIMESTAMP);
+    when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
+
+    // When
+    ActionPlan actionPlanUpdate = new ActionPlan();
+    actionPlanUpdate.setLastRunDateTime(UPDATED_TIMESTAMP);
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
+
+    // Then
+    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    assertEquals(updatedActionPlan.getLastRunDateTime(), UPDATED_TIMESTAMP);
+  }
+
+  @Test
+  public void testUpdateActionPlanSelectors() {
+    // Given
+    ActionPlan actionPlan = actionPlans.get(0);
+    when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
+
+    ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
+    savedActionPlan.setSelectors(selectors);
+    when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
+
+    // When
+    ActionPlan actionPlanUpdate = new ActionPlan();
+    actionPlanUpdate.setSelectors(selectors);
+    ActionPlan updatedActionPlan =
+        actionPlanServiceImpl.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
+
+    // Then
+    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    assertEquals(updatedActionPlan.getSelectors(), actionPlan.getSelectors());
   }
 }

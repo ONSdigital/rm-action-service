@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
@@ -34,11 +36,17 @@ public class ActionPlanEndpoint implements CTPEndpoint {
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";
 
-  @Autowired private ActionPlanService actionPlanService;
+  private ActionPlanService actionPlanService;
 
-  @Qualifier("actionBeanMapper")
-  @Autowired
   private MapperFacade mapperFacade;
+
+  @Autowired
+  public ActionPlanEndpoint(
+      final ActionPlanService actionPlanService,
+      final @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
+    this.actionPlanService = actionPlanService;
+    this.mapperFacade = mapperFacade;
+  }
 
   /**
    * This method returns all action plans.
@@ -46,49 +54,23 @@ public class ActionPlanEndpoint implements CTPEndpoint {
    * @return List<ActionPlanDTO> This returns all action plans.
    */
   @RequestMapping(method = RequestMethod.GET)
-  public final ResponseEntity<List<ActionPlanDTO>> findActionPlans() {
-    log.info("Entering findActionPlans...");
-    final List<ActionPlan> actionPlans = actionPlanService.findActionPlans();
+  public final ResponseEntity<List<ActionPlanDTO>> findActionPlans(
+      final @RequestParam HashMap<String, String> selectors) {
+    log.info("Retrieving action plans, Selectors: {}", selectors);
+
+    final List<ActionPlan> actionPlans;
+    if (!selectors.isEmpty()) {
+      actionPlans = actionPlanService.findActionPlansBySelectors(selectors);
+    } else {
+      actionPlans = actionPlanService.findActionPlans();
+    }
+
+    log.info("Successfully retrieved action plans, Selectors={}", selectors);
     final List<ActionPlanDTO> actionPlanDTOs =
         mapperFacade.mapAsList(actionPlans, ActionPlanDTO.class);
     return CollectionUtils.isEmpty(actionPlanDTOs)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.ok(actionPlanDTOs);
-  }
-
-  /**
-   * This method returns the associated action plan after it has been created.
-   *
-   * @param request The object created by ActionPlanPostRequestDTO from the json found in the
-   *     request body
-   * @param bindingResult collects errors thrown by create
-   * @return ActionPlanDTO This returns the updated action plan.
-   * @throws InvalidRequestException if binding errors
-   */
-  @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
-  public final ResponseEntity<ActionPlanDTO> createActionPlan(
-      @RequestBody @Valid final ActionPlanPostRequestDTO request, final BindingResult bindingResult)
-      throws CTPException, InvalidRequestException {
-    log.info("Create action plan - action plan {}", request);
-    if (bindingResult.hasErrors()) {
-      throw new InvalidRequestException("Binding errors for create action plan: ", bindingResult);
-    }
-
-    ActionPlan existingActionPlan = actionPlanService.findActionPlanByName(request.getName());
-    if (existingActionPlan != null) {
-      final String message = "Action plan with name " + request.getName() + " already exists";
-      throw new CTPException(CTPException.Fault.RESOURCE_VERSION_CONFLICT, message);
-    }
-
-    ActionPlan actionPlan =
-        actionPlanService.createActionPlan(mapperFacade.map(request, ActionPlan.class));
-    final ActionPlanDTO actionPlanDTO = mapperFacade.map(actionPlan, ActionPlanDTO.class);
-    final String newResourceUrl =
-        ServletUriComponentsBuilder.fromCurrentRequest()
-            .buildAndExpand(actionPlanDTO.getId())
-            .toUri()
-            .toString();
-    return ResponseEntity.created(URI.create(newResourceUrl)).body(actionPlanDTO);
   }
 
   /**
@@ -110,8 +92,44 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     return mapperFacade.map(actionPlan, ActionPlanDTO.class);
   }
 
+  /**
+   * This method returns the associated action plan after it has been created.
+   *
+   * @param request The object created by ActionPlanPostRequestDTO from the json found in the
+   *     request body
+   * @param bindingResult collects errors thrown by create
+   * @return ActionPlanDTO This returns the updated action plan.
+   * @throws InvalidRequestException if binding errors
+   */
+  @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
+  public final ResponseEntity<ActionPlanDTO> createActionPlan(
+      @RequestBody @Valid final ActionPlanPostRequestDTO request, final BindingResult bindingResult)
+      throws CTPException, InvalidRequestException {
+    log.info(
+        "Creating action plan, Name: {}, Selectors: {}", request.getName(), request.getSelectors());
+    if (bindingResult.hasErrors()) {
+      throw new InvalidRequestException("Binding errors for create action plan: ", bindingResult);
+    }
 
-  
+    // Check if action plan with same name already exists
+    ActionPlan existingActionPlan = actionPlanService.findActionPlanByName(request.getName());
+    if (existingActionPlan != null) {
+      final String message = "Action plan with name " + request.getName() + " already exists";
+      throw new CTPException(CTPException.Fault.RESOURCE_VERSION_CONFLICT, message);
+    }
+
+    ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
+    ActionPlan createdActionPlan = actionPlanService.createActionPlan(actionPlan);
+
+    ActionPlanDTO actionPlanDTO = mapperFacade.map(createdActionPlan, ActionPlanDTO.class);
+    final String newResourceUrl =
+        ServletUriComponentsBuilder.fromCurrentRequest()
+            .buildAndExpand(actionPlanDTO.getId())
+            .toUri()
+            .toString();
+    return ResponseEntity.created(URI.create(newResourceUrl)).body(actionPlanDTO);
+  }
+
   /**
    * This method returns the associated action plan after it has been updated. Note that only the
    * description and the lastGoodRunDatetime can be updated.
@@ -141,13 +159,14 @@ public class ActionPlanEndpoint implements CTPEndpoint {
       throw new InvalidRequestException("Binding errors for update action plan: ", bindingResult);
     }
 
-    final ActionPlan actionPlan =
-        actionPlanService.updateActionPlan(
-            actionPlanId, mapperFacade.map(request, ActionPlan.class));
+    ActionPlan actionPlan = mapperFacade.map(request, ActionPlan.class);
+
+    final ActionPlan updatedActionPlan =
+        actionPlanService.updateActionPlan(actionPlanId, actionPlan);
     if (actionPlan == null) {
       throw new CTPException(
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
     }
-    return mapperFacade.map(actionPlan, ActionPlanDTO.class);
+    return mapperFacade.map(updatedActionPlan, ActionPlanDTO.class);
   }
 }

@@ -1,7 +1,9 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,6 +17,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
 
 /** Domain model object. */
 @CoverageIgnore
@@ -23,6 +29,7 @@ import org.hibernate.annotations.GenericGenerator;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
+@TypeDefs({@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)})
 @Table(name = "actionplan", schema = "action")
 public class ActionPlan implements Serializable {
 
@@ -34,11 +41,9 @@ public class ActionPlan implements Serializable {
       name = "actionplanseq_gen",
       strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
       parameters = {
-        @org.hibernate.annotations.Parameter(
-            name = "sequence_name",
-            value = "action.actionplanseq"),
-        @org.hibernate.annotations.Parameter(name = "initial_value", value = "1000"),
-        @org.hibernate.annotations.Parameter(name = "increment_size", value = "1")
+        @Parameter(name = "sequence_name", value = "action.actionplanseq"),
+        @Parameter(name = "initial_value", value = "1000"),
+        @Parameter(name = "increment_size", value = "1")
       })
   @Column(name = "actionplanpk")
   private Integer actionPlanPK;
@@ -54,4 +59,8 @@ public class ActionPlan implements Serializable {
 
   @Column(name = "lastrundatetime")
   private Timestamp lastRunDateTime;
+
+  @Type(type = "jsonb")
+  @Column(name = "selectors", columnDefinition = "jsonb")
+  private HashMap<String, String> selectors;
 }

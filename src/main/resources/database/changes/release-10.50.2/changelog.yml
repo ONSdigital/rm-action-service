@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 10.50.2-1
+      author: Andrew Millar/Gemma Irving
+      changes:
+        - sqlFile:
+            comment: Add selector column to actionplan table
+            path: add_selector_column.sql
+            relativeToChangelogFile: true
+            splitStatements: false

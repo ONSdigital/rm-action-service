@@ -5,7 +5,10 @@
    "name":"name",
    "description":"description",
    "createdBy":"me",
-   "lastRunDateTime":1460719498196
+   "lastRunDateTime":1460719498196,
+   "selectors": {
+      "selectorKey": "selectorValue"
+   }
 },
 {  
    "id":"A4B60BE3-34DA-4565-AC3B-DD0631422518",
@@ -13,6 +16,9 @@
    "name":"name",
    "description":"description",
    "createdBy":"me",
-   "lastRunDateTime":1460719498196
+   "lastRunDateTime":1460719498196,
+   "selectors": {
+      "selectorKey": "selectorValue"
+   }
 }
 ]

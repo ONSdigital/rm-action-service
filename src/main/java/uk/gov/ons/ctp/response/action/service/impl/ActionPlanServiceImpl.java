@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.service.impl;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -21,34 +22,46 @@ public class ActionPlanServiceImpl implements ActionPlanService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  @Autowired private ActionPlanRepository actionPlanRepo;
+  private ActionPlanRepository actionPlanRepo;
+
+  @Autowired
+  public ActionPlanServiceImpl(final ActionPlanRepository actionPlanRepo) {
+    this.actionPlanRepo = actionPlanRepo;
+  }
 
   @CoverageIgnore
   @Override
   public List<ActionPlan> findActionPlans() {
     log.debug("Entering findActionPlans");
-    return actionPlanRepo.findAll();
+    return this.actionPlanRepo.findAll();
+  }
+
+  @CoverageIgnore
+  @Override
+  public List<ActionPlan> findActionPlansBySelectors(final HashMap<String, String> selectors) {
+    log.debug("Finding action plans by selectors, selectors: {}", selectors);
+    return this.actionPlanRepo.findBySelectorsIn(selectors);
   }
 
   @CoverageIgnore
   @Override
   public ActionPlan findActionPlan(final Integer actionPlanKey) {
     log.debug("Entering findActionPlan with primary key {}", actionPlanKey);
-    return actionPlanRepo.findOne(actionPlanKey);
+    return this.actionPlanRepo.findOne(actionPlanKey);
   }
 
   @CoverageIgnore
   @Override
   public ActionPlan findActionPlanById(final UUID actionPlanId) {
     log.debug("Entering findActionPlanById with id {}", actionPlanId);
-    return actionPlanRepo.findById(actionPlanId);
+    return this.actionPlanRepo.findById(actionPlanId);
   }
 
   @CoverageIgnore
   @Override
   public ActionPlan findActionPlanByName(final String name) {
     log.debug("Entering findActionPlanByName with name {}", name);
-    return actionPlanRepo.findByName(name);
+    return this.actionPlanRepo.findByName(name);
   }
 
   @Override
@@ -57,12 +70,25 @@ public class ActionPlanServiceImpl implements ActionPlanService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public ActionPlan createActionPlan(final ActionPlan actionPlan) {
-    log.debug("Entering createActionPlan with {}", actionPlan);
+    log.debug(
+        "Creating action plan, Name: {}, Selectors: {}",
+        actionPlan.getName(),
+        actionPlan.getSelectors());
 
+    ActionPlan savedActionPlan = saveActionPlan(actionPlan);
+
+    log.debug(
+        "Successfully created action plan, Name: {}, ActionPlanId: {}, Selectors: {}",
+        actionPlan.getName(),
+        actionPlan.getId(),
+        actionPlan.getSelectors());
+    return savedActionPlan;
+  }
+
+  private ActionPlan saveActionPlan(final ActionPlan actionPlan) {
     actionPlan.setActionPlanPK(null);
     actionPlan.setId(UUID.randomUUID());
-
-    return actionPlanRepo.saveAndFlush(actionPlan);
+    return this.actionPlanRepo.saveAndFlush(actionPlan);
   }
 
   @Override
@@ -71,28 +97,31 @@ public class ActionPlanServiceImpl implements ActionPlanService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public ActionPlan updateActionPlan(final UUID actionPlanId, final ActionPlan actionPlan) {
-    log.debug("Entering updateActionPlan with id {}", actionPlanId);
-    ActionPlan existingActionPlan = actionPlanRepo.findById(actionPlanId);
+    log.debug("Updating action plan, ActionPlanId: {}", actionPlanId);
+    ActionPlan existingActionPlan = this.actionPlanRepo.findById(actionPlanId);
     if (existingActionPlan != null) {
       boolean needsUpdate = false;
 
       final String newDescription = actionPlan.getDescription();
-      log.debug("newDescription = {}", newDescription);
       if (newDescription != null) {
         needsUpdate = true;
         existingActionPlan.setDescription(newDescription);
       }
 
       final Date newLastRunDateTime = actionPlan.getLastRunDateTime();
-      log.debug("newLastRunDatetime = {}", newLastRunDateTime);
       if (newLastRunDateTime != null) {
         needsUpdate = true;
         existingActionPlan.setLastRunDateTime(new Timestamp(newLastRunDateTime.getTime()));
       }
 
+      final HashMap<String, String> newSelectors = actionPlan.getSelectors();
+      if (newSelectors != null) {
+        needsUpdate = true;
+        existingActionPlan.setSelectors(newSelectors);
+      }
+
       if (needsUpdate) {
-        log.debug("about to update the action plan with id {}", actionPlanId);
-        existingActionPlan = actionPlanRepo.save(existingActionPlan);
+        existingActionPlan = this.actionPlanRepo.saveAndFlush(existingActionPlan);
       }
     }
     return existingActionPlan;
