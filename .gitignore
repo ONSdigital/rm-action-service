@@ -52,6 +52,7 @@ tools/addend/target/classes/
 .idea/
 out/
 tools/addend/target/classes/
+*__pycache__*
 
 target
 *.log

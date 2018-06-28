@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import uk.gov.ons.ctp.common.service.CTPService;
@@ -14,6 +15,14 @@ public interface ActionPlanService extends CTPService {
    * @return List<ActionPlan> This returns all action plans.
    */
   List<ActionPlan> findActionPlans();
+
+  /**
+   * This method returns all action plans with the given selectors
+   *
+   * @param selectors HashMap of selectors used to find matching action plans
+   * @return List<ActionPlan> This returns all action plans.
+   */
+  List<ActionPlan> findActionPlansBySelectors(HashMap<String, String> selectors);
 
   /**
    * This method returns the action plan for the specified action plan primary key.
@@ -53,8 +62,8 @@ public interface ActionPlanService extends CTPService {
   /**
    * This method returns the action plan after it has been created.
    *
-   * @param actionPlan This is the new action plan to be created.
-   * @return ActionPlan This returns the created action plan.
+   * @param actionPlan action plan to be created
+   * @return ActionPlan This returns the created action plan
    */
   ActionPlan createActionPlan(ActionPlan actionPlan);
 }

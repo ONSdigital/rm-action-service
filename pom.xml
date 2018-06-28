@@ -18,7 +18,7 @@
     <parent>
         <groupId>uk.gov.ons.ctp.product</groupId>
         <artifactId>rm-common-config</artifactId>
-        <version>10.49.8</version>
+        <version>10.49.11</version>
     </parent>
 
     <scm>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>uk.gov.ons.ctp.product</groupId>
             <artifactId>actionsvc-api</artifactId>
-            <version>10.49.12</version>
+            <version>10.49.18-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -220,6 +220,13 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>hibernate-types-52</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+
         <dependency>
             <groupId>com.cosium.code</groupId>
             <artifactId>maven-git-code-format</artifactId>
@@ -271,6 +278,7 @@
                 <groupId>com.coveo</groupId>
                 <artifactId>fmt-maven-plugin</artifactId>
                 <version>2.5.0</version>
+
                 <executions>
                     <execution>
                         <goals>
@@ -278,11 +286,13 @@
                         </goals>
                     </execution>
                 </executions>
+
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>2.17</version>
+
                 <executions>
                     <execution>
                         <id>test</id>
@@ -297,6 +307,7 @@
                         </configuration>
                     </execution>
                 </executions>
+
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
