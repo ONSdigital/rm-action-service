@@ -110,8 +110,6 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     return mapperFacade.map(actionPlan, ActionPlanDTO.class);
   }
 
-
-  
   /**
    * This method returns the associated action plan after it has been updated. Note that only the
    * description and the lastGoodRunDatetime can be updated.

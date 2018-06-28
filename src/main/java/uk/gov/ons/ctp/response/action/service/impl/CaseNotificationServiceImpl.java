@@ -48,11 +48,13 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
     final UUID caseId = UUID.fromString(notification.getCaseId());
     final UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
     final UUID partyId = UUID.fromString(notification.getPartyId());
+    final UUID sampleUnitId = UUID.fromString(notification.getSampleUnitId());
 
     if (actionPlan != null) {
       final ActionCase actionCase =
           ActionCase.builder()
               .id(caseId)
+              .sampleUnitId(sampleUnitId)
               .actionPlanId(actionPlanId)
               .actionPlanFK(actionPlan.getActionPlanPK())
               .collectionExerciseId(collectionExerciseId)
