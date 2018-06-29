@@ -69,6 +69,7 @@ public class CaseNotificationServiceImplTest {
     caseNotification.setNotificationType(NotificationType.ACTIVATED);
     caseNotification.setExerciseId(DUMMY_UUID);
     caseNotification.setPartyId(DUMMY_UUID);
+    caseNotification.setSampleUnitId(DUMMY_UUID);
 
     final ActionPlan actionPlan = new ActionPlan();
     actionPlan.setActionPlanPK(1);
