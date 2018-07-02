@@ -1,0 +1,28 @@
+{
+  "state": "ACTIONABLE",
+  "id": "95db01c8-f117-4c5b-9672-757ab661220e",
+  "actionPlanId": "%s",
+  "collectionInstrumentId": "57b61b3e-15ee-425c-86a8-27f2b72c75ac",
+  "iac": "37j59xnrjnkc",
+  "caseRef": "1000000000000101",
+  "createdBy": "SYSTEM",
+  "sampleUnitType": "B",
+  "createdDateTime": "2018-07-02T11:53:48.999Z",
+  "caseGroup": {
+    "collectionExerciseId": "%s",
+    "id": "b160e183-4747-4468-ab20-57f03a9b9b2b",
+    "sampleUnitRef": "LMS00001",
+    "sampleUnitType": "H",
+    "caseGroupStatus": "NOTSTARTED"
+  },
+  "responses": [],
+  "caseEvents": [
+    {
+      "createdDateTime": "2018-07-02T11:53:49.001Z",
+      "category": "CASE_CREATED",
+      "subCategory": null,
+      "createdBy": "SYSTEM",
+      "description": "Case created when Initial creation of case"
+    }
+  ]
+}
