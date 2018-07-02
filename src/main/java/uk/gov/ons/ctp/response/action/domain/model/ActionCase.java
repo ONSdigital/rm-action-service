@@ -76,4 +76,7 @@ public class ActionCase implements Serializable {
 
   @Column(name = "partyid")
   private UUID partyId;
+
+  @Column(name = "sampleunittype")
+  private String sampleUnitType;
 }

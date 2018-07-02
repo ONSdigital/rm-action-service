@@ -1,0 +1,1 @@
+ALTER TABLE action.case ADD COLUMN sampleunittype varchar(2);

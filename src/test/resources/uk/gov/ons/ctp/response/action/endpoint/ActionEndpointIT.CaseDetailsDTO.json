@@ -6,7 +6,7 @@
   "iac": "37j59xnrjnkc",
   "caseRef": "1000000000000101",
   "createdBy": "SYSTEM",
-  "sampleUnitType": "B",
+  "sampleUnitType": "H",
   "createdDateTime": "2018-07-02T11:53:48.999Z",
   "caseGroup": {
     "collectionExerciseId": "%s",

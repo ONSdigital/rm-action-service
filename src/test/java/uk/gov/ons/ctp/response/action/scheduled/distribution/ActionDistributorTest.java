@@ -25,7 +25,9 @@ import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.response.action.config.ActionDistribution;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
@@ -59,6 +61,8 @@ public class ActionDistributorTest {
   @Mock private ActionTypeRepository actionTypeRepo;
 
   @Mock private ActionProcessingService actionProcessingService;
+
+  @Mock private ActionCaseRepository actionCaseRepo;
 
   @InjectMocks private ActionDistributor actionDistributor;
 
@@ -124,6 +128,10 @@ public class ActionDistributorTest {
    */
   @Test
   public void testHappyPathParentCase() throws Exception {
+    ActionCase acase = new ActionCase();
+    acase.setSampleUnitType("B");
+    when(actionCaseRepo.findById(any())).thenReturn(acase);
+
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
     when(actionRepo.findSubmittedOrCancelledByActionTypeName(
             eq(HOUSEHOLD_INITIAL_CONTACT), anyInt()))
@@ -188,10 +196,14 @@ public class ActionDistributorTest {
    */
   @Test
   public void testActionProcessingServiceThrowsException() throws Exception {
+
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
     when(actionRepo.findSubmittedOrCancelledByActionTypeName(
             eq(HOUSEHOLD_INITIAL_CONTACT), anyInt()))
         .thenReturn(householdInitialContactActions);
+    ActionCase acase = new ActionCase();
+    acase.setSampleUnitType("B");
+    when(actionCaseRepo.findById(any())).thenReturn(acase);
     when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC), anyInt()))
         .thenReturn(householdUploadIACActions);
     doThrow(new RuntimeException("Database access failed"))
@@ -261,6 +273,10 @@ public class ActionDistributorTest {
    */
   @Test
   public void testActionProcessingServiceThrowsExceptionIntermittently() throws Exception {
+    ActionCase acase = new ActionCase();
+    acase.setSampleUnitType("B");
+    when(actionCaseRepo.findById(any())).thenReturn(acase);
+
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
     when(actionRepo.findSubmittedOrCancelledByActionTypeName(
             eq(HOUSEHOLD_INITIAL_CONTACT), anyInt()))

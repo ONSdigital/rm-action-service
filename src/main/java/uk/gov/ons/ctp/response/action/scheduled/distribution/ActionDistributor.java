@@ -7,15 +7,20 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 /**
  * This is the 'service' class that distributes actions to downstream services, ie services outside
@@ -35,7 +40,15 @@ class ActionDistributor {
 
   @Autowired private ActionTypeRepository actionTypeRepo;
 
-  @Autowired private ActionProcessingService actionProcessingService;
+  @Autowired
+  @Qualifier("business")
+  private ActionProcessingService businessActionProcessingService;
+
+  @Autowired
+  @Qualifier("social")
+  private ActionProcessingService socialActionProcessingService;
+
+  @Autowired private ActionCaseRepository actionCaseRepo;
 
   /**
    * wake up on schedule and check for submitted actions, enrich and distribute them to spring
@@ -94,13 +107,7 @@ class ActionDistributor {
         actions.stream().map(Objects::toString).collect(Collectors.joining(",")));
     for (final Action action : actions) {
       try {
-        if (action.getState().equals(ActionState.SUBMITTED)) {
-          actionProcessingService.processActionRequest(action);
-          requestCount.increment();
-        } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
-          actionProcessingService.processActionCancel(action);
-          cancelCount.increment();
-        }
+        processAction(action, requestCount, cancelCount);
       } catch (final Exception e) {
         log.error(
             "Could not processing action {}."
@@ -108,6 +115,39 @@ class ActionDistributor {
             action.getId(),
             e);
       }
+    }
+  }
+
+  public ActionProcessingService getActionProcessingService(Action action) {
+    ActionCase acase = actionCaseRepo.findById(action.getCaseId());
+    SampleUnitDTO.SampleUnitType caseType =
+        SampleUnitDTO.SampleUnitType.valueOf(acase.getSampleUnitType());
+
+    switch (caseType) {
+      case H:
+      case HI:
+        return socialActionProcessingService;
+
+      case B:
+      case BI:
+        return businessActionProcessingService;
+
+      default:
+        throw new UnsupportedOperationException("Sample Type: " + caseType + " is not supported!");
+    }
+  }
+
+  private void processAction(
+      Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
+      throws CTPException {
+    ActionProcessingService ap = getActionProcessingService(action);
+
+    if (action.getState().equals(ActionState.SUBMITTED)) {
+      ap.processActionRequest(action);
+      requestCount.increment();
+    } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
+      ap.processActionCancel(action);
+      cancelCount.increment();
     }
   }
 

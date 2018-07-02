@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.text.MessageFormat;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -107,6 +106,7 @@ public class ActionEndpointIT {
     casenot.setActionPlanId(case_details_dto.getActionPlanId().toString());
     casenot.setExerciseId(collexId.toString());
     casenot.setNotificationType(NotificationType.ACTIVATED);
+    casenot.setSampleUnitType("H");
 
     JAXBContext jaxbContext = JAXBContext.newInstance(CaseNotification.class);
     SimpleMessageListener listener = getMessageListener();

@@ -52,6 +52,7 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
       partyId = UUID.fromString(notification.getPartyId());
     }
     final UUID sampleUnitId = UUID.fromString(notification.getSampleUnitId());
+    final String sampleUnitType = notification.getSampleUnitType();
 
     if (actionPlan != null) {
       final ActionCase actionCase =
@@ -62,6 +63,7 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
               .actionPlanFK(actionPlan.getActionPlanPK())
               .collectionExerciseId(collectionExerciseId)
               .partyId(partyId)
+              .sampleUnitType(sampleUnitType)
               .build();
 
       switch (notification.getNotificationType()) {

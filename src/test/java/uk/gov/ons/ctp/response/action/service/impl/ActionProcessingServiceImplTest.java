@@ -106,7 +106,7 @@ public class ActionProcessingServiceImplTest {
 
   @Mock private ActionRequestValidator validator;
 
-  @InjectMocks private ActionProcessingServiceImpl actionProcessingService;
+  @InjectMocks private BusinessActionProcessingServiceImpl businessActionProcessingService;
 
   private List<CaseDetailsDTO> caseDetailsDTOs;
   private List<CollectionExerciseDTO> collectionExerciseDTOs;
@@ -130,7 +130,7 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestNoActionType() throws CTPException {
     final Action action = new Action();
-    actionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequest(action);
 
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
@@ -147,7 +147,7 @@ public class ActionProcessingServiceImplTest {
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
     final Action action = new Action();
     action.setActionType(ActionType.builder().build());
-    actionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequest(action);
 
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
@@ -171,7 +171,7 @@ public class ActionProcessingServiceImplTest {
     final Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     try {
-      actionProcessingService.processActionRequest(action);
+      businessActionProcessingService.processActionRequest(action);
       fail();
     } catch (final CTPException e) {
       assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
@@ -198,7 +198,7 @@ public class ActionProcessingServiceImplTest {
     final Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     try {
-      actionProcessingService.processActionRequest(action);
+      businessActionProcessingService.processActionRequest(action);
       fail();
     } catch (final RuntimeException e) {
       assertEquals(DB_ERROR_MSG, e.getMessage());
@@ -257,7 +257,7 @@ public class ActionProcessingServiceImplTest {
       action.setActionPlanFK(ACTION_PLAN_FK);
       action.setCaseId(CASE_ID);
       action.setPriority(1);
-      actionProcessingService.processActionRequest(action);
+      businessActionProcessingService.processActionRequest(action);
       fail();
     } catch (final RuntimeException e) {
       assertEquals(REST_ERROR_MSG, e.getMessage());
@@ -319,7 +319,7 @@ public class ActionProcessingServiceImplTest {
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID);
     action.setPriority(1);
-    actionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequest(action);
     // End of section to run the test
 
     // Start of section to verify calls
@@ -365,7 +365,7 @@ public class ActionProcessingServiceImplTest {
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID_1);
     action.setPriority(1);
-    actionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequest(action);
     // End of section to run the test
 
     // Start of section to verify calls
@@ -425,7 +425,7 @@ public class ActionProcessingServiceImplTest {
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID_2);
     action.setPriority(1);
-    actionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequest(action);
     // End of section to run the test
 
     // Start of section to verify calls
@@ -459,7 +459,7 @@ public class ActionProcessingServiceImplTest {
 
     try {
       final Action action = new Action();
-      actionProcessingService.processActionCancel(action);
+      businessActionProcessingService.processActionCancel(action);
       fail();
     } catch (final CTPException e) {
       assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
@@ -485,7 +485,7 @@ public class ActionProcessingServiceImplTest {
 
     try {
       final Action action = new Action();
-      actionProcessingService.processActionCancel(action);
+      businessActionProcessingService.processActionCancel(action);
       fail();
     } catch (final RuntimeException e) {
       assertEquals(DB_ERROR_MSG, e.getMessage());
@@ -518,7 +518,7 @@ public class ActionProcessingServiceImplTest {
       action.setActionType(
           ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
       action.setId(ACTION_ID);
-      actionProcessingService.processActionCancel(action);
+      businessActionProcessingService.processActionCancel(action);
       fail();
     } catch (final RuntimeException e) {
       assertEquals(REST_ERROR_MSG, e.getMessage());
@@ -548,7 +548,7 @@ public class ActionProcessingServiceImplTest {
     action.setActionType(
         ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setId(ACTION_ID);
-    actionProcessingService.processActionCancel(action);
+    businessActionProcessingService.processActionCancel(action);
 
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
@@ -583,10 +583,10 @@ public class ActionProcessingServiceImplTest {
 
     final Map<String, PartyDTO> expectedChildPartyMap = new HashMap<>();
     expectedChildPartyMap.put("SUSPENDED", respondentSuspendedBI);
-    expectedChildPartyMap.put(actionProcessingService.CREATED, respondentCreatedBI);
+    expectedChildPartyMap.put(businessActionProcessingService.CREATED, respondentCreatedBI);
 
     final Map<String, PartyDTO> actualChildPartyMap =
-        actionProcessingService.getChildParties(partyDTOs.get(B_PARTY), "B");
+        businessActionProcessingService.getChildParties(partyDTOs.get(B_PARTY), "B");
 
     assertEquals(expectedChildPartyMap, actualChildPartyMap);
   }
@@ -594,29 +594,32 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testParseRespondentStatusCreated() {
     final Map<String, PartyDTO> childPartyMap = new HashMap<>();
-    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put(businessActionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
     childPartyMap.put("SUSPENDED", partyDTOs.get(SUSPENDED_BI));
 
-    final String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+    final String respondentStatus =
+        businessActionProcessingService.parseRespondentStatuses(childPartyMap);
 
-    assertEquals(actionProcessingService.CREATED, respondentStatus);
+    assertEquals(businessActionProcessingService.CREATED, respondentStatus);
   }
 
   @Test
   public void testParseRespondentStatusActive() {
     final Map<String, PartyDTO> childPartyMap = new HashMap<>();
-    childPartyMap.put(actionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
-    childPartyMap.put(actionProcessingService.ACTIVE, partyDTOs.get(ACTIVE_BI));
+    childPartyMap.put(businessActionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
+    childPartyMap.put(businessActionProcessingService.ACTIVE, partyDTOs.get(ACTIVE_BI));
 
-    final String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+    final String respondentStatus =
+        businessActionProcessingService.parseRespondentStatuses(childPartyMap);
 
-    assertEquals(actionProcessingService.ACTIVE, respondentStatus);
+    assertEquals(businessActionProcessingService.ACTIVE, respondentStatus);
   }
 
   @Test
   public void testParseRespondentStatusesEmpty() {
     final Map<String, PartyDTO> childPartyMap = new HashMap<>();
-    final String respondentStatus = actionProcessingService.parseRespondentStatuses(childPartyMap);
+    final String respondentStatus =
+        businessActionProcessingService.parseRespondentStatuses(childPartyMap);
 
     assertEquals(null, respondentStatus);
   }
@@ -625,27 +628,29 @@ public class ActionProcessingServiceImplTest {
   public void testGetEnrolmentStatusEnabled() {
     final PartyDTO partyDTO = partyDTOs.get(0);
     assertEquals(
-        actionProcessingService.ENABLED, actionProcessingService.getEnrolmentStatus(partyDTO));
+        businessActionProcessingService.ENABLED,
+        businessActionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
   public void testGetEnrolmentStatusPending() {
     final PartyDTO partyDTO = partyDTOs.get(1);
     assertEquals(
-        actionProcessingService.PENDING, actionProcessingService.getEnrolmentStatus(partyDTO));
+        businessActionProcessingService.PENDING,
+        businessActionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
   public void testGetEnrolmentStatusDefault() {
     final PartyDTO partyDTO = partyDTOs.get(2);
-    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(null, businessActionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
   public void testGetEnrolmentStatusNoEnrolments() {
     final PartyDTO partyDTO = partyDTOs.get(2);
     partyDTO.setAssociations(null);
-    assertEquals(null, actionProcessingService.getEnrolmentStatus(partyDTO));
+    assertEquals(null, businessActionProcessingService.getEnrolmentStatus(partyDTO));
   }
 
   @Test
@@ -656,7 +661,7 @@ public class ActionProcessingServiceImplTest {
     businessAttributes.setTradstyle3("TRADSTYLE3");
 
     final String generatedTradingStyle =
-        actionProcessingService.generateTradingStyle(businessAttributes);
+        businessActionProcessingService.generateTradingStyle(businessAttributes);
     final String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE2 TRADSTYLE3";
 
     assertEquals(expectedTradingStyle, generatedTradingStyle);
@@ -667,7 +672,7 @@ public class ActionProcessingServiceImplTest {
     final Attributes businessAttributes = new Attributes();
 
     final String generatedTradingStyle =
-        actionProcessingService.generateTradingStyle(businessAttributes);
+        businessActionProcessingService.generateTradingStyle(businessAttributes);
     final String expectedTradingStyle = "";
 
     assertEquals(expectedTradingStyle, generatedTradingStyle);
@@ -680,7 +685,7 @@ public class ActionProcessingServiceImplTest {
     businessAttributes.setTradstyle3("TRADSTYLE3");
 
     final String generatedTradingStyle =
-        actionProcessingService.generateTradingStyle(businessAttributes);
+        businessActionProcessingService.generateTradingStyle(businessAttributes);
     final String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE3";
 
     assertEquals(expectedTradingStyle, generatedTradingStyle);
@@ -708,7 +713,7 @@ public class ActionProcessingServiceImplTest {
     action.setPriority(1);
 
     // When
-    actionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequest(action);
 
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);
