@@ -39,6 +39,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 import uk.gov.ons.tools.rabbit.Rabbitmq;
 import uk.gov.ons.tools.rabbit.SimpleMessageBase;
 import uk.gov.ons.tools.rabbit.SimpleMessageListener;
@@ -76,6 +77,7 @@ public class ActionEndpointIT {
   @Test
   public void ensureSampleIDExposed() throws Exception {
     UUID collexId = UUID.fromString("3116a1bd-3a84-4761-ae30-4916c4e7120a");
+    UUID sampleUnitId = UUID.randomUUID();
 
     createCollectionExerciseMock(collexId);
 
@@ -99,8 +101,12 @@ public class ActionEndpointIT {
     CaseDetailsDTO case_details_dto =
         createCaseDetailsMock(collexId, createActionPlanRes.getBody().getId());
 
+    createCaseEventMock(case_details_dto.getId());
+
+    SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
+
     CaseNotification casenot = new CaseNotification();
-    UUID sampleUnitId = UUID.randomUUID();
+
     casenot.setSampleUnitId(sampleUnitId.toString());
     casenot.setCaseId(case_details_dto.getId().toString());
     casenot.setActionPlanId(case_details_dto.getActionPlanId().toString());
@@ -115,6 +121,12 @@ public class ActionEndpointIT {
             SimpleMessageBase.ExchangeType.Direct,
             "action-outbound-exchange",
             "Action.CaseNotificationHandled.binding");
+
+    BlockingQueue<String> queue2 =
+        listener.listen(
+            SimpleMessageBase.ExchangeType.Direct,
+            "action-outbound-exchange",
+            "Action.Printer.binding");
 
     String xml =
         mapzer.convertObjectToXml(
@@ -136,7 +148,13 @@ public class ActionEndpointIT {
         .body(apord)
         .asObject(ActionPostRequestDTO.class);
 
-    Thread.sleep(10_000_000);
+    String printer_message = queue2.take();
+
+    assertThat(printer_message).isNotNull();
+
+    log.debug("printer_message = " + printer_message);
+
+
   }
 
   private String loadResourceAsString(Class clazz, String resourceName) throws IOException {
@@ -191,24 +209,16 @@ public class ActionEndpointIT {
         });
   }
 
-  private void createCollectionExerciseMock(UUID collexID) {
+  private void createCollectionExerciseMock(UUID collexID) throws IOException {
+    String f =
+        loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.CollectionExercise.json");
+
     this.wireMockRule.stubFor(
         get(urlPathEqualTo(String.format("/collectionexercises/%s", collexID.toString())))
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        String.format(
-                            "  {\n"
-                                + "    \"id\": \"%s\",\n"
-                                + "    \"surveyId\": \"31ec898e-f370-429a-bca4-eab1045aff4e\",\n"
-                                + "    \"name\": \"Survey Name\",\n"
-                                + "    \"exerciseRef\": \"202103\",\n"
-                                + "    \"userDescription\": \"March 2021\",\n"
-                                + "    \"scheduledStartDateTime\": \"2018-07-01T00:00:00.000Z\",\n"
-                                + "    \"scheduledEndDateTime\": \"2018-07-31T00:00:00.000Z\"\n"
-                                + "  }\n",
-                            collexID.toString()))));
+                    .withBody(String.format(f, collexID.toString()))));
   }
 
   private CaseDetailsDTO createCaseDetailsMock(UUID collexId, UUID actionPlanId)
@@ -225,5 +235,30 @@ public class ActionEndpointIT {
                 aResponse().withHeader("Content-Type", "application/json").withBody(case_details)));
 
     return case_details_dto;
+  }
+
+  private void createCaseEventMock(UUID caseId) throws IOException {
+
+    String f = loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.CreatedCaseEvent.json");
+    String case_event_created = String.format(f, caseId);
+
+    this.wireMockRule.stubFor(
+        post(urlPathMatching("/cases/(.*)/events"))
+            .willReturn(
+                aResponse().withHeader("Content-Type", "application/json").withStatus(201).withBody(case_event_created)));
+  }
+
+  private SampleAttributesDTO createSampleAttributesMock(UUID sampleUnitId) throws IOException {
+
+    String f = loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.SampleAttributes.json");
+    String sample_attributes = String.format(f, sampleUnitId);
+    SampleAttributesDTO sample_attributes_dto = mapper.readValue(f, SampleAttributesDTO.class);
+
+    this.wireMockRule.stubFor(
+            post(urlPathMatching("/samples/(.*)/attributes"))
+                    .willReturn(
+                            aResponse().withHeader("Content-Type", "application/json").withStatus(201).withBody(sample_attributes)));
+
+    return sample_attributes_dto;
   }
 }

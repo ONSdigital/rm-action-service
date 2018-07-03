@@ -53,7 +53,7 @@ spring:
       enabled: never
   application:
     name: ONS ActionService
-    
+
   datasource:
     url: jdbc:postgresql://localhost:6432/postgres
     username: postgres
@@ -92,12 +92,12 @@ action-distribution:
   retrieval-max: 200
   # when we fail to send to rabbit how long should we pause for before retry
   retry-sleep-seconds: 30
-  # how long to pause after each distribution exercise 
+  # how long to pause after each distribution exercise
   delay-milli-seconds: 1000
 
  # the thread that executes plans to create the  actions
 plan-execution:
-  # pause after each execution exercise 
+  # pause after each execution exercise
   delay-milli-seconds: 1000
 
  # calling the case svc endpoints
@@ -165,6 +165,20 @@ survey-svc:
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
+ # calling the survey svc endpoints
+sample-svc:
+  sample-attributes-by-id: /samples/{sampleUnitId}/attributes
+  connection-config:
+    scheme: http
+    host: localhost
+    port: 8125
+    username: admin
+    password: secret
+    retry-attempts: 5
+    retry-pause-milli-seconds: 5000
+    connect-timeout-milli-seconds: 5000
+    read-timeout-milli-seconds: 5000
+
  # looking for the ingest file
 csv-ingest:
   directory: /tmp/csv
@@ -185,7 +199,7 @@ rabbitmq:
   host: localhost
   port: 6672
   virtualhost: /
-  
+
 messaging:
   backoffInitial: 5000
   backoffMultiplier: 3
