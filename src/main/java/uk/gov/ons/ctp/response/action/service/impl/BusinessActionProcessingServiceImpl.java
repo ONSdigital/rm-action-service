@@ -53,7 +53,6 @@ public class BusinessActionProcessingServiceImpl extends ActionProcessingService
 
   @Autowired private SurveySvcClientService surveySvcClientService;
 
-  private static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String ENABLED = "ENABLED";
   public static final String PENDING = "PENDING";
   public static final String ACTIVE = "ACTIVE";
@@ -173,6 +172,8 @@ public class BusinessActionProcessingServiceImpl extends ActionProcessingService
       final PartyDTO childParty,
       final CollectionExerciseDTO collectionExercise,
       final List<CaseEventDTO> caseEventDTOs) {
+
+      // Everything from here ...
     final ActionRequest actionRequest = new ActionRequest();
     final String actionID = action.getId().toString();
     log.debug("actionID is {}", actionID);
@@ -203,9 +204,10 @@ public class BusinessActionProcessingServiceImpl extends ActionProcessingService
     actionRequest.setSurveyRef(surveyDTO.getSurveyRef());
     actionRequest.setUserDescription(collectionExercise.getUserDescription());
 
-    final Attributes businessUnitAttributes = parentParty.getAttributes();
-
     actionRequest.setLegalBasis(surveyDTO.getLegalBasis());
+    // ... to here is common to both social and business
+
+    final Attributes businessUnitAttributes = parentParty.getAttributes();
     actionRequest.setRegion(businessUnitAttributes.getRegion());
 
     final ActionContact actionContact = new ActionContact();

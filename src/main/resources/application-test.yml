@@ -37,3 +37,7 @@ sample-svc:
 collection-exercise-svc:
   connection-config:
     port: 18002
+
+survey-svc:
+  connection-config:
+    port: 18002

@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -33,6 +35,8 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
@@ -40,6 +44,7 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
+import uk.gov.ons.ctp.response.sampleunit.definition.SampleUnit;
 import uk.gov.ons.tools.rabbit.Rabbitmq;
 import uk.gov.ons.tools.rabbit.SimpleMessageBase;
 import uk.gov.ons.tools.rabbit.SimpleMessageListener;
@@ -105,6 +110,8 @@ public class ActionEndpointIT {
 
     SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
 
+    createSurveyDetailsMock();
+
     CaseNotification casenot = new CaseNotification();
 
     casenot.setSampleUnitId(sampleUnitId.toString());
@@ -136,10 +143,13 @@ public class ActionEndpointIT {
 
     String message = queue.take();
 
+    assertThat(message).isNotNull();
+
     ActionPostRequestDTO apord = new ActionPostRequestDTO();
     apord.setCaseId(UUID.fromString(casenot.getCaseId()));
     apord.setCreatedBy("SYSTEM");
     apord.setActionTypeName("SOCIALNOT");
+    apord.setPriority(1);
 
     Unirest.post("http://localhost:" + this.port + "/actions")
         .basicAuth("admin", "secret")
@@ -152,9 +162,15 @@ public class ActionEndpointIT {
 
     assertThat(printer_message).isNotNull();
 
+    JAXBContext xmlToObject = JAXBContext.newInstance(ActionInstruction.class);
+    ActionInstruction acti = (ActionInstruction) xmlToObject.createUnmarshaller()
+                                                    .unmarshal(new ByteArrayInputStream(printer_message.getBytes()));
+
+    ActionAddress address = acti.getActionRequest().getAddress();
+
+    assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
+
     log.debug("printer_message = " + printer_message);
-
-
   }
 
   private String loadResourceAsString(Class clazz, String resourceName) throws IOException {
@@ -239,26 +255,49 @@ public class ActionEndpointIT {
 
   private void createCaseEventMock(UUID caseId) throws IOException {
 
-    String f = loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.CreatedCaseEvent.json");
+    String f =
+        loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.CreatedCaseEvent.json");
     String case_event_created = String.format(f, caseId);
 
     this.wireMockRule.stubFor(
         post(urlPathMatching("/cases/(.*)/events"))
             .willReturn(
-                aResponse().withHeader("Content-Type", "application/json").withStatus(201).withBody(case_event_created)));
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withStatus(201)
+                    .withBody(case_event_created)));
   }
 
   private SampleAttributesDTO createSampleAttributesMock(UUID sampleUnitId) throws IOException {
 
-    String f = loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.SampleAttributes.json");
-    String sample_attributes = String.format(f, sampleUnitId);
+    String f =
+        loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.SampleAttributes.json");
+    String sample_attributes = String.format(f, sampleUnitId.toString());
     SampleAttributesDTO sample_attributes_dto = mapper.readValue(f, SampleAttributesDTO.class);
+    log.debug("sample_attributes to mock = " + sample_attributes_dto);
 
     this.wireMockRule.stubFor(
-            post(urlPathMatching("/samples/(.*)/attributes"))
-                    .willReturn(
-                            aResponse().withHeader("Content-Type", "application/json").withStatus(201).withBody(sample_attributes)));
+        get(urlPathMatching(String.format("/samples/%s/attributes", sampleUnitId)))
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withStatus(201)
+                    .withBody(sample_attributes)));
 
     return sample_attributes_dto;
+  }
+
+  private void createSurveyDetailsMock() throws IOException {
+
+    String survey_details =
+        loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.SurveyDetails.json");
+
+    this.wireMockRule.stubFor(
+        get(urlPathMatching("/surveys/(.*)"))
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withStatus(201)
+                    .withBody(survey_details)));
   }
 }

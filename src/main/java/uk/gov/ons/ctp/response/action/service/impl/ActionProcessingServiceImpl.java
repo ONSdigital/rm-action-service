@@ -23,6 +23,7 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 @Slf4j
 public abstract class ActionProcessingServiceImpl implements ActionProcessingService {
 
+  protected static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   public static final String ENABLED = "ENABLED";
   public static final String PENDING = "PENDING";
