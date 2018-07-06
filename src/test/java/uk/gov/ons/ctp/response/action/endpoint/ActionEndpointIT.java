@@ -168,9 +168,12 @@ public class ActionEndpointIT {
 
     ActionAddress address = acti.getActionRequest().getAddress();
 
-    assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
-
     log.debug("printer_message = " + printer_message);
+
+    assertThat(address.getSampleUnitRef()).isEqualTo(sample_attributes.getAttributes().get("Reference"));
+    assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
+    assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("Postcode"));
+    assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("PostTown"));
   }
 
   private String loadResourceAsString(Class clazz, String resourceName) throws IOException {
