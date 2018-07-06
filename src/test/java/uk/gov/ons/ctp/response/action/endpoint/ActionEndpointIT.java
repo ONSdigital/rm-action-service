@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +43,6 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
-import uk.gov.ons.ctp.response.sampleunit.definition.SampleUnit;
 import uk.gov.ons.tools.rabbit.Rabbitmq;
 import uk.gov.ons.tools.rabbit.SimpleMessageBase;
 import uk.gov.ons.tools.rabbit.SimpleMessageListener;
@@ -163,8 +161,11 @@ public class ActionEndpointIT {
     assertThat(printer_message).isNotNull();
 
     JAXBContext xmlToObject = JAXBContext.newInstance(ActionInstruction.class);
-    ActionInstruction acti = (ActionInstruction) xmlToObject.createUnmarshaller()
-                                                    .unmarshal(new ByteArrayInputStream(printer_message.getBytes()));
+    ActionInstruction acti =
+        (ActionInstruction)
+            xmlToObject
+                .createUnmarshaller()
+                .unmarshal(new ByteArrayInputStream(printer_message.getBytes()));
 
     ActionAddress address = acti.getActionRequest().getAddress();
 
