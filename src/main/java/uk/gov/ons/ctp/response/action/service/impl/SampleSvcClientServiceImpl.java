@@ -1,6 +1,8 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,15 +20,11 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.service.SampleSvcClientService;
 import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 
-import java.io.IOException;
-import java.util.UUID;
-
 @Slf4j
 @Service
 public class SampleSvcClientServiceImpl implements SampleSvcClientService {
 
-  @Autowired
-  private AppConfig appConfig;
+  @Autowired private AppConfig appConfig;
 
   @Autowired private RestTemplate restTemplate;
 
@@ -37,19 +35,19 @@ public class SampleSvcClientServiceImpl implements SampleSvcClientService {
   @Autowired private ObjectMapper objectMapper;
 
   @Retryable(
-          value = {RestClientException.class},
-          maxAttemptsExpression = "#{${retries.maxAttempts}}",
-          backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   @Override
   public SampleAttributesDTO getSampleAttributes(UUID sampleUnitId) {
     final UriComponents uriComponents =
-            restUtility.createUriComponents(
-                    appConfig.getSampleSvc().getSampleAttributesById(), null, sampleUnitId);
+        restUtility.createUriComponents(
+            appConfig.getSampleSvc().getSampleAttributesById(), null, sampleUnitId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
     final ResponseEntity<String> responseEntity =
-            restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     SampleAttributesDTO attribs = null;
 

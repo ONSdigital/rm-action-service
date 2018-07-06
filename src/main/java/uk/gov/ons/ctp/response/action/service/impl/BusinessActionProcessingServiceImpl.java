@@ -173,7 +173,7 @@ public class BusinessActionProcessingServiceImpl extends ActionProcessingService
       final CollectionExerciseDTO collectionExercise,
       final List<CaseEventDTO> caseEventDTOs) {
 
-      // Everything from here ...
+    // Everything from here ...
     final ActionRequest actionRequest = new ActionRequest();
     final String actionID = action.getId().toString();
     log.debug("actionID is {}", actionID);

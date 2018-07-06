@@ -1,7 +1,8 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +18,6 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
-
-import java.util.List;
-import java.util.UUID;
 
 @Data
 @Slf4j
@@ -40,8 +38,10 @@ public class ActionRequestHelper {
   private ActionPlan actionPlan;
   private List<CaseEventDTO> caseEventDTOs;
 
-  public ActionRequestHelper(ActionPlanRepository actionPlanRepo, CaseSvcClientService caseSvcClientService,
-          CollectionExerciseClientService collectionExerciseClientService) {
+  public ActionRequestHelper(
+      ActionPlanRepository actionPlanRepo,
+      CaseSvcClientService caseSvcClientService,
+      CollectionExerciseClientService collectionExerciseClientService) {
     this.actionPlanRepo = actionPlanRepo;
     this.caseSvcClientService = caseSvcClientService;
     this.collectionExerciseClientService = collectionExerciseClientService;
@@ -93,11 +93,12 @@ public class ActionRequestHelper {
     caseEventDTOs = caseDTO.getCaseEvents();
 
     caseEventDTOs.forEach(
-            (caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
+        (caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
 
     return actionRequest;
   }
+
   /**
    * Formats a CaseEvent as a string that can added to the ActionRequest
    *
@@ -106,11 +107,11 @@ public class ActionRequestHelper {
    */
   protected String formatCaseEvent(final CaseEventDTO caseEventDTO) {
     return String.format(
-            "%s : %s : %s : %s",
-            caseEventDTO.getCategory(),
-            caseEventDTO.getSubCategory(),
-            caseEventDTO.getCreatedBy(),
-            caseEventDTO.getDescription());
+        "%s : %s : %s : %s",
+        caseEventDTO.getCategory(),
+        caseEventDTO.getSubCategory(),
+        caseEventDTO.getCreatedBy(),
+        caseEventDTO.getDescription());
   }
 
   /**
