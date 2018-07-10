@@ -171,7 +171,8 @@ public class ActionEndpointIT {
 
     log.debug("printer_message = " + printer_message);
 
-    assertThat(address.getSampleUnitRef()).isEqualTo(sample_attributes.getAttributes().get("Reference"));
+    assertThat(address.getSampleUnitRef())
+        .isEqualTo(sample_attributes.getAttributes().get("Reference"));
     assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
     assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("Postcode"));
     assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("PostTown"));
