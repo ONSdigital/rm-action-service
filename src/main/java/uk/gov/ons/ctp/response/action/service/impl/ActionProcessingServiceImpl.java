@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -15,20 +16,14 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
+import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContext;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 @Slf4j
 public abstract class ActionProcessingServiceImpl implements ActionProcessingService {
-
-  protected static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
-  public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
-  public static final String ENABLED = "ENABLED";
-  public static final String PENDING = "PENDING";
-  public static final String ACTIVE = "ACTIVE";
-  public static final String CREATED = "CREATED";
 
   @Autowired private CaseSvcClientService caseSvcClientService;
 
@@ -40,9 +35,25 @@ public abstract class ActionProcessingServiceImpl implements ActionProcessingSer
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
 
+  private ActionRequestDecorator[] decorators;
+
   @Autowired private ActionRequestValidator validator;
 
-  public abstract ActionRequest prepareActionRequest(final Action action);
+  public abstract ActionRequestDecoratorContextFactory getActionRequestDecoratorContextFactory();
+
+  public ActionProcessingServiceImpl(ActionRequestDecorator[] decorators) {
+    this.decorators = decorators;
+  }
+
+  public ActionRequest prepareActionRequest(Action action) {
+    final ActionRequestDecoratorContextFactory factory = getActionRequestDecoratorContextFactory();
+    final ActionRequestDecoratorContext context = factory.getActionRequestDecoratorContext(action);
+    final ActionRequest actionRequest = new ActionRequest();
+
+    Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+
+    return actionRequest;
+  }
 
   /**
    * Deal with a single action - the transaction boundary is here.
@@ -130,49 +141,6 @@ public abstract class ActionProcessingServiceImpl implements ActionProcessingSer
     actionCancel.setResponseRequired(true);
     actionCancel.setReason(CANCELLATION_REASON);
     return actionCancel;
-  }
-
-  /**
-   * Formats a CaseEvent as a string that can added to the ActionRequest
-   *
-   * @param caseEventDTO the DTO to be formatted
-   * @return the pretty one liner
-   */
-  protected String formatCaseEvent(final CaseEventDTO caseEventDTO) {
-    return String.format(
-        "%s : %s : %s : %s",
-        caseEventDTO.getCategory(),
-        caseEventDTO.getSubCategory(),
-        caseEventDTO.getCreatedBy(),
-        caseEventDTO.getDescription());
-  }
-
-  /**
-   * To validate the sampleUnitTypeStr versus SampleSvc-Api
-   *
-   * @param sampleUnitTypeStr the string value for sampleUnitType
-   * @return true if sampleUnitTypeStr is known to us
-   */
-  protected boolean validate(final String sampleUnitTypeStr) {
-    boolean result = false;
-    try {
-      final SampleUnitDTO.SampleUnitType sampleUnitType =
-          SampleUnitDTO.SampleUnitType.valueOf(sampleUnitTypeStr);
-      log.debug("sampleUnitType {}", sampleUnitType);
-      if (sampleUnitType.isParent()) {
-        result = true;
-      } else {
-        final String childSampleUnitTypeStr = sampleUnitTypeStr.substring(0, 1);
-        SampleUnitDTO.SampleUnitType.valueOf(childSampleUnitTypeStr);
-        result = true;
-      }
-    } catch (final IllegalArgumentException e) {
-      log.error(
-          "Unexpected scenario. Error message is {}. Cause is {}", e.getMessage(), e.getCause());
-      log.error("Stacktrace: ", e);
-    }
-
-    return result;
   }
 
   /**
