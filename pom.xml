@@ -303,34 +303,11 @@
                 <groupId>com.coveo</groupId>
                 <artifactId>fmt-maven-plugin</artifactId>
                 <version>2.5.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>2.17</version>
-
-                <executions>
-                    <execution>
-                        <id>test</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <configLocation>checkstyle.xml</configLocation>
-                            <encoding>UTF-8</encoding>
-                            <consoleOutput>true</consoleOutput>
-                            <violationSeverity>info</violationSeverity>
-                        </configuration>
-                    </execution>
-                </executions>
-
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -342,9 +319,6 @@
                 <configuration>
                     <executable>true</executable>
                     <mainClass>uk.gov.ons.ctp.response.action.ActionSvcApplication</mainClass>
-                    <profiles>
-                        <profile>test</profile>
-                    </profiles>
                 </configuration>
                 <executions>
                     <execution>

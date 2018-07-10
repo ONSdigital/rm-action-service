@@ -6,10 +6,14 @@ logging:
 
 liquibase:
   url: jdbc:postgresql://localhost:15432/postgres
+  user: postgres
+  password: postgres
 
 spring:
   datasource:
     url: jdbc:postgresql://localhost:15432/postgres
+    username: postgres
+    password: postgres
 
 data-grid:
   # where is redis
