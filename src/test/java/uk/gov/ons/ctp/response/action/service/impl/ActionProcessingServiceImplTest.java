@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.response.action.service.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
@@ -13,9 +12,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.ons.ctp.response.action.service.impl.ActionProcessingServiceImpl.CANCELLATION_REASON;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +41,8 @@ import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContext;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
@@ -52,6 +51,7 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 /** Tests for the ActionProcessingServiceImpl */
@@ -68,11 +68,6 @@ public class ActionProcessingServiceImplTest {
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_H = "H";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
-  private static final Integer B_PARTY = 4;
-  private static final Integer ACTIVE_BI = 5;
-  private static final Integer SUSPENDED_BI = 6;
-  private static final Integer CREATED_BI = 7;
-  private static final Integer NO_ASSOCIATIONS_BI = 8;
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
@@ -105,6 +100,8 @@ public class ActionProcessingServiceImplTest {
       actionSvcStateTransitionManager;
 
   @Mock private ActionRequestValidator validator;
+
+  @Mock private ActionRequestDecoratorContextFactory decoratorContextFactory;
 
   @InjectMocks private BusinessActionProcessingServiceImpl businessActionProcessingService;
 
@@ -223,21 +220,17 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestCaseEventCreationThrowsException() throws CTPException {
     // Start of section to mock responses
-    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
-    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
 
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID))
-        .thenReturn(caseDetailsDTOs.get(0));
+    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
 
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-            SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID))
-        .thenReturn(partyDTOs.get(0));
-
-    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID))
-        .thenReturn(collectionExerciseDTOs.get(0));
-
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS_SURVEY_ID))
-        .thenReturn(surveyDTOs.get(0));
+    final ActionPlan actionPlan =
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+    context.setActionPlan(actionPlan);
+    context.setCaseDetails(caseDetailsDTOs.get(0));
+    context.setCollectionExercise(collectionExerciseDTOs.get(0));
+    context.setSurvey(surveyDTOs.get(0));
+    context.setParentParty(partyDTOs.get(0));
+    context.setSampleUnitType(SampleUnitType.B);
 
     when(caseSvcClientService.createNewCaseEvent(
             any(Action.class), any(CategoryDTO.CategoryName.class)))
@@ -257,6 +250,11 @@ public class ActionProcessingServiceImplTest {
       action.setActionPlanFK(ACTION_PLAN_FK);
       action.setCaseId(CASE_ID);
       action.setPriority(1);
+      context.setAction(action);
+
+      when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
+          .thenReturn(context);
+
       businessActionProcessingService.processActionRequest(action);
       fail();
     } catch (final RuntimeException e) {
@@ -267,13 +265,7 @@ public class ActionProcessingServiceImplTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
-    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1))
-        .getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID);
     verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
-    verify(collectionExerciseClientService, times(1)).getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS_SURVEY_ID);
     verify(actionInstructionPublisher, times(1))
         .sendActionInstruction(
             any(String.class),
@@ -289,21 +281,16 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestHappyPathParentUnit() throws CTPException {
     // Start of section to mock responses
-    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
-    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
+    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
 
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID))
-        .thenReturn(caseDetailsDTOs.get(0));
-
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-            SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID))
-        .thenReturn(partyDTOs.get(0));
-
-    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID))
-        .thenReturn(collectionExerciseDTOs.get(0));
-
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS_SURVEY_ID))
-        .thenReturn(surveyDTOs.get(0));
+    final ActionPlan actionPlan =
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+    context.setActionPlan(actionPlan);
+    context.setCaseDetails(caseDetailsDTOs.get(0));
+    context.setParentParty(partyDTOs.get(0));
+    context.setCollectionExercise(collectionExerciseDTOs.get(0));
+    context.setSurvey(surveyDTOs.get(0));
+    context.setSampleUnitType(SampleUnitType.B);
 
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
@@ -319,6 +306,11 @@ public class ActionProcessingServiceImplTest {
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID);
     action.setPriority(1);
+    context.setAction(action);
+
+    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
+        .thenReturn(context);
+
     businessActionProcessingService.processActionRequest(action);
     // End of section to run the test
 
@@ -329,60 +321,10 @@ public class ActionProcessingServiceImplTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1))
         .createNewCaseEvent(any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CREATED));
-    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
-    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID);
-    verify(partySvcClientService, times(1))
-        .getPartyWithAssociationsFilteredBySurvey(SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID);
-    verify(collectionExerciseClientService, times(1)).getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS_SURVEY_ID);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1))
         .sendActionInstruction(
             eq(ACTIONEXPORTER),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  /**
-   * Test where an action is linked to a case for a sample unit which is not recognised (ie none of
-   * the expected values H, HI, CI, B, BI)
-   */
-  @Test
-  public void testProcessActionRequestForActionLinkedToInvalidSampleUnitType() throws CTPException {
-    // Start of section to mock responses
-    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
-    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
-
-    // the returned case has a sample unit type of Z
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_1))
-        .thenReturn(caseDetailsDTOs.get(1));
-    // End of section to mock responses
-
-    // Start of section to run the test
-    final Action action = new Action();
-    action.setId(ACTION_ID);
-    action.setActionType(
-        ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
-    action.setActionPlanFK(ACTION_PLAN_FK);
-    action.setCaseId(CASE_ID_1);
-    action.setPriority(1);
-    businessActionProcessingService.processActionRequest(action);
-    // End of section to run the test
-
-    // Start of section to verify calls
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, times(1))
-        .createNewCaseEvent(any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CREATED));
-    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
-    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_1);
-    verify(partySvcClientService, never()).getParty(any(String.class), any(UUID.class));
-    verify(collectionExerciseClientService, never()).getCollectionExercise(any(UUID.class));
-    verify(surveySvcClientService, never()).requestDetailsForSurvey(any(String.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
@@ -393,24 +335,18 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestHappyPathChildUnit() throws CTPException {
     // Start of section to mock responses
-    final ActionPlan actionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).build();
-    when(actionPlanRepo.findOne(ACTION_PLAN_FK)).thenReturn(actionPlan);
+    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
 
-    when(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID_2))
-        .thenReturn(caseDetailsDTOs.get(2));
+    final ActionPlan actionPlan =
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+    context.setActionPlan(actionPlan);
+    context.setCaseDetails(caseDetailsDTOs.get(2));
+    context.setParentParty(partyDTOs.get(0));
+    context.setCollectionExercise(collectionExerciseDTOs.get(0));
+    context.setSurvey(surveyDTOs.get(0));
+    context.setChildParties(Collections.singletonList(partyDTOs.get(1)));
+    context.setSampleUnitType(SampleUnitType.HI);
 
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-            SAMPLE_UNIT_TYPE_HI, PARTY_ID, CENSUS_SURVEY_ID))
-        .thenReturn(partyDTOs.get(1));
-    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-            SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS_SURVEY_ID))
-        .thenReturn(partyDTOs.get(0));
-
-    when(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID))
-        .thenReturn(collectionExerciseDTOs.get(0));
-
-    when(surveySvcClientService.requestDetailsForSurvey(CENSUS_SURVEY_ID))
-        .thenReturn(surveyDTOs.get(0));
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenReturn(ActionDTO.ActionState.PENDING);
@@ -425,6 +361,11 @@ public class ActionProcessingServiceImplTest {
     action.setActionPlanFK(ACTION_PLAN_FK);
     action.setCaseId(CASE_ID_2);
     action.setPriority(1);
+    context.setAction(action);
+
+    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
+        .thenReturn(context);
+
     businessActionProcessingService.processActionRequest(action);
     // End of section to run the test
 
@@ -435,13 +376,6 @@ public class ActionProcessingServiceImplTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(caseSvcClientService, times(1))
         .createNewCaseEvent(any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CREATED));
-    verify(actionPlanRepo, times(1)).findOne(ACTION_PLAN_FK);
-    verify(caseSvcClientService, times(1)).getCaseWithIACandCaseEvents(CASE_ID_2);
-    verify(partySvcClientService, times(1))
-        .getPartyWithAssociationsFilteredBySurvey(
-            SAMPLE_UNIT_TYPE_H, PARTY_ID_PARENT_FOR_CASE_ID_2, CENSUS_SURVEY_ID);
-    verify(collectionExerciseClientService, times(1)).getCollectionExercise(COLLECTION_EXERCISE_ID);
-    verify(surveySvcClientService, times(1)).requestDetailsForSurvey(CENSUS_SURVEY_ID);
     // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1))
         .sendActionInstruction(
@@ -570,147 +504,32 @@ public class ActionProcessingServiceImplTest {
   }
 
   @Test
-  public void testGenerateChildPartyMap() {
-    final PartyDTO respondentSuspendedBI = partyDTOs.get(SUSPENDED_BI);
-    final PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
-
-    when(partySvcClientService.getParty(
-            "BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId()))
-        .thenReturn(respondentSuspendedBI);
-    when(partySvcClientService.getParty(
-            "BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId()))
-        .thenReturn(respondentCreatedBI);
-
-    final Map<String, PartyDTO> expectedChildPartyMap = new HashMap<>();
-    expectedChildPartyMap.put("SUSPENDED", respondentSuspendedBI);
-    expectedChildPartyMap.put(businessActionProcessingService.CREATED, respondentCreatedBI);
-
-    final Map<String, PartyDTO> actualChildPartyMap =
-        businessActionProcessingService.getChildParties(partyDTOs.get(B_PARTY), "B");
-
-    assertEquals(expectedChildPartyMap, actualChildPartyMap);
-  }
-
-  @Test
-  public void testParseRespondentStatusCreated() {
-    final Map<String, PartyDTO> childPartyMap = new HashMap<>();
-    childPartyMap.put(businessActionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
-    childPartyMap.put("SUSPENDED", partyDTOs.get(SUSPENDED_BI));
-
-    final String respondentStatus =
-        businessActionProcessingService.parseRespondentStatuses(childPartyMap);
-
-    assertEquals(businessActionProcessingService.CREATED, respondentStatus);
-  }
-
-  @Test
-  public void testParseRespondentStatusActive() {
-    final Map<String, PartyDTO> childPartyMap = new HashMap<>();
-    childPartyMap.put(businessActionProcessingService.CREATED, partyDTOs.get(CREATED_BI));
-    childPartyMap.put(businessActionProcessingService.ACTIVE, partyDTOs.get(ACTIVE_BI));
-
-    final String respondentStatus =
-        businessActionProcessingService.parseRespondentStatuses(childPartyMap);
-
-    assertEquals(businessActionProcessingService.ACTIVE, respondentStatus);
-  }
-
-  @Test
-  public void testParseRespondentStatusesEmpty() {
-    final Map<String, PartyDTO> childPartyMap = new HashMap<>();
-    final String respondentStatus =
-        businessActionProcessingService.parseRespondentStatuses(childPartyMap);
-
-    assertEquals(null, respondentStatus);
-  }
-
-  @Test
-  public void testGetEnrolmentStatusEnabled() {
-    final PartyDTO partyDTO = partyDTOs.get(0);
-    assertEquals(
-        businessActionProcessingService.ENABLED,
-        businessActionProcessingService.getEnrolmentStatus(partyDTO));
-  }
-
-  @Test
-  public void testGetEnrolmentStatusPending() {
-    final PartyDTO partyDTO = partyDTOs.get(1);
-    assertEquals(
-        businessActionProcessingService.PENDING,
-        businessActionProcessingService.getEnrolmentStatus(partyDTO));
-  }
-
-  @Test
-  public void testGetEnrolmentStatusDefault() {
-    final PartyDTO partyDTO = partyDTOs.get(2);
-    assertEquals(null, businessActionProcessingService.getEnrolmentStatus(partyDTO));
-  }
-
-  @Test
-  public void testGetEnrolmentStatusNoEnrolments() {
-    final PartyDTO partyDTO = partyDTOs.get(2);
-    partyDTO.setAssociations(null);
-    assertEquals(null, businessActionProcessingService.getEnrolmentStatus(partyDTO));
-  }
-
-  @Test
-  public void testGenerateTradingStyle() {
-    final Attributes businessAttributes = new Attributes();
-    businessAttributes.setTradstyle1("TRADSTYLE1");
-    businessAttributes.setTradstyle2("TRADSTYLE2");
-    businessAttributes.setTradstyle3("TRADSTYLE3");
-
-    final String generatedTradingStyle =
-        businessActionProcessingService.generateTradingStyle(businessAttributes);
-    final String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE2 TRADSTYLE3";
-
-    assertEquals(expectedTradingStyle, generatedTradingStyle);
-  }
-
-  @Test
-  public void testGenerateTradingStyleWithEmptyValues() {
-    final Attributes businessAttributes = new Attributes();
-
-    final String generatedTradingStyle =
-        businessActionProcessingService.generateTradingStyle(businessAttributes);
-    final String expectedTradingStyle = "";
-
-    assertEquals(expectedTradingStyle, generatedTradingStyle);
-  }
-
-  @Test
-  public void testGenerateTradingStyleWithSubsetOfTradingStyles() {
-    final Attributes businessAttributes = new Attributes();
-    businessAttributes.setTradstyle1("TRADSTYLE1");
-    businessAttributes.setTradstyle3("TRADSTYLE3");
-
-    final String generatedTradingStyle =
-        businessActionProcessingService.generateTradingStyle(businessAttributes);
-    final String expectedTradingStyle = "TRADSTYLE1 TRADSTYLE3";
-
-    assertEquals(expectedTradingStyle, generatedTradingStyle);
-  }
-
-  @Test
   public void testCaseRefShouldBeOnActionRequest() throws CTPException {
     // Given
     CaseDetailsDTO caseDetails = createCaseDetails();
     caseDetails.setCaseRef("Case ref");
-    given(caseSvcClientService.getCaseWithIACandCaseEvents(CASE_ID)).willReturn(caseDetails);
-    given(collectionExerciseClientService.getCollectionExercise(COLLECTION_EXERCISE_ID))
-        .willReturn(createCollectionExercise());
-    given(surveySvcClientService.requestDetailsForSurvey(CENSUS_SURVEY_ID))
-        .willReturn(new SurveyDTO());
-    given(
-            partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-                SAMPLE_UNIT_TYPE_H, PARTY_ID, CENSUS_SURVEY_ID))
-        .willReturn(createParty());
+    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
+
+    context.setCaseDetails(caseDetails);
+    context.setCollectionExercise(createCollectionExercise());
+    context.setSurvey(new SurveyDTO());
+    context.setParentParty(createParty());
+
+    final ActionPlan actionPlan =
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+    context.setActionPlan(actionPlan);
+    context.setSampleUnitType(SampleUnitType.B);
+
     final Action action = new Action();
     action.setId(ACTION_ID);
     action.setActionType(
         ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
     action.setCaseId(CASE_ID);
     action.setPriority(1);
+    context.setAction(action);
+
+    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
+        .thenReturn(context);
 
     // When
     businessActionProcessingService.processActionRequest(action);
@@ -733,6 +552,7 @@ public class ActionProcessingServiceImplTest {
     caseDetails.setSampleUnitType(SampleUnitDTO.SampleUnitType.H.toString());
     caseDetails.setCaseGroup(createCaseGroup());
     caseDetails.setPartyId(PARTY_ID);
+    caseDetails.setId(UUID.randomUUID());
     return caseDetails;
   }
 
