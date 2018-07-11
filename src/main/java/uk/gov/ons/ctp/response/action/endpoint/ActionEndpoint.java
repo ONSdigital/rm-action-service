@@ -23,6 +23,7 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionFeedbackRequestDTO;
@@ -152,8 +153,10 @@ public final class ActionEndpoint implements CTPEndpoint {
     final UUID parentCaseId = actionPostRequestDTO.getCaseId();
     final ActionCase parentCase = actionCaseService.findActionCase(parentCaseId);
     if (parentCase != null) {
+      ActionPlan actionPlan = this.actionPlanService.findActionPlanById(parentCase.getActionPlanId());
       Action action = mapperFacade.map(actionPostRequestDTO, Action.class);
       action.setCaseFK(parentCase.getCasePK());
+      action.setActionPlanFK(actionPlan.getActionPlanPK());
       action = actionService.createAction(action);
 
       final ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);

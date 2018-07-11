@@ -278,7 +278,8 @@ public class ActionEndpointIT {
     String f =
         loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.SampleAttributes.json");
     String sample_attributes = String.format(f, sampleUnitId.toString());
-    SampleAttributesDTO sample_attributes_dto = mapper.readValue(f, SampleAttributesDTO.class);
+    SampleAttributesDTO sample_attributes_dto =
+        mapper.readValue(sample_attributes, SampleAttributesDTO.class);
     log.debug("sample_attributes to mock = " + sample_attributes_dto);
 
     this.wireMockRule.stubFor(
