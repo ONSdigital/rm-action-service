@@ -147,16 +147,23 @@ public final class ActionEndpoint implements CTPEndpoint {
       throws CTPException, InvalidRequestException {
     log.debug("Entering createAdhocAction with actionPostRequestDTO {}", actionPostRequestDTO);
     if (bindingResult.hasErrors()) {
-      throw new InvalidRequestException("Binding errors for create action: ", bindingResult);
+      throw new InvalidRequestException(
+          "Binding errors for create acti"
+              + "action.setActionPlanFK(actionPlan.getActionPlanPK());on: ",
+          bindingResult);
     }
 
     final UUID parentCaseId = actionPostRequestDTO.getCaseId();
     final ActionCase parentCase = actionCaseService.findActionCase(parentCaseId);
     if (parentCase != null) {
-      ActionPlan actionPlan = this.actionPlanService.findActionPlanById(parentCase.getActionPlanId());
+      ActionPlan actionPlan =
+          this.actionPlanService.findActionPlanById(parentCase.getActionPlanId());
       Action action = mapperFacade.map(actionPostRequestDTO, Action.class);
       action.setCaseFK(parentCase.getCasePK());
-      action.setActionPlanFK(actionPlan.getActionPlanPK());
+      // Action plans are optional for ad-hoc actions
+      if (actionPlan != null) {
+        action.setActionPlanFK(actionPlan.getActionPlanPK());
+      }
       action = actionService.createAction(action);
 
       final ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
