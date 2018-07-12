@@ -118,6 +118,18 @@ public class ActionDistributorTest {
   }
 
   /**
+   * We retrieve actionTypes but then exception thrown when retrieving actions.
+   *
+   * @throws Exception oops
+   */
+  @Test
+  public void testNoActionTypesLeadsToNothingHappening() throws Exception {
+    when(actionTypeRepo.findAll()).thenReturn(new ArrayList<>());
+    final DistributionInfo info = actionDistributor.distribute();
+    assertEquals(new DistributionInfo(), info);
+  }
+
+  /**
    * Happy Path with 2 ActionRequests and 2 ActionCancels for a H case (ie parent case)
    *
    * @throws Exception oops

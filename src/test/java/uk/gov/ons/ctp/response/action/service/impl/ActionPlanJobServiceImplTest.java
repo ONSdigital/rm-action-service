@@ -111,6 +111,7 @@ public class ActionPlanJobServiceImplTest {
 
     // wire up mock responses
     Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
+    Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(1L);
 
     // let it roll
     final ActionPlanJob executedJob =
@@ -119,6 +120,29 @@ public class ActionPlanJobServiceImplTest {
     // assert the right calls were made
     verify(actionPlanJobRepo, times(0)).save(actionPlanJobs.get(0));
     verify(actionCaseRepo, times(0)).createActions(1);
+    Assert.assertNull(executedJob);
+  }
+
+  /**
+   * Test that the endpoint forced exec method gracefully handles the failure to lock an action plan
+   */
+  @Test
+  public void testCreateAndExecuteActionPlanJobActionNotFound() throws Exception {
+
+    // set up mock hazelcast with a lock that will fail
+    Mockito.when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
+
+    // load fixtures
+    final List<ActionPlanJob> actionPlanJobs =
+        FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
+
+    // wire up mock responses
+    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(null);
+
+    // let it roll
+    final ActionPlanJob executedJob =
+        actionPlanJobServiceImpl.createAndExecuteActionPlanJob(actionPlanJobs.get(0));
+
     Assert.assertNull(executedJob);
   }
 
