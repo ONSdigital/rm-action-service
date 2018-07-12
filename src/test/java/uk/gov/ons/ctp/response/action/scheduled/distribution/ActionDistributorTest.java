@@ -117,13 +117,13 @@ public class ActionDistributorTest {
     verify(actionProcessingService, times(0)).processActionCancel(any(Action.class));
   }
 
+
   /**
-   * We retrieve actionTypes but then exception thrown when retrieving actions.
+   * We retrieve no actionTypes so no exception should be thrown.
    *
-   * @throws Exception oops
    */
   @Test
-  public void testNoActionTypesLeadsToNothingHappening() throws Exception {
+  public void testExceptionNotThrowWhenNoActionTypes() {
     when(actionTypeRepo.findAll()).thenReturn(new ArrayList<>());
     final DistributionInfo info = actionDistributor.distribute();
     assertEquals(new DistributionInfo(), info);

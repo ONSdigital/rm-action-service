@@ -47,14 +47,11 @@ class ActionDistributor {
   public DistributionInfo distribute() {
     log.debug("ActionDistributor awoken...");
     final DistributionInfo distInfo = new DistributionInfo();
-
     final List<ActionType> actionTypes = actionTypeRepo.findAll();
 
-    if (!CollectionUtils.isEmpty(actionTypes)) {
-      for (final ActionType actionType : actionTypes) {
-        final List<InstructionCount> instructionCounts = processActionType(actionType);
-        distInfo.getInstructionCounts().addAll(instructionCounts);
-      }
+    for (final ActionType actionType : actionTypes) {
+      final List<InstructionCount> instructionCounts = processActionType(actionType);
+      distInfo.getInstructionCounts().addAll(instructionCounts);
     }
 
     log.debug("ActionDistributor going back to sleep");
