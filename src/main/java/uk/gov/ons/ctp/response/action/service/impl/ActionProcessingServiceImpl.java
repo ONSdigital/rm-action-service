@@ -16,10 +16,10 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContext;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContextFactory;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 
 @Slf4j
@@ -39,15 +39,15 @@ public abstract class ActionProcessingServiceImpl implements ActionProcessingSer
 
   @Autowired private ActionRequestValidator validator;
 
-  public abstract ActionRequestDecoratorContextFactory getActionRequestDecoratorContextFactory();
+  public abstract ActionRequestContextFactory getActionRequestDecoratorContextFactory();
 
   public ActionProcessingServiceImpl(ActionRequestDecorator[] decorators) {
     this.decorators = decorators;
   }
 
   public ActionRequest prepareActionRequest(Action action) {
-    final ActionRequestDecoratorContextFactory factory = getActionRequestDecoratorContextFactory();
-    final ActionRequestDecoratorContext context = factory.getActionRequestDecoratorContext(action);
+    final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
+    final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
     final ActionRequest actionRequest = new ActionRequest();
 
     Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));

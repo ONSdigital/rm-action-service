@@ -4,14 +4,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.impl.ActionProcessingServiceImpl;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
 
-public class CollectionExerciseActionRequestDecorator implements ActionRequestDecorator {
+public class CollectionExerciseAndSurvey implements ActionRequestDecorator {
 
   @Override
-  public void decorateActionRequest(
-      ActionRequest actionRequest, ActionRequestDecoratorContext context) {
+  public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
 
     actionRequest.setExerciseRef(context.getCollectionExercise().getExerciseRef());
     actionRequest.setUserDescription(context.getCollectionExercise().getUserDescription());

@@ -4,15 +4,14 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionEvent;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 
 @Slf4j
-public class CaseActionRequestDecorator implements ActionRequestDecorator {
+public class CaseAndCaseEvent implements ActionRequestDecorator {
 
   @Override
-  public void decorateActionRequest(
-      ActionRequest actionRequest, ActionRequestDecoratorContext context) {
+  public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     actionRequest.setCaseId(context.getCaseDetails().getId().toString());
     actionRequest.setCaseRef(context.getCaseDetails().getCaseRef());
     actionRequest.setIac(context.getCaseDetails().getIac());

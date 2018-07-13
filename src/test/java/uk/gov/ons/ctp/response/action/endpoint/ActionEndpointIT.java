@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -78,14 +80,97 @@ public class ActionEndpointIT {
   }
 
   @Test
-  public void ensureSampleIDExposed() throws Exception {
+  public void ensureAddressPopulatedInActionRequest() throws Exception {
     UUID collexId = UUID.fromString("3116a1bd-3a84-4761-ae30-4916c4e7120a");
     UUID sampleUnitId = UUID.randomUUID();
 
+    ActionPlanDTO actionPlan = createActionPlan();
+
+    // Create mocks
     createCollectionExerciseMock(collexId);
+    CaseDetailsDTO case_details_dto = createCaseDetailsMock(collexId, actionPlan.getId());
+    createSurveyDetailsMock();
+    createCaseEventMock(case_details_dto.getId());
+    SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
 
     SimpleMessageSender sender = getMessageSender();
+    SimpleMessageListener listener = getMessageListener();
 
+    BlockingQueue<String> queue =
+        listener.listen(
+            SimpleMessageBase.ExchangeType.Direct,
+            "action-outbound-exchange",
+            "Action.CaseNotificationHandled.binding");
+
+    BlockingQueue<String> queue2 =
+        listener.listen(
+            SimpleMessageBase.ExchangeType.Direct,
+            "action-outbound-exchange",
+            "Action.Printer.binding");
+
+    String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
+    sender.sendMessageToQueue("Case.LifecycleEvents", xml);
+
+    String message = queue.take();
+    assertThat(message).isNotNull();
+
+    createAction(case_details_dto);
+
+    String printer_message = queue2.take();
+    assertThat(printer_message).isNotNull();
+
+    log.debug("printer_message = " + printer_message);
+    ActionInstruction acti = getActionInstructionFromXml(printer_message);
+    ActionAddress address = acti.getActionRequest().getAddress();
+
+    assertThat(address.getSampleUnitRef())
+        .isEqualTo(sample_attributes.getAttributes().get("Reference"));
+    assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
+    assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("Postcode"));
+    assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("PostTown"));
+  }
+
+  private ActionInstruction getActionInstructionFromXml(String xml) throws JAXBException {
+    JAXBContext xmlToObject = JAXBContext.newInstance(ActionInstruction.class);
+
+    return (ActionInstruction)
+        xmlToObject.createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes()));
+  }
+
+  private void createAction(CaseDetailsDTO caseDetails) throws UnirestException {
+    ActionPostRequestDTO apord = new ActionPostRequestDTO();
+    apord.setCaseId(UUID.fromString(caseDetails.getId().toString()));
+    apord.setCreatedBy("SYSTEM");
+    apord.setActionTypeName("SOCIALNOT");
+    apord.setPriority(1);
+
+    Unirest.post("http://localhost:" + this.port + "/actions")
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(apord)
+        .asObject(ActionPostRequestDTO.class);
+  }
+
+  private String getCaseNotificationXml(
+      UUID sampleUnitId, CaseDetailsDTO caseDetails, UUID collexId) throws Exception {
+    CaseNotification casenot = new CaseNotification();
+    casenot.setSampleUnitId(sampleUnitId.toString());
+    casenot.setCaseId(caseDetails.getId().toString());
+    casenot.setActionPlanId(caseDetails.getActionPlanId().toString());
+    casenot.setExerciseId(collexId.toString());
+    casenot.setNotificationType(NotificationType.ACTIVATED);
+    casenot.setSampleUnitType("H");
+
+    JAXBContext jaxbContext = JAXBContext.newInstance(CaseNotification.class);
+    String xml =
+        mapzer.convertObjectToXml(
+            jaxbContext, casenot, "casesvc/xsd/outbound/caseNotification.xsd");
+
+    return xml;
+  }
+
+  private ActionPlanDTO createActionPlan() throws UnirestException {
     ActionPlanPostRequestDTO ap = new ActionPlanPostRequestDTO();
     ap.setCreatedBy("SYSTEM");
     ap.setName("action-test: " + new Random().nextInt(100));
@@ -101,81 +186,7 @@ public class ActionEndpointIT {
 
     assertThat(createActionPlanRes.getStatus()).isEqualTo(201);
 
-    CaseDetailsDTO case_details_dto =
-        createCaseDetailsMock(collexId, createActionPlanRes.getBody().getId());
-
-    createCaseEventMock(case_details_dto.getId());
-
-    SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
-
-    createSurveyDetailsMock();
-
-    CaseNotification casenot = new CaseNotification();
-
-    casenot.setSampleUnitId(sampleUnitId.toString());
-    casenot.setCaseId(case_details_dto.getId().toString());
-    casenot.setActionPlanId(case_details_dto.getActionPlanId().toString());
-    casenot.setExerciseId(collexId.toString());
-    casenot.setNotificationType(NotificationType.ACTIVATED);
-    casenot.setSampleUnitType("H");
-
-    JAXBContext jaxbContext = JAXBContext.newInstance(CaseNotification.class);
-    SimpleMessageListener listener = getMessageListener();
-    BlockingQueue<String> queue =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.CaseNotificationHandled.binding");
-
-    BlockingQueue<String> queue2 =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.Printer.binding");
-
-    String xml =
-        mapzer.convertObjectToXml(
-            jaxbContext, casenot, "casesvc/xsd/outbound/caseNotification.xsd");
-
-    sender.sendMessageToQueue("Case.LifecycleEvents", xml);
-
-    String message = queue.take();
-
-    assertThat(message).isNotNull();
-
-    ActionPostRequestDTO apord = new ActionPostRequestDTO();
-    apord.setCaseId(UUID.fromString(casenot.getCaseId()));
-    apord.setCreatedBy("SYSTEM");
-    apord.setActionTypeName("SOCIALNOT");
-    apord.setPriority(1);
-
-    Unirest.post("http://localhost:" + this.port + "/actions")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .header("Content-Type", "application/json")
-        .body(apord)
-        .asObject(ActionPostRequestDTO.class);
-
-    String printer_message = queue2.take();
-
-    assertThat(printer_message).isNotNull();
-
-    JAXBContext xmlToObject = JAXBContext.newInstance(ActionInstruction.class);
-    ActionInstruction acti =
-        (ActionInstruction)
-            xmlToObject
-                .createUnmarshaller()
-                .unmarshal(new ByteArrayInputStream(printer_message.getBytes()));
-
-    ActionAddress address = acti.getActionRequest().getAddress();
-
-    log.debug("printer_message = " + printer_message);
-
-    assertThat(address.getSampleUnitRef())
-        .isEqualTo(sample_attributes.getAttributes().get("Reference"));
-    assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
-    assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("Postcode"));
-    assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("PostTown"));
+    return createActionPlanRes.getBody();
   }
 
   private String loadResourceAsString(Class clazz, String resourceName) throws IOException {

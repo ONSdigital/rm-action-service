@@ -1,17 +1,15 @@
 package uk.gov.ons.ctp.response.action.service.impl.decorator;
 
 import lombok.extern.slf4j.Slf4j;
-import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.message.instruction.Priority;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
 
 @Slf4j
-public class ActionActionRequestDecorator implements ActionRequestDecorator {
+public class ActionAndActionPlan implements ActionRequestDecorator {
 
   @Override
-  public void decorateActionRequest(
-      ActionRequest actionRequest, ActionRequestDecoratorContext context) {
+  public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final String actionID = context.getAction().getId().toString();
     log.debug("actionID is {}", actionID);
 
@@ -23,6 +21,8 @@ public class ActionActionRequestDecorator implements ActionRequestDecorator {
 
     actionRequest.setPriority(
         Priority.fromValue(
-            Action.ActionPriority.valueOf(context.getAction().getPriority()).getName()));
+            uk.gov.ons.ctp.response.action.domain.model.Action.ActionPriority.valueOf(
+                    context.getAction().getPriority())
+                .getName()));
   }
 }

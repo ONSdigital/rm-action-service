@@ -41,8 +41,8 @@ import uk.gov.ons.ctp.response.action.service.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.service.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.service.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.SurveySvcClientService;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContext;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContextFactory;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
@@ -101,7 +101,7 @@ public class ActionProcessingServiceImplTest {
 
   @Mock private ActionRequestValidator validator;
 
-  @Mock private ActionRequestDecoratorContextFactory decoratorContextFactory;
+  @Mock private ActionRequestContextFactory decoratorContextFactory;
 
   @InjectMocks private BusinessActionProcessingServiceImpl businessActionProcessingService;
 
@@ -221,7 +221,7 @@ public class ActionProcessingServiceImplTest {
   public void testProcessActionRequestCaseEventCreationThrowsException() throws CTPException {
     // Start of section to mock responses
 
-    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
+    ActionRequestContext context = new ActionRequestContext();
 
     final ActionPlan actionPlan =
         ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
@@ -281,7 +281,7 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestHappyPathParentUnit() throws CTPException {
     // Start of section to mock responses
-    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
+    ActionRequestContext context = new ActionRequestContext();
 
     final ActionPlan actionPlan =
         ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
@@ -335,7 +335,7 @@ public class ActionProcessingServiceImplTest {
   @Test
   public void testProcessActionRequestHappyPathChildUnit() throws CTPException {
     // Start of section to mock responses
-    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
+    ActionRequestContext context = new ActionRequestContext();
 
     final ActionPlan actionPlan =
         ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
@@ -508,7 +508,7 @@ public class ActionProcessingServiceImplTest {
     // Given
     CaseDetailsDTO caseDetails = createCaseDetails();
     caseDetails.setCaseRef("Case ref");
-    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
+    ActionRequestContext context = new ActionRequestContext();
 
     context.setCaseDetails(caseDetails);
     context.setCollectionExercise(createCollectionExercise());

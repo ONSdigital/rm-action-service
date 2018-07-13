@@ -1,4 +1,4 @@
-package uk.gov.ons.ctp.response.action.service.impl.decorator;
+package uk.gov.ons.ctp.response.action.service.impl.decorator.context;
 
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +18,7 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 @Component
 @Slf4j
-public class ActionRequestDecoratorContextFactoryImpl
-    implements ActionRequestDecoratorContextFactory {
+public class DefaultActionRequestContextFactory implements ActionRequestContextFactory {
 
   @Autowired private ActionPlanRepository actionPlanRepo;
 
@@ -30,39 +29,46 @@ public class ActionRequestDecoratorContextFactoryImpl
   @Autowired private SurveySvcClientService surveySvcClientService;
 
   @Override
-  public ActionRequestDecoratorContext getActionRequestDecoratorContext(Action action) {
-    ActionRequestDecoratorContext context = new ActionRequestDecoratorContext();
+  public ActionRequestContext getActionRequestDecoratorContext(Action action) {
+    ActionRequestContext context = new ActionRequestContext();
 
     context.setAction(action);
+    context.setActionPlan(getActionPlan(action));
 
+    CaseDetailsDTO caseDetails = getCase(action);
+    context.setCaseDetails(caseDetails);
+    context.setSampleUnitType(SampleUnitType.valueOf(caseDetails.getSampleUnitType()));
+
+    CollectionExerciseDTO collectionExercise = getCollectionExercise(caseDetails);
+    context.setCollectionExercise(collectionExercise);
+    context.setSurvey(getSurvey(collectionExercise));
+
+    return context;
+  }
+
+  private ActionPlan getActionPlan(Action action) {
     ActionPlan actionPlan =
         (action.getActionPlanFK() == null)
             ? null
             : actionPlanRepo.findOne(action.getActionPlanFK());
-    context.setActionPlan(actionPlan);
     log.debug("actionPlan {}", actionPlan);
 
-    CaseDetailsDTO caseDetails =
-        caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
-    context.setCaseDetails(caseDetails);
+    return actionPlan;
+  }
 
-    // Throws IllegalArgumentException
-    context.setSampleUnitType(SampleUnitType.valueOf(caseDetails.getSampleUnitType()));
+  private CaseDetailsDTO getCase(Action action) {
+    return caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
+  }
 
+  private CollectionExerciseDTO getCollectionExercise(CaseDetailsDTO caseDetails) {
     final CaseGroupDTO caseGroupDTO = caseDetails.getCaseGroup();
 
     final UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
 
-    CollectionExerciseDTO collectionExercise =
-        collectionExerciseClientService.getCollectionExercise(collectionExerciseId);
+    return collectionExerciseClientService.getCollectionExercise(collectionExerciseId);
+  }
 
-    context.setCollectionExercise(collectionExercise);
-
-    SurveyDTO survey =
-        surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
-
-    context.setSurvey(survey);
-
-    return context;
+  private SurveyDTO getSurvey(CollectionExerciseDTO collectionExercise) {
+    return surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
   }
 }

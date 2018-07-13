@@ -5,14 +5,13 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
 
 @Slf4j
-public class SampleActionRequestDecorator implements ActionRequestDecorator {
+public class SampleAttributes implements ActionRequestDecorator {
 
   @Override
-  public void decorateActionRequest(
-      ActionRequest actionRequest, ActionRequestDecoratorContext context) {
+  public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final ActionAddress actionAddress = new ActionAddress();
     Map<String, String> sampleAttribs = context.getSampleAttributes().getAttributes();
     log.debug("sampleAttributesDTO received: " + context.getSampleAttributes().toString());

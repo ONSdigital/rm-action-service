@@ -1,4 +1,4 @@
-package uk.gov.ons.ctp.response.action.service.impl.decorator;
+package uk.gov.ons.ctp.response.action.service.impl.decorator.context;
 
 import java.util.List;
 import lombok.Data;
@@ -16,7 +16,7 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 @Slf4j
 @Data
 @NoArgsConstructor
-public class ActionRequestDecoratorContext {
+public class ActionRequestContext {
   private Action action;
   private ActionPlan actionPlan;
   private CollectionExerciseDTO collectionExercise;

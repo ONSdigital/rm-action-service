@@ -1,4 +1,4 @@
-package uk.gov.ons.ctp.response.action.service.impl.decorator;
+package uk.gov.ons.ctp.response.action.service.impl.decorator.context;
 
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -13,16 +13,15 @@ import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 @Slf4j
 @Component
 @Qualifier("social")
-public class SocialActionRequestDecoratorContextFactoryImpl
-    extends ActionRequestDecoratorContextFactoryImpl {
+public class SocialActionRequestContextFactory extends DefaultActionRequestContextFactory {
 
   @Autowired private ActionCaseRepository actionCaseRepo;
 
   @Autowired private SampleSvcClientService sampleSvcClient;
 
   @Override
-  public ActionRequestDecoratorContext getActionRequestDecoratorContext(Action action) {
-    ActionRequestDecoratorContext context = super.getActionRequestDecoratorContext(action);
+  public ActionRequestContext getActionRequestDecoratorContext(Action action) {
+    ActionRequestContext context = super.getActionRequestDecoratorContext(action);
 
     UUID sampleUnitId = actionCaseRepo.findById(action.getCaseId()).getSampleUnitId();
     SampleAttributesDTO sampleAttribs = null;

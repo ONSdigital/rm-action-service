@@ -2,13 +2,12 @@ package uk.gov.ons.ctp.response.action.service.impl.decorator;
 
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
 
-public class SampleUnitRefAddressDecorator implements ActionRequestDecorator {
+public class SampleUnitRefAddress implements ActionRequestDecorator {
 
   @Override
-  public void decorateActionRequest(
-      ActionRequest actionRequest, ActionRequestDecoratorContext context) {
+  public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
 
     final ActionAddress actionAddress = new ActionAddress();
     actionAddress.setSampleUnitRef(context.getCaseDetails().getCaseGroup().getSampleUnitRef());

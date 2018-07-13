@@ -3,36 +3,36 @@ package uk.gov.ons.ctp.response.action.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionActionRequestDecorator;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecoratorContextFactory;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.CaseActionRequestDecorator;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.CollectionExerciseActionRequestDecorator;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.PartyActionRequestDecorator;
-import uk.gov.ons.ctp.response.action.service.impl.decorator.SampleUnitRefAddressDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionAndActionPlan;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.CaseAndCaseEvent;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.CollectionExerciseAndSurvey;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.PartyAndContact;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.SampleUnitRefAddress;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContextFactory;
 
 @Service
 @Qualifier("business")
 public class BusinessActionProcessingServiceImpl extends ActionProcessingServiceImpl {
 
   private static final ActionRequestDecorator[] BUSINESS_DECORATORS = {
-    new ActionActionRequestDecorator(),
-    new CaseActionRequestDecorator(),
-    new CollectionExerciseActionRequestDecorator(),
-    new PartyActionRequestDecorator(),
-    new SampleUnitRefAddressDecorator()
+    new ActionAndActionPlan(),
+    new CaseAndCaseEvent(),
+    new CollectionExerciseAndSurvey(),
+    new PartyAndContact(),
+    new SampleUnitRefAddress()
   };
 
   @Autowired
   @Qualifier("business")
-  private ActionRequestDecoratorContextFactory decoratorContextFactory;
+  private ActionRequestContextFactory decoratorContextFactory;
 
   public BusinessActionProcessingServiceImpl() {
     super(BUSINESS_DECORATORS);
   }
 
   @Override
-  public ActionRequestDecoratorContextFactory getActionRequestDecoratorContextFactory() {
+  public ActionRequestContextFactory getActionRequestDecoratorContextFactory() {
     return decoratorContextFactory;
   }
 }

@@ -223,8 +223,7 @@ public class ActionSvcApplication {
   @Bean
   @Qualifier("sampleSvcClient")
   public RestUtility sampleClient() {
-    final RestUtility restUtility = new RestUtility(appConfig.getSampleSvc().getConnectionConfig());
-    return restUtility;
+    return new RestUtility(appConfig.getSampleSvc().getConnectionConfig());
   }
 
   /**

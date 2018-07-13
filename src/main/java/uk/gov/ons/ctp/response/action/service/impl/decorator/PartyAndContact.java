@@ -9,18 +9,17 @@ import lombok.extern.slf4j.Slf4j;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
-import uk.gov.ons.ctp.response.action.service.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.impl.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 @Slf4j
-public class PartyActionRequestDecorator implements ActionRequestDecorator {
+public class PartyAndContact implements ActionRequestDecorator {
 
   @Override
-  public void decorateActionRequest(
-      ActionRequest actionRequest, ActionRequestDecoratorContext context) {
+  public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final PartyDTO parentParty = context.getParentParty();
     final List<PartyDTO> childParties = context.getChildParties();
     final Attributes businessUnitAttributes = parentParty.getAttributes();

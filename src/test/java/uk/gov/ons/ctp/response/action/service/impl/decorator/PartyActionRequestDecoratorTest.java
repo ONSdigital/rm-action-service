@@ -22,7 +22,7 @@ public class PartyActionRequestDecoratorTest {
   private static final Integer SUSPENDED_BI = 6;
   private static final Integer CREATED_BI = 7;
 
-  @InjectMocks private PartyActionRequestDecorator partyActionRequestDecorator;
+  @InjectMocks private PartyAndContact partyActionRequestDecorator;
 
   private List<PartyDTO> partyDTOs;
 

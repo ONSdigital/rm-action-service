@@ -118,7 +118,7 @@ class ActionDistributor {
     }
   }
 
-  public ActionProcessingService getActionProcessingService(Action action) {
+  private ActionProcessingService getActionProcessingService(Action action) {
     ActionCase acase = actionCaseRepo.findById(action.getCaseId());
     SampleUnitDTO.SampleUnitType caseType =
         SampleUnitDTO.SampleUnitType.valueOf(acase.getSampleUnitType());
