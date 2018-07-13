@@ -51,7 +51,7 @@ public class CollectionExerciseClientServiceImpl implements CollectionExerciseCl
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    log.info("uriComponents.toUri() = " + uriComponents.toUriString());
+    log.info("collectionExerciseUrl = " + uriComponents.toUriString());
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);

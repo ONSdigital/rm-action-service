@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,22 +45,10 @@ public class SampleSvcClientServiceImpl implements SampleSvcClientService {
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity =
-        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
+    final ResponseEntity<SampleAttributesDTO> responseEntity =
+        restTemplate.exchange(
+            uriComponents.toUri(), HttpMethod.GET, httpEntity, SampleAttributesDTO.class);
 
-    SampleAttributesDTO attribs = null;
-
-    if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      final String responseBody = responseEntity.getBody();
-      log.info("responseBody for sample attributes = " + responseBody);
-      try {
-        attribs = objectMapper.readValue(responseBody, SampleAttributesDTO.class);
-      } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
-      }
-    }
-    return attribs;
+    return responseEntity.getBody();
   }
 }
