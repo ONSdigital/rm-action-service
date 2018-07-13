@@ -51,7 +51,8 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
     if (notification.getPartyId() != null) {
       partyId = UUID.fromString(notification.getPartyId());
     }
-    final UUID sampleUnitId = UUID.fromString(notification.getSampleUnitId());
+    final String sampleUnitIdStr = notification.getSampleUnitId();
+    final UUID sampleUnitId = sampleUnitIdStr == null ? null : UUID.fromString(sampleUnitIdStr);
     final String sampleUnitType = notification.getSampleUnitType();
 
     if (actionPlan != null) {

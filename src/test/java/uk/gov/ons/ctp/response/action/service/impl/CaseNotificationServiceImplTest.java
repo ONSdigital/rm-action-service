@@ -99,4 +99,42 @@ public class CaseNotificationServiceImplTest {
     assertNotNull(caze.get(0).getActionPlanEndDate());
     assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
   }
-}
+
+  @Test
+  public void testAcceptNotificationNoSampleUnitId() throws Exception {
+    final CaseNotification caseNotification = new CaseNotification();
+    caseNotification.setActionPlanId(DUMMY_UUID);
+    caseNotification.setCaseId(DUMMY_UUID);
+    caseNotification.setNotificationType(NotificationType.ACTIVATED);
+    caseNotification.setExerciseId(DUMMY_UUID);
+    caseNotification.setPartyId(DUMMY_UUID);
+
+    final ActionPlan actionPlan = new ActionPlan();
+    actionPlan.setActionPlanPK(1);
+
+    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
+
+    final List<CaseDetailsDTO> caseJson = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
+    final List<CollectionExerciseDTO> collectionExerciseJson =
+        FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
+
+    when(caseSvcClientServiceImpl.getCase(UUID.fromString(DUMMY_UUID))).thenReturn(caseJson.get(0));
+    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
+        .thenReturn(collectionExerciseJson.get(0));
+
+    caseNotificationService.acceptNotification(caseNotification);
+
+    final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
+
+    verify(actionCaseRepo, times(1)).save(actionCase.capture());
+
+    final List<ActionCase> caze = actionCase.getAllValues();
+
+    verify(actionCaseRepo, times(1)).flush();
+
+    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getActionPlanId());
+    assertNotNull(caze.get(0).getActionPlanStartDate());
+    assertNotNull(caze.get(0).getActionPlanEndDate());
+    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
+  }
+ }
