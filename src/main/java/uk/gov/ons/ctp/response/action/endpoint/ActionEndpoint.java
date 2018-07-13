@@ -147,10 +147,7 @@ public final class ActionEndpoint implements CTPEndpoint {
       throws CTPException, InvalidRequestException {
     log.debug("Entering createAdhocAction with actionPostRequestDTO {}", actionPostRequestDTO);
     if (bindingResult.hasErrors()) {
-      throw new InvalidRequestException(
-          "Binding errors for create acti"
-              + "action.setActionPlanFK(actionPlan.getActionPlanPK());on: ",
-          bindingResult);
+      throw new InvalidRequestException("Binding errors for create action: ", bindingResult);
     }
 
     final UUID parentCaseId = actionPostRequestDTO.getCaseId();

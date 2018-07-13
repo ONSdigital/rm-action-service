@@ -13,15 +13,17 @@ import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 @Slf4j
 @Component
 @Qualifier("social")
-public class SocialActionRequestContextFactory extends DefaultActionRequestContextFactory {
+public class SocialActionRequestContextFactory implements ActionRequestContextFactory {
 
   @Autowired private ActionCaseRepository actionCaseRepo;
 
   @Autowired private SampleSvcClientService sampleSvcClient;
 
+  @Autowired private DefaultActionRequestContextFactory defaultFactory;
+
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
-    ActionRequestContext context = super.getActionRequestDecoratorContext(action);
+    ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
 
     UUID sampleUnitId = actionCaseRepo.findById(action.getCaseId()).getSampleUnitId();
     SampleAttributesDTO sampleAttribs = null;

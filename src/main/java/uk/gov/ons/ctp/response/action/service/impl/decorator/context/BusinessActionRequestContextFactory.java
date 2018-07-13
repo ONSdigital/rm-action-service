@@ -18,13 +18,15 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitTyp
 @Slf4j
 @Component
 @Qualifier("business")
-public class BusinessActionRequestContextFactory extends DefaultActionRequestContextFactory {
+public class BusinessActionRequestContextFactory implements ActionRequestContextFactory {
 
   @Autowired private PartySvcClientService partySvcClientService;
 
+  @Autowired private DefaultActionRequestContextFactory defaultFactory;
+
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
-    ActionRequestContext context = super.getActionRequestDecoratorContext(action);
+    ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
 
     if (isIndividual(context)) {
       setPartiesForIndividual(context);
