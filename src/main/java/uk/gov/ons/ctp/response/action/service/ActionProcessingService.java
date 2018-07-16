@@ -12,6 +12,14 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
  * Service, and constructs an outbound ActionRequest/ActionCancel instance.
  */
 public interface ActionProcessingService {
+
+  public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
+  public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
+  public static final String ENABLED = "ENABLED";
+  public static final String PENDING = "PENDING";
+  public static final String ACTIVE = "ACTIVE";
+  public static final String CREATED = "CREATED";
+
   /**
    * To produce an ActionRequest and publish it to the relevant Handler.
    *

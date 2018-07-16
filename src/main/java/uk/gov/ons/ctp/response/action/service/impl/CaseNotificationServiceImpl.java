@@ -47,16 +47,24 @@ public class CaseNotificationServiceImpl implements CaseNotificationService {
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     final UUID caseId = UUID.fromString(notification.getCaseId());
     final UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
-    final UUID partyId = UUID.fromString(notification.getPartyId());
+    UUID partyId = null;
+    if (notification.getPartyId() != null) {
+      partyId = UUID.fromString(notification.getPartyId());
+    }
+    final String sampleUnitIdStr = notification.getSampleUnitId();
+    final UUID sampleUnitId = sampleUnitIdStr == null ? null : UUID.fromString(sampleUnitIdStr);
+    final String sampleUnitType = notification.getSampleUnitType();
 
     if (actionPlan != null) {
       final ActionCase actionCase =
           ActionCase.builder()
               .id(caseId)
+              .sampleUnitId(sampleUnitId)
               .actionPlanId(actionPlanId)
               .actionPlanFK(actionPlan.getActionPlanPK())
               .collectionExerciseId(collectionExerciseId)
               .partyId(partyId)
+              .sampleUnitType(sampleUnitType)
               .build();
 
       switch (notification.getNotificationType()) {
