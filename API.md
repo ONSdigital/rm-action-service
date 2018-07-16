@@ -355,7 +355,7 @@ An `HTTP 404 Not Found` status code is returned if an action plan with the speci
 ## Create Action Rule
 * `POST /actionrules` will create an action rule.
 
-### Example JSON Response
+### Example JSON Request
 ```json
 {
   "actionPlanId": "714356ba-7236-4179-8007-f09190eed323",
