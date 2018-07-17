@@ -8,9 +8,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureParameter;
 import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,16 +25,6 @@ import org.hibernate.annotations.Parameter;
 @Builder
 @NoArgsConstructor
 @Table(name = "case", schema = "action")
-@NamedStoredProcedureQuery(
-    name = "createactions",
-    procedureName = "action.createactions",
-    parameters = {
-      @StoredProcedureParameter(
-          mode = ParameterMode.IN,
-          name = "p_actionplanjobid",
-          type = Integer.class),
-      @StoredProcedureParameter(mode = ParameterMode.OUT, name = "success", type = Boolean.class)
-    })
 public class ActionCase implements Serializable {
 
   private static final long serialVersionUID = 7970373271889255844L;
