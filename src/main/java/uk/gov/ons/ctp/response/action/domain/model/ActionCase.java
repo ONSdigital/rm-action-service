@@ -56,6 +56,9 @@ public class ActionCase implements Serializable {
 
   private UUID id;
 
+  @Column(name = "sampleunit_id")
+  private UUID sampleUnitId;
+
   @Column(name = "actionplanfk")
   private Integer actionPlanFK;
 
@@ -73,4 +76,7 @@ public class ActionCase implements Serializable {
 
   @Column(name = "partyid")
   private UUID partyId;
+
+  @Column(name = "sampleunittype")
+  private String sampleUnitType;
 }

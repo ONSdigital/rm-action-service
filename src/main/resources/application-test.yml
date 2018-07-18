@@ -1,0 +1,47 @@
+logging:
+  level:
+    uk.gov.ons.ctp: DEBUG
+    org.springframework: WARN
+  profile: DEV
+
+liquibase:
+  url: jdbc:postgresql://localhost:15432/postgres
+  user: postgres
+  password: postgres
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15432/postgres
+    username: postgres
+    password: postgres
+
+data-grid:
+  # where is redis
+  address: localhost:17379
+  # when we create a list of actions being distib, how long should the list remain in redis after app death
+  list-time-to-live-seconds: 10
+  # when we try and create a list of ids being distrib how long should we wait to get the lock
+  list-time-to-wait-seconds: 10
+  #  after app death how long should the lock on all lists remain
+  lock-time-to-live-seconds: 10
+  report-lock-time-to-live-seconds: 300
+
+rabbitmq:
+  host: localhost
+  port: 35672
+
+case-svc:
+  connection-config:
+    port: 18002
+
+sample-svc:
+  connection-config:
+    port: 18002
+
+collection-exercise-svc:
+  connection-config:
+    port: 18002
+
+survey-svc:
+  connection-config:
+    port: 18002

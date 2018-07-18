@@ -1,0 +1,9 @@
+{
+  "caseId": "%s",
+  "partyId": null,
+  "createdDateTime": "2018-07-03T08:49:28.233Z",
+  "category": "ACTION_CREATED",
+  "subCategory": null,
+  "createdBy": "SYSTEM",
+  "description": "Test description"
+}

@@ -41,9 +41,12 @@ public class ActionPlan implements Serializable {
       name = "actionplanseq_gen",
       strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
       parameters = {
+        @org.hibernate.annotations.Parameter(
+            name = "sequence_name",
+            value = "action.actionplanseq"),
+        @org.hibernate.annotations.Parameter(name = "initial_value", value = "1000"),
+        @org.hibernate.annotations.Parameter(name = "increment_size", value = "1"),
         @Parameter(name = "sequence_name", value = "action.actionplanseq"),
-        @Parameter(name = "initial_value", value = "1000"),
-        @Parameter(name = "increment_size", value = "1")
       })
   @Column(name = "actionplanpk")
   private Integer actionPlanPK;

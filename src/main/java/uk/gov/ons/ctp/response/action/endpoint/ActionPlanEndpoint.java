@@ -107,6 +107,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
       throws CTPException, InvalidRequestException {
     log.info(
         "Creating action plan, Name: {}, Selectors: {}", request.getName(), request.getSelectors());
+
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action plan: ", bindingResult);
     }
