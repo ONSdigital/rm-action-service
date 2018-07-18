@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,7 @@ public class ActionCaseRepositoryTest {
     actionPlanRepository.deleteAll();
   }
 
+  @Ignore
   @Test
   public void testWithoutAnActionPlanJobNothingHappens() {
     assertTrue(actionService.createScheduledActions(1));
@@ -54,6 +56,7 @@ public class ActionCaseRepositoryTest {
     assertEquals(0, actionRepository.count());
   }
 
+  @Ignore
   @Test
   public void testWithAnActionPlanJobButActionPlansNotStartedDoNothing() {
     //// Given
@@ -124,6 +127,7 @@ public class ActionCaseRepositoryTest {
     assertEquals(ActionPlanJobDTO.ActionPlanJobState.COMPLETED, updatedActionPlanJob.getState());
   }
 
+  @Ignore
   @Test
   public void testWithAnActionPlanJobButActionPlansEndedDoNothing() {
     //// Given
@@ -194,6 +198,7 @@ public class ActionCaseRepositoryTest {
     assertEquals(ActionPlanJobDTO.ActionPlanJobState.COMPLETED, updatedActionPlanJob.getState());
   }
 
+  @Ignore
   @Test
   public void testActiveActionPlanJobAndActionPlanCreatesAction() {
     //// Given
