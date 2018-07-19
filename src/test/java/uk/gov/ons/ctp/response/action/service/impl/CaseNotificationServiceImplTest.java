@@ -137,4 +137,4 @@ public class CaseNotificationServiceImplTest {
     assertNotNull(caze.get(0).getActionPlanEndDate());
     assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
   }
- }
+}

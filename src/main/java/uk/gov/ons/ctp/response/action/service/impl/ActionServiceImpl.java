@@ -29,7 +29,6 @@ import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 
 /**
@@ -194,7 +193,6 @@ public class ActionServiceImpl implements ActionService {
 
     ActionPlan actionPlan =
         actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanFK());
-
     Timestamp currentTime = new Timestamp((new Date()).getTime());
 
     if (actionCaseRepository.hasActiveCaseWithActionPlanId(
@@ -202,13 +200,11 @@ public class ActionServiceImpl implements ActionService {
       actionRepo.createActionsForRulesDueAtTime(actionPlan.getActionPlanPK(), currentTime);
     }
 
-    actionPlanJob.setUpdatedDateTime(currentTime);
-    actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.COMPLETED);
-
+    actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
-
     actionPlanJobRepository.saveAndFlush(actionPlanJob);
     actionPlanRepository.saveAndFlush(actionPlan);
+
     return true;
   }
 

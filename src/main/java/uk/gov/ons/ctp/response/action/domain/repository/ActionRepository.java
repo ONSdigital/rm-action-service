@@ -121,7 +121,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
               + "  ,updateddatetime "
               + "  ) "
               + "SELECT "
-              + "   gen_random_uuid() "
+              + "   action.gen_random_uuid() "
               + "  ,nextval('action.actionPKseq') "
               + "  ,l.id "
               + "  ,l.casePK "

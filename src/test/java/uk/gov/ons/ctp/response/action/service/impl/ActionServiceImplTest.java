@@ -4,8 +4,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -28,7 +29,6 @@ import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 
 /** Tests for ActionServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
@@ -215,8 +215,7 @@ public class ActionServiceImplTest {
     verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
 
     // action plan job has been updated
-    verify(actionPlanJob, times(1)).setUpdatedDateTime(any(Timestamp.class));
-    verify(actionPlanJob, times(1)).setState(eq(ActionPlanJobDTO.ActionPlanJobState.COMPLETED));
+    verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
 
     // did not attempt to create actions
     verify(actionRepo, times(0))
@@ -251,8 +250,7 @@ public class ActionServiceImplTest {
     verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
 
     // action plan job has been updated
-    verify(actionPlanJob, times(1)).setUpdatedDateTime(any(Timestamp.class));
-    verify(actionPlanJob, times(1)).setState(eq(ActionPlanJobDTO.ActionPlanJobState.COMPLETED));
+    verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
 
     // attempted to create actions
     verify(actionRepo, times(1))
