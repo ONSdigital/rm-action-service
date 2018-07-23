@@ -430,8 +430,13 @@
                                 <version>1</version>
                             </info>
                             <springmvc>true</springmvc>
-                            <locations>uk.gov.ons.ctp.response.action.endpoint</locations>
-                            <schemes>http,https</schemes>
+                            <locations>
+                                <location>uk.gov.ons.ctp.response.action.endpoint</location>
+                            </locations>
+                            <schemes>
+                                <scheme>http</scheme>
+                                <scheme>https</scheme>
+                            </schemes>
                             <host>localhost:8151</host>
                             <swaggerDirectory>${project.build.directory}/swagger/swagger-ui</swaggerDirectory>
                         </apiSource>
