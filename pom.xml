@@ -463,7 +463,7 @@
                         </goals>
                         <configuration>
                             <swaggerInput>${project.build.directory}/swagger/swagger-ui/swagger.json</swaggerInput>
-                            <outputDir>${project.build.directory}/swagger</outputDir>
+                            <outputDir>${project.basedir}/docs</outputDir>
                             <config>
                                 <swagger2markup.markupLanguage>MARKDOWN</swagger2markup.markupLanguage>
                             </config>
