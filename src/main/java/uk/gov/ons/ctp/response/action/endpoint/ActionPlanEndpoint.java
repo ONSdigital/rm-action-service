@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -28,13 +32,13 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
-/** The REST endpoint controller for ActionPlans. */
+@Api("API for action plans")
 @RestController
 @RequestMapping(value = "/actionplans", produces = "application/json")
 @Slf4j
 public class ActionPlanEndpoint implements CTPEndpoint {
 
-  public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";
+  static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";
 
   private ActionPlanService actionPlanService;
 
@@ -48,11 +52,12 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     this.mapperFacade = mapperFacade;
   }
 
-  /**
-   * This method returns all action plans.
-   *
-   * @return List<ActionPlanDTO> This returns all action plans.
-   */
+  @ApiOperation(value = "List action plans for the optional selectors, most recent first")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action plans for the optional selectors"),
+    @ApiResponse(code = 204, message = "Action plans not found"),
+  })
   @RequestMapping(method = RequestMethod.GET)
   public final ResponseEntity<List<ActionPlanDTO>> findActionPlans(
       final @RequestParam HashMap<String, String> selectors) {
@@ -73,13 +78,12 @@ public class ActionPlanEndpoint implements CTPEndpoint {
         : ResponseEntity.ok(actionPlanDTOs);
   }
 
-  /**
-   * This method returns the associated action plan for the specified action plan id.
-   *
-   * @param actionPlanId This is the action plan id
-   * @return ActionPlanDTO This returns the associated action plan for the specified action plan id.
-   * @throws CTPException if no action plan found for the specified action plan id.
-   */
+  @ApiOperation(value = "Get the action plan for an actionPlanId")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action plan has been updated"),
+    @ApiResponse(code = 404, message = "Action plan not found"),
+  })
   @RequestMapping(value = "/{actionplanid}", method = RequestMethod.GET)
   public final ActionPlanDTO findActionPlanByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
@@ -92,15 +96,13 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     return mapperFacade.map(actionPlan, ActionPlanDTO.class);
   }
 
-  /**
-   * This method returns the associated action plan after it has been created.
-   *
-   * @param request The object created by ActionPlanPostRequestDTO from the json found in the
-   *     request body
-   * @param bindingResult collects errors thrown by create
-   * @return ActionPlanDTO This returns the updated action plan.
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Create an action plan")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 201, message = "Action plan has been created"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+    @ApiResponse(code = 409, message = "Action plan already exists"),
+  })
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
   public final ResponseEntity<ActionPlanDTO> createActionPlan(
       @RequestBody @Valid final ActionPlanPostRequestDTO request, final BindingResult bindingResult)
@@ -131,18 +133,13 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     return ResponseEntity.created(URI.create(newResourceUrl)).body(actionPlanDTO);
   }
 
-  /**
-   * This method returns the associated action plan after it has been updated. Note that only the
-   * description and the lastGoodRunDatetime can be updated.
-   *
-   * @param actionPlanId This is the action plan id
-   * @param request The object created by ActionPlanDTOMessageBodyReader from the json found in the
-   *     request body
-   * @param bindingResult collects errors thrown by update
-   * @return ActionPlanDTO This returns the updated action plan.
-   * @throws CTPException if the json provided is incorrect or if the action plan id does not exist.
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Update action plan")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 200, message = "Action plan has been updated"),
+    @ApiResponse(code = 404, message = "Action plan not found"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+  })
   @RequestMapping(
       value = "/{actionplanid}",
       method = RequestMethod.PUT,
