@@ -25,7 +25,7 @@ There are two ways of running this service
     ```
 
 ## API
-See http://localhost:8151/swagger-ui.html or [API.md](https://github.com/ONSdigital/rm-action-service/blob/master/API.md)
+See http://localhost:8151/swagger-ui.html or [paths.md](https://github.com/ONSdigital/rm-action-service/blob/master/docs/paths.md)
 
 ## Copyright
 Copyright (C) 2017 Crown Copyright (Office for National Statistics)
