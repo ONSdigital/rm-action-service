@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  - changeSet:
+        id: 11-1
+        author: Tejas Patel/ Billie Thompson
+        changes:
+          - sqlFile:
+              comment: Remove stored procedure as it is no longer used
+              path: remove_create_action_stored_procedure.sql
+              relativeToChangelogFile: true
+              splitStatements: false
