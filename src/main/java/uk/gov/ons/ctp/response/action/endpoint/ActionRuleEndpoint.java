@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -32,7 +33,7 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
 
-/** The REST endpoint controller for Action Rules. */
+@Api("API for action rules")
 @RestController
 @RequestMapping(value = "/actionrules", produces = "application/json")
 @Slf4j

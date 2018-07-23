@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.endpoint;
 
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -32,7 +33,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanJobRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
-/** The REST endpoint controller for ActionPlanJobs. */
+@Api("API for action plan jobs")
 @RestController
 @RequestMapping(value = "/actionplans", produces = "application/json")
 @Slf4j
