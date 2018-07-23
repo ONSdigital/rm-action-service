@@ -100,28 +100,37 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
   public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
     final Integer actionPlanPK = actionPlanJobTemplate.getActionPlanFK();
     final ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
+
     if (actionPlan == null) {
       log.debug("Action plan {} is null", actionPlanPK);
-    } else if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
-      log.debug("No open cases for action plan {}", actionPlanPK);
-    } else if (actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      try {
-        final ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
-        // createActions needs to be executed after actionPlanJob has been created and committed.
-        // createActions invokes a database procedure which won't be able to see the actionPlanJob
-        // if not committed.
-        // This also means an actionPlanJob could be left with state SUBMITTED if createActions
-        // failed.
-        actionCaseRepo.createActions(job.getActionPlanJobPK());
-        return job;
-      } finally {
-        log.debug("Releasing lock on action plan {}", actionPlanPK);
-        actionPlanExecutionLockManager.unlock(actionPlan.getName());
-      }
-    } else {
-      log.debug("Could not get lock on action plan {}", actionPlanPK);
+      return null;
     }
-    return null;
+
+    if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
+      log.debug("No open cases for action plan {}", actionPlanPK);
+
+      return null;
+    }
+
+    if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
+      log.debug("Could not get lock on action plan {}", actionPlanPK);
+
+      return null;
+    }
+
+    try {
+      final ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
+      // createActions needs to be executed after actionPlanJob has been created and committed.
+      // createActions invokes a database procedure which won't be able to see the actionPlanJob
+      // if not committed.
+      // This also means an actionPlanJob could be left with state SUBMITTED if createActions
+      // failed.
+      actionCaseRepo.createActions(job.getActionPlanJobPK());
+      return job;
+    } finally {
+      log.debug("Releasing lock on action plan {}", actionPlanPK);
+      actionPlanExecutionLockManager.unlock(actionPlan.getName());
+    }
   }
 
   private ActionPlanJob createActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {

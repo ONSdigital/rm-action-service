@@ -121,6 +121,18 @@ public class ActionDistributorTest {
     verify(actionProcessingService, times(0)).processActionCancel(any(Action.class));
   }
 
+
+  /**
+   * We retrieve no actionTypes so no exception should be thrown.
+   *
+   */
+  @Test
+  public void testExceptionNotThrowWhenNoActionTypes() {
+    when(actionTypeRepo.findAll()).thenReturn(new ArrayList<>());
+    final DistributionInfo info = actionDistributor.distribute();
+    assertEquals(new DistributionInfo(), info);
+  }
+
   /**
    * Happy Path with 2 ActionRequests and 2 ActionCancels for a H case (ie parent case)
    *
