@@ -14,8 +14,8 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -129,11 +129,15 @@ public class PlanSchedulerIT {
     return response.getBody();
   }
 
-  private ActionRuleDTO createActionRule(final ActionPlanDTO actionPlanDTO)
-      throws UnirestException {
-    ActionRulePostRequestDTO actionRuleDto =
-        new ActionRulePostRequestDTO(
-            actionPlanDTO.getId(), "BSNL", "Notifaction", "Notification file", 1, 3);
+  private ActionRuleDTO createActionRule(
+      ActionPlanDTO actionPlanDTO, OffsetDateTime triggerDateTime) throws UnirestException {
+    ActionRulePostRequestDTO actionRuleDto = new ActionRulePostRequestDTO();
+    actionRuleDto.setTriggerDateTime(triggerDateTime);
+    actionRuleDto.setActionPlanId(actionPlanDTO.getId());
+    actionRuleDto.setDescription("Notification file");
+    actionRuleDto.setName("Notifaction");
+    actionRuleDto.setActionTypeName("BSNL");
+    actionRuleDto.setPriority(3);
 
     HttpResponse<ActionRuleDTO> response =
         Unirest.post("http://localhost:" + this.port + "/actionrules")
@@ -217,13 +221,13 @@ public class PlanSchedulerIT {
   }
 
   private void mockGetCollectionExercise(
-      Date startDate, Date endDate, UUID surveyId, UUID collectionExerciseId)
+      OffsetDateTime startDate, OffsetDateTime endDate, UUID surveyId, UUID collectionExerciseId)
       throws JsonProcessingException {
 
     CollectionExerciseDTO collectionExerciseDTO = new CollectionExerciseDTO();
     collectionExerciseDTO.setId(collectionExerciseId);
-    collectionExerciseDTO.setScheduledStartDateTime(startDate);
-    collectionExerciseDTO.setScheduledEndDateTime(endDate);
+    collectionExerciseDTO.setScheduledStartDateTime(Date.from(startDate.toInstant()));
+    collectionExerciseDTO.setScheduledEndDateTime(Date.from(endDate.toInstant()));
     collectionExerciseDTO.setSurveyId(surveyId.toString());
 
     wireMockRule.stubFor(
@@ -286,18 +290,20 @@ public class PlanSchedulerIT {
   public void testNoActionsCreatedWhenActionPlanHasNotStarted() throws Exception {
     //// Given
     ActionPlanDTO actionPlan = createActionPlan();
-    createActionRule(actionPlan);
 
     final UUID surveyId = UUID.fromString("2ae42f73-3324-4d6b-b071-d9ae0e1fbe22");
     final UUID partyId = UUID.fromString("2050428f-1cea-4e71-8b0c-f00d0d354a0f");
 
-    final UUID collectionExerciseId = UUID.fromString("09a47930-c3f1-470d-a4a3-f2f5454d8e99");
-    final Date startDate = nowOffsetByHours(24);
-    final Date endDate = nowOffsetByHours(72);
+    UUID collectionExerciseId = UUID.fromString("09a47930-c3f1-470d-a4a3-f2f5454d8e99");
+    OffsetDateTime startDate = OffsetDateTime.now().plusDays(1);
+    OffsetDateTime endDate = OffsetDateTime.now().plusDays(3);
     mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
 
-    final UUID caseId = UUID.fromString("7d84ffcd-4a5d-4427-a712-581437ebd6c2");
-    final String sampleUnitType = "B";
+    OffsetDateTime triggerDateTime = OffsetDateTime.now().plusDays(2);
+    createActionRule(actionPlan, triggerDateTime);
+
+    UUID caseId = UUID.fromString("7d84ffcd-4a5d-4427-a712-581437ebd6c2");
+    String sampleUnitType = "B";
 
     mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
     createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
@@ -313,15 +319,17 @@ public class PlanSchedulerIT {
   public void testNoActionsCreatedWhenActionPlanHasEnded() throws Exception {
     //// Given
     final ActionPlanDTO actionPlan = createActionPlan();
-    createActionRule(actionPlan);
 
     final UUID partyId = UUID.fromString("cca5e7fc-9062-476d-94c5-5c46efd1ef54");
     final UUID surveyId = UUID.fromString("e0af7bd1-5ddf-4861-93a9-27d3eec31799");
 
-    final UUID collectionExcerciseId = UUID.fromString("7245ce02-139f-44d1-9d4e-f03ebdfcf0b1");
-    final Date startDate = nowOffsetByHours(-72);
-    final Date endDate = nowOffsetByHours(-24);
+    UUID collectionExcerciseId = UUID.fromString("7245ce02-139f-44d1-9d4e-f03ebdfcf0b1");
+    OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
+    OffsetDateTime endDate = OffsetDateTime.now().minusDays(1);
     mockGetCollectionExercise(startDate, endDate, surveyId, collectionExcerciseId);
+
+    OffsetDateTime triggerDateTime = OffsetDateTime.now().minusDays(2);
+    createActionRule(actionPlan, triggerDateTime);
 
     UUID caseId = UUID.fromString("61bcd60e-d91f-49db-a572-a2033b044baa");
     String sampleUnitType = "B";
@@ -339,15 +347,17 @@ public class PlanSchedulerIT {
   public void testActiveActionPlanJobAndActionPlanCreatesAction() throws Exception {
     //// Given
     ActionPlanDTO actionPlan = createActionPlan();
-    ActionRuleDTO actionRule = createActionRule(actionPlan);
 
     UUID surveyId = UUID.fromString("2e679bf1-18c9-4945-86f0-126d6c9aae4d");
     UUID partyId = UUID.fromString("905810f0-777f-48a1-ad79-3ef230551da1");
 
     UUID collectionExcerciseId = UUID.fromString("eea05d8a-f7ae-41de-ad9d-060acd024d38");
-    Date startDate = nowOffsetByHours(-72);
-    Date endDate = nowOffsetByHours(48);
+    OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
+    OffsetDateTime endDate = OffsetDateTime.now().plusDays(2);
     mockGetCollectionExercise(startDate, endDate, surveyId, collectionExcerciseId);
+
+    OffsetDateTime triggerDateTime = OffsetDateTime.now().minusDays(1);
+    ActionRuleDTO actionRule = createActionRule(actionPlan, triggerDateTime);
 
     UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");
     String sampleUnitType = "B";
@@ -376,11 +386,5 @@ public class PlanSchedulerIT {
         actionRule.getActionTypeName(), is(actionInstruction.getActionRequest().getActionType()));
 
     assertThat(pollForPrinterAction(), nullValue());
-  }
-
-  private Date nowOffsetByHours(int hours) {
-    final Calendar now = Calendar.getInstance();
-    now.add(Calendar.HOUR, hours);
-    return now.getTime();
   }
 }

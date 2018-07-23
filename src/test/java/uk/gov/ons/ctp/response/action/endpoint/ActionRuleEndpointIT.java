@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import javax.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -59,72 +60,11 @@ public class ActionRuleEndpointIT {
   public void setup() {
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(mapper);
-    actionRuleRepository.deleteAll();
-    actionPlanJobRepository.deleteAll();
     actionCaseRepository.deleteAll();
     actionRepository.deleteAll();
+    actionPlanJobRepository.deleteAll();
+    actionRuleRepository.deleteAll();
     actionPlanRepository.deleteAll();
-  }
-
-  private ActionPlanDTO createActionPlan() throws UnirestException {
-    ActionPlanPostRequestDTO actionPlanDto = new ActionPlanPostRequestDTO();
-    actionPlanDto.setName("notification2");
-    actionPlanDto.setDescription("bres enrolment notification");
-    actionPlanDto.setCreatedBy("TEST");
-
-    HttpResponse<ActionPlanDTO> response =
-        Unirest.post("http://localhost:" + this.port + "/actionplans")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .header("Content-Type", "application/json")
-            .body(actionPlanDto)
-            .asObject(ActionPlanDTO.class);
-
-    assertEquals(201, response.getStatus());
-
-    return response.getBody();
-  }
-
-  private HttpResponse<ActionRuleDTO> postActionRule(ActionRulePostRequestDTO postBody)
-      throws UnirestException {
-    return Unirest.post("http://localhost:" + this.port + "/actionrules")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .header("Content-Type", "application/json")
-        .body(postBody)
-        .asObject(ActionRuleDTO.class);
-  }
-
-  private HttpResponse<ActionRuleDTO[]> getActionRules(UUID actionPlanUUID)
-      throws UnirestException {
-    return Unirest.get(
-            "http://localhost:"
-                + this.port
-                + "/actionrules/actionplan/"
-                + actionPlanUUID.toString())
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .asObject(ActionRuleDTO[].class);
-  }
-
-  private HttpResponse<ActionRuleDTO> putActionRule(
-      ActionRulePutRequestDTO putBody, UUID actionRuleId) throws UnirestException {
-    return Unirest.put("http://localhost:" + this.port + "/actionrules/" + actionRuleId.toString())
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .header("Content-Type", "application/json")
-        .body(putBody)
-        .asObject(ActionRuleDTO.class);
-  }
-
-  private ActionRulePostRequestDTO createActionRulePostRequestDTO(ActionPlanDTO actionPlanDTO) {
-    ActionRulePostRequestDTO actionRuleDto = new ActionRulePostRequestDTO();
-    actionRuleDto.setDaysOffset(1);
-    actionRuleDto.setActionPlanId(actionPlanDTO.getId());
-    actionRuleDto.setDescription("Notification file");
-    actionRuleDto.setName("Notifaction");
-    actionRuleDto.setActionTypeName("BSNL");
-    return actionRuleDto;
   }
 
   @Test
@@ -158,6 +98,9 @@ public class ActionRuleEndpointIT {
     assertEquals(200, getResponse.getStatus());
     assertEquals(1, getResponse.getBody().length);
     assertEquals(postRequestBody.getName(), getResponse.getBody()[0].getName());
+    assertEquals(
+        postRequestBody.getTriggerDateTime().toEpochSecond(),
+        getResponse.getBody()[0].getTriggerDateTime().toEpochSecond());
   }
 
   @Test
@@ -170,8 +113,10 @@ public class ActionRuleEndpointIT {
     HttpResponse<ActionRuleDTO> postResponse = postActionRule(postRequestBody);
     assertEquals(201, postResponse.getStatus());
 
+    OffsetDateTime editedTriggerDateTime = OffsetDateTime.now().plusDays(3);
+
     ActionRulePutRequestDTO putRequestBody = new ActionRulePutRequestDTO();
-    putRequestBody.setDaysOffset(3);
+    putRequestBody.setTriggerDateTime(editedTriggerDateTime);
     putRequestBody.setDescription("Another description");
     putRequestBody.setName("AnotherName");
 
@@ -188,7 +133,70 @@ public class ActionRuleEndpointIT {
 
     ActionRuleDTO updatedActionRule = getResponse.getBody()[0];
     assertEquals(putRequestBody.getName(), updatedActionRule.getName());
-    assertEquals(putRequestBody.getDaysOffset(), updatedActionRule.getDaysOffset());
+    assertEquals(
+        putRequestBody.getTriggerDateTime().toEpochSecond(),
+        updatedActionRule.getTriggerDateTime().toEpochSecond());
     assertEquals(putRequestBody.getDescription(), updatedActionRule.getDescription());
+  }
+
+  private ActionPlanDTO createActionPlan() throws UnirestException {
+    ActionPlanPostRequestDTO actionPlanDto = new ActionPlanPostRequestDTO();
+    actionPlanDto.setName("notification2");
+    actionPlanDto.setDescription("bres enrolment notification");
+    actionPlanDto.setCreatedBy("TEST");
+
+    HttpResponse<ActionPlanDTO> response =
+      Unirest.post("http://localhost:" + this.port + "/actionplans")
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(actionPlanDto)
+        .asObject(ActionPlanDTO.class);
+
+    assertEquals(201, response.getStatus());
+
+    return response.getBody();
+  }
+
+  private HttpResponse<ActionRuleDTO> postActionRule(ActionRulePostRequestDTO postBody)
+    throws UnirestException {
+    return Unirest.post("http://localhost:" + this.port + "/actionrules")
+      .basicAuth("admin", "secret")
+      .header("accept", "application/json")
+      .header("Content-Type", "application/json")
+      .body(postBody)
+      .asObject(ActionRuleDTO.class);
+  }
+
+  private HttpResponse<ActionRuleDTO[]> getActionRules(UUID actionPlanUUID)
+    throws UnirestException {
+    return Unirest.get(
+      "http://localhost:"
+        + this.port
+        + "/actionrules/actionplan/"
+        + actionPlanUUID.toString())
+      .basicAuth("admin", "secret")
+      .header("accept", "application/json")
+      .asObject(ActionRuleDTO[].class);
+  }
+
+  private HttpResponse<ActionRuleDTO> putActionRule(
+    ActionRulePutRequestDTO putBody, UUID actionRuleId) throws UnirestException {
+    return Unirest.put("http://localhost:" + this.port + "/actionrules/" + actionRuleId.toString())
+      .basicAuth("admin", "secret")
+      .header("accept", "application/json")
+      .header("Content-Type", "application/json")
+      .body(putBody)
+      .asObject(ActionRuleDTO.class);
+  }
+
+  private ActionRulePostRequestDTO createActionRulePostRequestDTO(ActionPlanDTO actionPlanDTO) {
+    ActionRulePostRequestDTO actionRuleDto = new ActionRulePostRequestDTO();
+    actionRuleDto.setTriggerDateTime(OffsetDateTime.now());
+    actionRuleDto.setActionPlanId(actionPlanDTO.getId());
+    actionRuleDto.setDescription("Notification file");
+    actionRuleDto.setName("Notifaction");
+    actionRuleDto.setActionTypeName("BSNL");
+    return actionRuleDto;
   }
 }

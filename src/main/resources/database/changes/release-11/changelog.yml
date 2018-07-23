@@ -9,3 +9,13 @@ databaseChangeLog:
               path: remove_create_action_stored_procedure.sql
               relativeToChangelogFile: true
               splitStatements: false
+
+  - changeSet:
+          id: 11-3
+          author: Tejas Patel/ Billie Thompson
+          changes:
+            - sqlFile:
+                comment: Change action rule offsets to static dates
+                path: offset_to_static_action_rule_dates.sql
+                relativeToChangelogFile: true
+                splitStatements: false

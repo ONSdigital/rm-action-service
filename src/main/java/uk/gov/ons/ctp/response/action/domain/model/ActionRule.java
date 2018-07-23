@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -51,8 +52,8 @@ public class ActionRule {
 
   private String description;
 
-  @Column(name = "daysoffset")
-  private Integer daysOffset;
+  @Column(name = "triggerdatetime")
+  private OffsetDateTime triggerDateTime;
 
   private Integer priority;
 }

@@ -18,10 +18,8 @@ import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_
 import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_TYPE_NOT_FOUND;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.time.OffsetDateTime;
+import java.util.*;
 import ma.glasnost.orika.MapperFacade;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -67,9 +65,8 @@ public final class ActionRuleEndpointUnitTest {
   @Mock private ActionPlanService actionPlanService;
   @Mock private ActionTypeService actionTypeService;
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = new CustomObjectMapper();
   private MockMvc mockMvc;
-  private List<ActionRule> actionRules;
   private List<ActionPlan> actionPlans;
   private List<ActionType> actionTypes;
 
@@ -85,33 +82,11 @@ public final class ActionRuleEndpointUnitTest {
     this.mockMvc =
         MockMvcBuilders.standaloneSetup(actionRuleEndpoint)
             .setHandlerExceptionResolvers(mockAdviceFor(RestExceptionHandler.class))
-            .setMessageConverters(new MappingJackson2HttpMessageConverter(new CustomObjectMapper()))
+            .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
             .build();
 
-    actionRules = FixtureHelper.loadClassFixtures(ActionRule[].class);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
-  }
-
-  private ActionRulePostRequestDTO createActionRulePostRequestDTO(
-      UUID actionPlanId, String actionTypeName) {
-    ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
-    actionRulePostRequestDTO.setActionPlanId(actionPlanId);
-    actionRulePostRequestDTO.setActionTypeName(actionTypeName);
-    actionRulePostRequestDTO.setName("BSREM+45");
-    actionRulePostRequestDTO.setDescription("Enrolment Reminder Letter(+45 days)");
-    actionRulePostRequestDTO.setDaysOffset(45);
-    actionRulePostRequestDTO.setPriority(3);
-    return actionRulePostRequestDTO;
-  }
-
-  private ActionRulePutRequestDTO createActionRulePutRequestDTO() {
-    ActionRulePutRequestDTO actionRulePutRequestDTO = new ActionRulePutRequestDTO();
-    actionRulePutRequestDTO.setName("BSREM+45");
-    actionRulePutRequestDTO.setDescription("Enrolment Reminder Letter(+45 days)");
-    actionRulePutRequestDTO.setDaysOffset(45);
-    actionRulePutRequestDTO.setPriority(3);
-    return actionRulePutRequestDTO;
   }
 
   /**
@@ -161,9 +136,10 @@ public final class ActionRuleEndpointUnitTest {
   @Test
   public void findActionRulesByActionPlan() throws Exception {
     final List<ActionRule> results = new ArrayList<>();
-    for (int i = 0; i < 3; i++) {
-      results.add((actionRules.get(i)));
-    }
+    results.add(ActionRule.builder().id(ACTION_RULE_ID_1).priority(1).actionTypeFK(1).build());
+    results.add(ActionRule.builder().id(ACTION_RULE_ID_2).priority(2).actionTypeFK(2).build());
+    results.add(ActionRule.builder().id(ACTION_RULE_ID_3).priority(3).actionTypeFK(4).build());
+
     when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
     when(actionRuleService.findActionRulesByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
         .thenReturn(results);
@@ -201,7 +177,18 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void createActionRuleGoodJsonProvided() throws Exception {
-    when(actionRuleService.createActionRule(any(ActionRule.class))).thenReturn(actionRules.get(2));
+    ActionRule actionRule =
+        new ActionRule(
+            ACTION_RULE_ID_3,
+            3,
+            actionPlans.get(0).getActionPlanPK(),
+            actionTypes.get(0).getActionTypePK(),
+            "BSREM+0",
+            "TEST description three",
+            OffsetDateTime.now(),
+            3);
+
+    when(actionRuleService.createActionRule(any(ActionRule.class))).thenReturn(actionRule);
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
     when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(actionTypes.get(0));
     ActionRulePostRequestDTO actionRulePostRequestDTO =
@@ -325,7 +312,18 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void updateActionByActionId() throws Exception {
-    when(actionRuleService.updateActionRule(any(ActionRule.class))).thenReturn(actionRules.get(0));
+    ActionRule actionRule =
+        new ActionRule(
+            ACTION_RULE_ID_1,
+            1,
+            actionPlans.get(0).getActionPlanPK(),
+            actionTypes.get(0).getActionTypePK(),
+            "BSNOT+0",
+            "TEST description one",
+            OffsetDateTime.now(),
+            1);
+
+    when(actionRuleService.updateActionRule(any(ActionRule.class))).thenReturn(actionRule);
     when(actionTypeService.findActionType(any(Integer.class))).thenReturn(actionTypes.get(0));
 
     ActionRulePutRequestDTO actionRulePutRequestDTO = createActionRulePutRequestDTO();
@@ -342,5 +340,26 @@ public final class ActionRuleEndpointUnitTest {
         .andExpect(handler().methodName("updateActionRule"))
         .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
         .andExpect(jsonPath("$.id", is(ACTION_RULE_ID_1.toString())));
+  }
+
+  private ActionRulePostRequestDTO createActionRulePostRequestDTO(
+    UUID actionPlanId, String actionTypeName) {
+    ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
+    actionRulePostRequestDTO.setActionPlanId(actionPlanId);
+    actionRulePostRequestDTO.setActionTypeName(actionTypeName);
+    actionRulePostRequestDTO.setName("BSREM+45");
+    actionRulePostRequestDTO.setDescription("Enrolment Reminder Letter(+45 days)");
+    actionRulePostRequestDTO.setTriggerDateTime(OffsetDateTime.now());
+    actionRulePostRequestDTO.setPriority(3);
+    return actionRulePostRequestDTO;
+  }
+
+  private ActionRulePutRequestDTO createActionRulePutRequestDTO() {
+    ActionRulePutRequestDTO actionRulePutRequestDTO = new ActionRulePutRequestDTO();
+    actionRulePutRequestDTO.setName("BSREM+45");
+    actionRulePutRequestDTO.setDescription("Enrolment Reminder Letter(+45 days)");
+    actionRulePutRequestDTO.setTriggerDateTime(OffsetDateTime.now());
+    actionRulePutRequestDTO.setPriority(3);
+    return actionRulePutRequestDTO;
   }
 }
