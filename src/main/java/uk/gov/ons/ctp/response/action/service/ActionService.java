@@ -91,6 +91,14 @@ public interface ActionService extends CTPService {
   Action createAction(Action action);
 
   /**
+   * Create scheduled actions.
+   *
+   * @param actionPlanJobId Action Plan Job primary key
+   * @return True if processed successfully
+   */
+  boolean createScheduledActions(Integer actionPlanJobId);
+
+  /**
    * Update an action.
    *
    * @param action Action with update information
