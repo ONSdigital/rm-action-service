@@ -139,9 +139,9 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void findActionRulesByActionPlanNoRules() throws Exception {
-    when(actionRuleService.findActionRulesByActionPlanId(ACTION_PLAN_ID_1))
-        .thenReturn(Collections.emptyList());
     when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
+    when(actionRuleService.findActionRulesByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
+        .thenReturn(Collections.emptyList());
 
     final ResultActions resultActions =
         mockMvc.perform(getJson("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString()));
@@ -164,8 +164,9 @@ public final class ActionRuleEndpointUnitTest {
     for (int i = 0; i < 3; i++) {
       results.add((actionRules.get(i)));
     }
-    when(actionRuleService.findActionRulesByActionPlanId(ACTION_PLAN_ID_1)).thenReturn(results);
     when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
+    when(actionRuleService.findActionRulesByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
+        .thenReturn(results);
     when(actionTypeService.findActionType(any(Integer.class))).thenReturn(actionTypes.get(0));
 
     final ResultActions resultActions =

@@ -23,9 +23,9 @@ public class ActionRuleServiceImpl implements ActionRuleService {
 
   @CoverageIgnore
   @Override
-  public List<ActionRule> findActionRulesByActionPlanId(final UUID actionPlanId) {
-    log.debug("Entering findActionRulesByActionPlanId");
-    return actionRuleRepo.findByActionPlanId(actionPlanId);
+  public List<ActionRule> findActionRulesByActionPlanFK(final Integer actionPlanFK) {
+    log.debug("Entering findActionRulesByActionPlanFK");
+    return actionRuleRepo.findByActionPlanFK(actionPlanFK);
   }
 
   @Override

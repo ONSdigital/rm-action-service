@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import java.util.List;
-import java.util.UUID;
 import uk.gov.ons.ctp.common.service.CTPService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 
@@ -9,11 +8,11 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 public interface ActionRuleService extends CTPService {
 
   /**
-   * This method returns all action rules associated to given action plan id
+   * This method returns all action rules associated to given action plan foreign key
    *
-   * @return List<ActionRule> This returns all action rules for action plan id
+   * @return List<ActionRule> This returns all action rules for action plan
    */
-  List<ActionRule> findActionRulesByActionPlanId(UUID actionPlanId);
+  List<ActionRule> findActionRulesByActionPlanFK(Integer actionPlanFk);
 
   /**
    * This method returns the action rule after it has been created.
