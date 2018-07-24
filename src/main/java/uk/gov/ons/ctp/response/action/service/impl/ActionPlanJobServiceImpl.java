@@ -21,7 +21,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
-import uk.gov.ons.ctp.response.action.service.ActionService;
 
 @Service
 @Slf4j
@@ -39,8 +38,6 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
   @Autowired private ActionCaseRepository actionCaseRepo;
 
   @Autowired private ActionPlanJobRepository actionPlanJobRepo;
-
-  @Autowired private ActionService actionSvc;
 
   @CoverageIgnore
   @Override
@@ -128,7 +125,7 @@ public class ActionPlanJobServiceImpl implements ActionPlanJobService {
       // if not committed.
       // This also means an actionPlanJob could be left with state SUBMITTED if createActions
       // failed.
-      actionSvc.createScheduledActions(job.getActionPlanJobPK());
+      actionCaseRepo.createActions(job.getActionPlanJobPK());
       return job;
     } finally {
       log.debug("Releasing lock on action plan {}", actionPlanPK);
