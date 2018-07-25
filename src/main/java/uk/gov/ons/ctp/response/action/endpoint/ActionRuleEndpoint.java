@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -29,15 +33,15 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
 
-/** The REST endpoint controller for Action Rules. */
+@Api("API for action rules")
 @RestController
 @RequestMapping(value = "/actionrules", produces = "application/json")
 @Slf4j
 public class ActionRuleEndpoint implements CTPEndpoint {
 
-  public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan with id %s not found";
-  public static final String ACTION_TYPE_NOT_FOUND = "ActionType with name %s not found";
-  public static final String ACTION_RULE_NOT_FOUND = "ActionRule with id %s not found";
+  static final String ACTION_PLAN_NOT_FOUND = "ActionPlan with id %s not found";
+  static final String ACTION_TYPE_NOT_FOUND = "ActionType with name %s not found";
+  static final String ACTION_RULE_NOT_FOUND = "ActionRule with id %s not found";
 
   @Autowired private ActionRuleService actionRuleService;
 
@@ -49,13 +53,12 @@ public class ActionRuleEndpoint implements CTPEndpoint {
   @Autowired
   private MapperFacade mapperFacade;
 
-  /**
-   * GET ActionRules for the specified ActionPlan Id.
-   *
-   * @param actionPlanId actionPlanID to which action rules apply
-   * @return List<ActionRulesDTO> Returns the associated action rules for the specified action plan
-   *     id
-   */
+  @ApiOperation(value = "List action rules for an actionPlanId")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action rules for an actionPlanId"),
+    @ApiResponse(code = 404, message = "Action plan not found"),
+  })
   @RequestMapping(value = "/actionplan/{actionplanid}", method = RequestMethod.GET)
   public ResponseEntity<List<ActionRuleDTO>> findActionRulesByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
@@ -73,16 +76,13 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     return ResponseEntity.ok(buildActionRulesDTOs(actionRules));
   }
 
-  /**
-   * POST Create an ActionRule.
-   *
-   * @param actionRulePostRequestDTO Incoming ActionDTO with details to validate and from which to
-   *     create ActionRule
-   * @param bindingResult collects errors thrown by update
-   * @return ActionDTO Created Action
-   * @throws CTPException on failure to create Action
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Create an action rule")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 201, message = "Action rule has been created"),
+    @ApiResponse(code = 404, message = "Action plan or action type not found"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+  })
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
   public ResponseEntity<ActionRuleDTO> createActionRule(
       final @RequestBody @Valid ActionRulePostRequestDTO actionRulePostRequestDTO,
@@ -124,16 +124,13 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     return ResponseEntity.created(URI.create(newResourceUrl)).body(actionRuleDTO);
   }
 
-  /**
-   * PUT to update the specified Action Rule.
-   *
-   * @param actionRuleId Id of the Action Rule to update
-   * @param actionRulePutRequestDTO Incoming ActionRuleDTO with details to update
-   * @param bindingResult collects errors thrown by update
-   * @return ActionRuleDTO Returns the updated Action Rule details
-   * @throws CTPException if update operation fails
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Update an action rule")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 201, message = "Action rule has been updated"),
+    @ApiResponse(code = 404, message = "Action rule not found"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+  })
   @RequestMapping(
       value = "/{actionRuleId}",
       method = RequestMethod.PUT,

@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -33,15 +37,16 @@ import uk.gov.ons.ctp.response.action.service.ActionCaseService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 
-/** The REST endpoint controller for Actions. */
+@Api("API for actions")
 @RestController
 @RequestMapping(value = "/actions", produces = "application/json")
 @Slf4j
 public final class ActionEndpoint implements CTPEndpoint {
 
-  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
-  public static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
-  public static final String CASE_NOT_FOUND = "Case not found for id %s";
+  static final String ACTION_NOT_FOUND = "Action not found for id %s";
+  static final String ACTION_NOT_UPDATED = "Action not updated for id %s";
+  static final String CASE_NOT_FOUND = "Case not found for id %s";
+
   @Autowired private ActionService actionService;
   @Autowired private ActionPlanService actionPlanService;
   @Autowired private ActionCaseService actionCaseService;
@@ -50,13 +55,12 @@ public final class ActionEndpoint implements CTPEndpoint {
   @Autowired
   private MapperFacade mapperFacade;
 
-  /**
-   * GET the Action for the specified action id.
-   *
-   * @param actionId Action Id of requested Action
-   * @return ActionDTO Returns the associated Action for the specified action
-   * @throws CTPException if no associated Action found for the specified action Id.
-   */
+  @ApiOperation("Get the action for an actionId")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action for the actionId"),
+    @ApiResponse(code = 404, message = "Action not found"),
+  })
   @RequestMapping(value = "/{actionid}", method = RequestMethod.GET)
   public ActionDTO findActionByActionId(@PathVariable("actionid") final UUID actionId)
       throws CTPException {
@@ -72,16 +76,16 @@ public final class ActionEndpoint implements CTPEndpoint {
     return actionDTO;
   }
 
-  /**
-   * GET Actions for the specified case Id.
-   *
-   * @param caseId caseID to which Actions apply
-   * @return List<ActionDTO> Returns the associated actions for the specified case id.
-   */
+  @ApiOperation("List actions for a case")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Actions for the case"),
+    @ApiResponse(code = 204, message = "Action not found"),
+  })
   @RequestMapping(value = "/case/{caseid}", method = RequestMethod.GET)
   public ResponseEntity<List<ActionDTO>> findActionsByCaseId(
       @PathVariable("caseid") final UUID caseId) {
-    log.info("Entering findActionsByCaseId...");
+    log.info("Entering findActionsByCaseId..");
     final List<Action> actions = actionService.findActionsByCaseId(caseId);
     if (CollectionUtils.isEmpty(actions)) {
       return ResponseEntity.noContent().build();
@@ -90,13 +94,12 @@ public final class ActionEndpoint implements CTPEndpoint {
     }
   }
 
-  /**
-   * GET all Actions optionally filtered by ActionType and or state
-   *
-   * @param actionType Optional filter by ActionType
-   * @param state Optional filter by Action state
-   * @return List<ActionDTO> Actions for the specified filters
-   */
+  @ApiOperation(value = "List actions with the actionType and state, most recent first")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Actions for the actionType and state"),
+    @ApiResponse(code = 204, message = "Action not found"),
+  })
   @RequestMapping(method = RequestMethod.GET)
   public ResponseEntity<List<ActionDTO>> findActions(
       @RequestParam(value = "actiontype", required = false) final String actionType,
@@ -130,16 +133,12 @@ public final class ActionEndpoint implements CTPEndpoint {
     }
   }
 
-  /**
-   * POST Create an adhoc Action.
-   *
-   * @param actionPostRequestDTO Incoming ActionDTO with details to validate and from which to
-   *     create Action
-   * @param bindingResult collects errors thrown by update
-   * @return ActionDTO Created Action
-   * @throws CTPException on failure to create Action
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Create an Action")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 201, message = "Action has been created"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+  })
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
   public ResponseEntity<ActionDTO> createAdhocAction(
       final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
@@ -175,16 +174,12 @@ public final class ActionEndpoint implements CTPEndpoint {
     }
   }
 
-  /**
-   * PUT to update the specified Action.
-   *
-   * @param actionId Action Id of the Action to update
-   * @param actionPutRequestDTO Incoming ActionDTO with details to update
-   * @param bindingResult collects errors thrown by update
-   * @return ActionDTO Returns the updated Action details
-   * @throws CTPException if update operation fails
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Update an Action")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action has been updated"),
+    @ApiResponse(code = 404, message = "Action not found"),
+  })
   @RequestMapping(value = "/{actionid}", method = RequestMethod.PUT, consumes = "application/json")
   public ActionDTO updateAction(
       @PathVariable("actionid") final UUID actionId,
@@ -210,13 +205,13 @@ public final class ActionEndpoint implements CTPEndpoint {
     return resultDTO;
   }
 
-  /**
-   * PUT to cancel all the Actions for a specified caseId.
-   *
-   * @param caseId Case Id of the actions to cancel
-   * @return List<ActionDTO> Returns a list of cancelled Actions
-   * @throws CTPException if update operation fails
-   */
+  @ApiOperation(value = "Cancel all the actions for a case")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 200, message = "Cancelled action"),
+    @ApiResponse(code = 204, message = "No actions to be cancelled"),
+    @ApiResponse(code = 404, message = "Case not found"),
+  })
   @RequestMapping(
       value = "/case/{caseid}/cancel",
       method = RequestMethod.PUT,
@@ -238,16 +233,13 @@ public final class ActionEndpoint implements CTPEndpoint {
     }
   }
 
-  /**
-   * Allow feedback otherwise sent via JMS to be sent via endpoint
-   *
-   * @param actionId the action
-   * @param actionFeedbackRequestDTO the feedback
-   * @param bindingResult the bindingResult
-   * @return the modified action
-   * @throws CTPException oops
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Update state of the action")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 200, message = "Action has been updated"),
+    @ApiResponse(code = 404, message = "Action not found"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+  })
   @RequestMapping(
       value = "/{actionid}/feedback",
       method = RequestMethod.PUT,

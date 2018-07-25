@@ -2,6 +2,10 @@ package uk.gov.ons.ctp.response.action.endpoint;
 
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -29,13 +33,13 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanJobRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
-/** The REST endpoint controller for ActionPlanJobs. */
+@Api("API for action plan jobs")
 @RestController
 @RequestMapping(value = "/actionplans", produces = "application/json")
 @Slf4j
 public class ActionPlanJobEndpoint implements CTPEndpoint {
 
-  public static final String ACTION_PLAN_JOB_NOT_FOUND = "ActionPlanJob not found for id %s";
+  static final String ACTION_PLAN_JOB_NOT_FOUND = "ActionPlanJob not found for id %s";
 
   @Autowired private ActionPlanJobService actionPlanJobService;
 
@@ -45,14 +49,12 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   @Autowired
   private MapperFacade mapperFacade;
 
-  /**
-   * This method returns the associated action plan job for the specified action plan job id.
-   *
-   * @param actionPlanJobId This is the action plan job id
-   * @return ActionPlanJobDTO This returns the associated action plan job for the specified action
-   *     plan job id.
-   * @throws CTPException if no action plan job found for the specified action plan job id.
-   */
+  @ApiOperation(value = "Get the Action plan job for an actionPlanJobId")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action plan job for the actionPlanJobId"),
+    @ApiResponse(code = 404, message = "Action plan job not found"),
+  })
   @RequestMapping(value = "/jobs/{actionplanjobid}", method = RequestMethod.GET)
   public final ActionPlanJobDTO findActionPlanJobById(
       @PathVariable("actionplanjobid") final UUID actionPlanJobId) throws CTPException {
@@ -71,13 +73,12 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
     return actionPlanJobDTO;
   }
 
-  /**
-   * Returns all action plan jobs for the given action plan id.
-   *
-   * @param actionPlanId the given action plan id.
-   * @return Returns all action plan jobs for the given action plan id.
-   * @throws CTPException summats went wrong
-   */
+  @ApiOperation(value = "List Action plan job for an actionPlanId, most recent first")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 2 LINES
+    @ApiResponse(code = 200, message = "Action plan jobs for the actionPlanId"),
+    @ApiResponse(code = 204, message = "Action plan jobs not found"),
+  })
   @RequestMapping(value = "/{actionplanid}/jobs", method = RequestMethod.GET)
   public final ResponseEntity<List<ActionPlanJobDTO>> findAllActionPlanJobsByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
@@ -91,16 +92,13 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
     }
   }
 
-  /**
-   * To create a new Action Plan Job having received an action plan id and some json
-   *
-   * @param actionPlanId the given action plan id.
-   * @param actionPlanJobRequestDTO the ActionPlanJobRequestDTO representation of the provided json
-   * @param binding collects errors thrown by update
-   * @return the created ActionPlanJobDTO
-   * @throws CTPException summats went wrong
-   * @throws InvalidRequestException if binding errors
-   */
+  @ApiOperation(value = "Create an action plan job (i.e. execute the action plan)")
+  @ApiResponses({
+    // CHECKSTYLE IGNORE indentation FOR NEXT 3 LINES
+    @ApiResponse(code = 201, message = "Action plan job has been created"),
+    @ApiResponse(code = 404, message = "Action plan not found"),
+    @ApiResponse(code = 400, message = "Required fields are missing or invalid"),
+  })
   @RequestMapping(
       value = "/{actionplanid}/jobs",
       method = RequestMethod.POST,
