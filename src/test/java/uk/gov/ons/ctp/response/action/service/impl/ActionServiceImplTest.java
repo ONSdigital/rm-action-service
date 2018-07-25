@@ -6,12 +6,12 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Before;
@@ -26,7 +26,6 @@ import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.domain.model.*;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
@@ -51,9 +50,7 @@ public class ActionServiceImplTest {
 
   @Mock private ActionTypeRepository actionTypeRepo;
 
-  @Mock
-  private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
-      actionSvcStateTransitionManager;
+  @Mock private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
 
   private List<Action> actions;
   private List<ActionFeedback> actionFeedback;
@@ -118,8 +115,7 @@ public class ActionServiceImplTest {
 
     actionServiceImpl.feedBackAction(actionFeedback.get(0));
 
-    final ActionDTO.ActionEvent event =
-        ActionDTO.ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
+    final ActionEvent event = ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
     final Action originalAction = FixtureHelper.loadClassFixtures(Action[].class).get(0);
 
     verify(actionRepo, times(1)).findById(ACTION_ID_0);
@@ -147,14 +143,14 @@ public class ActionServiceImplTest {
   }
 
   @Test
-  public void checkCreateActionIsSaved() throws Exception {
+  public void checkCreateActionIsSaved() {
     when(actionTypeRepo.findByName(ACTION_TYPENAME)).thenReturn(actionType.get(0));
     actionServiceImpl.createAction(actions.get(0));
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
   }
 
   @Test
-  public void testUpdateActionCallsSaveEvent() throws Exception {
+  public void testUpdateActionCallsSaveEvent() {
     final Action action = actions.get(0);
     when(actionRepo.findById(ACTION_ID_0)).thenReturn(action);
     when(actionRepo.saveAndFlush(any())).then(returnsFirstArg());
@@ -165,7 +161,7 @@ public class ActionServiceImplTest {
   }
 
   @Test
-  public void testUpdateActionNoActionFound() throws Exception {
+  public void testUpdateActionNoActionFound() {
     final Action existingAction = actionServiceImpl.updateAction(actions.get(0));
 
     verify(actionRepo, times(0)).saveAndFlush(any());
@@ -173,7 +169,7 @@ public class ActionServiceImplTest {
   }
 
   @Test
-  public void testUpdateActionNoUpdate() throws Exception {
+  public void testUpdateActionNoUpdate() {
     when(actionRepo.findById(ACTION_ID_3)).thenReturn(actions.get(3));
     final Action existingAction = actionServiceImpl.updateAction(actions.get(3));
 
@@ -183,7 +179,7 @@ public class ActionServiceImplTest {
 
   @Test
   public void testCreateScheduledActionsWithoutAnActionPlanJobNothingHappens() {
-    assertTrue(actionServiceImpl.createScheduledActions(1));
+    actionServiceImpl.createScheduledActions(1);
 
     assertEquals(0, actionRepo.count());
   }
@@ -192,25 +188,24 @@ public class ActionServiceImplTest {
   public void testCreateScheduledActionsWithNoActiveCaseDoesNotCreateActions() {
     //// Given
     // Create Action Plan
-    int actionPlanPK = 1;
-    ActionPlan actionPlan = mock(ActionPlan.class);
+    final int actionPlanPK = 1;
+    final ActionPlan actionPlan = mock(ActionPlan.class);
 
     // Create Action Plan Job for Action Plan
-    int actionPlanJobPK = 1;
-    ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
+    final int actionPlanJobPK = 1;
+    final ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
     when(actionPlanJob.getActionPlanFK()).thenReturn(actionPlanPK);
 
     when(actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobPK)).thenReturn(actionPlanJob);
     when(actionPlanRepository.findByActionPlanPK(actionPlanPK)).thenReturn(actionPlan);
-    when(actionCaseRepository.hasActiveCaseWithActionPlanId(eq(actionPlanPK), any(Timestamp.class)))
-        .thenReturn(false);
+
+    when(actionRepo.findPotentialActionsActiveDate(eq(actionPlanPK), any(Timestamp.class)))
+        .thenReturn(new ArrayList<>());
 
     //// When
-    boolean actual = actionServiceImpl.createScheduledActions(actionPlanJobPK);
+    actionServiceImpl.createScheduledActions(actionPlanJobPK);
 
     //// Then
-    assertTrue(actual);
-
     // action plan has been updated
     verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
 
@@ -218,34 +213,36 @@ public class ActionServiceImplTest {
     verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
 
     // did not attempt to create actions
-    verify(actionRepo, times(0))
-        .createActionsForRulesDueAtTime(eq(actionPlanPK), any(Timestamp.class));
+    verify(actionRepo, times(0)).save(any(Action.class));
+    verify(actionRepo, times(1)).flush();
   }
 
   @Test
   public void testCreateScheduledActionsWithActiveCaseCreatesActions() {
     //// Given
     // Create Action Plan
-    int actionPlanPK = 1;
-    ActionPlan actionPlan = mock(ActionPlan.class);
+    final int actionPlanPK = 1;
+    final ActionPlan actionPlan = mock(ActionPlan.class);
     when(actionPlan.getActionPlanPK()).thenReturn(actionPlanPK);
 
     // Create Action Plan Job for Action Plan
-    int actionPlanJobPK = 1;
-    ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
+    final int actionPlanJobPK = 1;
+    final ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
     when(actionPlanJob.getActionPlanFK()).thenReturn(actionPlanPK);
+
+    final List<PotentialAction> potentialActions = new ArrayList<>();
+    final PotentialAction potentialAction = mock(PotentialAction.class);
+    potentialActions.add(potentialAction);
 
     when(actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobPK)).thenReturn(actionPlanJob);
     when(actionPlanRepository.findByActionPlanPK(actionPlanPK)).thenReturn(actionPlan);
-    when(actionCaseRepository.hasActiveCaseWithActionPlanId(eq(actionPlanPK), any(Timestamp.class)))
-        .thenReturn(true);
+    when(actionRepo.findPotentialActionsActiveDate(eq(actionPlanPK), any(Timestamp.class)))
+        .thenReturn(potentialActions);
 
     //// When
-    boolean actual = actionServiceImpl.createScheduledActions(actionPlanJobPK);
+    actionServiceImpl.createScheduledActions(actionPlanJobPK);
 
     //// Then
-    assertTrue(actual);
-
     // action plan has been updated
     verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
 
@@ -253,7 +250,7 @@ public class ActionServiceImplTest {
     verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
 
     // attempted to create actions
-    verify(actionRepo, times(1))
-        .createActionsForRulesDueAtTime(eq(actionPlanPK), any(Timestamp.class));
+    verify(actionRepo, times(1)).save(any(Action.class));
+    verify(actionRepo, times(1)).flush();
   }
 }

@@ -5,11 +5,11 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.PotentialAction;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 
 /** JPA Data Repository. */
@@ -97,65 +97,28 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
   List<Action> findByStateOrderByCreatedDateTimeDesc(ActionDTO.ActionState state);
 
   /**
-   * Create actions for action rules due to run
-   *
-   * @param actionPlanId action Plan primary key
+   * @param actionPlanId Action Plan primary key filter criteria
+   * @return Return all true if case exists with active action plan
    */
-  @Modifying
   @Query(
-      value =
-          "INSERT INTO action.action "
-              + "  ( "
-              + "   id "
-              + "  ,actionPK "
-              + "  ,caseId "
-              + "  ,caseFK "
-              + "  ,actionplanFK "
-              + "  ,actionruleFK "
-              + "  ,actiontypeFK "
-              + "  ,createdby "
-              + "  ,manuallycreated "
-              + "  ,situation "
-              + "  ,stateFK "
-              + "  ,createddatetime "
-              + "  ,updateddatetime "
-              + "  ) "
-              + "SELECT "
-              + "   action.gen_random_uuid() "
-              + "  ,nextval('action.actionPKseq') "
-              + "  ,l.id "
-              + "  ,l.casePK "
-              + "  ,l.actionplanFk "
-              + "  ,l.actionrulePK "
-              + "  ,l.actiontypeFK "
-              + "  ,'SYSTEM' "
-              + "  ,FALSE "
-              + "  ,NULL "
-              + "  ,'SUBMITTED' "
-              + "  , :currentTime "
-              + "  , :currentTime "
-              + " FROM "
-              + "  (SELECT c.id "
-              + "         ,c.casePK "
-              + "         ,r.actionplanFK "
-              + "         ,r.actionrulePK "
-              + "         ,r.actiontypeFK "
-              + "   FROM action.actionrule r "
-              + "        ,action.case c "
-              + "   WHERE  c.actionplanFk = :actionPlanId "
-              + "   AND    r.actionplanFk = c.actionplanFK "
-              + "   AND r.daysoffset <= EXTRACT(DAY FROM ( :currentTime - c.actionplanstartdate)) "
-              + "   AND c.actionplanstartdate <= :currentTime "
-              + "   AND c.actionplanenddate >= :currentTime "
-              + "  EXCEPT "
-              + "  SELECT a.caseId "
-              + "        ,a.caseFK "
-              + "        ,a.actionplanFK "
-              + "        ,a.actionruleFK "
-              + "        ,a.actiontypeFK "
-              + "  FROM action.action a "
-              + "  WHERE a.actionplanFk = :actionPlanId ) l",
-      nativeQuery = true)
-  void createActionsForRulesDueAtTime(
+      "SELECT "
+          + "new uk.gov.ons.ctp.response.action.domain.model.PotentialAction("
+          + "c.id, c.casePK, r.actionPlanFK, r.actionRulePK, t, r.priority"
+          + ") FROM ActionCase c, ActionRule r, ActionType t "
+          + "WHERE r.actionPlanFK = c.actionPlanFK "
+          + "AND c.actionPlanStartDate <= :currentTime "
+          + "AND c.actionPlanEndDate >= :currentTime "
+          + "AND r.daysOffset <= DAY(:currentTime - c.actionPlanStartDate) "
+          + "AND c.actionPlanFK = :actionPlanId "
+          + "AND t.actionTypePK = r.actionTypeFK "
+          + "AND NOT EXISTS ("
+          + "   SELECT a "
+          + "   FROM Action a "
+          + "   WHERE a.actionPlanFK = :actionPlanId"
+          + "   AND a.caseId = c.id"
+          + "   AND a.caseFK = c.casePK"
+          + "   AND a.actionRuleFK = r.actionRulePK"
+          + "   AND a.actionType.actionTypePK = r.actionTypeFK )")
+  List<PotentialAction> findPotentialActionsActiveDate(
       @Param("actionPlanId") Integer actionPlanId, @Param("currentTime") Timestamp currentTime);
 }

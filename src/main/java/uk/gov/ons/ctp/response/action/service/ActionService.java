@@ -96,7 +96,7 @@ public interface ActionService extends CTPService {
    * @param actionPlanJobId Action Plan Job primary key
    * @return True if processed successfully
    */
-  boolean createScheduledActions(Integer actionPlanJobId);
+  void createScheduledActions(Integer actionPlanJobId);
 
   /**
    * Update an action.

@@ -177,35 +177,36 @@ public class ActionServiceImpl implements ActionService {
 
     action.setManuallyCreated(true);
     action.setCreatedDateTime(DateTimeUtil.nowUTC());
-    action.setState(ActionDTO.ActionState.SUBMITTED);
+    action.setState(ActionState.SUBMITTED);
     action.setId(UUID.randomUUID());
     return actionRepo.saveAndFlush(action);
   }
 
   @Transactional
   @Override
-  public boolean createScheduledActions(Integer actionPlanJobId) {
-    ActionPlanJob actionPlanJob = actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobId);
+  public void createScheduledActions(Integer actionPlanJobId) {
+    final ActionPlanJob actionPlanJob =
+        actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobId);
 
     if (actionPlanJob == null) {
-      return true;
+      return;
     }
 
-    ActionPlan actionPlan =
+    final ActionPlan actionPlan =
         actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanFK());
-    Timestamp currentTime = new Timestamp((new Date()).getTime());
+    final Timestamp currentTime = new Timestamp((new Date()).getTime());
 
-    if (actionCaseRepository.hasActiveCaseWithActionPlanId(
-        actionPlan.getActionPlanPK(), currentTime)) {
-      actionRepo.createActionsForRulesDueAtTime(actionPlan.getActionPlanPK(), currentTime);
-    }
+    actionRepo
+        .findPotentialActionsActiveDate(actionPlan.getActionPlanPK(), currentTime)
+        .stream()
+        .map(pa -> Action.fromPotentialAction(pa, currentTime))
+        .forEach(a -> actionRepo.save(a));
+    actionRepo.flush();
 
     actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
     actionPlanJobRepository.saveAndFlush(actionPlanJob);
     actionPlanRepository.saveAndFlush(actionPlan);
-
-    return true;
   }
 
   @Transactional(
