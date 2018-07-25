@@ -4,14 +4,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Before;
@@ -23,8 +22,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.response.action.domain.model.*;
-import uk.gov.ons.ctp.response.action.domain.repository.*;
+import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
@@ -40,12 +41,6 @@ public class ActionServiceImplTest {
   private static final String ACTION_TYPENAME = "HouseholdInitialContact";
 
   @InjectMocks private ActionServiceImpl actionServiceImpl;
-
-  @Mock private ActionCaseRepository actionCaseRepository;
-
-  @Mock private ActionPlanJobRepository actionPlanJobRepository;
-
-  @Mock private ActionPlanRepository actionPlanRepository;
 
   @Mock private ActionRepository actionRepo;
 
@@ -179,81 +174,5 @@ public class ActionServiceImplTest {
 
     verify(actionRepo, times(0)).saveAndFlush(any());
     assertThat(existingAction, is(actions.get(3)));
-  }
-
-  @Test
-  public void testCreateScheduledActionsWithoutAnActionPlanJobNothingHappens() {
-    assertTrue(actionServiceImpl.createScheduledActions(1));
-
-    assertEquals(0, actionRepo.count());
-  }
-
-  @Test
-  public void testCreateScheduledActionsWithNoActiveCaseDoesNotCreateActions() {
-    //// Given
-    // Create Action Plan
-    int actionPlanPK = 1;
-    ActionPlan actionPlan = mock(ActionPlan.class);
-
-    // Create Action Plan Job for Action Plan
-    int actionPlanJobPK = 1;
-    ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
-    when(actionPlanJob.getActionPlanFK()).thenReturn(actionPlanPK);
-
-    when(actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobPK)).thenReturn(actionPlanJob);
-    when(actionPlanRepository.findByActionPlanPK(actionPlanPK)).thenReturn(actionPlan);
-    when(actionCaseRepository.hasActiveCaseWithActionPlanId(eq(actionPlanPK), any(Timestamp.class)))
-        .thenReturn(false);
-
-    //// When
-    boolean actual = actionServiceImpl.createScheduledActions(actionPlanJobPK);
-
-    //// Then
-    assertTrue(actual);
-
-    // action plan has been updated
-    verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
-
-    // action plan job has been updated
-    verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
-
-    // did not attempt to create actions
-    verify(actionRepo, times(0))
-        .createActionsForRulesDueAtTime(eq(actionPlanPK), any(Timestamp.class));
-  }
-
-  @Test
-  public void testCreateScheduledActionsWithActiveCaseCreatesActions() {
-    //// Given
-    // Create Action Plan
-    int actionPlanPK = 1;
-    ActionPlan actionPlan = mock(ActionPlan.class);
-    when(actionPlan.getActionPlanPK()).thenReturn(actionPlanPK);
-
-    // Create Action Plan Job for Action Plan
-    int actionPlanJobPK = 1;
-    ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
-    when(actionPlanJob.getActionPlanFK()).thenReturn(actionPlanPK);
-
-    when(actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobPK)).thenReturn(actionPlanJob);
-    when(actionPlanRepository.findByActionPlanPK(actionPlanPK)).thenReturn(actionPlan);
-    when(actionCaseRepository.hasActiveCaseWithActionPlanId(eq(actionPlanPK), any(Timestamp.class)))
-        .thenReturn(true);
-
-    //// When
-    boolean actual = actionServiceImpl.createScheduledActions(actionPlanJobPK);
-
-    //// Then
-    assertTrue(actual);
-
-    // action plan has been updated
-    verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
-
-    // action plan job has been updated
-    verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
-
-    // attempted to create actions
-    verify(actionRepo, times(1))
-        .createActionsForRulesDueAtTime(eq(actionPlanPK), any(Timestamp.class));
   }
 }

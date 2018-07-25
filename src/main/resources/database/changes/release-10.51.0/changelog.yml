@@ -19,3 +19,13 @@ databaseChangeLog:
             path: add_sample_unit_type_to_case.sql
             relativeToChangelogFile: true
             splitStatements: false
+
+  - changeSet:
+      id: 10.51.0-3
+      author: Matt Innes
+      changes:
+        - sqlFile:
+            comment: Reinstate create_actions stored procedure
+            path: reinstate_createactions_fn.sql
+            relativeToChangelogFile: true
+            splitStatements: false
