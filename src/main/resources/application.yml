@@ -165,7 +165,7 @@ survey-svc:
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
- # calling the survey svc endpoints
+ # calling the sample svc endpoints
 sample-svc:
   sample-attributes-by-id: /samples/{sampleUnitId}/attributes
   connection-config:

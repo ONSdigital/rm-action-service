@@ -31,6 +31,11 @@ applications:
     surveySvc_connectionConfig_scheme: REPLACE_PROTOCOL
     surveySvc_connectionConfig_username: REPLACE_BA_USERNAME
     surveySvc_connectionConfig_password: REPLACE_BA_PASSWORD
+    sampleSvc_connectionConfig_host: samplesvc-SPACE.DOMAIN
+    sampleSvc_connectionConfig_port: "REPLACE_PORT"
+    sampleSvc_connectionConfig_scheme: REPLACE_PROTOCOL
+    sampleSvc_connectionConfig_username: REPLACE_BA_USERNAME
+    sampleSvc_connectionConfig_password: REPLACE_BA_PASSWORD
     endpoints_enabled: ENDPOINT_ENABLED
     security_user_name: REPLACE_BA_USERNAME
     security_user_password: REPLACE_BA_PASSWORD
