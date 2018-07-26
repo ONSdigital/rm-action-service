@@ -1,17 +1,29 @@
 package uk.gov.ons.ctp.response.action.domain.repository;
 
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 
 /** JPA Data Repository for ActionCase which is backed by action.case table */
 @Repository
 public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer> {
+
+  /**
+   * trigger creation of actions from the population of the action.case and action.actionjobplan
+   * tables
+   *
+   * @param actionplanjobid the id of the action plan job
+   * @return true if successful
+   */
+  @Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+  @Procedure(name = "createactions")
+  boolean createActions(@Param("p_actionplanjobid") Integer actionplanjobid);
 
   /**
    * find cases (by virtue open) for actionplanid
@@ -36,21 +48,4 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
    * @return how many cases for that plan
    */
   Long countByActionPlanFK(Integer actionPlanKey);
-
-  /**
-   * @param actionPlanId Action Plan primary key filter criteria
-   * @return Return all true if case exists with active action plan
-   */
-  @Query(
-      value =
-          "SELECT EXISTS (SELECT 1 "
-              + "FROM action.case c, action.actionrule r "
-              + "WHERE c.actionplanstartdate <= :currentTime "
-              + "AND c.actionplanenddate >= :currentTime "
-              + "AND r.daysoffset <= EXTRACT(DAY FROM (:currentTime - c.actionplanstartdate)) "
-              + "AND c.actionplanFk = :actionPlanId "
-              + "AND r.actionplanFK = c.actionplanFK)",
-      nativeQuery = true)
-  boolean hasActiveCaseWithActionPlanId(
-      @Param("actionPlanId") Integer actionPlanId, @Param("currentTime") Timestamp currentTime);
 }

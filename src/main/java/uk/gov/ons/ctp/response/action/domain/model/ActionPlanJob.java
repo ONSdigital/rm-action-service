@@ -59,9 +59,4 @@ public class ActionPlanJob {
 
   @Column(name = "updateddatetime")
   private Timestamp updatedDateTime;
-
-  public void complete(Timestamp completedAt) {
-    state = ActionPlanJobDTO.ActionPlanJobState.COMPLETED;
-    updatedDateTime = completedAt;
-  }
 }
