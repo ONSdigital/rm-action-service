@@ -19,10 +19,18 @@ public interface ActionPlanJobRepository extends JpaRepository<ActionPlanJob, In
   ActionPlanJob findById(UUID actionPlanJobId);
 
   /**
-   * Gte the actionplanjobs for an action plan by id
+   * Get the actionplanjobs for an action plan by id
    *
    * @param actionPlanFK the plan id
    * @return the jobs
    */
   List<ActionPlanJob> findByActionPlanFK(Integer actionPlanFK);
+
+  /**
+   * Retrieve by Primary Key
+   *
+   * @param actionPlanJobPK the Id of the ActionPlanJob
+   * @return the associated job
+   */
+  ActionPlanJob findByActionPlanJobPK(Integer actionPlanJobPK);
 }
