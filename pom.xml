@@ -197,7 +197,7 @@
 
         <!-- ONS END -->
 
-        <!-- third party libraries -->
+        <!-- Third party libraries -->
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
