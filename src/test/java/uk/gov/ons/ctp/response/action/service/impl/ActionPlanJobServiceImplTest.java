@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.service.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -15,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -30,6 +30,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.action.service.ActionService;
 
 /** Tests for the ActionPlanJobServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
@@ -45,6 +46,8 @@ public class ActionPlanJobServiceImplTest {
 
   @Mock private ActionPlanJobRepository actionPlanJobRepo;
 
+  @Mock private ActionService actionService;
+
   @InjectMocks private ActionPlanJobServiceImpl actionPlanJobServiceImpl;
 
   /** Initialises Mockito */
@@ -55,7 +58,7 @@ public class ActionPlanJobServiceImplTest {
     appConfig.setPlanExecution(planExecution);
     MockitoAnnotations.initMocks(this);
 
-    Mockito.when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
+    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
   }
 
   /**
@@ -71,10 +74,9 @@ public class ActionPlanJobServiceImplTest {
     final List<ActionCase> actionCases = FixtureHelper.loadClassFixtures(ActionCase[].class);
 
     // wire up mock responses
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
-    Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
-    Mockito.when(actionPlanJobRepo.save(actionPlanJobs.get(0))).thenReturn(actionPlanJobs.get(0));
-    Mockito.when(actionCaseRepo.createActions(1)).thenReturn(Boolean.TRUE);
+    when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
+    when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
+    when(actionPlanJobRepo.save(actionPlanJobs.get(0))).thenReturn(actionPlanJobs.get(0));
 
     // let it roll
     final ActionPlanJob executedJob =
@@ -90,7 +92,7 @@ public class ActionPlanJobServiceImplTest {
     final ActionPlanJob savedJob = actionPlanJob.getValue();
     assertEquals(actionPlanJobs.get(0), savedJob);
 
-    verify(actionCaseRepo).createActions(1);
+    verify(actionService).createScheduledActions(1);
 
     Assert.assertNotNull(executedJob);
   }
@@ -102,7 +104,7 @@ public class ActionPlanJobServiceImplTest {
   public void testCreateAndExecuteActionPlanJobForcedExecutionFailedLock() throws Exception {
 
     // set up mock hazelcast with a lock that will fail
-    Mockito.when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
+    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
 
     // load fixtures
     final List<ActionPlan> actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
@@ -110,8 +112,8 @@ public class ActionPlanJobServiceImplTest {
         FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
 
     // wire up mock responses
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
-    Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(1L);
+    when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
+    when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(1L);
 
     // let it roll
     final ActionPlanJob executedJob =
@@ -119,7 +121,7 @@ public class ActionPlanJobServiceImplTest {
 
     // assert the right calls were made
     verify(actionPlanJobRepo, times(0)).save(actionPlanJobs.get(0));
-    verify(actionCaseRepo, times(0)).createActions(1);
+    verify(actionService, times(0)).createScheduledActions(1);
     Assert.assertNull(executedJob);
   }
 
@@ -130,14 +132,14 @@ public class ActionPlanJobServiceImplTest {
   public void testCreateAndExecuteActionPlanJobActionNotFound() throws Exception {
 
     // set up mock hazelcast with a lock that will fail
-    Mockito.when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
+    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
 
     // load fixtures
     final List<ActionPlanJob> actionPlanJobs =
         FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
 
     // wire up mock responses
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(null);
+    when(actionPlanRepo.findOne(1)).thenReturn(null);
 
     // let it roll
     final ActionPlanJob executedJob =
@@ -157,8 +159,8 @@ public class ActionPlanJobServiceImplTest {
     final List<ActionCase> actionCases = new ArrayList<>();
 
     // wire up mock responses
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
-    Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
+    when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
+    when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(new Long(actionCases.size()));
 
     // let it roll
     final ActionPlanJob executedJob =
@@ -168,7 +170,7 @@ public class ActionPlanJobServiceImplTest {
     verify(actionPlanRepo).findOne(1);
     verify(actionCaseRepo).countByActionPlanFK(1);
     verify(actionPlanJobRepo, times(0)).save(actionPlanJobs.get(0));
-    verify(actionCaseRepo, times(0)).createActions(1);
+    verify(actionService, times(0)).createScheduledActions(1);
 
     Assert.assertNull(executedJob);
   }
@@ -192,14 +194,12 @@ public class ActionPlanJobServiceImplTest {
         FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
 
     // wire up mock responses
-    Mockito.when(actionPlanRepo.findAll()).thenReturn(actionPlans);
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
-    Mockito.when(actionPlanRepo.findOne(2)).thenReturn(actionPlans.get(1));
-    Mockito.when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(1L);
-    Mockito.when(actionCaseRepo.countByActionPlanFK(2)).thenReturn(1L);
-    Mockito.when(actionPlanJobRepo.save(any(ActionPlanJob.class)))
-        .thenReturn(actionPlanJobs.get(0));
-    Mockito.when(actionCaseRepo.createActions(1)).thenReturn(Boolean.TRUE);
+    when(actionPlanRepo.findAll()).thenReturn(actionPlans);
+    when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
+    when(actionPlanRepo.findOne(2)).thenReturn(actionPlans.get(1));
+    when(actionCaseRepo.countByActionPlanFK(1)).thenReturn(1L);
+    when(actionCaseRepo.countByActionPlanFK(2)).thenReturn(1L);
+    when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
 
     // let it roll
     final List<ActionPlanJob> executedJobs =
@@ -212,7 +212,7 @@ public class ActionPlanJobServiceImplTest {
     verify(actionCaseRepo, times(1)).countByActionPlanFK(1);
     verify(actionCaseRepo, times(1)).countByActionPlanFK(2);
     verify(actionPlanJobRepo, times(2)).save(any(ActionPlanJob.class));
-    verify(actionCaseRepo, times(2)).createActions(any(Integer.class));
+    verify(actionService, times(2)).createScheduledActions(any(Integer.class));
 
     Assert.assertTrue(executedJobs.size() > 0);
   }
@@ -229,9 +229,9 @@ public class ActionPlanJobServiceImplTest {
     actionPlans.forEach(actionPlan -> actionPlan.setLastRunDateTime(lastExecutionTime));
 
     // wire up mock responses
-    Mockito.when(actionPlanRepo.findAll()).thenReturn(actionPlans);
-    Mockito.when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
-    Mockito.when(actionPlanRepo.findOne(2)).thenReturn(actionPlans.get(1));
+    when(actionPlanRepo.findAll()).thenReturn(actionPlans);
+    when(actionPlanRepo.findOne(1)).thenReturn(actionPlans.get(0));
+    when(actionPlanRepo.findOne(2)).thenReturn(actionPlans.get(1));
 
     // let it roll
     final List<ActionPlanJob> executedJobs =
@@ -239,7 +239,7 @@ public class ActionPlanJobServiceImplTest {
 
     // assert the right calls were made
     verify(actionPlanJobRepo, times(0)).save(any(ActionPlanJob.class));
-    verify(actionCaseRepo, times(0)).createActions(any(Integer.class));
+    verify(actionService, times(0)).createScheduledActions(any(Integer.class));
 
     Assert.assertFalse(executedJobs.size() > 0);
   }

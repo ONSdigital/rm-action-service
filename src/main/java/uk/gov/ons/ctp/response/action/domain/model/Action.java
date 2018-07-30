@@ -22,7 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
 /** Domain model object. */
 @CoverageIgnore
@@ -35,6 +35,8 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 public class Action implements Serializable {
 
   private static final long serialVersionUID = 8539984354009320104L;
+  public static final String CREATED_BY_SYSTEM = "SYSTEM";
+  public static final int DEFAULT_PRIORITY = 3;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,7 +72,7 @@ public class Action implements Serializable {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "statefk")
-  private ActionDTO.ActionState state;
+  private ActionState state;
 
   @Column(name = "createddatetime")
   private Timestamp createdDateTime;
@@ -81,6 +83,35 @@ public class Action implements Serializable {
   @Version
   @Column(name = "optlockversion")
   private int optLockVersion;
+
+  public static Action fromPotentialAction(
+      final PotentialAction potentialAction, final Timestamp currentTime) {
+
+    final Action action = new Action();
+
+    action.setId(UUID.randomUUID());
+    action.setCaseId(potentialAction.getCaseId());
+    action.setCaseFK(potentialAction.getCaseFk());
+    action.setActionPlanFK(potentialAction.getActionPlanFk());
+
+    action.setActionRuleFK(potentialAction.getActionRuleFk());
+    action.setPriority(DEFAULT_PRIORITY);
+
+    if (potentialAction.getPriority() != null) {
+      action.setPriority(potentialAction.getPriority());
+    }
+
+    action.setActionType(potentialAction.getActionType());
+
+    action.setState(ActionState.SUBMITTED);
+    action.setManuallyCreated(false);
+    action.setCreatedBy(CREATED_BY_SYSTEM);
+
+    action.setCreatedDateTime(currentTime);
+    action.setUpdatedDateTime(currentTime);
+
+    return action;
+  }
 
   /** Priority of action NOTE: the names need to match those in the outbound xsd */
   public enum ActionPriority {

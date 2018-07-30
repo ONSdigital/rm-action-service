@@ -4,7 +4,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mashape.unirest.http.HttpResponse;
@@ -34,6 +33,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import uk.gov.ons.ctp.common.UnirestInitialiser;
 import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
@@ -76,7 +76,7 @@ public class ActionEndpointIT {
   @Before
   public void setup() {
     mapzer = new Mapzer(resourceLoader);
-    initialiseUnirestObjectMapper();
+    UnirestInitialiser.initialise(mapper);
   }
 
   @Test
@@ -218,27 +218,6 @@ public class ActionEndpointIT {
 
     return new SimpleMessageListener(
         config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
-  }
-
-  private void initialiseUnirestObjectMapper() {
-    Unirest.setObjectMapper(
-        new com.mashape.unirest.http.ObjectMapper() {
-          public <T> T readValue(final String value, final Class<T> valueType) {
-            try {
-              return mapper.readValue(value, valueType);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-
-          public String writeValue(final Object value) {
-            try {
-              return mapper.writeValueAsString(value);
-            } catch (JsonProcessingException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        });
   }
 
   private void createCollectionExerciseMock(UUID collexID) throws IOException {

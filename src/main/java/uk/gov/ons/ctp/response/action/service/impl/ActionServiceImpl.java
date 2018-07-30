@@ -1,7 +1,9 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +17,12 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
@@ -36,7 +43,13 @@ public class ActionServiceImpl implements ActionService {
 
   @Autowired private ActionRepository actionRepo;
 
+  @Autowired private ActionCaseRepository actionCaseRepository;
+
   @Autowired private ActionTypeRepository actionTypeRepo;
+
+  @Autowired private ActionPlanRepository actionPlanRepository;
+
+  @Autowired private ActionPlanJobRepository actionPlanJobRepository;
 
   @Autowired
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
@@ -164,9 +177,36 @@ public class ActionServiceImpl implements ActionService {
 
     action.setManuallyCreated(true);
     action.setCreatedDateTime(DateTimeUtil.nowUTC());
-    action.setState(ActionDTO.ActionState.SUBMITTED);
+    action.setState(ActionState.SUBMITTED);
     action.setId(UUID.randomUUID());
     return actionRepo.saveAndFlush(action);
+  }
+
+  @Transactional
+  @Override
+  public void createScheduledActions(Integer actionPlanJobId) {
+    final ActionPlanJob actionPlanJob =
+        actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobId);
+
+    if (actionPlanJob == null) {
+      return;
+    }
+
+    final ActionPlan actionPlan =
+        actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanFK());
+    final Timestamp currentTime = new Timestamp((new Date()).getTime());
+
+    actionRepo
+        .findPotentialActionsActiveDate(actionPlan.getActionPlanPK(), currentTime)
+        .stream()
+        .map(pa -> Action.fromPotentialAction(pa, currentTime))
+        .forEach(a -> actionRepo.save(a));
+    actionRepo.flush();
+
+    actionPlanJob.complete(currentTime);
+    actionPlan.setLastRunDateTime(currentTime);
+    actionPlanJobRepository.saveAndFlush(actionPlanJob);
+    actionPlanRepository.saveAndFlush(actionPlan);
   }
 
   @Transactional(
