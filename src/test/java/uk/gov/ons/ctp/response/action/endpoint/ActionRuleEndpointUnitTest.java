@@ -17,10 +17,9 @@ import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_
 import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_RULE_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionRuleEndpoint.ACTION_TYPE_NOT_FOUND;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.OffsetDateTime;
+import java.util.*;
 import ma.glasnost.orika.MapperFacade;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -41,6 +40,8 @@ import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionRulePutRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
@@ -59,24 +60,13 @@ public final class ActionRuleEndpointUnitTest {
   private static final UUID ACTION_PLAN_ID_1 =
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
   private static final String ACTION_TYPE_NAME_1 = "BSNOT";
-  private static final String ACTION_RULE_CREATE_VALID_JSON =
-      "{ \"actionPlanId\": \""
-          + ACTION_PLAN_ID_1.toString()
-          + "\", \"actionTypeName\": \""
-          + ACTION_TYPE_NAME_1
-          + "\", \"name\": \"BSREM+45\", \"description\": \"Enrolment Reminder Letter(+45 days)\", "
-          + "\"daysOffset\": 45, \"priority\": 3 }";
-  private static final String ACTION_RULE_UPDATE_VALID_JSON =
-      "{ \"name\": \"BSREM+45\", "
-          + "\"description\": \"Enrolment Reminder Letter(+45 days)\", "
-          + "\"daysOffset\": 45, \"priority\": 3 }";
   @InjectMocks private ActionRuleEndpoint actionRuleEndpoint;
   @Mock private ActionRuleService actionRuleService;
   @Mock private ActionPlanService actionPlanService;
   @Mock private ActionTypeService actionTypeService;
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
+  private ObjectMapper objectMapper = new CustomObjectMapper();
   private MockMvc mockMvc;
-  private List<ActionRule> actionRules;
   private List<ActionPlan> actionPlans;
   private List<ActionType> actionTypes;
 
@@ -92,10 +82,9 @@ public final class ActionRuleEndpointUnitTest {
     this.mockMvc =
         MockMvcBuilders.standaloneSetup(actionRuleEndpoint)
             .setHandlerExceptionResolvers(mockAdviceFor(RestExceptionHandler.class))
-            .setMessageConverters(new MappingJackson2HttpMessageConverter(new CustomObjectMapper()))
+            .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
             .build();
 
-    actionRules = FixtureHelper.loadClassFixtures(ActionRule[].class);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
   }
@@ -110,8 +99,7 @@ public final class ActionRuleEndpointUnitTest {
     when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(null);
 
     final ResultActions resultActions =
-        mockMvc.perform(
-            getJson(String.format("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString())));
+        mockMvc.perform(getJson("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString()));
 
     resultActions
         .andExpect(status().isNotFound())
@@ -126,13 +114,12 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void findActionRulesByActionPlanNoRules() throws Exception {
-    when(actionRuleService.findActionRulesByActionPlanId(ACTION_PLAN_ID_1))
-        .thenReturn(Collections.emptyList());
     when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
+    when(actionRuleService.findActionRulesByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
+        .thenReturn(Collections.emptyList());
 
     final ResultActions resultActions =
-        mockMvc.perform(
-            getJson(String.format("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString())));
+        mockMvc.perform(getJson("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString()));
 
     resultActions
         .andExpect(status().is2xxSuccessful())
@@ -149,16 +136,17 @@ public final class ActionRuleEndpointUnitTest {
   @Test
   public void findActionRulesByActionPlan() throws Exception {
     final List<ActionRule> results = new ArrayList<>();
-    for (int i = 0; i < 3; i++) {
-      results.add((actionRules.get(i)));
-    }
-    when(actionRuleService.findActionRulesByActionPlanId(ACTION_PLAN_ID_1)).thenReturn(results);
+    results.add(ActionRule.builder().id(ACTION_RULE_ID_1).priority(1).actionTypeFK(1).build());
+    results.add(ActionRule.builder().id(ACTION_RULE_ID_2).priority(2).actionTypeFK(2).build());
+    results.add(ActionRule.builder().id(ACTION_RULE_ID_3).priority(3).actionTypeFK(4).build());
+
     when(actionPlanService.findActionPlanById(ACTION_PLAN_ID_1)).thenReturn(actionPlans.get(0));
+    when(actionRuleService.findActionRulesByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
+        .thenReturn(results);
     when(actionTypeService.findActionType(any(Integer.class))).thenReturn(actionTypes.get(0));
 
     final ResultActions resultActions =
-        mockMvc.perform(
-            getJson(String.format("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString())));
+        mockMvc.perform(getJson("/actionrules/actionplan/" + ACTION_PLAN_ID_1.toString()));
 
     resultActions
         .andExpect(status().is2xxSuccessful())
@@ -189,12 +177,26 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void createActionRuleGoodJsonProvided() throws Exception {
-    when(actionRuleService.createActionRule(any(ActionRule.class))).thenReturn(actionRules.get(2));
+    ActionRule actionRule =
+        new ActionRule(
+            ACTION_RULE_ID_3,
+            3,
+            actionPlans.get(0).getActionPlanPK(),
+            actionTypes.get(0).getActionTypePK(),
+            "BSREM+0",
+            "TEST description three",
+            OffsetDateTime.now(),
+            3);
+
+    when(actionRuleService.createActionRule(any(ActionRule.class))).thenReturn(actionRule);
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
     when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(actionTypes.get(0));
+    ActionRulePostRequestDTO actionRulePostRequestDTO =
+        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE_NAME_1);
 
     final ResultActions resultActions =
-        mockMvc.perform(postJson("/actionrules", ACTION_RULE_CREATE_VALID_JSON));
+        mockMvc.perform(
+            postJson("/actionrules", objectMapper.writeValueAsString(actionRulePostRequestDTO)));
 
     resultActions
         .andExpect(status().isCreated())
@@ -232,9 +234,12 @@ public final class ActionRuleEndpointUnitTest {
   @Test
   public void createActionRuleActionPlanNotFound() throws Exception {
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(null);
+    ActionRulePostRequestDTO actionRulePostRequestDTO =
+        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE_NAME_1);
 
     final ResultActions resultActions =
-        mockMvc.perform(postJson("/actionrules", ACTION_RULE_CREATE_VALID_JSON));
+        mockMvc.perform(
+            postJson("/actionrules", objectMapper.writeValueAsString(actionRulePostRequestDTO)));
 
     resultActions
         .andExpect(status().isNotFound())
@@ -257,9 +262,12 @@ public final class ActionRuleEndpointUnitTest {
   public void createActionRuleActionType() throws Exception {
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
     when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(null);
+    ActionRulePostRequestDTO actionRulePostRequestDTO =
+        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE_NAME_1);
 
     final ResultActions resultActions =
-        mockMvc.perform(postJson("/actionrules", ACTION_RULE_CREATE_VALID_JSON));
+        mockMvc.perform(
+            postJson("/actionrules", objectMapper.writeValueAsString(actionRulePostRequestDTO)));
 
     resultActions
         .andExpect(status().isNotFound())
@@ -281,10 +289,12 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void updateActionRuleByActionRuleIdNotFound() throws Exception {
+    ActionRulePutRequestDTO actionRulePutRequestDTO = createActionRulePutRequestDTO();
     final ResultActions resultActions =
         mockMvc.perform(
             putJson(
-                String.format("/actionrules/%s", NON_EXISTING_ID), ACTION_RULE_UPDATE_VALID_JSON));
+                String.format("/actionrules/%s", NON_EXISTING_ID),
+                objectMapper.writeValueAsString(actionRulePutRequestDTO)));
 
     resultActions
         .andExpect(status().isNotFound())
@@ -302,13 +312,27 @@ public final class ActionRuleEndpointUnitTest {
    */
   @Test
   public void updateActionByActionId() throws Exception {
-    when(actionRuleService.updateActionRule(any(ActionRule.class))).thenReturn(actionRules.get(0));
+    ActionRule actionRule =
+        new ActionRule(
+            ACTION_RULE_ID_1,
+            1,
+            actionPlans.get(0).getActionPlanPK(),
+            actionTypes.get(0).getActionTypePK(),
+            "BSNOT+0",
+            "TEST description one",
+            OffsetDateTime.now(),
+            1);
+
+    when(actionRuleService.updateActionRule(any(ActionRule.class))).thenReturn(actionRule);
     when(actionTypeService.findActionType(any(Integer.class))).thenReturn(actionTypes.get(0));
+
+    ActionRulePutRequestDTO actionRulePutRequestDTO = createActionRulePutRequestDTO();
 
     final ResultActions resultActions =
         mockMvc.perform(
             putJson(
-                String.format("/actionrules/%s", ACTION_RULE_ID_1), ACTION_RULE_UPDATE_VALID_JSON));
+                String.format("/actionrules/%s", ACTION_RULE_ID_1),
+                objectMapper.writeValueAsString(actionRulePutRequestDTO)));
 
     resultActions
         .andExpect(status().isOk())
@@ -316,5 +340,26 @@ public final class ActionRuleEndpointUnitTest {
         .andExpect(handler().methodName("updateActionRule"))
         .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
         .andExpect(jsonPath("$.id", is(ACTION_RULE_ID_1.toString())));
+  }
+
+  private ActionRulePostRequestDTO createActionRulePostRequestDTO(
+    UUID actionPlanId, String actionTypeName) {
+    ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
+    actionRulePostRequestDTO.setActionPlanId(actionPlanId);
+    actionRulePostRequestDTO.setActionTypeName(actionTypeName);
+    actionRulePostRequestDTO.setName("BSREM+45");
+    actionRulePostRequestDTO.setDescription("Enrolment Reminder Letter(+45 days)");
+    actionRulePostRequestDTO.setTriggerDateTime(OffsetDateTime.now());
+    actionRulePostRequestDTO.setPriority(3);
+    return actionRulePostRequestDTO;
+  }
+
+  private ActionRulePutRequestDTO createActionRulePutRequestDTO() {
+    ActionRulePutRequestDTO actionRulePutRequestDTO = new ActionRulePutRequestDTO();
+    actionRulePutRequestDTO.setName("BSREM+45");
+    actionRulePutRequestDTO.setDescription("Enrolment Reminder Letter(+45 days)");
+    actionRulePutRequestDTO.setTriggerDateTime(OffsetDateTime.now());
+    actionRulePutRequestDTO.setPriority(3);
+    return actionRulePutRequestDTO;
   }
 }

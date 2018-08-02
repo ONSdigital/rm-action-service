@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.service.impl;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +24,9 @@ public class ActionRuleServiceImpl implements ActionRuleService {
 
   @CoverageIgnore
   @Override
-  public List<ActionRule> findActionRulesByActionPlanId(final UUID actionPlanId) {
-    log.debug("Entering findActionRulesByActionPlanId");
-    return actionRuleRepo.findByActionPlanId(actionPlanId);
+  public List<ActionRule> findActionRulesByActionPlanFK(final Integer actionPlanFK) {
+    log.debug("Entering findActionRulesByActionPlanFK");
+    return actionRuleRepo.findByActionPlanFK(actionPlanFK);
   }
 
   @Override
@@ -69,10 +70,10 @@ public class ActionRuleServiceImpl implements ActionRuleService {
       existingActionRule.setDescription(newDescription);
     }
 
-    final Integer newDaysOffset = actionRule.getDaysOffset();
-    if (newDaysOffset != null) {
+    final OffsetDateTime triggerDateTime = actionRule.getTriggerDateTime();
+    if (triggerDateTime != null) {
       needsUpdate = true;
-      existingActionRule.setDaysOffset(newDaysOffset);
+      existingActionRule.setTriggerDateTime(triggerDateTime);
     }
 
     if (needsUpdate) {

@@ -68,7 +68,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     }
 
     final List<ActionRule> actionRules =
-        actionRuleService.findActionRulesByActionPlanId(actionPlanId);
+        actionRuleService.findActionRulesByActionPlanFK(actionPlan.getActionPlanPK());
 
     return ResponseEntity.ok(buildActionRulesDTOs(actionRules));
   }

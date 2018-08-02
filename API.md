@@ -343,7 +343,7 @@ An `HTTP 201 Created` status code is returned if the action plan job creation wa
     "id": "35fe06af-d16b-47b0-92a3-099805c65c9d",
     "name": "BSREM+45",
     "description": "Enrolment Reminder Letter(+45 days)",
-    "daysOffset": 45,
+    "triggerDateTime": "2017-05-15T10:00:00Z",
     "priority": 3,
     "actionTypeName": "BSREM"
   }
@@ -362,7 +362,7 @@ An `HTTP 404 Not Found` status code is returned if an action plan with the speci
   "actionTypeName": "BSREM",
   "name": "BSREM+45",
   "description": "Enrolment Reminder Letter(+45 days)",
-  "daysOffset": 45,
+  "triggerDateTime": "2017-05-15T10:00:00Z",
   "priority": 3
 }
 ```
@@ -378,7 +378,7 @@ An `HTTP 404 Not Found` status code is returned if an action plan with the speci
 * `priority` the action priority (1 = highest, 5 = lowest) as passed to the remote handler
 * `name` the name of the action rule.
 * `description` description for the action rule.
-* `daysOffset` action rule trigger offset in days.
+* `triggerDateTime` action rule trigger datetime in iso 8601.
 
 ### Example JSON Response
 ```json
@@ -387,7 +387,7 @@ An `HTTP 404 Not Found` status code is returned if an action plan with the speci
   "actionTypeName": "BSREM",
   "name": "BSREM+45",
   "description": "Enrolment Reminder Letter(+45 days)",
-  "daysOffset": 45,
+  "triggerDateTime": "2017-05-15T10:00:00Z",
   "priority": 3
 }
 ```
