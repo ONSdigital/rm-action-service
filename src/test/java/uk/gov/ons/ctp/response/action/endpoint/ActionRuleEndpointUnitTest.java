@@ -343,7 +343,7 @@ public final class ActionRuleEndpointUnitTest {
   }
 
   private ActionRulePostRequestDTO createActionRulePostRequestDTO(
-    UUID actionPlanId, String actionTypeName) {
+      UUID actionPlanId, String actionTypeName) {
     ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
     actionRulePostRequestDTO.setActionPlanId(actionPlanId);
     actionRulePostRequestDTO.setActionTypeName(actionTypeName);
