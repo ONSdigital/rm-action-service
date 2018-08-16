@@ -46,6 +46,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionType;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
@@ -136,7 +137,7 @@ public class PlanSchedulerIT {
     actionRuleDto.setActionPlanId(actionPlanDTO.getId());
     actionRuleDto.setDescription("Notification file");
     actionRuleDto.setName("Notifaction");
-    actionRuleDto.setActionTypeName("BSNL");
+    actionRuleDto.setActionTypeName(ActionType.BSNL);
     actionRuleDto.setPriority(3);
 
     HttpResponse<ActionRuleDTO> response =
@@ -383,7 +384,8 @@ public class PlanSchedulerIT {
     assertThat(
         actionPlan.getId().toString(), is(actionInstruction.getActionRequest().getActionPlan()));
     assertThat(
-        actionRule.getActionTypeName(), is(actionInstruction.getActionRequest().getActionType()));
+        actionRule.getActionTypeName().toString(),
+        is(actionInstruction.getActionRequest().getActionType()));
 
     assertThat(pollForPrinterAction(), nullValue());
   }

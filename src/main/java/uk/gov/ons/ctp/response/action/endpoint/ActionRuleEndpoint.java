@@ -101,7 +101,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
     }
 
-    final String actionTypeName = actionRulePostRequestDTO.getActionTypeName();
+    final String actionTypeName = actionRulePostRequestDTO.getActionTypeName().toString();
     final ActionType actionType = actionTypeService.findActionTypeByName(actionTypeName);
     if (actionType == null) {
       throw new CTPException(
@@ -114,7 +114,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     actionRule = actionRuleService.createActionRule(actionRule);
 
     final ActionRuleDTO actionRuleDTO = mapperFacade.map(actionRule, ActionRuleDTO.class);
-    actionRuleDTO.setActionTypeName(actionType.getName());
+    actionRuleDTO.setActionTypeName(actionType.getActionTypeNameEnum());
 
     final String newResourceUrl =
         ServletUriComponentsBuilder.fromCurrentRequest()
@@ -157,9 +157,9 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     }
 
     final ActionRuleDTO resultDTO = mapperFacade.map(updatedActionRule, ActionRuleDTO.class);
-    final String actionTypeName =
-        actionTypeService.findActionType(updatedActionRule.getActionTypeFK()).getName();
-    resultDTO.setActionTypeName(actionTypeName);
+    final ActionType actionType =
+        actionTypeService.findActionType(updatedActionRule.getActionTypeFK());
+    resultDTO.setActionTypeName(actionType.getActionTypeNameEnum());
     return resultDTO;
   }
 
@@ -176,8 +176,8 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     int index = 0;
     for (final ActionRule actionRule : actionRules) {
       final int actionTypeFK = actionRule.getActionTypeFK();
-      final String actionTypeName = actionTypeService.findActionType(actionTypeFK).getName();
-      actionRulesDTOs.get(index).setActionTypeName(actionTypeName);
+      final ActionType actionType = actionTypeService.findActionType(actionTypeFK);
+      actionRulesDTOs.get(index).setActionTypeName(actionType.getActionTypeNameEnum());
       index++;
     }
 
