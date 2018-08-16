@@ -146,12 +146,12 @@ public class ActionRuleEndpointIT {
     actionPlanDto.setCreatedBy("TEST");
 
     HttpResponse<ActionPlanDTO> response =
-      Unirest.post("http://localhost:" + this.port + "/actionplans")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .header("Content-Type", "application/json")
-        .body(actionPlanDto)
-        .asObject(ActionPlanDTO.class);
+        Unirest.post("http://localhost:" + this.port + "/actionplans")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .header("Content-Type", "application/json")
+            .body(actionPlanDto)
+            .asObject(ActionPlanDTO.class);
 
     assertEquals(201, response.getStatus());
 
@@ -159,35 +159,35 @@ public class ActionRuleEndpointIT {
   }
 
   private HttpResponse<ActionRuleDTO> postActionRule(ActionRulePostRequestDTO postBody)
-    throws UnirestException {
+      throws UnirestException {
     return Unirest.post("http://localhost:" + this.port + "/actionrules")
-      .basicAuth("admin", "secret")
-      .header("accept", "application/json")
-      .header("Content-Type", "application/json")
-      .body(postBody)
-      .asObject(ActionRuleDTO.class);
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(postBody)
+        .asObject(ActionRuleDTO.class);
   }
 
   private HttpResponse<ActionRuleDTO[]> getActionRules(UUID actionPlanUUID)
-    throws UnirestException {
+      throws UnirestException {
     return Unirest.get(
-      "http://localhost:"
-        + this.port
-        + "/actionrules/actionplan/"
-        + actionPlanUUID.toString())
-      .basicAuth("admin", "secret")
-      .header("accept", "application/json")
-      .asObject(ActionRuleDTO[].class);
+            "http://localhost:"
+                + this.port
+                + "/actionrules/actionplan/"
+                + actionPlanUUID.toString())
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .asObject(ActionRuleDTO[].class);
   }
 
   private HttpResponse<ActionRuleDTO> putActionRule(
-    ActionRulePutRequestDTO putBody, UUID actionRuleId) throws UnirestException {
+      ActionRulePutRequestDTO putBody, UUID actionRuleId) throws UnirestException {
     return Unirest.put("http://localhost:" + this.port + "/actionrules/" + actionRuleId.toString())
-      .basicAuth("admin", "secret")
-      .header("accept", "application/json")
-      .header("Content-Type", "application/json")
-      .body(putBody)
-      .asObject(ActionRuleDTO.class);
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(putBody)
+        .asObject(ActionRuleDTO.class);
   }
 
   private ActionRulePostRequestDTO createActionRulePostRequestDTO(ActionPlanDTO actionPlanDTO) {
