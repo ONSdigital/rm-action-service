@@ -1,16 +1,21 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import java.util.UUID;
-import uk.gov.ons.ctp.common.service.CTPService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 
-/** The service for ActionPlanJobs */
-public interface ActionCaseService extends CTPService {
-  /**
-   * Find the action service case entry for the given id
-   *
-   * @param caseId the given id
-   * @return the case
-   */
-  ActionCase findActionCase(UUID caseId);
+/**
+ * An ActionService implementation which encapsulates all business logic operating on the Action
+ * entity model.
+ */
+@Service
+public class ActionCaseService {
+
+  @Autowired private ActionCaseRepository actionCaseRepo;
+
+  public ActionCase findActionCase(final UUID caseId) {
+    return actionCaseRepo.findById(caseId);
+  }
 }

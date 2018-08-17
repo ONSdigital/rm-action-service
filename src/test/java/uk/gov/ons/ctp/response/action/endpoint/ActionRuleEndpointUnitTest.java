@@ -59,7 +59,8 @@ public final class ActionRuleEndpointUnitTest {
       UUID.fromString("a0b9fe16-4e08-11e8-9c2d-fa7ae01bbebc");
   private static final UUID ACTION_PLAN_ID_1 =
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
-  private static final String ACTION_TYPE_NAME_1 = "BSNOT";
+  private static final uk.gov.ons.ctp.response.action.representation.ActionType ACTION_TYPE =
+      uk.gov.ons.ctp.response.action.representation.ActionType.BSNOT;
   @InjectMocks private ActionRuleEndpoint actionRuleEndpoint;
   @Mock private ActionRuleService actionRuleService;
   @Mock private ActionPlanService actionPlanService;
@@ -190,9 +191,10 @@ public final class ActionRuleEndpointUnitTest {
 
     when(actionRuleService.createActionRule(any(ActionRule.class))).thenReturn(actionRule);
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
-    when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(actionTypes.get(0));
+    when(actionTypeService.findActionTypeByName(ACTION_TYPE.toString()))
+        .thenReturn(actionTypes.get(0));
     ActionRulePostRequestDTO actionRulePostRequestDTO =
-        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE_NAME_1);
+        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE);
 
     final ResultActions resultActions =
         mockMvc.perform(
@@ -203,7 +205,7 @@ public final class ActionRuleEndpointUnitTest {
         .andExpect(handler().handlerType(ActionRuleEndpoint.class))
         .andExpect(handler().methodName("createActionRule"))
         .andExpect(jsonPath("$.*", Matchers.hasSize(6)))
-        .andExpect(jsonPath("$.actionTypeName", is(ACTION_TYPE_NAME_1)));
+        .andExpect(jsonPath("$.actionTypeName", is(ACTION_TYPE.toString())));
 
     verify(actionTypeService, times(1)).findActionTypeByName(any(String.class));
     verify(actionPlanService, times(1)).findActionPlanById(any(UUID.class));
@@ -235,7 +237,7 @@ public final class ActionRuleEndpointUnitTest {
   public void createActionRuleActionPlanNotFound() throws Exception {
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(null);
     ActionRulePostRequestDTO actionRulePostRequestDTO =
-        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE_NAME_1);
+        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE);
 
     final ResultActions resultActions =
         mockMvc.perform(
@@ -261,9 +263,9 @@ public final class ActionRuleEndpointUnitTest {
   @Test
   public void createActionRuleActionType() throws Exception {
     when(actionPlanService.findActionPlanById(any(UUID.class))).thenReturn(actionPlans.get(0));
-    when(actionTypeService.findActionTypeByName(ACTION_TYPE_NAME_1)).thenReturn(null);
+    when(actionTypeService.findActionTypeByName(ACTION_TYPE.toString())).thenReturn(null);
     ActionRulePostRequestDTO actionRulePostRequestDTO =
-        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE_NAME_1);
+        createActionRulePostRequestDTO(ACTION_PLAN_ID_1, ACTION_TYPE);
 
     final ResultActions resultActions =
         mockMvc.perform(
@@ -275,8 +277,7 @@ public final class ActionRuleEndpointUnitTest {
         .andExpect(handler().methodName("createActionRule"))
         .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
         .andExpect(
-            jsonPath(
-                "$.error.message", is(String.format(ACTION_TYPE_NOT_FOUND, ACTION_TYPE_NAME_1))));
+            jsonPath("$.error.message", is(String.format(ACTION_TYPE_NOT_FOUND, ACTION_TYPE))));
 
     verify(actionTypeService, times(1)).findActionTypeByName(any(String.class));
     verify(actionPlanService, times(1)).findActionPlanById(any(UUID.class));
@@ -343,7 +344,7 @@ public final class ActionRuleEndpointUnitTest {
   }
 
   private ActionRulePostRequestDTO createActionRulePostRequestDTO(
-    UUID actionPlanId, String actionTypeName) {
+      UUID actionPlanId, uk.gov.ons.ctp.response.action.representation.ActionType actionTypeName) {
     ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
     actionRulePostRequestDTO.setActionPlanId(actionPlanId);
     actionRulePostRequestDTO.setActionTypeName(actionTypeName);

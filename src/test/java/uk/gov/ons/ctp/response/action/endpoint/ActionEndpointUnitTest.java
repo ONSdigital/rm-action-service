@@ -21,7 +21,7 @@ import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAd
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_UPDATED;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.CASE_NOT_FOUND;
-import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.CREATED_BY_SYSTEM;
+import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.CREATED_BY_SYSTEM;
 
 import java.util.ArrayList;
 import java.util.List;

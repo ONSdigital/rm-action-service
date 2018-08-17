@@ -15,8 +15,8 @@ import static uk.gov.ons.ctp.common.MvcHelper.postJson;
 import static uk.gov.ons.ctp.common.error.RestExceptionHandler.INVALID_JSON;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.ACTION_PLAN_JOB_NOT_FOUND;
-import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.CREATED_BY_SYSTEM;
-import static uk.gov.ons.ctp.response.action.service.impl.ActionPlanJobServiceImpl.NO_ACTIONPLAN_MSG;
+import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.CREATED_BY_SYSTEM;
+import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.NO_ACTIONPLAN_MSG;
 
 import java.util.ArrayList;
 import java.util.List;

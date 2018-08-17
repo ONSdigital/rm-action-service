@@ -36,4 +36,23 @@ public class ActionType implements Serializable {
 
   @Column(name = "responserequired")
   private Boolean responseRequired;
+
+  /**
+   * Getter
+   *
+   * @return gotten
+   */
+  public uk.gov.ons.ctp.response.action.representation.ActionType getActionTypeNameEnum() {
+    return uk.gov.ons.ctp.response.action.representation.ActionType.valueOf(this.name);
+  }
+
+  /**
+   * Setter
+   *
+   * @param actionTypeEnum Action Type Enum to set action type name
+   */
+  public void setNameFromActionTypeEnum(
+      uk.gov.ons.ctp.response.action.representation.ActionType actionTypeEnum) {
+    this.name = actionTypeEnum.toString();
+  }
 }
