@@ -5,7 +5,6 @@ import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,7 +23,6 @@ import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
@@ -95,7 +92,6 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
    * To create a new Action Plan Job having received an action plan id and some json
    *
    * @param actionPlanId the given action plan id.
-   * @param actionPlanJobRequestDTO the ActionPlanJobRequestDTO representation of the provided json
    * @param binding collects errors thrown by update
    * @return the created ActionPlanJobDTO
    * @throws CTPException summats went wrong
@@ -106,9 +102,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
       method = RequestMethod.POST,
       consumes = "application/json")
   public final ResponseEntity<ActionPlanJobDTO> executeActionPlan(
-      @PathVariable("actionplanid") final UUID actionPlanId,
-      final @RequestBody @Valid ActionPlanJobRequestDTO actionPlanJobRequestDTO,
-      final BindingResult binding)
+      @PathVariable("actionplanid") final UUID actionPlanId, final BindingResult binding)
       throws CTPException, InvalidRequestException {
     log.info("Entering executeActionPlan with {}", actionPlanId);
 
@@ -121,9 +115,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
       throw new CTPException(
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
     }
-    ActionPlanJob job = mapperFacade.map(actionPlanJobRequestDTO, ActionPlanJob.class);
-    job.setActionPlanFK(actionPlan.getActionPlanPK());
-    job = actionPlanJobService.createAndExecuteActionPlanJob(job);
+    ActionPlanJob job = actionPlanJobService.createAndExecuteActionPlanJob(actionPlan);
     if (job == null) {
       throw new CTPException(
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);

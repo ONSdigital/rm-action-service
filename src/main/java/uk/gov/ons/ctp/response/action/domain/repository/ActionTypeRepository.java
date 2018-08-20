@@ -15,4 +15,6 @@ public interface ActionTypeRepository extends JpaRepository<ActionType, Integer>
    * @return ActionType the action type found or null if not
    */
   ActionType findByName(String name);
+
+  ActionType findByActionTypePK(Integer actionTypePK);
 }

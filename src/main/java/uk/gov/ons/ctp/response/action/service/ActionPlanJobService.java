@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -28,17 +27,30 @@ public class ActionPlanJobService {
   public static final String CREATED_BY_SYSTEM = "SYSTEM";
   public static final String NO_ACTIONPLAN_MSG = "ActionPlan not found for id %s";
 
-  @Autowired private DistributedLockManager actionPlanExecutionLockManager;
+  private AppConfig appConfig;
 
-  @Autowired private AppConfig appConfig;
+  private ActionCaseRepository actionCaseRepo;
+  private ActionPlanRepository actionPlanRepo;
+  private ActionPlanJobRepository actionPlanJobRepo;
 
-  @Autowired private ActionPlanRepository actionPlanRepo;
+  private ActionService actionSvc;
 
-  @Autowired private ActionCaseRepository actionCaseRepo;
+  private DistributedLockManager actionPlanExecutionLockManager;
 
-  @Autowired private ActionPlanJobRepository actionPlanJobRepo;
-
-  @Autowired private ActionService actionSvc;
+  public ActionPlanJobService(
+      AppConfig appConfig,
+      ActionCaseRepository actionCaseRepo,
+      ActionPlanRepository actionPlanRepo,
+      ActionPlanJobRepository actionPlanJobRepo,
+      ActionService actionSvc,
+      DistributedLockManager actionPlanExecutionLockManager) {
+    this.appConfig = appConfig;
+    this.actionCaseRepo = actionCaseRepo;
+    this.actionPlanRepo = actionPlanRepo;
+    this.actionPlanJobRepo = actionPlanJobRepo;
+    this.actionSvc = actionSvc;
+    this.actionPlanExecutionLockManager = actionPlanExecutionLockManager;
+  }
 
   @CoverageIgnore
   public ActionPlanJob findActionPlanJob(final UUID actionPlanJobId) {
@@ -61,68 +73,56 @@ public class ActionPlanJobService {
 
   public List<ActionPlanJob> createAndExecuteAllActionPlanJobs() {
     final List<ActionPlanJob> executedJobs = new ArrayList<>();
-    actionPlanRepo
-        .findAll()
-        .forEach(
-            actionPlan -> {
-              final Date lastExecutionTime =
-                  new Date(
-                      nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
-              if (actionPlan.getLastRunDateTime() == null
-                  || actionPlan.getLastRunDateTime().before(lastExecutionTime)) {
-                ActionPlanJob job =
-                    ActionPlanJob.builder()
-                        .actionPlanFK(actionPlan.getActionPlanPK())
-                        .createdBy(CREATED_BY_SYSTEM)
-                        .build();
-                job = createAndExecuteActionPlanJob(job);
-                if (job != null) {
-                  executedJobs.add(job);
-                }
-              } else {
-                log.debug(
-                    "Job for plan {} has been run since last wake up - skipping",
-                    actionPlan.getActionPlanPK());
-              }
-            });
+    List<ActionPlan> actionPlans = actionPlanRepo.findAll();
+    actionPlans.forEach(
+        actionPlan -> {
+          if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
+            ActionPlanJob job = createAndExecuteActionPlanJob(actionPlan);
+            if (job != null) {
+              executedJobs.add(job);
+            }
+          } else {
+            log.debug(
+                "Job for plan {} has been run since last wake up - skipping",
+                actionPlan.getActionPlanPK());
+          }
+        });
     return executedJobs;
+  }
+
+  private boolean hasActionPlanBeenRunSinceLastSchedule(ActionPlan actionPlan) {
+    final Date lastExecutionTime =
+        new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
+    return (actionPlan.getLastRunDateTime() == null
+        || actionPlan.getLastRunDateTime().before(lastExecutionTime));
   }
 
   /**
    * Create a new ActionPlanJob record and execute createActions stored procedure.
    *
-   * @param actionPlanJobTemplate template {@link ActionPlanJob} to create and execute.
+   * @param actionPlan Action plan to create and execute job for
    * @return ActionPlanJob that was created or null if it has not been created.
    */
-  public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
-    final Integer actionPlanPK = actionPlanJobTemplate.getActionPlanFK();
-    final ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
-
-    if (actionPlan == null) {
-      log.debug("Action plan {} is null", actionPlanPK);
-      return null;
-    }
-
+  public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
+    Integer actionPlanPK = actionPlan.getActionPlanPK();
     if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
       log.debug("No open cases for action plan {}", actionPlanPK);
-
       return null;
     }
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
       log.debug("Could not get lock on action plan {}", actionPlanPK);
-
       return null;
     }
 
     try {
-      final ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
-      // createActions needs to be executed after actionPlanJob has been created and committed.
-      // createActions invokes a database procedure which won't be able to see the actionPlanJob
-      // if not committed.
-      // This also means an actionPlanJob could be left with state SUBMITTED if createActions
-      // failed.
-      actionSvc.createScheduledActions(job.getActionPlanJobPK());
+      ActionPlanJob actionPlanJobTemplate =
+          ActionPlanJob.builder()
+              .actionPlanFK(actionPlan.getActionPlanPK())
+              .createdBy(CREATED_BY_SYSTEM)
+              .build();
+      ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
+      actionSvc.createScheduledActions(actionPlan, job);
       return job;
     } finally {
       log.debug("Releasing lock on action plan {}", actionPlanPK);
