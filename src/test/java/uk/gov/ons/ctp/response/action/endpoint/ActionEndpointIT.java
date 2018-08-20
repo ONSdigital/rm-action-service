@@ -38,6 +38,7 @@ import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
@@ -120,14 +121,17 @@ public class ActionEndpointIT {
     assertThat(printer_message).isNotNull();
 
     log.debug("printer_message = " + printer_message);
-    ActionInstruction acti = getActionInstructionFromXml(printer_message);
-    ActionAddress address = acti.getActionRequest().getAddress();
+    ActionInstruction actionInstruction = getActionInstructionFromXml(printer_message);
+    ActionRequest actionRequest = actionInstruction.getActionRequest();
+    ActionAddress address = actionRequest.getAddress();
 
+    assertThat(actionRequest.getSurveyAbbreviation()).isEqualTo("LMS");
     assertThat(address.getSampleUnitRef())
-        .isEqualTo(sample_attributes.getAttributes().get("Reference"));
-    assertThat(address.getLine1()).isEqualTo(sample_attributes.getAttributes().get("Prem1"));
-    assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("Postcode"));
-    assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("PostTown"));
+        .isEqualTo(sample_attributes.getAttributes().get("REFERENCE"));
+    assertThat(address.getLine1())
+        .isEqualTo(sample_attributes.getAttributes().get("ADDRESS_LINE1"));
+    assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("POSTCODE"));
+    assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("TOWN_NAME"));
   }
 
   private ActionInstruction getActionInstructionFromXml(String xml) throws JAXBException {
