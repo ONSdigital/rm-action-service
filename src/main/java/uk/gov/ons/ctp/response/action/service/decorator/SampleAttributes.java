@@ -25,6 +25,5 @@ public class SampleAttributes implements ActionRequestDecorator {
     actionAddress.setSampleUnitRef(context.getCaseDetails().getCaseGroup().getSampleUnitRef());
 
     actionRequest.setAddress(actionAddress);
-    actionRequest.setSurveyAbbreviation(sampleAttribs.get("TLA"));
   }
 }

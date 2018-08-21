@@ -125,9 +125,10 @@ public class ActionEndpointIT {
     ActionRequest actionRequest = actionInstruction.getActionRequest();
     ActionAddress address = actionRequest.getAddress();
 
-    assertThat(actionRequest.getSurveyAbbreviation()).isEqualTo("LMS");
     assertThat(address.getSampleUnitRef())
-        .isEqualTo(sample_attributes.getAttributes().get("REFERENCE"));
+        .isEqualTo(
+            sample_attributes.getAttributes().get("TLA")
+                + sample_attributes.getAttributes().get("REFERENCE"));
     assertThat(address.getLine1())
         .isEqualTo(sample_attributes.getAttributes().get("ADDRESS_LINE1"));
     assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("POSTCODE"));

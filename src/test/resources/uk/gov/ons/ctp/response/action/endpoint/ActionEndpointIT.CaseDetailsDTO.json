@@ -11,7 +11,7 @@
   "caseGroup": {
     "collectionExerciseId": "%s",
     "id": "b160e183-4747-4468-ab20-57f03a9b9b2b",
-    "sampleUnitRef": "00001",
+    "sampleUnitRef": "LMS00001",
     "sampleUnitType": "H",
     "caseGroupStatus": "NOTSTARTED"
   },
