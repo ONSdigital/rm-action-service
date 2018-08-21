@@ -1,10 +1,11 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -30,8 +31,8 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
  * createddatatime, and forwards them to ActionProcessingService.
  */
 @Component
-@Slf4j
 class ActionDistributor {
+  private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
   @Autowired private AppConfig appConfig;
 

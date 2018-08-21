@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action;
 
+import com.godaddy.logging.LoggingConfigs;
 import java.math.BigInteger;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
@@ -66,6 +67,8 @@ public class ActionSvcApplication {
    * @param args These are the optional command line arguments
    */
   public static void main(final String[] args) {
+    LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
+
     SpringApplication.run(ActionSvcApplication.class, args);
   }
 

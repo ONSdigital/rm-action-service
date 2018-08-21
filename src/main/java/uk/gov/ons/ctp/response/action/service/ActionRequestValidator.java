@@ -1,14 +1,15 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
 
-@Slf4j
 @Service
 public class ActionRequestValidator {
+  private static final Logger log = LoggerFactory.getLogger(ActionRequestValidator.class);
 
   public static final String RESPONDENTCREATED = "CREATED";
   public static final String RESPONDENTACTIVE = "ACTIVE";

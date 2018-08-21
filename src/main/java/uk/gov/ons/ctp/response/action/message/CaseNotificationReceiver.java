@@ -2,7 +2,8 @@ package uk.gov.ons.ctp.response.action.message;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,8 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 /** Message end point for Case notification life cycle messages, please see flows.xml. */
 @CoverageIgnore
 @MessageEndpoint
-@Slf4j
 public class CaseNotificationReceiver {
+  private static final Logger log = LoggerFactory.getLogger(CaseNotificationReceiver.class);
 
   @Autowired private CaseNotificationService caseNotificationService;
 

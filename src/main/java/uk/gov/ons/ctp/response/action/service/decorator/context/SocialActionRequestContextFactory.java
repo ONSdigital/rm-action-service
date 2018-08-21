@@ -1,7 +1,8 @@
 package uk.gov.ons.ctp.response.action.service.decorator.context;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,11 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 
-@Slf4j
 @Component
 @Qualifier("social")
 public class SocialActionRequestContextFactory implements ActionRequestContextFactory {
+  private static final Logger log =
+      LoggerFactory.getLogger(SocialActionRequestContextFactory.class);
 
   @Autowired private ActionCaseRepository actionCaseRepo;
 
