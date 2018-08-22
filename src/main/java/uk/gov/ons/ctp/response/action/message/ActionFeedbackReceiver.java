@@ -1,18 +1,38 @@
 package uk.gov.ons.ctp.response.action.message;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
+import net.sourceforge.cobertura.CoverageIgnore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.integration.annotation.MessageEndpoint;
+import org.springframework.integration.annotation.ServiceActivator;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
+import uk.gov.ons.ctp.response.action.service.FeedbackService;
 
 /**
- * Interface for the receipt of feedback messages from the Spring Integration inbound message queue
+ * The entry point for inbound feedback messages from SpringIntegration. See the
+ * integration-context.xml
+ *
+ * <p>This is just an annotated class that acts as the initial receiver - the work is done in the
+ * feedbackservice, but having this class in this package keeps spring integration related
+ * entry/exit points in one logical location
  */
-public interface ActionFeedbackReceiver {
+@CoverageIgnore
+@MessageEndpoint
+public class ActionFeedbackReceiver {
+  private static final Logger log = LoggerFactory.getLogger(ActionFeedbackReceiver.class);
 
-  /**
-   * impl will be called with the deserialised AMQ message sent from downstream handlers
-   *
-   * @param feedback the java representation of the AMQ message body
-   * @throws CTPException CTPException thrown
-   */
-  void acceptFeedback(ActionFeedback feedback) throws CTPException;
+  @Autowired private FeedbackService feedbackService;
+
+  @ServiceActivator(
+      inputChannel = "actionFeedbackTransformed",
+      adviceChain = "actionFeedbackRetryAdvice")
+  public void acceptFeedback(final ActionFeedback feedback) throws CTPException {
+    log.debug(
+        "processing action feedback {} for action id {}",
+        feedback.getOutcome(),
+        feedback.getActionId());
+    feedbackService.acceptFeedback(feedback);
+  }
 }

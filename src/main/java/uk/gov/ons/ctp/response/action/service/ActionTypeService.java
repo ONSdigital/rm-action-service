@@ -1,24 +1,27 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import uk.gov.ons.ctp.common.service.CTPService;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
+import net.sourceforge.cobertura.CoverageIgnore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 
-/** The service for ActionTypes */
-public interface ActionTypeService extends CTPService {
+/** Implementation */
+@Service
+public class ActionTypeService {
+  private static final Logger log = LoggerFactory.getLogger(ActionTypeService.class);
 
-  /**
-   * This method returns the action type for the specified action type primary key.
-   *
-   * @param actionTypeKey This is the action plan primary key
-   * @return ActionType This returns the associated action type.
-   */
-  ActionType findActionType(Integer actionTypeKey);
+  @Autowired private ActionTypeRepository actionTypeRepo;
 
-  /**
-   * This method returns the action type for the specified action type name.
-   *
-   * @param name This is the action type name
-   * @return ActionType This returns the associated action type.
-   */
-  ActionType findActionTypeByName(String name);
+  @CoverageIgnore
+  public ActionType findActionType(final Integer actionTypeKey) {
+    return actionTypeRepo.findOne(actionTypeKey);
+  }
+
+  @CoverageIgnore
+  public ActionType findActionTypeByName(final String name) {
+    return actionTypeRepo.findByName(name);
+  }
 }

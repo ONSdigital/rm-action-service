@@ -1,0 +1,1 @@
+\copy (SELECT ce.id, cto.sampleunittypefk, cto.actionplanid FROM collectionexercise.casetypeoverride AS cto INNER JOIN collectionexercise.collectionexercise AS ce ON cto.exercisefk = ce.exercisepk) TO STDOUT WITH CSV;

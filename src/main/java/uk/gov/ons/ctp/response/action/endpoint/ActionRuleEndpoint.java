@@ -1,10 +1,11 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,8 +33,8 @@ import uk.gov.ons.ctp.response.action.service.ActionTypeService;
 /** The REST endpoint controller for Action Rules. */
 @RestController
 @RequestMapping(value = "/actionrules", produces = "application/json")
-@Slf4j
 public class ActionRuleEndpoint implements CTPEndpoint {
+  private static final Logger log = LoggerFactory.getLogger(ActionRuleEndpoint.class);
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan with id %s not found";
   public static final String ACTION_TYPE_NOT_FOUND = "ActionType with name %s not found";
@@ -101,7 +102,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
     }
 
-    final String actionTypeName = actionRulePostRequestDTO.getActionTypeName();
+    final String actionTypeName = actionRulePostRequestDTO.getActionTypeName().toString();
     final ActionType actionType = actionTypeService.findActionTypeByName(actionTypeName);
     if (actionType == null) {
       throw new CTPException(
@@ -114,7 +115,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     actionRule = actionRuleService.createActionRule(actionRule);
 
     final ActionRuleDTO actionRuleDTO = mapperFacade.map(actionRule, ActionRuleDTO.class);
-    actionRuleDTO.setActionTypeName(actionType.getName());
+    actionRuleDTO.setActionTypeName(actionType.getActionTypeNameEnum());
 
     final String newResourceUrl =
         ServletUriComponentsBuilder.fromCurrentRequest()
@@ -157,9 +158,9 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     }
 
     final ActionRuleDTO resultDTO = mapperFacade.map(updatedActionRule, ActionRuleDTO.class);
-    final String actionTypeName =
-        actionTypeService.findActionType(updatedActionRule.getActionTypeFK()).getName();
-    resultDTO.setActionTypeName(actionTypeName);
+    final ActionType actionType =
+        actionTypeService.findActionType(updatedActionRule.getActionTypeFK());
+    resultDTO.setActionTypeName(actionType.getActionTypeNameEnum());
     return resultDTO;
   }
 
@@ -176,8 +177,8 @@ public class ActionRuleEndpoint implements CTPEndpoint {
     int index = 0;
     for (final ActionRule actionRule : actionRules) {
       final int actionTypeFK = actionRule.getActionTypeFK();
-      final String actionTypeName = actionTypeService.findActionType(actionTypeFK).getName();
-      actionRulesDTOs.get(index).setActionTypeName(actionTypeName);
+      final ActionType actionType = actionTypeService.findActionType(actionTypeFK);
+      actionRulesDTOs.get(index).setActionTypeName(actionType.getActionTypeNameEnum());
       index++;
     }
 

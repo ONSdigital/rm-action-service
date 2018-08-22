@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.ingest;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
@@ -20,7 +22,6 @@ import liquibase.util.csv.CSVReader;
 import liquibase.util.csv.opencsv.bean.ColumnPositionMappingStrategy;
 import liquibase.util.csv.opencsv.bean.CsvToBean;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -42,8 +43,8 @@ import uk.gov.ons.ctp.response.action.message.instruction.Priority;
  * service.
  */
 @MessageEndpoint
-@Slf4j
 public class CsvIngester extends CsvToBean<CsvLine> {
+  private static final Logger log = LoggerFactory.getLogger(CsvIngester.class);
 
   private static final String CHANNEL = "csvIngest";
 

@@ -1,0 +1,1 @@
+COPY action.temp_cto(collectionexerciseid, sampleunittype, actionplanid) FROM STDIN WITH CSV;

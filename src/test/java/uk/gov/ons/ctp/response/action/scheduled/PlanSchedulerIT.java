@@ -9,6 +9,8 @@ import static org.junit.Assert.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -22,7 +24,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionType;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
@@ -63,11 +65,11 @@ import uk.gov.ons.tools.rabbit.SimpleMessageListener;
 import uk.gov.ons.tools.rabbit.SimpleMessageSender;
 
 /** Integration tests for creating action requests */
-@Slf4j
 @ContextConfiguration
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class PlanSchedulerIT {
+  private static final Logger log = LoggerFactory.getLogger(PlanSchedulerIT.class);
 
   @Autowired private ResourceLoader resourceLoader;
 
@@ -136,7 +138,7 @@ public class PlanSchedulerIT {
     actionRuleDto.setActionPlanId(actionPlanDTO.getId());
     actionRuleDto.setDescription("Notification file");
     actionRuleDto.setName("Notifaction");
-    actionRuleDto.setActionTypeName("BSNL");
+    actionRuleDto.setActionTypeName(ActionType.BSNL);
     actionRuleDto.setPriority(3);
 
     HttpResponse<ActionRuleDTO> response =
@@ -383,7 +385,8 @@ public class PlanSchedulerIT {
     assertThat(
         actionPlan.getId().toString(), is(actionInstruction.getActionRequest().getActionPlan()));
     assertThat(
-        actionRule.getActionTypeName(), is(actionInstruction.getActionRequest().getActionType()));
+        actionRule.getActionTypeName().toString(),
+        is(actionInstruction.getActionRequest().getActionType()));
 
     assertThat(pollForPrinterAction(), nullValue());
   }
