@@ -1,7 +1,8 @@
 package uk.gov.ons.ctp.response.action.service.decorator.context;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
@@ -17,8 +18,9 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitTyp
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 @Component
-@Slf4j
 public class DefaultActionRequestContextFactory implements ActionRequestContextFactory {
+  private static final Logger log =
+      LoggerFactory.getLogger(DefaultActionRequestContextFactory.class);
 
   @Autowired private ActionPlanRepository actionPlanRepo;
 

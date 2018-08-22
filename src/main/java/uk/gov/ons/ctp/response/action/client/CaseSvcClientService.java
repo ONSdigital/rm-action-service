@@ -1,11 +1,12 @@
 package uk.gov.ons.ctp.response.action.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -31,9 +32,9 @@ import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
 
 /** Impl of the service that centralizes all REST calls to the Case service */
-@Slf4j
 @Service
 public class CaseSvcClientService {
+  private static final Logger log = LoggerFactory.getLogger(CaseSvcClientService.class);
 
   @Autowired private AppConfig appConfig;
 

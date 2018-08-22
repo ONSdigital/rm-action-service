@@ -1,13 +1,14 @@
 package uk.gov.ons.ctp.response.action.service.decorator;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import uk.gov.ons.ctp.response.action.domain.model.Action.ActionPriority;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.message.instruction.Priority;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 
-@Slf4j
 public class ActionAndActionPlan implements ActionRequestDecorator {
+  private static final Logger log = LoggerFactory.getLogger(ActionAndActionPlan.class);
 
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {

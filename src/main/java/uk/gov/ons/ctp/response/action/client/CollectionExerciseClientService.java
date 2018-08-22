@@ -1,9 +1,10 @@
 package uk.gov.ons.ctp.response.action.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,9 +22,9 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
 /** Impl of the service that centralizes all REST calls to the Collection Exercise service */
-@Slf4j
 @Service
 public class CollectionExerciseClientService {
+  private static final Logger log = LoggerFactory.getLogger(CollectionExerciseClientService.class);
 
   @Autowired private AppConfig appConfig;
 
