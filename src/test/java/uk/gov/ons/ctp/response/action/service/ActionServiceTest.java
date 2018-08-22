@@ -1,14 +1,14 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -19,24 +19,31 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.response.action.domain.model.*;
-import uk.gov.ons.ctp.response.action.domain.repository.*;
+import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
+import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.model.PotentialAction;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
-import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
+import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 /** Tests for ActionServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
@@ -264,28 +271,55 @@ public class ActionServiceTest {
   }
 
   @Test
-  public void ensureReturnByDateFormattedForSocial() throws Exception {
-    CollectionExerciseAndSurvey decor = mock(CollectionExerciseAndSurvey.class);
+  public void ensureReturnByDateFormattedForSocial() {
+    SimpleDateFormat expectedDateFormat = new SimpleDateFormat("dd/MM");
+    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
     ActionRequest actionRequest = new ActionRequest();
+
+    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.H);
+
+    decorator.decorateActionRequest(actionRequest, context);
+
+    assertThat(actionRequest.getReturnByDate())
+        .isEqualTo(
+            expectedDateFormat.format(
+                context.getCollectionExercise().getScheduledReturnDateTime()));
+  }
+
+  @Test
+  public void ensureReturnByDateFormattedForBusiness() {
+    SimpleDateFormat expectedDateFormat =
+        new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);
+    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
+    ActionRequest actionRequest = new ActionRequest();
+
+    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.B);
+
+    decorator.decorateActionRequest(actionRequest, context);
+
+    assertThat(actionRequest.getReturnByDate())
+        .isEqualTo(
+            expectedDateFormat.format(
+                context.getCollectionExercise().getScheduledReturnDateTime()));
+  }
+
+  private ActionRequestContext createActionRequestContext(
+      SampleUnitDTO.SampleUnitType sampleUnitType) {
     ActionRequestContext context = new ActionRequestContext();
     Date date = new Date();
-    SimpleDateFormat df = new SimpleDateFormat("dd/MM");
 
-    when(context.getCollectionExercise()).thenReturn(new CollectionExerciseDTO());
-    when(context.getCollectionExercise().getExerciseRef()).thenReturn("123");
-    when(context.getCollectionExercise().getUserDescription()).thenReturn("Hi there");
-    when(context.getSurvey().getLongName()).thenReturn("The greatest survey eva");
-    when(context.getSurvey().getSurveyRef()).thenReturn("THIS IS IT");
-    when(context.getSurvey().getLegalBasis()).thenReturn("Tory Abolition Act 2018");
-    when(context.getCollectionExercise().getScheduledReturnDateTime()).thenReturn(new Timestamp(date.getTime()));
-    when(context.getSampleUnitType()).thenReturn(SampleUnitDTO.SampleUnitType.H);
+    CollectionExerciseDTO collectionExercise = new CollectionExerciseDTO();
+    collectionExercise.setExerciseRef("123");
+    collectionExercise.setUserDescription("Test Description");
+    collectionExercise.setScheduledReturnDateTime(new Timestamp(date.getTime()));
+    context.setCollectionExercise(collectionExercise);
 
-    //decor.decorateActionRequest(actionRequest, context);
-
-    ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);
-
-    verify(decor).decorateActionRequest(captor.capture(), context);
-
-    assertThat(captor.getValue().getReturnByDate()).isEqualTo(df.format(date));
+    SurveyDTO survey = new SurveyDTO();
+    survey.setLongName("Test Survey Long Name");
+    survey.setLegalBasis("Test Basis");
+    survey.setSurveyRef("001");
+    context.setSurvey(survey);
+    context.setSampleUnitType(sampleUnitType);
+    return context;
   }
 }
