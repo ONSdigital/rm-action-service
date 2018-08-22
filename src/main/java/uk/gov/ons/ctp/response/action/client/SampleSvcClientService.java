@@ -1,8 +1,9 @@
 package uk.gov.ons.ctp.response.action.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -18,9 +19,9 @@ import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 
-@Slf4j
 @Service
 public class SampleSvcClientService {
+  private static final Logger log = LoggerFactory.getLogger(SampleSvcClientService.class);
 
   @Autowired private AppConfig appConfig;
 

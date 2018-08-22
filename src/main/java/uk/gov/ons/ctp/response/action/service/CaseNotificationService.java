@@ -1,8 +1,9 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,8 +22,8 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
  * events.
  */
 @Service
-@Slf4j
 public class CaseNotificationService {
+  private static final Logger log = LoggerFactory.getLogger(CaseNotificationService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
 

@@ -3,13 +3,14 @@ package uk.gov.ons.ctp.response.action.endpoint;
 import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import javax.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -27,11 +28,11 @@ import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.representation.*;
 
-@Slf4j
 @ContextConfiguration
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ActionRuleEndpointIT {
+  private static final Logger log = LoggerFactory.getLogger(ActionRuleEndpointIT.class);
 
   @Autowired private ResourceLoader resourceLoader;
 

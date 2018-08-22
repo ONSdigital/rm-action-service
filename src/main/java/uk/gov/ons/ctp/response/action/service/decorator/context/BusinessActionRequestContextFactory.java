@@ -1,11 +1,12 @@
 package uk.gov.ons.ctp.response.action.service.decorator.context;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,11 @@ import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 
-@Slf4j
 @Component
 @Qualifier("business")
 public class BusinessActionRequestContextFactory implements ActionRequestContextFactory {
+  private static final Logger log =
+      LoggerFactory.getLogger(BusinessActionRequestContextFactory.class);
 
   @Autowired private PartySvcClientService partySvcClientService;
 
