@@ -1,9 +1,6 @@
 package uk.gov.ons.ctp.response.action.scheduled.plan;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
@@ -15,11 +12,13 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
  */
 @Component
 @Slf4j
-public class PlanScheduler implements HealthIndicator {
+public class PlanScheduler {
 
-  @Autowired private ActionPlanJobService actionPlanJobServiceImpl;
+  private ActionPlanJobService actionPlanJobServiceImpl;
 
-  private PlanExecutionInfo executionInfo = new PlanExecutionInfo();
+  public PlanScheduler(ActionPlanJobService actionPlanJobServiceImpl) {
+    this.actionPlanJobServiceImpl = actionPlanJobServiceImpl;
+  }
 
   /**
    * schedule the Execution of Action Plans It is simply a scheduled trigger for the service layer
@@ -29,16 +28,9 @@ public class PlanScheduler implements HealthIndicator {
   public void run() {
     log.info("Executing ActionPlans");
     try {
-      executionInfo = new PlanExecutionInfo();
-      executionInfo.setExecutedJobs(actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs());
+      actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
     } catch (final Exception e) {
       log.error("Exception in action plan scheduler", e);
-      log.error("Stacktrace: ", e);
     }
-  }
-
-  @Override
-  public Health health() {
-    return Health.up().withDetail("planExecutionInfo", executionInfo).build();
   }
 }

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
@@ -20,16 +19,23 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitTyp
 @Qualifier("business")
 public class BusinessActionRequestContextFactory implements ActionRequestContextFactory {
 
-  @Autowired private PartySvcClientService partySvcClientService;
+  private final PartySvcClientService partySvcClientService;
 
-  @Autowired private DefaultActionRequestContextFactory defaultFactory;
+  private final DefaultActionRequestContextFactory defaultFactory;
+
+  public BusinessActionRequestContextFactory(
+      PartySvcClientService partySvcClientService,
+      DefaultActionRequestContextFactory defaultFactory) {
+    this.partySvcClientService = partySvcClientService;
+    this.defaultFactory = defaultFactory;
+  }
 
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
     ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
 
-    if (isIndividual(context)) {
-      setPartiesForIndividual(context);
+    if (isRespondent(context)) {
+      setPartiesForRespondent(context);
     } else {
       setPartiesForBusiness(context);
     }
@@ -37,31 +43,29 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
     return context;
   }
 
-  private boolean isIndividual(ActionRequestContext context) {
-    return context.getSampleUnitType().isParent() == false;
+  private boolean isRespondent(ActionRequestContext context) {
+    return context.getAction().getActionRuleFK() == 5 || context.getAction().getActionRuleFK() == 7;
   }
 
-  private void setPartiesForIndividual(ActionRequestContext context) {
-    final PartyDTO parentParty;
-    List<PartyDTO> childParties;
+  private void setPartiesForRespondent(ActionRequestContext context) {
+    final PartyDTO businessParty;
+    List<PartyDTO> respondentParties;
 
     PartyDTO childParty =
         partySvcClientService.getParty(
-            context.getSampleUnitType().name(), context.getCaseDetails().getPartyId());
+            context.getSampleUnitType().name(), context.getAction().getPartyId());
     log.debug("childParty retrieved is {}", childParty);
-    childParties = Collections.singletonList(childParty);
+    respondentParties = Collections.singletonList(childParty);
 
     final UUID associatedParentPartyID = context.getCaseDetails().getCaseGroup().getPartyId();
-    // For BRES, child sampleUnitTypeStr is BI. parent will thus be B.
-    parentParty =
-        partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-            context.getSampleUnitType().name().substring(0, 1),
-            associatedParentPartyID,
-            context.getSurvey().getId());
-    log.debug("parentParty for the child retrieved is {}", parentParty);
 
-    context.setParentParty(parentParty);
-    context.setChildParties(childParties);
+    businessParty =
+        partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+            SampleUnitType.B.toString(), associatedParentPartyID, context.getSurvey().getId());
+    log.debug("businessParty for the child retrieved is {}", businessParty);
+
+    context.setParentParty(businessParty);
+    context.setChildParties(respondentParties);
   }
 
   private void setPartiesForBusiness(ActionRequestContext context) {

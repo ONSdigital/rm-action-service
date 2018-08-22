@@ -101,5 +101,5 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    * @param actionRuleFK reference to action rule
    * @return Action returns an action is
    */
-  Action findOneByCaseIdAndActionRuleFK(UUID caseId, Integer actionRuleFK);
+  Action findOneByCaseIdAndActionRuleFKAndPartyId(UUID caseId, Integer actionRuleFK, UUID partyId);
 }

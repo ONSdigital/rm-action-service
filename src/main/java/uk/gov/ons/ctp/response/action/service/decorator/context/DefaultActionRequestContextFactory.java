@@ -2,7 +2,6 @@ package uk.gov.ons.ctp.response.action.service.decorator.context;
 
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
@@ -20,13 +19,22 @@ import uk.gov.ons.response.survey.representation.SurveyDTO;
 @Slf4j
 public class DefaultActionRequestContextFactory implements ActionRequestContextFactory {
 
-  @Autowired private ActionPlanRepository actionPlanRepo;
+  private ActionPlanRepository actionPlanRepo;
 
-  @Autowired private CaseSvcClientService caseSvcClientService;
+  private CaseSvcClientService caseSvcClientService;
+  private CollectionExerciseClientService collectionExerciseClientService;
+  private SurveySvcClientService surveySvcClientService;
 
-  @Autowired private CollectionExerciseClientService collectionExerciseClientService;
-
-  @Autowired private SurveySvcClientService surveySvcClientService;
+  public DefaultActionRequestContextFactory(
+      ActionPlanRepository actionPlanRepo,
+      CaseSvcClientService caseSvcClientService,
+      CollectionExerciseClientService collectionExerciseClientService,
+      SurveySvcClientService surveySvcClientService) {
+    this.actionPlanRepo = actionPlanRepo;
+    this.caseSvcClientService = caseSvcClientService;
+    this.collectionExerciseClientService = collectionExerciseClientService;
+    this.surveySvcClientService = surveySvcClientService;
+  }
 
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {

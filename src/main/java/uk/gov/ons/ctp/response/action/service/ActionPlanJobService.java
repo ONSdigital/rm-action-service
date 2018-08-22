@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.response.action.service;
 import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -71,23 +70,18 @@ public class ActionPlanJobService {
     return actionPlanJobRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
   }
 
-  public List<ActionPlanJob> createAndExecuteAllActionPlanJobs() {
-    final List<ActionPlanJob> executedJobs = new ArrayList<>();
+  public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
         actionPlan -> {
           if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
-            ActionPlanJob job = createAndExecuteActionPlanJob(actionPlan);
-            if (job != null) {
-              executedJobs.add(job);
-            }
+            createAndExecuteActionPlanJob(actionPlan);
           } else {
             log.debug(
                 "Job for plan {} has been run since last wake up - skipping",
                 actionPlan.getActionPlanPK());
           }
         });
-    return executedJobs;
   }
 
   private boolean hasActionPlanBeenRunSinceLastSchedule(ActionPlan actionPlan) {

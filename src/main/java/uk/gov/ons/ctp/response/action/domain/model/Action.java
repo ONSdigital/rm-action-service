@@ -84,34 +84,8 @@ public class Action implements Serializable {
   @Column(name = "optlockversion")
   private int optLockVersion;
 
-  public static Action fromPotentialAction(
-      final PotentialAction potentialAction, final Timestamp currentTime) {
-
-    final Action action = new Action();
-
-    action.setId(UUID.randomUUID());
-    action.setCaseId(potentialAction.getCaseId());
-    action.setCaseFK(potentialAction.getCaseFk());
-    action.setActionPlanFK(potentialAction.getActionPlanFk());
-
-    action.setActionRuleFK(potentialAction.getActionRuleFk());
-    action.setPriority(DEFAULT_PRIORITY);
-
-    if (potentialAction.getPriority() != null) {
-      action.setPriority(potentialAction.getPriority());
-    }
-
-    action.setActionType(potentialAction.getActionType());
-
-    action.setState(ActionState.SUBMITTED);
-    action.setManuallyCreated(false);
-    action.setCreatedBy(CREATED_BY_SYSTEM);
-
-    action.setCreatedDateTime(currentTime);
-    action.setUpdatedDateTime(currentTime);
-
-    return action;
-  }
+  @Column(name = "partyid")
+  private UUID partyId;
 
   /** Priority of action NOTE: the names need to match those in the outbound xsd */
   public enum ActionPriority {

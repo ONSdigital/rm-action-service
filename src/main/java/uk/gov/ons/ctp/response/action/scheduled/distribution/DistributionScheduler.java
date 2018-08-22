@@ -2,9 +2,6 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -15,22 +12,19 @@ import org.springframework.stereotype.Component;
 @CoverageIgnore
 @Component
 @Slf4j
-public class DistributionScheduler implements HealthIndicator {
+public class DistributionScheduler {
 
-  private DistributionInfo distributionInfo = new DistributionInfo();
+  private ActionDistributor actionDistributorImpl;
 
-  @Autowired private ActionDistributor actionDistributorImpl;
-
-  @Override
-  public Health health() {
-    return Health.up().withDetail("distributionInfo", distributionInfo).build();
+  public DistributionScheduler(ActionDistributor actionDistributorImpl) {
+    this.actionDistributorImpl = actionDistributorImpl;
   }
 
   /** Scheduled execution of the Action Distributor */
   @Scheduled(fixedDelayString = "#{appConfig.actionDistribution.delayMilliSeconds}")
   public void run() {
     try {
-      distributionInfo = actionDistributorImpl.distribute();
+      actionDistributorImpl.distribute();
     } catch (final Exception e) {
       log.error("Exception in action distributor", e);
     }

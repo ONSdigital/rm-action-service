@@ -29,15 +29,15 @@ public class PartyAndContact implements ActionRequestDecorator {
     actionContact.setRuName(businessUnitAttributes.getName());
     actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
 
-    if (context.getSampleUnitType().isParent() == false) {
+    if (isRespondent(context)) {
       // BI case - this means the action request is being raised for the child party so
       // their details are the only ones we're interested in (and we can assume the first and
       // only element in the childParties list contains the details we are after)
       PartyDTO childParty = childParties.get(0);
       actionRequest.setRespondentStatus(childParty.getStatus());
 
-      final Attributes biPartyAttributes = childParty.getAttributes();
-      populateContactDetails(biPartyAttributes, actionContact);
+      final Attributes respondentAttributes = childParty.getAttributes();
+      populateContactDetails(respondentAttributes, actionContact);
     } else {
       // B case
       actionRequest.setRespondentStatus(parseRespondentStatuses(context.getChildParties()));
@@ -62,6 +62,11 @@ public class PartyAndContact implements ActionRequestDecorator {
 
     actionRequest.setContact(actionContact);
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
+  }
+
+  private boolean isRespondent(ActionRequestContext context) {
+    return context.getAction().getActionType().getActionTypePK() == 5
+        || context.getAction().getActionType().getActionTypePK() == 7;
   }
 
   /**

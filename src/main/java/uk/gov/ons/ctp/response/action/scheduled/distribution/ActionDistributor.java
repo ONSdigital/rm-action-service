@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,21 +32,32 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 @Slf4j
 class ActionDistributor {
 
-  @Autowired private AppConfig appConfig;
+  private AppConfig appConfig;
 
-  @Autowired private ActionRepository actionRepo;
+  private ActionRepository actionRepo;
+  private ActionCaseRepository actionCaseRepo;
+  private ActionTypeRepository actionTypeRepo;
 
-  @Autowired private ActionTypeRepository actionTypeRepo;
-
-  @Autowired
   @Qualifier("business")
   private ActionProcessingService businessActionProcessingService;
 
-  @Autowired
   @Qualifier("social")
   private ActionProcessingService socialActionProcessingService;
 
-  @Autowired private ActionCaseRepository actionCaseRepo;
+  public ActionDistributor(
+      AppConfig appConfig,
+      ActionRepository actionRepo,
+      ActionCaseRepository actionCaseRepo,
+      ActionTypeRepository actionTypeRepo,
+      @Qualifier("business") ActionProcessingService businessActionProcessingService,
+      @Qualifier("social") ActionProcessingService socialActionProcessingService) {
+    this.appConfig = appConfig;
+    this.actionRepo = actionRepo;
+    this.actionCaseRepo = actionCaseRepo;
+    this.actionTypeRepo = actionTypeRepo;
+    this.businessActionProcessingService = businessActionProcessingService;
+    this.socialActionProcessingService = socialActionProcessingService;
+  }
 
   /**
    * wake up on schedule and check for submitted actions, enrich and distribute them to spring
@@ -57,7 +67,6 @@ class ActionDistributor {
    */
   @Transactional
   public DistributionInfo distribute() {
-    log.debug("ActionDistributor awoken...");
     final DistributionInfo distInfo = new DistributionInfo();
     final List<ActionType> actionTypes = actionTypeRepo.findAll();
 
@@ -66,7 +75,6 @@ class ActionDistributor {
       distInfo.getInstructionCounts().addAll(instructionCounts);
     }
 
-    log.debug("ActionDistributor going back to sleep");
     return distInfo;
   }
 
@@ -94,6 +102,22 @@ class ActionDistributor {
     return Arrays.asList(requestCount, cancelCount);
   }
 
+  /**
+   * Get the oldest page of submitted actions by type
+   *
+   * @param actionType the type
+   * @return list of actions
+   */
+  private List<Action> retrieveActions(final ActionType actionType) {
+    List<Action> actions =
+        actionRepo.findSubmittedOrCancelledByActionTypeName(
+            actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
+    log.debug(
+        "RETRIEVED action ids {}",
+        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(",")));
+    return actions;
+  }
+
   private void processActions(
       final List<Action> actions,
       final InstructionCount requestCount,
@@ -114,25 +138,6 @@ class ActionDistributor {
     }
   }
 
-  private ActionProcessingService getActionProcessingService(Action action) {
-    ActionCase acase = actionCaseRepo.findById(action.getCaseId());
-    SampleUnitDTO.SampleUnitType caseType =
-        SampleUnitDTO.SampleUnitType.valueOf(acase.getSampleUnitType());
-
-    switch (caseType) {
-      case H:
-      case HI:
-        return socialActionProcessingService;
-
-      case B:
-      case BI:
-        return businessActionProcessingService;
-
-      default:
-        throw new UnsupportedOperationException("Sample Type: " + caseType + " is not supported!");
-    }
-  }
-
   private void processAction(
       Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
       throws CTPException {
@@ -147,19 +152,21 @@ class ActionDistributor {
     }
   }
 
-  /**
-   * Get the oldest page of submitted actions by type
-   *
-   * @param actionType the type
-   * @return list of actions
-   */
-  private List<Action> retrieveActions(final ActionType actionType) {
-    List<Action> actions =
-        actionRepo.findSubmittedOrCancelledByActionTypeName(
-            actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-    log.debug(
-        "RETRIEVED action ids {}",
-        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(",")));
-    return actions;
+  private ActionProcessingService getActionProcessingService(Action action) {
+    ActionCase acase = actionCaseRepo.findById(action.getCaseId());
+    SampleUnitDTO.SampleUnitType caseType =
+        SampleUnitDTO.SampleUnitType.valueOf(acase.getSampleUnitType());
+
+    switch (caseType) {
+      case H:
+      case HI:
+        return socialActionProcessingService;
+
+      case B:
+        return businessActionProcessingService;
+
+      default:
+        throw new UnsupportedOperationException("Sample Type: " + caseType + " is not supported!");
+    }
   }
 }

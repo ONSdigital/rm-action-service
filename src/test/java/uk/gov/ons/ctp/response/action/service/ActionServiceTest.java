@@ -147,7 +147,7 @@
 //  @Test
 //  public void checkCreateActionIsSaved() {
 //    when(actionTypeRepo.findByName(ACTION_TYPENAME)).thenReturn(actionType.get(0));
-//    actionService.createAction(actions.get(0));
+//    actionService.createAdHocAction(actions.get(0));
 //    verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
 //  }
 //

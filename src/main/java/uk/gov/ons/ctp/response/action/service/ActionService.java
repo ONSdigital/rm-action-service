@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
+import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
+import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -32,6 +35,11 @@ import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
+import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.Association;
+import uk.gov.ons.ctp.response.party.representation.Enrolment;
+import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 /**
  * An ActionService implementation which encapsulates all business logic operating on the Action
@@ -42,6 +50,9 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 public class ActionService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
+  private static final String ENABLED = "ENABLED";
+
+  private static final String NO_RESPONDENTS_FOR_SURVEY = "No respondents found for survey";
 
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
@@ -49,6 +60,9 @@ public class ActionService {
   private ActionPlanJobRepository actionPlanJobRepository;
   private ActionRuleRepository actionRuleRepo;
   private ActionTypeRepository actionTypeRepo;
+
+  private CollectionExerciseClientService collectionExerciseClientService;
+  private PartySvcClientService partySvcClientService;
 
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -60,6 +74,8 @@ public class ActionService {
       ActionPlanJobRepository actionPlanJobRepository,
       ActionRuleRepository actionRuleRepo,
       ActionTypeRepository actionTypeRepo,
+      CollectionExerciseClientService collectionExerciseClientService,
+      PartySvcClientService partySvcClientService,
       StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
@@ -67,6 +83,8 @@ public class ActionService {
     this.actionPlanJobRepository = actionPlanJobRepository;
     this.actionRuleRepo = actionRuleRepo;
     this.actionTypeRepo = actionTypeRepo;
+    this.collectionExerciseClientService = collectionExerciseClientService;
+    this.partySvcClientService = partySvcClientService;
     this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }
 
@@ -162,7 +180,7 @@ public class ActionService {
       propagation = Propagation.REQUIRED,
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
-  public Action createAction(final Action action) {
+  public Action createAdHocAction(final Action action) {
     log.debug("Entering createAdhocAction with {}", action);
 
     // guard against the caller providing an id - we would perform an update otherwise
@@ -181,32 +199,6 @@ public class ActionService {
     return actionRepo.saveAndFlush(action);
   }
 
-  private void createAction(ActionCase actionCase, ActionRule actionRule) {
-    if (actionRepo.findOneByCaseIdAndActionRuleFK(actionCase.getId(), actionRule.getActionRulePK())
-        != null) {
-      log.debug("Action already exists");
-      return;
-    }
-
-    Action newAction = new Action();
-    newAction.setId(UUID.randomUUID());
-    newAction.setCreatedBy("SYSTEM");
-    newAction.setManuallyCreated(false);
-    newAction.setState(ActionState.SUBMITTED);
-    newAction.setCreatedDateTime(new Timestamp((new Date()).getTime()));
-
-    newAction.setActionPlanFK(actionRule.getActionPlanFK());
-
-    newAction.setCaseFK(actionCase.getCasePK());
-    newAction.setCaseId(actionCase.getId());
-
-    newAction.setActionRuleFK(actionRule.getActionRulePK());
-    newAction.setActionType(actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK()));
-    newAction.setPriority(actionRule.getPriority());
-
-    actionRepo.saveAndFlush(newAction);
-  }
-
   @Transactional
   public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
     List<ActionCase> cases = actionCaseRepo.findByActionPlanId(actionPlan.getId());
@@ -217,7 +209,7 @@ public class ActionService {
             rules.forEach(
                 rule -> {
                   if (hasRuleTriggered(rule)) {
-                    createAction(caze, rule);
+                    createActions(caze, rule);
                   }
                 });
           }
@@ -237,6 +229,83 @@ public class ActionService {
         Timestamp.valueOf(
             LocalDateTime.ofInstant(rule.getTriggerDateTime().toInstant(), ZoneOffset.UTC));
     return triggerDateTime.before(currentTime);
+  }
+
+  private void createActions(ActionCase actionCase, ActionRule actionRule) {
+    ActionType actionType = actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK());
+
+    if (actionCase.getSampleUnitType().equals(SampleUnitDTO.SampleUnitType.B.toString())
+        && (actionType.getActionTypePK() == 5 || actionType.getActionTypePK() == 7)) {
+      PartyDTO businessParty =
+          partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
+
+      CollectionExerciseDTO collectionExercise =
+          collectionExerciseClientService.getCollectionExercise(
+              actionCase.getCollectionExerciseId());
+
+      List<Association> enrolledAssociations =
+          associationsEnrolledForSurvey(businessParty, collectionExercise.getSurveyId());
+
+      if (enrolledAssociations.isEmpty()) {
+        log.error(NO_RESPONDENTS_FOR_SURVEY);
+        throw new IllegalStateException(NO_RESPONDENTS_FOR_SURVEY);
+      }
+
+      enrolledAssociations.forEach(
+          association ->
+              createAction(actionCase, actionRule, UUID.fromString(association.getPartyId())));
+
+    } else {
+      createAction(actionCase, actionRule, actionCase.getPartyId());
+    }
+  }
+
+  private List<Association> associationsEnrolledForSurvey(PartyDTO party, String surveyId) {
+    return party
+        .getAssociations()
+        .stream()
+        .filter(association -> isAssociationEnabledForSurvey(association, surveyId))
+        .collect(Collectors.toList());
+  }
+
+  private boolean isAssociationEnabledForSurvey(Association association, String surveyId) {
+    return association
+        .getEnrolments()
+        .stream()
+        .anyMatch(enrolment -> isEnrolmentEnabledForSurvey(enrolment, surveyId));
+  }
+
+  private boolean isEnrolmentEnabledForSurvey(final Enrolment enrolment, String surveyId) {
+    return enrolment.getSurveyId().equals(surveyId)
+        && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED);
+  }
+
+  private void createAction(ActionCase actionCase, ActionRule actionRule, UUID partyId) {
+    if (actionRepo.findOneByCaseIdAndActionRuleFKAndPartyId(
+            actionCase.getId(), actionRule.getActionRulePK(), partyId)
+        != null) {
+      log.debug("Action already exists");
+      return;
+    }
+
+    Action newAction = new Action();
+    newAction.setId(UUID.randomUUID());
+    newAction.setCreatedBy("SYSTEM");
+    newAction.setManuallyCreated(false);
+    newAction.setState(ActionState.SUBMITTED);
+    newAction.setCreatedDateTime(new Timestamp((new Date()).getTime()));
+
+    newAction.setCaseFK(actionCase.getCasePK());
+    newAction.setCaseId(actionCase.getId());
+
+    newAction.setActionPlanFK(actionRule.getActionPlanFK());
+    newAction.setActionRuleFK(actionRule.getActionRulePK());
+    newAction.setActionType(actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK()));
+    newAction.setPriority(actionRule.getPriority());
+
+    newAction.setPartyId(partyId);
+
+    actionRepo.saveAndFlush(newAction);
   }
 
   private void updatePlanAndJob(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
