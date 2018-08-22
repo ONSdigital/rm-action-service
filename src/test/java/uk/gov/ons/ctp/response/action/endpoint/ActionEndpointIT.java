@@ -6,6 +6,8 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -19,7 +21,6 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -51,11 +52,11 @@ import uk.gov.ons.tools.rabbit.SimpleMessageListener;
 import uk.gov.ons.tools.rabbit.SimpleMessageSender;
 
 /** Integration tests for action endpoints */
-@Slf4j
 @ContextConfiguration
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ActionEndpointIT {
+  private static final Logger log = LoggerFactory.getLogger(ActionEndpointIT.class);
 
   @Autowired private ResourceLoader resourceLoader;
 

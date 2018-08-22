@@ -1,11 +1,12 @@
 package uk.gov.ons.ctp.response.action.service.decorator;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
@@ -15,8 +16,8 @@ import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
-@Slf4j
 public class PartyAndContact implements ActionRequestDecorator {
+  private static final Logger log = LoggerFactory.getLogger(PartyAndContact.class);
 
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {

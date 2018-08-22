@@ -1,7 +1,8 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +22,9 @@ import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestCon
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 
-@Slf4j
 public abstract class ActionProcessingService {
+  private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
+
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   public static final String ENABLED = "ENABLED";
