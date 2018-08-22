@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -8,7 +10,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -46,8 +47,8 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
  * entity model.
  */
 @Service
-@Slf4j
 public class ActionService {
+  private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
   private static final String ENABLED = "ENABLED";

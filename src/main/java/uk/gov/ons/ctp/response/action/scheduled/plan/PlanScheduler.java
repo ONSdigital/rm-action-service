@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.plan;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
@@ -11,8 +12,8 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
  * details from the AppConfig
  */
 @Component
-@Slf4j
 public class PlanScheduler {
+  private static final Logger log = LoggerFactory.getLogger(PlanScheduler.class);
 
   private ActionPlanJobService actionPlanJobServiceImpl;
 

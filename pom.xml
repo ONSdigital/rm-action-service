@@ -1,10 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>actionsvc</artifactId>
-    <version>10.49.22-SNAPSHOT</version>
+    <version>10.49.23-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>CTP : ActionService</name>
@@ -19,7 +17,7 @@
     <parent>
         <groupId>uk.gov.ons.ctp.product</groupId>
         <artifactId>rm-common-config</artifactId>
-        <version>10.49.12</version>
+        <version>10.49.13</version>
     </parent>
 
     <scm>
@@ -259,6 +257,10 @@
             <version>5.0.12.Final</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.godaddy</groupId>
+            <artifactId>logging</artifactId>
+        </dependency>
         <!-- Third party end -->
 
         <!-- Testing -->
@@ -394,7 +396,7 @@
                         <format>html</format>
                         <format>xml</format>
                     </formats>
-                    <check/>
+                    <check />
                 </configuration>
             </plugin>
             <plugin>

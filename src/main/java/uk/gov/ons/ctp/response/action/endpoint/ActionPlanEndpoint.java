@@ -1,11 +1,12 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,8 +32,8 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 /** The REST endpoint controller for ActionPlans. */
 @RestController
 @RequestMapping(value = "/actionplans", produces = "application/json")
-@Slf4j
 public class ActionPlanEndpoint implements CTPEndpoint {
+  private static final Logger log = LoggerFactory.getLogger(ActionPlanEndpoint.class);
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";
 

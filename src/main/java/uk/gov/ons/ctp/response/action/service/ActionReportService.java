@@ -1,14 +1,15 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionReportRepository;
 
 /** Create report via stored procedure */
 @Service
-@Slf4j
 public class ActionReportService {
+  private static final Logger log = LoggerFactory.getLogger(ActionReportService.class);
 
   @Autowired private ActionReportRepository actionReportRepository;
 

@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -11,8 +12,8 @@ import org.springframework.stereotype.Component;
  */
 @CoverageIgnore
 @Component
-@Slf4j
 public class DistributionScheduler {
+  private static final Logger log = LoggerFactory.getLogger(DistributionScheduler.class);
 
   private ActionDistributor actionDistributorImpl;
 
