@@ -1,16 +1,17 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Before;
@@ -24,13 +25,28 @@ import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
-import uk.gov.ons.ctp.response.action.domain.model.*;
-import uk.gov.ons.ctp.response.action.domain.repository.*;
+import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
+import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
+import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
+import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
+import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
+import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 /** Tests for ActionServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
@@ -105,9 +121,9 @@ public class ActionServiceTest {
 
     for (final Action action : actions) {
       if (action.getActionType().getCanCancel()) {
-        assertThat(action.getState(), is(ActionState.CANCELLED));
+        assertThat(action.getState()).isEqualTo(ActionState.CANCELLED);
       } else {
-        assertThat(action.getState(), is(not(ActionState.CANCELLED)));
+        assertThat(action.getState()).isNotEqualTo(ActionState.CANCELLED);
       }
     }
     final List<Action> originalActions = FixtureHelper.loadClassFixtures(Action[].class);
@@ -120,7 +136,7 @@ public class ActionServiceTest {
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
     verify(actionRepo, times(1)).saveAndFlush(actions.get(1));
 
-    assertThat(flushedActions, containsInAnyOrder(actions.get(0), actions.get(1)));
+    assertThat(flushedActions).contains(actions.get(0), actions.get(1));
   }
 
   @Test
@@ -183,7 +199,7 @@ public class ActionServiceTest {
     final Action existingAction = actionService.updateAction(actions.get(0));
 
     verify(actionRepo, times(0)).saveAndFlush(any());
-    assertThat(existingAction, is(nullValue()));
+    assertThat(existingAction).isNull();
   }
 
   @Test
@@ -192,7 +208,7 @@ public class ActionServiceTest {
     final Action existingAction = actionService.updateAction(actions.get(3));
 
     verify(actionRepo, times(0)).saveAndFlush(any());
-    assertThat(existingAction, is(actions.get(3)));
+    assertThat(existingAction).isEqualTo(actions.get(3));
   }
 
   @Test
@@ -266,5 +282,58 @@ public class ActionServiceTest {
     verify(actionRepo, times(0)).saveAndFlush(any());
     verify(actionPlanRepo, times(1)).saveAndFlush(any());
     verify(actionPlanJobRepo, times(1)).saveAndFlush(any());
+  }
+
+  @Test
+  public void ensureReturnByDateFormattedForSocial() {
+    SimpleDateFormat expectedDateFormat = new SimpleDateFormat("dd/MM");
+    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
+    ActionRequest actionRequest = new ActionRequest();
+
+    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.H);
+
+    decorator.decorateActionRequest(actionRequest, context);
+
+    assertThat(actionRequest.getReturnByDate())
+        .isEqualTo(
+            expectedDateFormat.format(
+                context.getCollectionExercise().getScheduledReturnDateTime()));
+  }
+
+  @Test
+  public void ensureReturnByDateFormattedForBusiness() {
+    SimpleDateFormat expectedDateFormat =
+        new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);
+    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
+    ActionRequest actionRequest = new ActionRequest();
+
+    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.B);
+
+    decorator.decorateActionRequest(actionRequest, context);
+
+    assertThat(actionRequest.getReturnByDate())
+        .isEqualTo(
+            expectedDateFormat.format(
+                context.getCollectionExercise().getScheduledReturnDateTime()));
+  }
+
+  private ActionRequestContext createActionRequestContext(
+      SampleUnitDTO.SampleUnitType sampleUnitType) {
+    ActionRequestContext context = new ActionRequestContext();
+    Date date = new Date();
+
+    CollectionExerciseDTO collectionExercise = new CollectionExerciseDTO();
+    collectionExercise.setExerciseRef("123");
+    collectionExercise.setUserDescription("Test Description");
+    collectionExercise.setScheduledReturnDateTime(new Timestamp(date.getTime()));
+    context.setCollectionExercise(collectionExercise);
+
+    SurveyDTO survey = new SurveyDTO();
+    survey.setLongName("Test Survey Long Name");
+    survey.setLegalBasis("Test Basis");
+    survey.setSurveyRef("001");
+    context.setSurvey(survey);
+    context.setSampleUnitType(sampleUnitType);
+    return context;
   }
 }

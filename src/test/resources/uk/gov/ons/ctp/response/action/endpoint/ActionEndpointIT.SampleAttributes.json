@@ -1,14 +1,13 @@
 {
   "id": "%s",
   "attributes": {
-    "Prem1": "14 ASHMEAD VIEW",
-    "Prem2": "",
-    "Prem3": "",
-    "Prem4": "",
-    "District": "",
-    "PostTown": "STOCKTON-ON-TEES",
-    "Postcode": "TS184QG",
-    "Reference": "LMS00001",
-    "CountryCode": "E"
+    "ADDRESS_LINE1": "11 HILL VIEW",
+    "ADDRESS_LINE2": "",
+    "LOCALITY": "",
+    "TOWN_NAME": "STOCKTON-ON-TEES",
+    "POSTCODE": "AA1 1AA",
+    "REFERENCE": "00001",
+    "TLA": "LMS",
+    "COUNTRY": "E"
   }
 }
