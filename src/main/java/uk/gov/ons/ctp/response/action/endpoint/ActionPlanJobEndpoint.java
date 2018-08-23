@@ -8,7 +8,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import ma.glasnost.orika.MapperFacade;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -35,13 +34,19 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
 
   public static final String ACTION_PLAN_JOB_NOT_FOUND = "ActionPlanJob not found for id %s";
 
-  @Autowired private ActionPlanJobService actionPlanJobService;
+  private ActionPlanJobService actionPlanJobService;
+  private ActionPlanService actionPlanService;
 
-  @Autowired private ActionPlanService actionPlanService;
-
-  @Qualifier("actionBeanMapper")
-  @Autowired
   private MapperFacade mapperFacade;
+
+  public ActionPlanJobEndpoint(ActionPlanJobService actionPlanJobService,
+                               ActionPlanService actionPlanService,
+                               @Qualifier("actionBeanMapper")
+                                 MapperFacade mapperFacade) {
+    this.actionPlanJobService = actionPlanJobService;
+    this.actionPlanService = actionPlanService;
+    this.mapperFacade = mapperFacade;
+  }
 
   /**
    * This method returns the associated action plan job for the specified action plan job id.
