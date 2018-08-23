@@ -111,12 +111,12 @@ public class ActionPlanJobService {
     }
 
     try {
-      ActionPlanJob actionPlanJobTemplate =
+      ActionPlanJob actionPlanJob =
           ActionPlanJob.builder()
               .actionPlanFK(actionPlan.getActionPlanPK())
               .createdBy(CREATED_BY_SYSTEM)
               .build();
-      ActionPlanJob job = createActionPlanJob(actionPlanJobTemplate);
+      ActionPlanJob job = createActionPlanJob(actionPlanJob);
       actionSvc.createScheduledActions(actionPlan, job);
       return job;
     } finally {

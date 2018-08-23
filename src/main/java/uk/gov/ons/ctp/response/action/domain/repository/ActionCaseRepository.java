@@ -13,10 +13,10 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
   /**
    * find cases (by virtue open) for actionplanid
    *
-   * @param actionPlanId the action plan
+   * @param actionPlanFK the action plan
    * @return the list of (open) cases assoc with that plan
    */
-  List<ActionCase> findByActionPlanId(UUID actionPlanId);
+  List<ActionCase> findByActionPlanFK(Integer actionPlanFK);
 
   /**
    * find a case by its id - the uuid which is not the primary key btw

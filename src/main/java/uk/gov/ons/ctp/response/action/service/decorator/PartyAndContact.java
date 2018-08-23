@@ -21,9 +21,9 @@ public class PartyAndContact implements ActionRequestDecorator {
 
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
-    final PartyDTO parentParty = context.getParentParty();
-    final List<PartyDTO> childParties = context.getChildParties();
-    final Attributes businessUnitAttributes = parentParty.getAttributes();
+    final PartyDTO businessParty = context.getParentParty();
+    final List<PartyDTO> respondentParties = context.getChildParties();
+    final Attributes businessUnitAttributes = businessParty.getAttributes();
     actionRequest.setRegion(businessUnitAttributes.getRegion());
 
     final ActionContact actionContact = new ActionContact();
@@ -31,13 +31,10 @@ public class PartyAndContact implements ActionRequestDecorator {
     actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
 
     if (isRespondent(context)) {
-      // BI case - this means the action request is being raised for the child party so
-      // their details are the only ones we're interested in (and we can assume the first and
-      // only element in the childParties list contains the details we are after)
-      PartyDTO childParty = childParties.get(0);
-      actionRequest.setRespondentStatus(childParty.getStatus());
+      PartyDTO respondentParty = respondentParties.get(0);
+      actionRequest.setRespondentStatus(respondentParty.getStatus());
 
-      final Attributes respondentAttributes = childParty.getAttributes();
+      final Attributes respondentAttributes = respondentParty.getAttributes();
       populateContactDetails(respondentAttributes, actionContact);
     } else {
       // B case
@@ -62,7 +59,7 @@ public class PartyAndContact implements ActionRequestDecorator {
     }
 
     actionRequest.setContact(actionContact);
-    actionRequest.setEnrolmentStatus(getEnrolmentStatus(parentParty));
+    actionRequest.setEnrolmentStatus(getEnrolmentStatus(businessParty));
   }
 
   private boolean isRespondent(ActionRequestContext context) {

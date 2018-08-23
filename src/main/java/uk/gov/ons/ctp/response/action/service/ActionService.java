@@ -202,7 +202,7 @@ public class ActionService {
 
   @Transactional
   public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
-    List<ActionCase> cases = actionCaseRepo.findByActionPlanId(actionPlan.getId());
+    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     cases.forEach(
         caze -> {
@@ -210,7 +210,15 @@ public class ActionService {
             rules.forEach(
                 rule -> {
                   if (hasRuleTriggered(rule)) {
-                    createActions(caze, rule);
+                    try {
+                      createActions(caze, rule);
+                    } catch (Exception ex) {
+                      log.with("caseId", caze.getId().toString())
+                        .with("cause", ex.getCause())
+                        .with("actionRuleId", rule.getId().toString())
+                        .with("message", ex.getMessage())
+                        .error("Failed to create actions");
+                    }
                   }
                 });
           }
@@ -240,6 +248,7 @@ public class ActionService {
       PartyDTO businessParty =
           partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
 
+
       CollectionExerciseDTO collectionExercise =
           collectionExerciseClientService.getCollectionExercise(
               actionCase.getCollectionExerciseId());
@@ -254,10 +263,10 @@ public class ActionService {
 
       enrolledAssociations.forEach(
           association ->
-              createAction(actionCase, actionRule, UUID.fromString(association.getPartyId())));
+              createAction(actionCase, actionRule, actionType, UUID.fromString(association.getPartyId())));
 
     } else {
-      createAction(actionCase, actionRule, actionCase.getPartyId());
+      createAction(actionCase, actionRule, actionType, actionCase.getPartyId());
     }
   }
 
@@ -281,7 +290,7 @@ public class ActionService {
         && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED);
   }
 
-  private void createAction(ActionCase actionCase, ActionRule actionRule, UUID partyId) {
+  private void createAction(ActionCase actionCase, ActionRule actionRule, ActionType actionType, UUID partyId) {
     if (actionRepo.findOneByCaseIdAndActionRuleFKAndPartyId(
             actionCase.getId(), actionRule.getActionRulePK(), partyId)
         != null) {
@@ -301,7 +310,7 @@ public class ActionService {
 
     newAction.setActionPlanFK(actionRule.getActionPlanFK());
     newAction.setActionRuleFK(actionRule.getActionRulePK());
-    newAction.setActionType(actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK()));
+    newAction.setActionType(actionType);
     newAction.setPriority(actionRule.getPriority());
 
     newAction.setPartyId(partyId);
