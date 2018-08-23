@@ -4,8 +4,6 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,14 +19,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
-/**
- * This is the 'service' class that distributes actions to downstream services, ie services outside
- * of Response Management (ActionExporterSvc, NotifyGW, etc.).
- *
- * <p>This class has a self scheduled method wakeUp(), which looks for Actions in SUBMITTED state to
- * send to downstream handlers. On each wake cycle, it fetches the first n actions of each type, by
- * createddatatime, and forwards them to ActionProcessingService.
- */
+/** This is the service class that distributes actions to downstream services */
 @Component
 class ActionDistributor {
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
@@ -61,8 +52,8 @@ class ActionDistributor {
   }
 
   /**
-   * wake up on schedule and check for submitted actions, enrich and distribute them to spring
-   * integration channels
+   * Called on schedule to check for submitted actions then creates and distributes the actions to
+   * action exporter or notify gateway
    *
    * @return the info for the health endpoint regarding the distribution just performed
    */
@@ -80,7 +71,6 @@ class ActionDistributor {
   }
 
   private List<InstructionCount> processActionType(final ActionType actionType) {
-    log.debug("Dealing with actionType {}", actionType.getName());
     final InstructionCount requestCount =
         InstructionCount.builder()
             .actionTypeName(actionType.getName())
@@ -103,38 +93,21 @@ class ActionDistributor {
     return Arrays.asList(requestCount, cancelCount);
   }
 
-  /**
-   * Get the oldest page of submitted actions by type
-   *
-   * @param actionType the type
-   * @return list of actions
-   */
   private List<Action> retrieveActions(final ActionType actionType) {
-    List<Action> actions =
-        actionRepo.findSubmittedOrCancelledByActionTypeName(
-            actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-    log.debug(
-        "RETRIEVED action ids {}",
-        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(",")));
-    return actions;
+    return actionRepo.findSubmittedOrCancelledByActionTypeName(
+        actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
   }
 
   private void processActions(
       final List<Action> actions,
       final InstructionCount requestCount,
       final InstructionCount cancelCount) {
-    log.debug(
-        "Dealing with actions {}",
-        actions.stream().map(Objects::toString).collect(Collectors.joining(",")));
-    for (final Action action : actions) {
+    for (Action action : actions) {
       try {
         processAction(action, requestCount, cancelCount);
-      } catch (final Exception e) {
-        log.error(
-            "Could not processing action {}."
-                + " Processing will be retried at next scheduled distribution",
-            action.getId(),
-            e);
+      } catch (Exception e) {
+        log.with("actionId", action.getId())
+            .error("Could not process action. Will be retried at next schedule");
       }
     }
   }

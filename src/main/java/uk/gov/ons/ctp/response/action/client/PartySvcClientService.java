@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -28,15 +27,21 @@ import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 public class PartySvcClientService {
   private static final Logger log = LoggerFactory.getLogger(PartySvcClientService.class);
 
-  @Autowired private AppConfig appConfig;
-
-  @Autowired private RestTemplate restTemplate;
-
-  @Autowired
-  @Qualifier("partySvcClient")
+  private AppConfig appConfig;
+  private RestTemplate restTemplate;
   private RestUtility restUtility;
+  private ObjectMapper objectMapper;
 
-  @Autowired private ObjectMapper objectMapper;
+  public PartySvcClientService(
+      AppConfig appConfig,
+      RestTemplate restTemplate,
+      @Qualifier("partySvcClient") RestUtility restUtility,
+      @Qualifier("customObjectMapper") ObjectMapper objectMapper) {
+    this.appConfig = appConfig;
+    this.restTemplate = restTemplate;
+    this.restUtility = restUtility;
+    this.objectMapper = objectMapper;
+  }
 
   @Retryable(
       value = {RestClientException.class},
@@ -81,7 +86,7 @@ public class PartySvcClientService {
         surveyId);
 
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
-    queryParams.put("survey_id", Arrays.asList(surveyId));
+    queryParams.put("survey_id", Collections.singletonList(surveyId));
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
@@ -98,15 +103,12 @@ public class PartySvcClientService {
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
-    log.debug("responseEntity is {}", responseEntity);
 
     PartyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
       final String responseBody = responseEntity.getBody();
-      log.debug("responseBody is {}", responseBody);
       try {
         result = objectMapper.readValue(responseBody, PartyDTO.class);
-        log.debug("result is {}", result);
       } catch (final IOException e) {
         final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
         log.error(msg);

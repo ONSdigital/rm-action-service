@@ -181,7 +181,7 @@ public class ActionService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public Action createAdHocAction(final Action action) {
-    log.debug("Entering createAdhocAction with {}", action);
+    log.debug("Creating adhoc action");
 
     // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);
@@ -292,7 +292,10 @@ public class ActionService {
     if (actionRepo.findOneByCaseIdAndActionRuleFKAndPartyId(
             actionCase.getId(), actionRule.getActionRulePK(), partyId)
         != null) {
-      log.debug("Action already exists");
+      log.with("caseId", actionCase.getId().toString())
+          .with("actionRuleId", actionRule.getId().toString())
+          .with("partyId", partyId.toString())
+          .debug("Action already exists");
       return;
     }
 

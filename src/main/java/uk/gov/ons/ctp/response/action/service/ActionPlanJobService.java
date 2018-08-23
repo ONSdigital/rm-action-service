@@ -72,19 +72,21 @@ public class ActionPlanJobService {
   }
 
   public void createAndExecuteAllActionPlanJobs() {
-    actionPlanRepo
-        .findAll()
-        .forEach(
-            actionPlan -> {
-              if (!hasActionPlanBeenRunSinceLastSchedule(actionPlan)
-                  && hasActionableCases(actionPlan)) {
-                createAndExecuteActionPlanJob(actionPlan);
-              } else {
-                log.debug(
-                    "Job for plan {} has been run since last wake up - skipping",
-                    actionPlan.getActionPlanPK());
-              }
-            });
+    List<ActionPlan> actionPlans = actionPlanRepo.findAll();
+    actionPlans.forEach(
+        actionPlan -> {
+          if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
+            log.with("actionPlanId", actionPlan.getId())
+                .with("actionPlanPK", actionPlan.getActionPlanPK())
+                .debug("Job for plan has been run since last wake up - skipping");
+          } else if (!hasActionableCases(actionPlan)) {
+            log.with("actionPlanId", actionPlan.getId())
+                .with("actionPlanPK", actionPlan.getActionPlanPK())
+                .debug("No actionable cases for action plan");
+          } else {
+            createAndExecuteActionPlanJob(actionPlan);
+          }
+        });
   }
 
   private boolean hasActionableCases(ActionPlan actionPlan) {
@@ -117,7 +119,6 @@ public class ActionPlanJobService {
       actionSvc.createScheduledActions(actionPlan, job);
       return job;
     } finally {
-      log.with("actionPlanId", actionPlan.getId()).debug("Releasing lock");
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }
   }

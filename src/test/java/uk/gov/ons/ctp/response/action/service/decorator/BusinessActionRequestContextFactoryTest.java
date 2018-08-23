@@ -15,7 +15,6 @@ import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.decorator.context.BusinessActionRequestContextFactory;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BusinessActionRequestContextFactoryTest {
@@ -48,7 +47,7 @@ public class BusinessActionRequestContextFactoryTest {
         .thenReturn(respondentCreatedBI);
 
     final List<PartyDTO> actualChildPartyList =
-        factory.getChildParties(partyDTOs.get(B_PARTY), SampleUnitType.B);
+        factory.getRespondentParties(partyDTOs.get(B_PARTY));
 
     assertTrue(
         "Party list should contain SUSPENDED BI",
