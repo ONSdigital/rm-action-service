@@ -3,7 +3,7 @@ applications:
 - name: actionsvc-SPACE
   instances: INSTANCES
   host: actionsvc-SPACE
-  memory: 1024M
+  memory: 1536M
   path: target/actionsvc.jar
   timeout: 180
   services:
