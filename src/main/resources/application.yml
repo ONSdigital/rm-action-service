@@ -53,6 +53,9 @@ spring:
       enabled: never
   application:
     name: ONS ActionService
+  zipkin:
+    baseUrl: http://localhost:9411
+    enabled: false
 
   datasource:
     url: jdbc:postgresql://localhost:6432/postgres
