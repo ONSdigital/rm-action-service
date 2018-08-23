@@ -24,10 +24,10 @@ public class DistributionScheduler {
   /** Scheduled execution of the Action Distributor */
   @Scheduled(fixedDelayString = "#{appConfig.actionDistribution.delayMilliSeconds}")
   public void run() {
-    try {
-      actionDistributorImpl.distribute();
-    } catch (final Exception e) {
-      log.error("Exception in action distributor", e);
-    }
+    DistributionInfo distInfo = actionDistributorImpl.distribute();
+    log.with("count", distInfo.getInstructionCounts().get(0).getCount())
+        .debug("Action requests created");
+    log.with("count", distInfo.getInstructionCounts().get(0).getCount())
+        .debug("Actions requests cancelled");
   }
 }

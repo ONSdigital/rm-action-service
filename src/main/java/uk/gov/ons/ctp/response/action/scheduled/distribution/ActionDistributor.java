@@ -66,7 +66,6 @@ class ActionDistributor {
       final List<InstructionCount> instructionCounts = processActionType(actionType);
       distInfo.getInstructionCounts().addAll(instructionCounts);
     }
-
     return distInfo;
   }
 
