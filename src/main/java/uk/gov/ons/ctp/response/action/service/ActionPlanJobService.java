@@ -112,6 +112,7 @@ public class ActionPlanJobService {
     }
 
     try {
+      // Action plan job has to be created before actions
       ActionPlanJob job = createActionPlanJob(actionPlan);
       actionSvc.createScheduledActions(actionPlan, job);
       return job;
@@ -125,8 +126,8 @@ public class ActionPlanJobService {
     ActionPlanJob actionPlanJob = new ActionPlanJob();
     actionPlanJob.setActionPlanFK(actionPlan.getActionPlanPK());
     actionPlanJob.setCreatedBy(CREATED_BY_SYSTEM);
-    Timestamp now = nowUTC();
     actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
+    Timestamp now = nowUTC();
     actionPlanJob.setCreatedDateTime(now);
     actionPlanJob.setUpdatedDateTime(now);
     actionPlanJob.setId(UUID.randomUUID());

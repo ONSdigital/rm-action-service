@@ -38,7 +38,6 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Association;
-import uk.gov.ons.ctp.response.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
@@ -241,18 +240,12 @@ public class ActionService {
   private void createActions(ActionCase actionCase, ActionRule actionRule) {
     ActionType actionType = actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK());
 
+    // If creating actions for business respondents, create an action per respondent
+    // Else create single action
     if (actionCase.getSampleUnitType().equals(SampleUnitDTO.SampleUnitType.B.toString())
         && (actionType.getActionTypePK() == 5 || actionType.getActionTypePK() == 7)) {
-      PartyDTO businessParty =
-          partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
 
-      CollectionExerciseDTO collectionExercise =
-          collectionExerciseClientService.getCollectionExercise(
-              actionCase.getCollectionExerciseId());
-
-      List<Association> enrolledAssociations =
-          associationsEnrolledForSurvey(businessParty, collectionExercise.getSurveyId());
-
+      List<Association> enrolledAssociations = respondentsEnrolledOnCase(actionCase);
       if (enrolledAssociations.isEmpty()) {
         log.error(NO_RESPONDENTS_FOR_SURVEY);
         throw new IllegalStateException(NO_RESPONDENTS_FOR_SURVEY);
@@ -268,6 +261,14 @@ public class ActionService {
     }
   }
 
+  private List<Association> respondentsEnrolledOnCase(ActionCase actionCase) {
+    PartyDTO businessParty =
+        partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
+    CollectionExerciseDTO collectionExercise =
+        collectionExerciseClientService.getCollectionExercise(actionCase.getCollectionExerciseId());
+    return associationsEnrolledForSurvey(businessParty, collectionExercise.getSurveyId());
+  }
+
   private List<Association> associationsEnrolledForSurvey(PartyDTO party, String surveyId) {
     return party
         .getAssociations()
@@ -280,12 +281,10 @@ public class ActionService {
     return association
         .getEnrolments()
         .stream()
-        .anyMatch(enrolment -> isEnrolmentEnabledForSurvey(enrolment, surveyId));
-  }
-
-  private boolean isEnrolmentEnabledForSurvey(final Enrolment enrolment, String surveyId) {
-    return enrolment.getSurveyId().equals(surveyId)
-        && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED);
+        .anyMatch(
+            enrolment ->
+                enrolment.getSurveyId().equals(surveyId)
+                    && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED));
   }
 
   private void createAction(
