@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.response.action.service.decorator;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Map;
-import java.util.Objects;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
@@ -17,13 +16,13 @@ public class SampleAttributes implements ActionRequestDecorator {
     Map<String, String> sampleAttribs = context.getSampleAttributes().getAttributes();
     log.debug("sampleAttributesDTO received: " + context.getSampleAttributes().toString());
 
-    actionAddress.setLine1(Objects.toString(sampleAttribs.get("Prem1"), "Missing Address Line 1"));
-    actionAddress.setLine2(sampleAttribs.get("Prem2"));
-    actionAddress.setLine3(sampleAttribs.get("Prem3"));
-    actionAddress.setLine4(sampleAttribs.get("Prem4"));
-    actionAddress.setLocality(sampleAttribs.get("District"));
-    actionAddress.setTownName(sampleAttribs.get("PostTown"));
-    actionAddress.setPostcode(sampleAttribs.get("Postcode"));
+    actionAddress.setLine1(sampleAttribs.get("ADDRESS_LINE1"));
+    actionAddress.setLine2(sampleAttribs.get("ADDRESS_LINE2"));
+    actionAddress.setLocality(sampleAttribs.get("LOCALITY"));
+    actionAddress.setTownName(sampleAttribs.get("TOWN_NAME"));
+    actionAddress.setPostcode(sampleAttribs.get("POSTCODE"));
+    actionAddress.setCountry(sampleAttribs.get("COUNTRY"));
+    actionAddress.setOrganisationName(sampleAttribs.get("ORGANISATION_NAME"));
     actionAddress.setSampleUnitRef(context.getCaseDetails().getCaseGroup().getSampleUnitRef());
 
     actionRequest.setAddress(actionAddress);
