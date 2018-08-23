@@ -11,11 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.ons.ctp.common.MvcHelper.getJson;
-import static uk.gov.ons.ctp.common.MvcHelper.postJson;
-import static uk.gov.ons.ctp.common.error.RestExceptionHandler.INVALID_JSON;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
-import static
-uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.ACTION_PLAN_JOB_NOT_FOUND;
+import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.ACTION_PLAN_JOB_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.CREATED_BY_SYSTEM;
 import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.NO_ACTIONPLAN_MSG;
 
@@ -49,8 +46,7 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 /** ActionPlanJobEndpoint Unit tests */
 public class ActionPlanJobEndpointUnitTest {
 
-  private static final UUID ACTIONPLANID =
-    UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
+  private static final UUID ACTIONPLANID = UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
   private static final UUID ACTIONPLANID_NOTFOUND =
       UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a8");
   private static final UUID ACTION_PLAN_JOB_ID_1 =
@@ -100,8 +96,7 @@ public class ActionPlanJobEndpointUnitTest {
     this.mockMvc =
         MockMvcBuilders.standaloneSetup(actionPlanJobEndpoint)
             .setHandlerExceptionResolvers(mockAdviceFor(RestExceptionHandler.class))
-            .setMessageConverters(new MappingJackson2HttpMessageConverter(new
- CustomObjectMapper()))
+            .setMessageConverters(new MappingJackson2HttpMessageConverter(new CustomObjectMapper()))
             .build();
 
     actionPlanJobs = FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
@@ -222,8 +217,7 @@ public class ActionPlanJobEndpointUnitTest {
   @Test
   public void findActionPlanJobNotFound() throws Exception {
     final ResultActions actions =
-        mockMvc.perform(getJson(String.format("/actionplans/jobs/%s",
- ACTION_PLAN_JOBID_NOTFOUND)));
+        mockMvc.perform(getJson(String.format("/actionplans/jobs/%s", ACTION_PLAN_JOBID_NOTFOUND)));
 
     actions
         .andExpect(status().isNotFound())
@@ -248,8 +242,7 @@ public class ActionPlanJobEndpointUnitTest {
         .thenThrow(new IllegalArgumentException(OUR_EXCEPTION_MESSAGE));
 
     final ResultActions actions =
-        mockMvc.perform(getJson(String.format("/actionplans/jobs/%s",
- ACTION_PLAN_JOBID_NOTFOUND)));
+        mockMvc.perform(getJson(String.format("/actionplans/jobs/%s", ACTION_PLAN_JOBID_NOTFOUND)));
 
     actions
         .andExpect(status().is5xxServerError())
@@ -290,5 +283,4 @@ public class ActionPlanJobEndpointUnitTest {
             jsonPath(
                 "$.updatedDateTime", is(new DateMatcher(UPDATED_DATE_TIME_ACTION_PLAN_JOB_ID_1))));
   }
-
- }
+}

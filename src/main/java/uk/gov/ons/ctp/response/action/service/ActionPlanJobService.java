@@ -72,19 +72,19 @@ public class ActionPlanJobService {
   }
 
   public void createAndExecuteAllActionPlanJobs() {
-    actionPlanRepo.findAll()
-      .forEach(
-        actionPlan -> {
-          if (!hasActionPlanBeenRunSinceLastSchedule(actionPlan)
-            && hasActionableCases(actionPlan)) {
-            createAndExecuteActionPlanJob(actionPlan);
-          } else {
-            log.debug(
-                "Job for plan {} has been run since last wake up - skipping",
-                actionPlan.getActionPlanPK());
-          }
-        }
-      );
+    actionPlanRepo
+        .findAll()
+        .forEach(
+            actionPlan -> {
+              if (!hasActionPlanBeenRunSinceLastSchedule(actionPlan)
+                  && hasActionableCases(actionPlan)) {
+                createAndExecuteActionPlanJob(actionPlan);
+              } else {
+                log.debug(
+                    "Job for plan {} has been run since last wake up - skipping",
+                    actionPlan.getActionPlanPK());
+              }
+            });
   }
 
   private boolean hasActionableCases(ActionPlan actionPlan) {
@@ -107,8 +107,7 @@ public class ActionPlanJobService {
   public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.with("actionPlanId", actionPlan.getId())
-        .debug("Could not get manager lock");
+      log.with("actionPlanId", actionPlan.getId()).debug("Could not get manager lock");
       return null;
     }
 
@@ -117,8 +116,7 @@ public class ActionPlanJobService {
       actionSvc.createScheduledActions(actionPlan, job);
       return job;
     } finally {
-      log.with("actionPlanId", actionPlan.getId())
-        .debug("Releasing lock");
+      log.with("actionPlanId", actionPlan.getId()).debug("Releasing lock");
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }
   }
@@ -134,8 +132,8 @@ public class ActionPlanJobService {
     actionPlanJob.setId(UUID.randomUUID());
     ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJob);
     log.with("actionPlanId", actionPlan.getId().toString())
-      .with("actionPlanJobId", createdJob.getId().toString())
-      .debug("Created action plan job");
+        .with("actionPlanJobId", createdJob.getId().toString())
+        .debug("Created action plan job");
     return createdJob;
   }
 }

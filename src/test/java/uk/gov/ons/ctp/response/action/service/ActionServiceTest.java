@@ -36,8 +36,7 @@ import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionServiceTest {
 
-  private static final UUID ACTION_CASEID =
-    UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
+  private static final UUID ACTION_CASEID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
   private static final UUID ACTION_ID_0 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72b3e");
   private static final UUID ACTION_ID_3 = UUID.fromString("774afa97-8c87-4131-923b-b33ccbf72bd9");
   private static final String ACTION_TYPENAME = "HouseholdInitialContact";
@@ -139,8 +138,7 @@ public class ActionServiceTest {
 
     verify(actionRepo, times(1)).findById(ACTION_ID_0);
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
-    verify(actionSvcStateTransitionManager, times(1))
-      .transition(originalAction.getState(), event);
+    verify(actionSvcStateTransitionManager, times(1)).transition(originalAction.getState(), event);
   }
 
   @Test
@@ -201,8 +199,10 @@ public class ActionServiceTest {
   public void testCreateScheduledActions() {
 
     // Given
-    when(actionCaseRepo.findByActionPlanFK(any())).thenReturn(Collections.singletonList(actionCases.get(0)));
-    when(actionRuleRepo.findByActionPlanFK(any())).thenReturn(Collections.singletonList(actionRules.get(0)));
+    when(actionCaseRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionCases.get(0)));
+    when(actionRuleRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionRules.get(0)));
     when(actionTypeRepo.findByActionTypePK(any())).thenReturn(actionTypes.get(0));
 
     // When
@@ -220,11 +220,16 @@ public class ActionServiceTest {
   public void testCreateScheduledActionsBCaseRule5() {
 
     // Given
-    when(actionCaseRepo.findByActionPlanFK(any())).thenReturn(Collections.singletonList(actionBCase));
-    when(actionRuleRepo.findByActionPlanFK(any())).thenReturn(Collections.singletonList(actionRules.get(1)));
+    when(actionCaseRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionBCase));
+    when(actionRuleRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionRules.get(1)));
     when(actionTypeRepo.findByActionTypePK(any())).thenReturn(actionTypes.get(2));
-    when(partySvcClientService.getParty(actionBCase.getSampleUnitType(), actionBCase.getPartyId())).thenReturn(partys.get(0));
-    when(collectionExerciseClientService.getCollectionExercise(actionBCase.getCollectionExerciseId())).thenReturn(collectionExercises.get(0));
+    when(partySvcClientService.getParty(actionBCase.getSampleUnitType(), actionBCase.getPartyId()))
+        .thenReturn(partys.get(0));
+    when(collectionExerciseClientService.getCollectionExercise(
+            actionBCase.getCollectionExerciseId()))
+        .thenReturn(collectionExercises.get(0));
 
     // When
     ActionPlan actionPlan = new ActionPlan();
@@ -241,11 +246,16 @@ public class ActionServiceTest {
   public void testCreateScheduledActionsBCaseRule5NoEnrolledRespondents() {
 
     // Given
-    when(actionCaseRepo.findByActionPlanFK(any())).thenReturn(Collections.singletonList(actionBCase));
-    when(actionRuleRepo.findByActionPlanFK(any())).thenReturn(Collections.singletonList(actionRules.get(1)));
+    when(actionCaseRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionBCase));
+    when(actionRuleRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionRules.get(1)));
     when(actionTypeRepo.findByActionTypePK(any())).thenReturn(actionTypes.get(2));
-    when(partySvcClientService.getParty(actionBCase.getSampleUnitType(), actionBCase.getPartyId())).thenReturn(partys.get(1));
-    when(collectionExerciseClientService.getCollectionExercise(actionBCase.getCollectionExerciseId())).thenReturn(collectionExercises.get(0));
+    when(partySvcClientService.getParty(actionBCase.getSampleUnitType(), actionBCase.getPartyId()))
+        .thenReturn(partys.get(1));
+    when(collectionExerciseClientService.getCollectionExercise(
+            actionBCase.getCollectionExerciseId()))
+        .thenReturn(collectionExercises.get(0));
 
     // When
     ActionPlan actionPlan = new ActionPlan();
@@ -257,5 +267,4 @@ public class ActionServiceTest {
     verify(actionPlanRepo, times(1)).saveAndFlush(any());
     verify(actionPlanJobRepo, times(1)).saveAndFlush(any());
   }
-
 }

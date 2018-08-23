@@ -39,10 +39,10 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
 
   private MapperFacade mapperFacade;
 
-  public ActionPlanJobEndpoint(ActionPlanJobService actionPlanJobService,
-                               ActionPlanService actionPlanService,
-                               @Qualifier("actionBeanMapper")
-                                 MapperFacade mapperFacade) {
+  public ActionPlanJobEndpoint(
+      ActionPlanJobService actionPlanJobService,
+      ActionPlanService actionPlanService,
+      @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
     this.actionPlanJobService = actionPlanJobService;
     this.actionPlanService = actionPlanService;
     this.mapperFacade = mapperFacade;

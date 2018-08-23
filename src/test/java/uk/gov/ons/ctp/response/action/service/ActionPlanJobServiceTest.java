@@ -1,20 +1,16 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -22,10 +18,8 @@ import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
-import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.PlanExecution;
-import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
@@ -74,7 +68,8 @@ public class ActionPlanJobServiceTest {
     when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
 
     // When
-    ActionPlanJob executedJob = actionPlanJobService.createAndExecuteActionPlanJob(actionPlans.get(0));
+    ActionPlanJob executedJob =
+        actionPlanJobService.createAndExecuteActionPlanJob(actionPlans.get(0));
 
     // assert the right calls were made
     verify(actionPlanJobRepo, times(1)).save(any(ActionPlanJob.class));
@@ -85,8 +80,7 @@ public class ActionPlanJobServiceTest {
   }
 
   /**
-   * Test that the endpoint forced exec method gracefully handles the failure to lock an action
-  plan
+   * Test that the endpoint forced exec method gracefully handles the failure to lock an action plan
    */
   @Test
   public void testCreateAndExecuteActionPlanFailedLock() {
@@ -95,7 +89,8 @@ public class ActionPlanJobServiceTest {
     when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
 
     // When
-    ActionPlanJob executedJob = actionPlanJobService.createAndExecuteActionPlanJob(actionPlans.get(0));
+    ActionPlanJob executedJob =
+        actionPlanJobService.createAndExecuteActionPlanJob(actionPlans.get(0));
 
     // Then
     assertNull(executedJob);
@@ -106,7 +101,8 @@ public class ActionPlanJobServiceTest {
 
     // Given
     when(actionPlanRepo.findAll()).thenReturn(actionPlans);
-    when(actionCaseRepo.countByActionPlanFK(any(Integer.class))).thenReturn(Integer.toUnsignedLong(1));
+    when(actionCaseRepo.countByActionPlanFK(any(Integer.class)))
+        .thenReturn(Integer.toUnsignedLong(1));
     when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
     when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
 
@@ -124,7 +120,8 @@ public class ActionPlanJobServiceTest {
 
     // Given
     when(actionPlanRepo.findAll()).thenReturn(actionPlans);
-    when(actionCaseRepo.countByActionPlanFK(any(Integer.class))).thenReturn(Integer.toUnsignedLong(0));
+    when(actionCaseRepo.countByActionPlanFK(any(Integer.class)))
+        .thenReturn(Integer.toUnsignedLong(0));
 
     // When
     actionPlanJobService.createAndExecuteAllActionPlanJobs();
