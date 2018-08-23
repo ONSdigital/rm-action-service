@@ -54,13 +54,9 @@ public class SurveySvcClientService {
       try {
         result = objectMapper.readValue(responseBody, SurveyDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read survey response", e);
       }
     }
-
-    log.debug("made call to survey service and retrieved {}", result);
     return result;
   }
 }

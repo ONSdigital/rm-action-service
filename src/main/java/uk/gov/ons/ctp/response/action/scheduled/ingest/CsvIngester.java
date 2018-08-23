@@ -143,7 +143,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
    */
   @ServiceActivator(inputChannel = CHANNEL)
   public void ingest(final File csvFile) {
-    log.debug("INGESTED {}", csvFile.toString());
+    log.with("csv", csvFile.toString()).debug("INGESTED csv file");
     CSVReader reader = null;
     final Map<String, InstructionBucket> handlerInstructionBuckets = new HashMap<>();
 
@@ -157,10 +157,9 @@ public class CsvIngester extends CsvToBean<CsvLine> {
             final CsvLine csvLine = (CsvLine) processLine(columnPositionMappingStrategy, nextLine);
             final Optional<String> namesOfInvalidColumns = validateLine(csvLine);
             if (namesOfInvalidColumns.isPresent()) {
-              log.error(
-                  "Problem parsing {} due to {} - entire ingest aborted",
-                  Arrays.toString(nextLine),
-                  namesOfInvalidColumns.get());
+              log.with("line", Arrays.toString(nextLine))
+                  .with("invalid_columns", namesOfInvalidColumns.get())
+                  .error("Problem parsing line - entire ingest aborted");
               csvFile.renameTo(
                   new File(
                       csvFile.getPath()
@@ -189,8 +188,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
           }
         }
       } catch (final Exception e) {
-        log.error("Problem parsing {} - entire ingest aborted", nextLine);
-        log.error("Stacktrace: ", e);
+        log.with("line", nextLine).error("Problem parsing line - entire ingest aborted", e);
         csvFile.renameTo(new File(csvFile.getPath() + ".fix_line_" + lineNum));
         return;
       } finally {
@@ -203,8 +201,7 @@ public class CsvIngester extends CsvToBean<CsvLine> {
       // all lines parsed successfully - now send out bucket contents
       publishBuckets(handlerInstructionBuckets);
     } catch (final Exception e) {
-      log.error("Problem reading ingest file {}", csvFile.getPath());
-      log.error("Stacktrace: ", e);
+      log.with("csv_path", csvFile.getPath()).error("Problem reading ingest file", e);
     }
   }
 

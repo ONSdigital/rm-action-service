@@ -4,7 +4,6 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -72,7 +71,7 @@ class ActionDistributor {
   }
 
   private List<InstructionCount> processActionType(final ActionType actionType) {
-    log.debug("Dealing with actionType {}", actionType.getName());
+    log.with("action_type", actionType.getName()).debug("Dealing with actionType");
     final InstructionCount requestCount =
         InstructionCount.builder()
             .actionTypeName(actionType.getName())
@@ -90,7 +89,7 @@ class ActionDistributor {
       final List<Action> actions = retrieveActions(actionType);
       processActions(actions, requestCount, cancelCount);
     } catch (final Exception e) {
-      log.error("Failed to process action type {}", actionType, e);
+      log.with("action_type", actionType.getName()).error("Failed to process action type", e);
     }
     return Arrays.asList(requestCount, cancelCount);
   }
@@ -99,18 +98,13 @@ class ActionDistributor {
       final List<Action> actions,
       final InstructionCount requestCount,
       final InstructionCount cancelCount) {
-    log.debug(
-        "Dealing with actions {}",
-        actions.stream().map(Objects::toString).collect(Collectors.joining(",")));
+    log.with(actions).debug("Dealing with actions");
     for (final Action action : actions) {
       try {
         processAction(action, requestCount, cancelCount);
       } catch (final Exception e) {
-        log.error(
-            "Could not processing action {}."
-                + " Processing will be retried at next scheduled distribution",
-            action.getId(),
-            e);
+        log.with("action_id", action.getId())
+            .error("Could not process action, will be retried at next scheduled distribution", e);
       }
     }
   }
@@ -158,9 +152,11 @@ class ActionDistributor {
     List<Action> actions =
         actionRepo.findSubmittedOrCancelledByActionTypeName(
             actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-    log.debug(
-        "RETRIEVED action ids {}",
-        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(",")));
+    String actionIds =
+        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(","));
+    log.with("action_type", actionType.getName())
+        .with("action_ids", actionIds)
+        .debug("RETRIEVED action ids");
     return actions;
   }
 }

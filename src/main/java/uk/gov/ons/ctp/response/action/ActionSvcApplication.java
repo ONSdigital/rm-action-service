@@ -8,6 +8,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -51,7 +52,7 @@ import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFacto
 @EnableCaching
 @EnableScheduling
 @ImportResource("springintegration/main.xml")
-public class ActionSvcApplication {
+public class ActionSvcApplication implements CommandLineRunner {
 
   public static final String ACTION_DISTRIBUTION_LIST = "actionsvc.action.distribution";
   public static final String ACTION_EXECUTION_LOCK = "actionsvc.action.execution";
@@ -67,9 +68,14 @@ public class ActionSvcApplication {
    * @param args These are the optional command line arguments
    */
   public static void main(final String[] args) {
-    LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
-
     SpringApplication.run(ActionSvcApplication.class, args);
+  }
+
+  @Override
+  public void run(String... args) throws Exception {
+    if (appConfig.getLogging().isUseJson()) {
+      LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
+    }
   }
 
   /**

@@ -66,9 +66,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read case details response", e);
       }
     }
     return result;
@@ -94,9 +92,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseGroupDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read case group response", e);
       }
     }
     return result;
@@ -122,9 +118,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseEventDTO[].class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read case Event response", e);
       }
     }
     return Arrays.asList(result);
@@ -152,9 +146,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read case details response", e);
       }
     }
     return result;
@@ -183,9 +175,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read case details response", e);
       }
     }
     return result;
@@ -197,10 +187,9 @@ public class CaseSvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   public CreatedCaseEventDTO createNewCaseEvent(
       final Action action, final CategoryDTO.CategoryName actionCategory) {
-    log.debug(
-        "posting caseEvent for actionId {} to casesvc for category {} ",
-        action.getId(),
-        actionCategory);
+    log.with("action_id", action.getId())
+        .with("action_category", actionCategory)
+        .debug("posting caseEvent");
     final UriComponents uriComponents =
         restUtility.createUriComponents(
             appConfig.getCaseSvc().getCaseEventsByCasePostPath(), null, action.getCaseId());
@@ -227,9 +216,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CreatedCaseEventDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read created case event response", e);
       }
     }
     return result;
