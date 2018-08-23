@@ -72,23 +72,29 @@ public class ActionPlanJobService {
   }
 
   public void createAndExecuteAllActionPlanJobs() {
-    List<ActionPlan> actionPlans = actionPlanRepo.findAll();
-    actionPlans.forEach(
+    actionPlanRepo.findAll()
+      .forEach(
         actionPlan -> {
-          if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
+          if (!hasActionPlanBeenRunSinceLastSchedule(actionPlan)
+            && hasActionableCases(actionPlan)) {
             createAndExecuteActionPlanJob(actionPlan);
           } else {
             log.debug(
                 "Job for plan {} has been run since last wake up - skipping",
                 actionPlan.getActionPlanPK());
           }
-        });
+        }
+      );
+  }
+
+  private boolean hasActionableCases(ActionPlan actionPlan) {
+    return actionCaseRepo.countByActionPlanFK(actionPlan.getActionPlanPK()) > 0;
   }
 
   private boolean hasActionPlanBeenRunSinceLastSchedule(ActionPlan actionPlan) {
     final Date lastExecutionTime =
         new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
-    return (actionPlan.getLastRunDateTime() == null
+    return !(actionPlan.getLastRunDateTime() == null
         || actionPlan.getLastRunDateTime().before(lastExecutionTime));
   }
 
@@ -99,43 +105,37 @@ public class ActionPlanJobService {
    * @return ActionPlanJob that was created or null if it has not been created.
    */
   public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
-    Integer actionPlanPK = actionPlan.getActionPlanPK();
-    if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
-      log.debug("No open cases for action plan {}", actionPlanPK);
-      return null;
-    }
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.debug("Could not get lock on action plan {}", actionPlanPK);
+      log.with("actionPlanId", actionPlan.getId())
+        .debug("Could not get manager lock");
       return null;
     }
 
     try {
-      ActionPlanJob actionPlanJob =
-          ActionPlanJob.builder()
-              .actionPlanFK(actionPlan.getActionPlanPK())
-              .createdBy(CREATED_BY_SYSTEM)
-              .build();
-      ActionPlanJob job = createActionPlanJob(actionPlanJob);
+      ActionPlanJob job = createActionPlanJob(actionPlan);
       actionSvc.createScheduledActions(actionPlan, job);
       return job;
     } finally {
-      log.debug("Releasing lock on action plan {}", actionPlanPK);
+      log.with("actionPlanId", actionPlan.getId())
+        .debug("Releasing lock");
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }
   }
 
-  private ActionPlanJob createActionPlanJob(final ActionPlanJob actionPlanJobTemplate) {
-    final Timestamp now = nowUTC();
-    actionPlanJobTemplate.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
-    actionPlanJobTemplate.setCreatedDateTime(now);
-    actionPlanJobTemplate.setUpdatedDateTime(now);
-    actionPlanJobTemplate.setId(UUID.randomUUID());
-    final ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJobTemplate);
-    log.info(
-        "Running actionplanjobid {} actionplanid {}",
-        createdJob.getActionPlanJobPK(),
-        createdJob.getActionPlanFK());
+  private ActionPlanJob createActionPlanJob(final ActionPlan actionPlan) {
+    ActionPlanJob actionPlanJob = new ActionPlanJob();
+    actionPlanJob.setActionPlanFK(actionPlan.getActionPlanPK());
+    actionPlanJob.setCreatedBy(CREATED_BY_SYSTEM);
+    Timestamp now = nowUTC();
+    actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
+    actionPlanJob.setCreatedDateTime(now);
+    actionPlanJob.setUpdatedDateTime(now);
+    actionPlanJob.setId(UUID.randomUUID());
+    ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJob);
+    log.with("actionPlanId", actionPlan.getId().toString())
+      .with("actionPlanJobId", createdJob.getId().toString())
+      .debug("Created action plan job");
     return createdJob;
   }
 }

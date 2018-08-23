@@ -214,10 +214,8 @@ public class ActionService {
                       createActions(caze, rule);
                     } catch (Exception ex) {
                       log.with("caseId", caze.getId().toString())
-                        .with("cause", ex.getCause())
                         .with("actionRuleId", rule.getId().toString())
-                        .with("message", ex.getMessage())
-                        .error("Failed to create actions");
+                        .error(ex.toString());
                     }
                   }
                 });

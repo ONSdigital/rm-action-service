@@ -44,6 +44,8 @@ public class ActionServiceTest {
 
   @InjectMocks private ActionService actionService;
 
+  @Mock private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
+
   @Mock private ActionRepository actionRepo;
   @Mock private ActionCaseRepository actionCaseRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
@@ -54,8 +56,6 @@ public class ActionServiceTest {
   @Mock private CollectionExerciseClientService collectionExerciseClientService;
   @Mock private PartySvcClientService partySvcClientService;
 
-  @Mock private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
-
   private List<Action> actions;
   private List<ActionCase> actionCases;
   private ActionCase actionBCase;
@@ -63,7 +63,6 @@ public class ActionServiceTest {
   private List<ActionRule> actionRules;
   private List<ActionType> actionTypes;
   private ActionPlanJob actionPlanJob;
-
   private List<CollectionExerciseDTO> collectionExercises;
   private List<PartyDTO> partys;
 
