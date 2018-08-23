@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.message;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.MessageEndpoint;
@@ -19,8 +20,8 @@ import uk.gov.ons.ctp.response.action.service.FeedbackService;
  */
 @CoverageIgnore
 @MessageEndpoint
-@Slf4j
 public class ActionFeedbackReceiver {
+  private static final Logger log = LoggerFactory.getLogger(ActionFeedbackReceiver.class);
 
   @Autowired private FeedbackService feedbackService;
 

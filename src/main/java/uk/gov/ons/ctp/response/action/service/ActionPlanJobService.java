@@ -2,12 +2,13 @@ package uk.gov.ons.ctp.response.action.service;
 
 import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,8 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 
 @Service
-@Slf4j
 public class ActionPlanJobService {
+  private static final Logger log = LoggerFactory.getLogger(ActionPlanJobService.class);
 
   public static final String CREATED_BY_SYSTEM = "SYSTEM";
   public static final String NO_ACTIONPLAN_MSG = "ActionPlan not found for id %s";

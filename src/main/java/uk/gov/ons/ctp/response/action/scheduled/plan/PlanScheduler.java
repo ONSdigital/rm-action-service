@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.plan;
 
-import lombok.extern.slf4j.Slf4j;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -14,8 +15,8 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
  * details from the AppConfig
  */
 @Component
-@Slf4j
 public class PlanScheduler implements HealthIndicator {
+  private static final Logger log = LoggerFactory.getLogger(PlanScheduler.class);
 
   @Autowired private ActionPlanJobService actionPlanJobServiceImpl;
 

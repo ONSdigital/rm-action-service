@@ -1,8 +1,9 @@
 package uk.gov.ons.ctp.response.action.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -19,9 +20,9 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
 /** Impl of the service that centralizes all REST calls to the Survey service */
-@Slf4j
 @Service
 public class SurveySvcClientService {
+  private static final Logger log = LoggerFactory.getLogger(SurveySvcClientService.class);
 
   @Autowired private AppConfig appConfig;
 

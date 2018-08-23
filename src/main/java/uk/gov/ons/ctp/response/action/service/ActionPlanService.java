@@ -1,11 +1,12 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,8 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 
 /** Implementation */
 @Service
-@Slf4j
 public class ActionPlanService {
+  private static final Logger log = LoggerFactory.getLogger(ActionPlanService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
 

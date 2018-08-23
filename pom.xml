@@ -17,7 +17,7 @@
     <parent>
         <groupId>uk.gov.ons.ctp.product</groupId>
         <artifactId>rm-common-config</artifactId>
-        <version>10.49.12</version>
+        <version>10.49.13</version>
     </parent>
 
     <scm>
@@ -122,6 +122,12 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-spring-service-connector</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-sleuth-zipkin -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-sleuth-zipkin</artifactId>
         </dependency>
 
         <dependency>
@@ -257,6 +263,10 @@
             <version>5.0.12.Final</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.godaddy</groupId>
+            <artifactId>logging</artifactId>
+        </dependency>
         <!-- Third party end -->
 
         <!-- Testing -->
