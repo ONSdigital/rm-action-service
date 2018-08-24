@@ -6,6 +6,7 @@ import java.util.Date;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 public class CollectionExerciseAndSurvey implements ActionRequestDecorator {
 
@@ -22,9 +23,15 @@ public class CollectionExerciseAndSurvey implements ActionRequestDecorator {
     final Date scheduledReturnDateTime =
         context.getCollectionExercise().getScheduledReturnDateTime();
     if (scheduledReturnDateTime != null) {
-      final DateFormat df =
-          new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);
-      actionRequest.setReturnByDate(df.format(scheduledReturnDateTime));
+
+      DateFormat dateFormat;
+
+      if (context.getSampleUnitType() == SampleUnitDTO.SampleUnitType.H) {
+        dateFormat = new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_SOCIAL_LETTER);
+      } else {
+        dateFormat = new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);
+      }
+      actionRequest.setReturnByDate(dateFormat.format(scheduledReturnDateTime));
     }
   }
 }
