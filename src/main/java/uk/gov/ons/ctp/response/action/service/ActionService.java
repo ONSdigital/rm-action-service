@@ -203,6 +203,8 @@ public class ActionService {
   public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
     List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
+
+    // For each case/rule pair create actions
     cases.forEach(
         caze -> {
           if (isActionPlanLive(caze)) {
