@@ -17,8 +17,8 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
 /**
- * Service for receiving notifications from case service
- * Creates/Updates/Deletes cases in the action.case table
+ * Service for receiving notifications from case service Creates/Updates/Deletes cases in the
+ * action.case table
  */
 @Service
 public class CaseNotificationService {
@@ -72,7 +72,7 @@ public class CaseNotificationService {
 
       default:
         log.with("notificationType", notification.getNotificationType())
-          .warn("Unknown case notification type", notification.getNotificationType());
+            .warn("Unknown case notification type", notification.getNotificationType());
         break;
     }
     actionCaseRepo.flush();
@@ -93,12 +93,19 @@ public class CaseNotificationService {
             ? null
             : UUID.fromString(notification.getSampleUnitId());
 
+    final CollectionExerciseDTO collectionExercise =
+        collectionSvcClientServiceImpl.getCollectionExercise(collectionExerciseId);
+    Timestamp startDateTime =
+        new Timestamp(collectionExercise.getScheduledStartDateTime().getTime());
+    Timestamp endDateTime = new Timestamp(collectionExercise.getScheduledEndDateTime().getTime());
     return ActionCase.builder()
         .id(caseId)
         .sampleUnitId(sampleUnitId)
         .actionPlanId(actionPlanId)
         .actionPlanFK(actionPlan.getActionPlanPK())
         .collectionExerciseId(collectionExerciseId)
+        .actionPlanStartDate(startDateTime)
+        .actionPlanEndDate(endDateTime)
         .partyId(partyId)
         .sampleUnitType(notification.getSampleUnitType())
         .build();
@@ -110,12 +117,6 @@ public class CaseNotificationService {
           .error("Can't create case as it already exists");
       throw new CTPException(CTPException.Fault.RESOURCE_VERSION_CONFLICT);
     }
-    final CollectionExerciseDTO collectionExercise =
-        collectionSvcClientServiceImpl.getCollectionExercise(actionCase.getCollectionExerciseId());
-    actionCase.setActionPlanStartDate(
-        new Timestamp(collectionExercise.getScheduledStartDateTime().getTime()));
-    actionCase.setActionPlanEndDate(
-        new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
     actionCaseRepo.save(actionCase);
   }
 
