@@ -24,16 +24,13 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 class ActionDistributor {
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
-  private AppConfig appConfig;
+  private final AppConfig appConfig;
 
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
   private ActionTypeRepository actionTypeRepo;
 
-  @Qualifier("business")
   private ActionProcessingService businessActionProcessingService;
-
-  @Qualifier("social")
   private ActionProcessingService socialActionProcessingService;
 
   public ActionDistributor(
@@ -60,7 +57,7 @@ class ActionDistributor {
   @Transactional
   public DistributionInfo distribute() {
     final DistributionInfo distInfo = new DistributionInfo();
-    final List<ActionType> actionTypes = actionTypeRepo.findAll();
+    List<ActionType> actionTypes = actionTypeRepo.findAll();
 
     for (final ActionType actionType : actionTypes) {
       final List<InstructionCount> instructionCounts = processActionType(actionType);
@@ -84,9 +81,9 @@ class ActionDistributor {
             .build();
 
     try {
-      final List<Action> actions = retrieveActions(actionType);
+      List<Action> actions = retrieveActions(actionType);
       processActions(actions, requestCount, cancelCount);
-    } catch (final Exception e) {
+    } catch (Exception e) {
       log.error("Failed to process action type {}", actionType, e);
     }
     return Arrays.asList(requestCount, cancelCount);
@@ -105,14 +102,14 @@ class ActionDistributor {
       try {
         processAction(action, requestCount, cancelCount);
       } catch (Exception e) {
-        log.with("actionId", action.getId())
-            .error("Could not process action. Will be retried at next schedule");
+        log.with("action_id", action.getId())
+            .error("Could not process action. Will be retried at next schedule", e);
       }
     }
   }
 
   private void processAction(
-      Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
+      Action action, InstructionCount requestCount, InstructionCount cancelCount)
       throws CTPException {
     ActionProcessingService ap = getActionProcessingService(action);
 

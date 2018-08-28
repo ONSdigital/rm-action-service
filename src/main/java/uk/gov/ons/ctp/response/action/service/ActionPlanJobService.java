@@ -75,18 +75,26 @@ public class ActionPlanJobService {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
         actionPlan -> {
-          if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
-            log.with("actionPlanId", actionPlan.getId())
-                .with("actionPlanPK", actionPlan.getActionPlanPK())
-                .debug("Job for plan has been run since last wake up - skipping");
-          } else if (!hasActionableCases(actionPlan)) {
-            log.with("actionPlanId", actionPlan.getId())
-                .with("actionPlanPK", actionPlan.getActionPlanPK())
-                .debug("No actionable cases for action plan");
-          } else {
+          if (shouldCreateAndExecuteActionPlanJob(actionPlan)) {
             createAndExecuteActionPlanJob(actionPlan);
           }
         });
+  }
+
+  private boolean shouldCreateAndExecuteActionPlanJob(ActionPlan actionPlan) {
+    if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
+      log.with("action_plan_id", actionPlan.getId())
+          .with("action_plan_PK", actionPlan.getActionPlanPK())
+          .debug("Job for plan has been run since last wake up - skipping");
+      return false;
+    } else if (!hasActionableCases(actionPlan)) {
+      log.with("action_plan_id", actionPlan.getId())
+          .with("action_plan_PK", actionPlan.getActionPlanPK())
+          .debug("No actionable cases for action plan");
+      return false;
+    } else {
+      return true;
+    }
   }
 
   private boolean hasActionableCases(ActionPlan actionPlan) {
@@ -109,7 +117,7 @@ public class ActionPlanJobService {
   public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.with("actionPlanId", actionPlan.getId()).debug("Could not get manager lock");
+      log.with("action_plan_id", actionPlan.getId()).debug("Could not get manager lock");
       return null;
     }
 
@@ -133,8 +141,8 @@ public class ActionPlanJobService {
     actionPlanJob.setUpdatedDateTime(now);
     actionPlanJob.setId(UUID.randomUUID());
     ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJob);
-    log.with("actionPlanId", actionPlan.getId().toString())
-        .with("actionPlanJobId", createdJob.getId().toString())
+    log.with("action_plan_id", actionPlan.getId().toString())
+        .with("action_plan_job_id", createdJob.getId().toString())
         .debug("Created action plan job");
     return createdJob;
   }

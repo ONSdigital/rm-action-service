@@ -102,5 +102,5 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    * @param partyId UUID of associated party
    * @return Action returns an action is
    */
-  Action findOneByCaseIdAndActionRuleFKAndPartyId(UUID caseId, Integer actionRuleFK, UUID partyId);
+  Boolean existsByCaseIdAndActionRuleFKAndPartyId(UUID caseId, Integer actionRuleFK, UUID partyId);
 }

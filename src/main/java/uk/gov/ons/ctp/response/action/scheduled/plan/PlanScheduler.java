@@ -15,10 +15,10 @@ import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 public class PlanScheduler {
   private static final Logger log = LoggerFactory.getLogger(PlanScheduler.class);
 
-  private ActionPlanJobService actionPlanJobServiceImpl;
+  private final ActionPlanJobService actionPlanJobService;
 
-  public PlanScheduler(ActionPlanJobService actionPlanJobServiceImpl) {
-    this.actionPlanJobServiceImpl = actionPlanJobServiceImpl;
+  public PlanScheduler(ActionPlanJobService actionPlanJobService) {
+    this.actionPlanJobService = actionPlanJobService;
   }
 
   /**
@@ -29,7 +29,7 @@ public class PlanScheduler {
   public void run() {
     log.info("Executing ActionPlans");
     try {
-      actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs();
+      actionPlanJobService.createAndExecuteAllActionPlanJobs();
     } catch (final Exception e) {
       log.error("Exception in action plan scheduler", e);
     }

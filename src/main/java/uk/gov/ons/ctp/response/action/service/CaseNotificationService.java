@@ -26,23 +26,22 @@ public class CaseNotificationService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  private ActionCaseRepository actionCaseRepo;
+  private final ActionCaseRepository actionCaseRepo;
+  private final ActionPlanRepository actionPlanRepo;
 
-  private ActionPlanRepository actionPlanRepo;
+  private final ActionService actionService;
 
-  private ActionService actionService;
-
-  private CollectionExerciseClientService collectionSvcClientServiceImpl;
+  private final CollectionExerciseClientService collectionSvcClientService;
 
   public CaseNotificationService(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
       ActionService actionService,
-      CollectionExerciseClientService collectionSvcClientServiceImpl) {
+      CollectionExerciseClientService collectionSvcClientService) {
     this.actionCaseRepo = actionCaseRepo;
     this.actionPlanRepo = actionPlanRepo;
     this.actionService = actionService;
-    this.collectionSvcClientServiceImpl = collectionSvcClientServiceImpl;
+    this.collectionSvcClientService = collectionSvcClientService;
   }
 
   @Transactional(
@@ -73,7 +72,7 @@ public class CaseNotificationService {
       default:
         log.with("notification_type", notification.getNotificationType())
             .warn("Unknown case notification type", notification.getNotificationType());
-        break;
+        throw new IllegalArgumentException("Invalid notification type");
     }
     actionCaseRepo.flush();
   }
@@ -93,8 +92,8 @@ public class CaseNotificationService {
             ? null
             : UUID.fromString(notification.getSampleUnitId());
 
-    final CollectionExerciseDTO collectionExercise =
-        collectionSvcClientServiceImpl.getCollectionExercise(collectionExerciseId);
+    CollectionExerciseDTO collectionExercise =
+        collectionSvcClientService.getCollectionExercise(collectionExerciseId);
     Timestamp startDateTime =
         new Timestamp(collectionExercise.getScheduledStartDateTime().getTime());
     Timestamp endDateTime = new Timestamp(collectionExercise.getScheduledEndDateTime().getTime());

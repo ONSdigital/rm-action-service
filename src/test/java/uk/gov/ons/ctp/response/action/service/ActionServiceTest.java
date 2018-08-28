@@ -48,7 +48,7 @@ import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
-/** Tests for ActionServiceImpl */
+/** Tests for ActionService */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionServiceTest {
 

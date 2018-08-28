@@ -34,10 +34,10 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
 
   public static final String ACTION_PLAN_JOB_NOT_FOUND = "ActionPlanJob not found for id %s";
 
-  private ActionPlanJobService actionPlanJobService;
-  private ActionPlanService actionPlanService;
+  private final ActionPlanJobService actionPlanJobService;
+  private final ActionPlanService actionPlanService;
 
-  private MapperFacade mapperFacade;
+  private final MapperFacade mapperFacade;
 
   public ActionPlanJobEndpoint(
       ActionPlanJobService actionPlanJobService,

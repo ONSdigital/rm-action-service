@@ -21,11 +21,11 @@ public class DefaultActionRequestContextFactory implements ActionRequestContextF
   private static final Logger log =
       LoggerFactory.getLogger(DefaultActionRequestContextFactory.class);
 
-  private ActionPlanRepository actionPlanRepo;
+  private final ActionPlanRepository actionPlanRepo;
 
-  private CaseSvcClientService caseSvcClientService;
-  private CollectionExerciseClientService collectionExerciseClientService;
-  private SurveySvcClientService surveySvcClientService;
+  private final CaseSvcClientService caseSvcClientService;
+  private final CollectionExerciseClientService collectionExerciseClientService;
+  private final SurveySvcClientService surveySvcClientService;
 
   public DefaultActionRequestContextFactory(
       ActionPlanRepository actionPlanRepo,

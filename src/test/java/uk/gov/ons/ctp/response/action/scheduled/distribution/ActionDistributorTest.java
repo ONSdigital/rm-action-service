@@ -53,6 +53,7 @@ public class ActionDistributorTest {
   private List<ActionType> actionTypes;
   private List<Action> householdInitialContactActions;
   private List<Action> householdUploadIACActions;
+  private ActionCase actionCase;
 
   @Spy private AppConfig appConfig = new AppConfig();
 
@@ -80,45 +81,10 @@ public class ActionDistributorTest {
         FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
     householdUploadIACActions =
         FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_UPLOAD_IAC);
+    actionCase = new ActionCase();
+    actionCase.setSampleUnitType("H");
 
     MockitoAnnotations.initMocks(this);
-  }
-
-  /**
-   * We retrieve actionTypes but then exception thrown when retrieving actions.
-   *
-   * @throws Exception oops
-   */
-  @Test
-  public void testFailToGetAnyAction() throws Exception {
-    when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    when(actionRepo.findSubmittedOrCancelledByActionTypeName(any(String.class), anyInt()))
-        .thenThrow(new RuntimeException("Database access failed"));
-
-    final DistributionInfo info = actionDistributor.distribute();
-    final List<InstructionCount> countList = info.getInstructionCounts();
-    assertEquals(4, countList.size());
-    final List<InstructionCount> expectedCountList = new ArrayList<>();
-    expectedCountList.add(
-        new InstructionCount(HOUSEHOLD_INITIAL_CONTACT, DistributionInfo.Instruction.REQUEST, 0));
-    expectedCountList.add(
-        new InstructionCount(
-            HOUSEHOLD_INITIAL_CONTACT, DistributionInfo.Instruction.CANCEL_REQUEST, 0));
-    expectedCountList.add(
-        new InstructionCount(HOUSEHOLD_UPLOAD_IAC, DistributionInfo.Instruction.REQUEST, 0));
-    expectedCountList.add(
-        new InstructionCount(HOUSEHOLD_UPLOAD_IAC, DistributionInfo.Instruction.CANCEL_REQUEST, 0));
-    assertTrue(countList.equals(expectedCountList));
-
-    // Assertions for calls in method retrieveActions
-    verify(actionRepo, times(1))
-        .findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
-    verify(actionRepo, times(1))
-        .findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
-
-    // Assertions for calls in actionProcessingService
-    verify(actionProcessingService, times(0)).processActionRequest(any(Action.class));
-    verify(actionProcessingService, times(0)).processActionCancel(any(Action.class));
   }
 
   /** We retrieve no actionTypes so no exception should be thrown. */
@@ -130,7 +96,7 @@ public class ActionDistributorTest {
   }
 
   /**
-   * Happy Path with 2 ActionRequests and 2 ActionCancels for a H case (ie parent case)
+   * Happy Path with 2 ActionRequests and 2 ActionCancels for a H case
    *
    * @throws Exception oops
    */

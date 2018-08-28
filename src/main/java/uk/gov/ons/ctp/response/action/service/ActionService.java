@@ -291,9 +291,8 @@ public class ActionService {
 
   private void createAction(
       ActionCase actionCase, ActionRule actionRule, ActionType actionType, UUID partyId) {
-    if (actionRepo.findOneByCaseIdAndActionRuleFKAndPartyId(
-            actionCase.getId(), actionRule.getActionRulePK(), partyId)
-        != null) {
+    if (actionRepo.existsByCaseIdAndActionRuleFKAndPartyId(
+        actionCase.getId(), actionRule.getActionRulePK(), partyId)) {
       log.with("caseId", actionCase.getId().toString())
           .with("actionRuleId", actionRule.getId().toString())
           .with("partyId", partyId.toString())
