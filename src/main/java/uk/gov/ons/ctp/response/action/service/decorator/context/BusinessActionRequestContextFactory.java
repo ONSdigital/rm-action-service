@@ -20,6 +20,8 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   private static final Logger log =
       LoggerFactory.getLogger(BusinessActionRequestContextFactory.class);
 
+  private static final String NOTIFY = "Notify";
+
   private final PartySvcClientService partySvcClientService;
 
   private final DefaultActionRequestContextFactory defaultFactory;
@@ -35,7 +37,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
     ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
 
-    if (isRespondent(context)) {
+    if (isNotifyType(context)) {
       setPartiesForRespondent(context);
     } else {
       setPartiesForBusiness(context);
@@ -44,8 +46,8 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
     return context;
   }
 
-  private boolean isRespondent(ActionRequestContext context) {
-    return context.getAction().getActionRuleFK() == 5 || context.getAction().getActionRuleFK() == 7;
+  private boolean isNotifyType(ActionRequestContext context) {
+    return context.getAction().getActionType().getHandler().equals(NOTIFY);
   }
 
   private void setPartiesForRespondent(ActionRequestContext context) {
@@ -63,14 +65,14 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   }
 
   private void setPartiesForBusiness(ActionRequestContext context) {
-    PartyDTO buisinessParty =
+    PartyDTO businessParty =
         partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
             SampleUnitType.B.name(),
             context.getCaseDetails().getPartyId(),
             context.getSurvey().getId());
-    context.setParentParty(buisinessParty);
+    context.setParentParty(businessParty);
 
-    List<PartyDTO> respondentParties = getRespondentParties(buisinessParty);
+    List<PartyDTO> respondentParties = getRespondentParties(businessParty);
     context.setChildParties(respondentParties);
   }
 

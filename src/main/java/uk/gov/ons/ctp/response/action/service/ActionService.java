@@ -51,6 +51,8 @@ public class ActionService {
 
   private static final int TRANSACTION_TIMEOUT = 30;
   private static final String ENABLED = "ENABLED";
+  private static final String SYSTEM = "SYSTEM";
+  private static final String NOTIFY = "Notify";
 
   private static final String NO_RESPONDENTS_FOR_SURVEY = "No respondents found for survey";
 
@@ -205,30 +207,32 @@ public class ActionService {
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
 
     // For each case/rule pair create actions
-    cases.forEach(
-        caze -> {
-          if (isActionPlanLive(caze)) {
-            rules.forEach(
-                rule -> {
-                  if (hasRuleTriggered(rule)) {
-                    try {
-                      createActions(caze, rule);
-                    } catch (Exception ex) {
-                      log.with("caseId", caze.getId().toString())
-                          .with("actionRuleId", rule.getId().toString())
-                          .error(ex.toString());
-                    }
-                  }
-                });
-          }
-        });
+    cases.forEach(caze -> createActionsForCase(caze, rules));
     updatePlanAndJob(actionPlan, actionPlanJob);
+  }
+
+  private void createActionsForCase(ActionCase actionCase, List<ActionRule> actionRules) {
+    if (isActionPlanLive(actionCase)) {
+      actionRules.forEach(rule -> createActionsForCaseAndRule(actionCase, rule));
+    }
   }
 
   private boolean isActionPlanLive(ActionCase actionCase) {
     final Timestamp currentTime = new Timestamp((new Date()).getTime());
     return actionCase.getActionPlanStartDate().before(currentTime)
         && actionCase.getActionPlanEndDate().after(currentTime);
+  }
+
+  private void createActionsForCaseAndRule(ActionCase actionCase, ActionRule actionRule) {
+    if (hasRuleTriggered(actionRule)) {
+      try {
+        createActions(actionCase, actionRule);
+      } catch (Exception ex) {
+        log.with("case_id", actionCase.getId().toString())
+            .with("action_rule_id", actionRule.getId().toString())
+            .error("Failed to create actions", ex);
+      }
+    }
   }
 
   private boolean hasRuleTriggered(ActionRule rule) {
@@ -245,8 +249,7 @@ public class ActionService {
     // If creating actions for business respondents, create an action per respondent
     // Else create single action
     if (actionCase.getSampleUnitType().equals(SampleUnitDTO.SampleUnitType.B.toString())
-        && (actionType.getActionTypePK() == 5 || actionType.getActionTypePK() == 7)) {
-
+        && (actionType.getHandler().equals(NOTIFY))) {
       List<Association> enrolledAssociations = respondentsEnrolledOnCase(actionCase);
       if (enrolledAssociations.isEmpty()) {
         log.error(NO_RESPONDENTS_FOR_SURVEY);
@@ -302,7 +305,7 @@ public class ActionService {
 
     Action newAction = new Action();
     newAction.setId(UUID.randomUUID());
-    newAction.setCreatedBy("SYSTEM");
+    newAction.setCreatedBy(SYSTEM);
     newAction.setManuallyCreated(false);
     newAction.setState(ActionState.SUBMITTED);
     newAction.setCreatedDateTime(new Timestamp((new Date()).getTime()));

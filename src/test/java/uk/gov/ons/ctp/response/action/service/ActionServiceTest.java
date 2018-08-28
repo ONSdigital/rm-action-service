@@ -233,7 +233,7 @@ public class ActionServiceTest {
   }
 
   @Test
-  public void testCreateScheduledActionsBCaseRule5() {
+  public void testCreateScheduledActionsBCaseNotifyType() {
 
     // Given
     when(actionCaseRepo.findByActionPlanFK(any()))
@@ -259,7 +259,7 @@ public class ActionServiceTest {
   }
 
   @Test
-  public void testCreateScheduledActionsBCaseRule5NoEnrolledRespondents() {
+  public void testCreateScheduledActionsBCaseNotifyTypeNoEnrolledRespondents() {
 
     // Given
     when(actionCaseRepo.findByActionPlanFK(any()))
