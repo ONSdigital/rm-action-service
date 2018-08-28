@@ -31,7 +31,7 @@ public class PartyAndContact implements ActionRequestDecorator {
     actionContact.setRuName(businessUnitAttributes.getName());
     actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
 
-    if (isRespondent(context)) {
+    if (isNotifyType(context)) {
       PartyDTO respondentParty = respondentParties.get(0);
       actionRequest.setRespondentStatus(respondentParty.getStatus());
 
@@ -63,7 +63,7 @@ public class PartyAndContact implements ActionRequestDecorator {
     actionRequest.setEnrolmentStatus(getEnrolmentStatus(businessParty));
   }
 
-  private boolean isRespondent(ActionRequestContext context) {
+  private boolean isNotifyType(ActionRequestContext context) {
     return context.getAction().getActionType().getHandler().equals(NOTIFY);
   }
 
