@@ -17,8 +17,8 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
 /**
- * Service for receiving notifications from case service Creates/Updates/Deletes cases in the
- * action.case table
+ * Service for receiving notifications from case service.
+ * Creates/Updates/Deletes cases in the action.case table.
  */
 @Service
 public class CaseNotificationService {
@@ -140,14 +140,14 @@ public class CaseNotificationService {
     existingCase.setActionPlanId(actionPlanId);
     log.with("case_id", actionCaseId.toString())
         .with("action_plan_id", actionPlanId.toString())
-        .info("Updating case");
+        .info("Updating case action plan");
     actionCaseRepo.save(existingCase);
   }
 
   private void deleteActionCase(UUID actionCaseId) {
     ActionCase actionCaseToDelete = actionCaseRepo.findById(actionCaseId);
     if (actionCaseToDelete == null) {
-      log.with("case_id", actionCaseId.toString()).error("No case found to delete");
+      log.with("case_id", actionCaseId.toString()).warn("No case found to delete");
       return;
     }
     log.with("case_id", actionCaseId.toString()).info("Deleting case");
