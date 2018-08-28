@@ -18,6 +18,7 @@ import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 public class PartyAndContact implements ActionRequestDecorator {
   private static final Logger log = LoggerFactory.getLogger(PartyAndContact.class);
+  private static final String NOTIFY = "Notify";
 
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
@@ -63,8 +64,7 @@ public class PartyAndContact implements ActionRequestDecorator {
   }
 
   private boolean isRespondent(ActionRequestContext context) {
-    return context.getAction().getActionType().getActionTypePK() == 5
-        || context.getAction().getActionType().getActionTypePK() == 7;
+    return context.getAction().getActionType().getHandler().equals(NOTIFY);
   }
 
   /**

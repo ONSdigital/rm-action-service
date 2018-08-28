@@ -24,6 +24,9 @@ import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExer
 public class CaseNotificationService {
   private static final Logger log = LoggerFactory.getLogger(CaseNotificationService.class);
 
+  private static final String ACTION_PLAN_NOT_FOUND = "No action plan found with id: %s";
+  private static final String ACTION_CASE_ALREADY_EXISTS = "Action case already exists with id: %s";
+  private static final String ACTION_CASE_NOT_FOUND = "No action case found with id: %s";
   private static final int TRANSACTION_TIMEOUT = 30;
 
   private final ActionCaseRepository actionCaseRepo;
@@ -77,11 +80,12 @@ public class CaseNotificationService {
     actionCaseRepo.flush();
   }
 
-  private ActionCase createActionCase(CaseNotification notification) throws CTPException {
+  private ActionCase createActionCase(CaseNotification notification) {
     UUID actionPlanId = UUID.fromString(notification.getActionPlanId());
     ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, actionPlanId.toString());
+      throw new IllegalStateException(
+          String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
     }
     UUID caseId = UUID.fromString(notification.getCaseId());
     UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
@@ -110,24 +114,27 @@ public class CaseNotificationService {
         .build();
   }
 
-  private void saveActionCase(ActionCase actionCase) throws CTPException {
+  private void saveActionCase(ActionCase actionCase) {
     if (actionCaseRepo.findById(actionCase.getId()) != null) {
       log.with("case_id", actionCase.getId().toString())
           .error("Can't create case as it already exists");
-      throw new CTPException(CTPException.Fault.RESOURCE_VERSION_CONFLICT);
+      throw new IllegalStateException(
+          String.format(ACTION_CASE_ALREADY_EXISTS, actionCase.getId().toString()));
     }
     actionCaseRepo.save(actionCase);
   }
 
-  private void updateActionCase(UUID actionCaseId, UUID actionPlanId) throws CTPException {
+  private void updateActionCase(UUID actionCaseId, UUID actionPlanId) {
     ActionCase existingCase = actionCaseRepo.findById(actionCaseId);
     if (existingCase == null) {
       log.with("case_id", actionCaseId.toString()).error("No case found to update");
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND);
+      throw new IllegalStateException(
+          String.format(ACTION_CASE_NOT_FOUND, actionCaseId.toString()));
     }
     ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, actionPlanId.toString());
+      throw new IllegalStateException(
+          String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
     }
     existingCase.setActionPlanFK(actionPlan.getActionPlanPK());
     existingCase.setActionPlanId(actionPlanId);
@@ -137,11 +144,11 @@ public class CaseNotificationService {
     actionCaseRepo.save(existingCase);
   }
 
-  private void deleteActionCase(UUID actionCaseId) throws CTPException {
+  private void deleteActionCase(UUID actionCaseId) {
     ActionCase actionCaseToDelete = actionCaseRepo.findById(actionCaseId);
     if (actionCaseToDelete == null) {
       log.with("case_id", actionCaseId.toString()).error("No case found to delete");
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND);
+      return;
     }
     log.with("case_id", actionCaseId.toString()).info("Deleting case");
     actionCaseRepo.delete(actionCaseToDelete);

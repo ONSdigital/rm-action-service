@@ -39,6 +39,7 @@
   {
     "id":"2e6add83-e43d-4f52-954f-4109be506c81",
     "sampleUnitType":"HI",
+    "status": "ACTIVE",
     "sampleUnitRef": "333",
     "attributes": {
       "entref": "bob",
