@@ -324,7 +324,7 @@ public class ActionService {
   }
 
   private void updatePlanAndJob(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
-    final Timestamp currentTime = new Timestamp((new Date()).getTime());
+    final Timestamp currentTime = DateTimeUtil.nowUTC();
     actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
     actionPlanJobRepository.saveAndFlush(actionPlanJob);
