@@ -17,8 +17,8 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
 /**
- * Service for receiving notifications from case service.
- * Creates/Updates/Deletes cases in the action.case table.
+ * Service for receiving notifications from case service. Creates/Updates/Deletes cases in the
+ * action.case table.
  */
 @Service
 public class CaseNotificationService {

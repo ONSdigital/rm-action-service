@@ -296,9 +296,9 @@ public class ActionService {
       ActionCase actionCase, ActionRule actionRule, ActionType actionType, UUID partyId) {
     if (actionRepo.existsByCaseIdAndActionRuleFKAndPartyId(
         actionCase.getId(), actionRule.getActionRulePK(), partyId)) {
-      log.with("caseId", actionCase.getId().toString())
-          .with("actionRuleId", actionRule.getId().toString())
-          .with("partyId", partyId.toString())
+      log.with("case_id", actionCase.getId().toString())
+          .with("action_rule_id", actionRule.getActionRulePK().toString())
+          .with("party_id", partyId.toString())
           .debug("Action already exists");
       return;
     }
