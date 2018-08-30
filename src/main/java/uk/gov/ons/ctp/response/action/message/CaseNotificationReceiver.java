@@ -37,7 +37,8 @@ public class CaseNotificationReceiver {
   public void acceptNotification(final CaseNotification caseNotification) throws CTPException {
 
     try {
-      log.debug("Receiving case notification for case id {}", caseNotification.getCaseId());
+      log.with("case_id", caseNotification.getCaseId())
+          .debug("Receiving case notification for case id");
       caseNotificationService.acceptNotification(caseNotification);
     } finally {
       try {
@@ -46,7 +47,7 @@ public class CaseNotificationReceiver {
             ACTION_ROUTING_KEY,
             objectMapper.writeValueAsString(caseNotification));
       } catch (JsonProcessingException e) {
-        log.error("Can't send message: " + e.toString());
+        log.error("Can't send message", e);
       }
     }
   }

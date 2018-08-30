@@ -40,13 +40,11 @@ public class ActionRequestValidator {
       return validateLetter(actionRequest);
     }
 
-    log.info(
-        "Invalid action request: handler = {} : respondentStatus {} :  enrolmentStatus {} :"
-            + " actionTypePK {}",
-        handler,
-        actionRequest.getCaseGroupStatus(),
-        actionRequest.getEnrolmentStatus(),
-        actionType.getActionTypePK());
+    log.with("handler", handler)
+        .with("respondent_status", actionRequest.getCaseGroupStatus())
+        .with("enrolment_status", actionRequest.getEnrolmentStatus())
+        .with("action_type_pk", actionType.getActionTypePK())
+        .info("Invalid action request");
 
     return false;
   }

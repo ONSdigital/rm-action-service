@@ -61,8 +61,6 @@ public class DefaultActionRequestContextFactory implements ActionRequestContextF
         (action.getActionPlanFK() == null)
             ? null
             : actionPlanRepo.findOne(action.getActionPlanFK());
-    log.debug("actionPlan {}", actionPlan);
-
     return actionPlan;
   }
 

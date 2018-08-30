@@ -76,11 +76,10 @@ public abstract class ActionProcessingService {
       readOnly = false,
       rollbackFor = Exception.class)
   public void processActionRequest(final Action action) throws CTPException {
-    log.debug(
-        "processing actionRequest with actionid {} caseid {} actionplanFK {}",
-        action.getId(),
-        action.getCaseId(),
-        action.getActionPlanFK());
+    log.with("action_id", action.getId())
+        .with("case_id", action.getCaseId())
+        .with("action_plan_pk", action.getActionPlanFK())
+        .debug("processing actionRequest");
 
     final ActionType actionType = action.getActionType();
     if (valid(actionType)) {
@@ -100,9 +99,8 @@ public abstract class ActionProcessingService {
       // advise casesvc to create a corresponding caseevent for our action
       caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
     } else {
-      log.error(
-          "Unexpected situation. actionType is not defined for action with actionid {}",
-          action.getId());
+      log.with("action_id", action.getId())
+          .error("Unexpected situation. actionType is not defined for action");
     }
   }
 
@@ -116,11 +114,10 @@ public abstract class ActionProcessingService {
       readOnly = false,
       rollbackFor = Exception.class)
   public void processActionCancel(final Action action) throws CTPException {
-    log.info(
-        "processing action cancel for actionid {} caseid {} actionplanFK {}",
-        action.getId(),
-        action.getCaseId(),
-        action.getActionPlanFK());
+    log.with("action_id", action.getId())
+        .with("case_id", action.getCaseId())
+        .with("action_plan_pk", action.getActionPlanFK())
+        .info("processing action cancel");
 
     transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
 
@@ -140,10 +137,10 @@ public abstract class ActionProcessingService {
    * @return The ActionRequest created from the Action and the other info from CaseSvc
    */
   private ActionCancel prepareActionCancel(final Action action) {
-    log.debug(
-        "Building ActionCancel to publish to downstream handler for action id {} and case id {}",
-        action.getActionPK(),
-        action.getCaseId());
+    log.with("action_id", action.getId())
+        .with("case_id", action.getCaseId())
+        .with("action_plan_pk", action.getActionPlanFK())
+        .debug("Building ActionCancel to publish to downstream handler");
     final ActionCancel actionCancel = new ActionCancel();
     actionCancel.setActionId(action.getId().toString());
     actionCancel.setResponseRequired(true);

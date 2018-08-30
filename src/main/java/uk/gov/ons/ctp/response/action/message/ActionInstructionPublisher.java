@@ -25,7 +25,7 @@ public class ActionInstructionPublisher {
   private RabbitTemplate rabbitTemplate;
 
   public void sendActionInstruction(@Header("HANDLER") final String handler, final Action action) {
-    log.debug("Entering sendActionInstruction with handler {} and action {}", handler, action);
+    log.with("action", action).with("handler", handler).debug("Entering sendActionInstruction");
 
     final ActionInstruction instruction = new ActionInstruction();
     if (action instanceof ActionRequest) {

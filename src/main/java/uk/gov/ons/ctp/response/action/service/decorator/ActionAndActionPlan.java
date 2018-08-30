@@ -13,7 +13,7 @@ public class ActionAndActionPlan implements ActionRequestDecorator {
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final String actionID = context.getAction().getId().toString();
-    log.debug("actionID is {}", actionID);
+    log.with("action_id", actionID).debug("populating action request");
 
     actionRequest.setActionId(actionID);
     actionRequest.setActionType(context.getAction().getActionType().getName());
