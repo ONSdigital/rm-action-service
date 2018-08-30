@@ -43,8 +43,9 @@ public class PartySvcClientService {
       maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    log.debug(
-        "Retrieving party with sampleUnitType {} - partyId {}", sampleUnitType, partyId.toString());
+    log.with("sample_unit_type", sampleUnitType)
+        .with("party_id", partyId.toString())
+        .debug("Retrieving party");
     final UriComponents uriComponents =
         restUtility.createUriComponents(
             appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
@@ -56,7 +57,9 @@ public class PartySvcClientService {
   }
 
   public PartyDTO getParty(final String sampleUnitType, final String partyId) {
-    log.debug("entering party with sampleUnitType {} - partyId {}", sampleUnitType, partyId);
+    log.with("sample_unit_type", sampleUnitType)
+        .with("party_id", partyId)
+        .debug("entering get party");
     final UriComponents uriComponents =
         restUtility.createUriComponents(
             appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
@@ -73,12 +76,10 @@ public class PartySvcClientService {
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   public PartyDTO getPartyWithAssociationsFilteredBySurvey(
       final String sampleUnitType, final UUID partyId, final String surveyId) {
-    log.debug(
-        "Retrieving party with sampleUnitType {}"
-            + " - partyId {}, with associations filtered by surveyId - {}",
-        sampleUnitType,
-        partyId.toString(),
-        surveyId);
+    log.with("sample_unit_type", sampleUnitType)
+        .with("party_id", partyId.toString())
+        .with("survey_id", surveyId)
+        .debug("Retrieving party");
 
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.put("survey_id", Arrays.asList(surveyId));
@@ -98,19 +99,15 @@ public class PartySvcClientService {
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
-    log.debug("responseEntity is {}", responseEntity);
+    log.with("response_entity", responseEntity).debug("Party service response");
 
     PartyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
       final String responseBody = responseEntity.getBody();
-      log.debug("responseBody is {}", responseBody);
       try {
         result = objectMapper.readValue(responseBody, PartyDTO.class);
-        log.debug("result is {}", result);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read party response", e);
       }
     }
 

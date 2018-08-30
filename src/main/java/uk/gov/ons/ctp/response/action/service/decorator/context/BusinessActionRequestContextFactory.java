@@ -50,7 +50,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
     PartyDTO childParty =
         partySvcClientService.getParty(
             context.getSampleUnitType().name(), context.getCaseDetails().getPartyId());
-    log.debug("childParty retrieved is {}", childParty);
+    log.with("child_party", childParty).debug("childParty retrieved ");
     childParties = Collections.singletonList(childParty);
 
     final UUID associatedParentPartyID = context.getCaseDetails().getCaseGroup().getPartyId();
@@ -60,7 +60,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
             context.getSampleUnitType().name().substring(0, 1),
             associatedParentPartyID,
             context.getSurvey().getId());
-    log.debug("parentParty for the child retrieved is {}", parentParty);
+    log.with("parent_party", parentParty).debug("parentParty for the child retrieved");
 
     context.setParentParty(parentParty);
     context.setChildParties(childParties);
@@ -75,7 +75,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
             context.getSampleUnitType().name(),
             context.getCaseDetails().getPartyId(),
             context.getSurvey().getId());
-    log.debug("parentParty retrieved is {}", parentParty);
+    log.with("parent_party", parentParty).debug("parentParty retrieved");
     childParties = getChildParties(parentParty, context.getSampleUnitType());
 
     context.setParentParty(parentParty);
@@ -101,7 +101,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
       if (childParty != null) {
         childParties.add(childParty);
       } else {
-        log.info("Unable to get party with id, {}", id);
+        log.with("party_id", id).info("Unable to get party with id");
       }
     }
     return childParties;
