@@ -133,6 +133,7 @@ public class CaseNotificationService {
     }
     ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
+      log.with("action_plan_id", actionPlanId.toString()).error("No action plan found");
       throw new IllegalStateException(
           String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
     }
@@ -140,7 +141,7 @@ public class CaseNotificationService {
     existingCase.setActionPlanId(actionPlanId);
     log.with("case_id", actionCaseId.toString())
         .with("action_plan_id", actionPlanId.toString())
-        .info("Updating case action plan");
+        .debug("Updating case action plan");
     actionCaseRepo.save(existingCase);
   }
 
@@ -150,7 +151,7 @@ public class CaseNotificationService {
       log.with("case_id", actionCaseId.toString()).warn("No case found to delete");
       return;
     }
-    log.with("case_id", actionCaseId.toString()).info("Deleting case");
+    log.with("case_id", actionCaseId.toString()).debug("Deleting case");
     actionCaseRepo.delete(actionCaseToDelete);
   }
 }
