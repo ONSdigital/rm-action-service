@@ -84,7 +84,7 @@ class ActionDistributor {
       List<Action> actions = retrieveActions(actionType);
       processActions(actions, requestCount, cancelCount);
     } catch (Exception e) {
-      log.error("Failed to process action type {}", actionType, e);
+      log.with("action_type", actionType).error("Failed to process", e);
     }
     return Arrays.asList(requestCount, cancelCount);
   }

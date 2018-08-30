@@ -99,31 +99,33 @@ public class ActionService {
   @CoverageIgnore
   public List<Action> findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(
       final String actionTypeName, final ActionDTO.ActionState state) {
-    log.debug("Entering findActionsByTypeAndState with {} {}", actionTypeName, state);
+    log.with("action_type_name", actionTypeName)
+        .with("state", state)
+        .debug("Entering findActionsByTypeAndState");
     return actionRepo.findByActionTypeNameAndStateOrderByCreatedDateTimeDesc(actionTypeName, state);
   }
 
   @CoverageIgnore
   public List<Action> findActionsByType(final String actionTypeName) {
-    log.debug("Entering findActionsByType with {}", actionTypeName);
+    log.with("action_type_name", actionTypeName).debug("Entering findActionsByType");
     return actionRepo.findByActionTypeNameOrderByCreatedDateTimeDesc(actionTypeName);
   }
 
   @CoverageIgnore
   public List<Action> findActionsByState(final ActionDTO.ActionState state) {
-    log.debug("Entering findActionsByState with {}", state);
+    log.with("state", state).debug("Entering findActionsByState");
     return actionRepo.findByStateOrderByCreatedDateTimeDesc(state);
   }
 
   @CoverageIgnore
   public Action findActionById(final UUID actionId) {
-    log.debug("Entering findActionById with {}", actionId);
+    log.with("action_id", actionId).debug("Entering findActionById");
     return actionRepo.findById(actionId);
   }
 
   @CoverageIgnore
   public List<Action> findActionsByCaseId(final UUID caseId) {
-    log.debug("Entering findActionsByCaseId with {}", caseId);
+    log.with("case_id", caseId).debug("Entering findActionsByCaseId");
     return actionRepo.findByCaseIdOrderByCreatedDateTimeDesc(caseId);
   }
 
@@ -132,14 +134,15 @@ public class ActionService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public List<Action> cancelActions(final UUID caseId) throws CTPException {
-    log.debug("Entering cancelAction with {}", caseId);
+    log.with("case_id", caseId).debug("Entering cancelAction");
 
     final List<Action> flushedActions = new ArrayList<>();
     final List<Action> actions = actionRepo.findByCaseId(caseId);
     for (final Action action : actions) {
       if (action.getActionType().getCanCancel()) {
-        log.debug(
-            "Cancelling action {} of type {}", action.getId(), action.getActionType().getName());
+        log.with("action_id", action.getId())
+            .with("action_type", action.getActionType().getName())
+            .debug("Cancelling action");
         final ActionDTO.ActionState nextState =
             actionSvcStateTransitionManager.transition(
                 action.getState(), ActionEvent.REQUEST_CANCELLED);
@@ -158,7 +161,7 @@ public class ActionService {
       timeout = TRANSACTION_TIMEOUT)
   public Action feedBackAction(final ActionFeedback actionFeedback) throws CTPException {
     final String actionId = actionFeedback.getActionId();
-    log.debug("Entering feedBackAction with actionId {}", actionId);
+    log.with("action_id", actionId).debug("Entering feedBackAction");
 
     Action result = null;
     if (!StringUtils.isEmpty(actionId)) {
@@ -337,20 +340,20 @@ public class ActionService {
       timeout = TRANSACTION_TIMEOUT)
   public Action updateAction(final Action action) {
     final UUID actionId = action.getId();
-    log.debug("Entering updateAction with actionId {}", actionId);
+    log.with("action_id", actionId).debug("Entering updateAction");
     Action existingAction = actionRepo.findById(actionId);
     if (existingAction != null) {
       boolean needsUpdate = false;
 
       final Integer newPriority = action.getPriority();
-      log.debug("newPriority = {}", newPriority);
+      log.with("new_priority", newPriority).debug("Got priority");
       if (newPriority != null) {
         needsUpdate = true;
         existingAction.setPriority(newPriority);
       }
 
       final String newSituation = action.getSituation();
-      log.debug("newSituation = {}", newSituation);
+      log.with("new_situation", newSituation).debug("Got situation");
       if (newSituation != null) {
         needsUpdate = true;
         existingAction.setSituation(newSituation);
@@ -358,7 +361,7 @@ public class ActionService {
 
       if (needsUpdate) {
         existingAction.setUpdatedDateTime(DateTimeUtil.nowUTC());
-        log.debug("updating action with {}", existingAction);
+        log.with("existing_action", existingAction).debug("updating action");
         existingAction = actionRepo.saveAndFlush(existingAction);
       }
     }

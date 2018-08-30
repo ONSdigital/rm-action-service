@@ -54,14 +54,14 @@ public class ActionPlanJobService {
 
   @CoverageIgnore
   public ActionPlanJob findActionPlanJob(final UUID actionPlanJobId) {
-    log.debug("Entering findActionPlanJob with id {}", actionPlanJobId);
+    log.with("action_plan_job_id", actionPlanJobId).debug("Entering findActionPlanJob");
     return actionPlanJobRepo.findById(actionPlanJobId);
   }
 
   @CoverageIgnore
   public List<ActionPlanJob> findActionPlanJobsForActionPlan(final UUID actionPlanId)
       throws CTPException {
-    log.debug("Entering findActionPlanJobsForActionPlan with {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanJobsForActionPlan");
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
       throw new CTPException(
@@ -84,12 +84,12 @@ public class ActionPlanJobService {
   private boolean shouldCreateAndExecuteActionPlanJob(ActionPlan actionPlan) {
     if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
       log.with("action_plan_id", actionPlan.getId())
-          .with("action_plan_PK", actionPlan.getActionPlanPK())
+          .with("action_plan_pk", actionPlan.getActionPlanPK())
           .debug("Job for plan has been run since last wake up - skipping");
       return false;
     } else if (!hasActionableCases(actionPlan)) {
       log.with("action_plan_id", actionPlan.getId())
-          .with("action_plan_PK", actionPlan.getActionPlanPK())
+          .with("action_plan_pk", actionPlan.getActionPlanPK())
           .debug("No actionable cases for action plan");
       return false;
     } else {
