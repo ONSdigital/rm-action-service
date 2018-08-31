@@ -2,13 +2,13 @@ package uk.gov.ons.ctp.response.action;
 
 import com.godaddy.logging.LoggingConfigs;
 import java.math.BigInteger;
+import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -52,7 +52,7 @@ import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFacto
 @EnableCaching
 @EnableScheduling
 @ImportResource("springintegration/main.xml")
-public class ActionSvcApplication implements CommandLineRunner {
+public class ActionSvcApplication {
 
   public static final String ACTION_DISTRIBUTION_LIST = "actionsvc.action.distribution";
   public static final String ACTION_EXECUTION_LOCK = "actionsvc.action.execution";
@@ -71,8 +71,8 @@ public class ActionSvcApplication implements CommandLineRunner {
     SpringApplication.run(ActionSvcApplication.class, args);
   }
 
-  @Override
-  public void run(String... args) throws Exception {
+  @PostConstruct
+  public void initJsonLogging() {
     if (appConfig.getLogging().isUseJson()) {
       LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
     }
