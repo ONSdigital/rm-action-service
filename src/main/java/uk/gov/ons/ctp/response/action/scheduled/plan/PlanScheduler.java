@@ -21,17 +21,14 @@ public class PlanScheduler {
     this.actionPlanJobService = actionPlanJobService;
   }
 
-  /**
-   * schedule the Execution of Action Plans It is simply a scheduled trigger for the service layer
-   * method.
-   */
+  /** Schedules execution of Action Plans */
   @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void run() {
     log.info("Executing ActionPlans");
     try {
       actionPlanJobService.createAndExecuteAllActionPlanJobs();
     } catch (final Exception e) {
-      log.error("Exception in action plan scheduler", e);
+      log.error("Exception during action plan executions", e);
     }
   }
 }

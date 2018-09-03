@@ -1,1 +1,0 @@
-ALTER TABLE action.action ADD partyid UUID;

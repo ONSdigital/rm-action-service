@@ -2,7 +2,10 @@ package uk.gov.ons.ctp.response.action.service;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,7 @@ import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
+import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 
 public abstract class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
@@ -53,14 +57,31 @@ public abstract class ActionProcessingService {
     this.decorators = decorators;
   }
 
-  public ActionRequest prepareActionRequest(Action action) {
+  public List<ActionRequest> prepareActionRequests(Action action) {
     final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
     final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
-    final ActionRequest actionRequest = new ActionRequest();
 
-    Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+    ArrayList<ActionRequest> actionRequests = new ArrayList<>();
+    if (context.getCaseDetails().getSampleUnitType().equals("B")
+        && context.getAction().getActionType().getHandler().equals("Notify")) {
+      List<PartyDTO> respondentParties = context.getChildParties();
 
-    return actionRequest;
+      respondentParties.forEach(
+          p -> {
+            context.setChildParties(Collections.singletonList(p));
+            ActionRequest actionRequest = new ActionRequest();
+            Arrays.stream(this.decorators)
+                .forEach(d -> d.decorateActionRequest(actionRequest, context));
+            actionRequests.add(actionRequest);
+          });
+
+    } else {
+      ActionRequest actionRequest = new ActionRequest();
+      Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+      actionRequests.add(actionRequest);
+    }
+
+    return actionRequests;
   }
 
   /**
@@ -78,25 +99,20 @@ public abstract class ActionProcessingService {
   public void processActionRequest(final Action action) throws CTPException {
     log.with("action_id", action.getId())
         .with("case_id", action.getCaseId())
-        .with("action_plan_pk", action.getActionPlanFK())
         .debug("processing actionRequest");
 
     final ActionType actionType = action.getActionType();
     if (valid(actionType)) {
+
+      final List<ActionRequest> actionRequests = prepareActionRequests(action);
+      actionRequests.forEach(
+          ar -> actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), ar));
+
       final ActionDTO.ActionEvent event =
           actionType.getResponseRequired()
               ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
               : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-
       transitionAction(action, event);
-
-      final ActionRequest actionRequest = prepareActionRequest(action);
-
-      if (actionRequest != null) {
-        actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
-      }
-
-      // advise casesvc to create a corresponding caseevent for our action
       caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
     } else {
       log.with("action_id", action.getId())

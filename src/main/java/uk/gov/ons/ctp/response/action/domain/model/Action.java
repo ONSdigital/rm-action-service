@@ -84,9 +84,6 @@ public class Action implements Serializable {
   @Column(name = "optlockversion")
   private int optLockVersion;
 
-  @Column(name = "partyid")
-  private UUID partyId;
-
   /** Priority of action NOTE: the names need to match those in the outbound xsd */
   public enum ActionPriority {
     HIGHEST(1, "highest"),

@@ -84,13 +84,10 @@ public class ActionPlanJobService {
   private boolean shouldCreateAndExecuteActionPlanJob(ActionPlan actionPlan) {
     if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
       log.with("action_plan_id", actionPlan.getId())
-          .with("action_plan_pk", actionPlan.getActionPlanPK())
           .debug("Job for plan has been run since last wake up - skipping");
       return false;
     } else if (!hasActionableCases(actionPlan)) {
-      log.with("action_plan_id", actionPlan.getId())
-          .with("action_plan_pk", actionPlan.getActionPlanPK())
-          .debug("No actionable cases for action plan");
+      log.with("action_plan_id", actionPlan.getId()).debug("No actionable cases for action plan");
       return false;
     } else {
       return true;
@@ -109,7 +106,7 @@ public class ActionPlanJobService {
   }
 
   /**
-   * Create a new ActionPlanJob record and execute createActions stored procedure.
+   * Create a new ActionPlanJob and execute associated actions
    *
    * @param actionPlan Action plan to create and execute job for
    * @return ActionPlanJob that was created or null if it has not been created.

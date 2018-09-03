@@ -35,4 +35,5 @@ public class BusinessActionProcessingService extends ActionProcessingService {
   public ActionRequestContextFactory getActionRequestDecoratorContextFactory() {
     return decoratorContextFactory;
   }
+
 }

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -36,10 +35,6 @@ import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
-import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.Association;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 /**
  * An ActionService implementation which encapsulates all business logic operating on the Action
@@ -50,11 +45,7 @@ public class ActionService {
   private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
-  private static final String ENABLED = "ENABLED";
   private static final String SYSTEM = "SYSTEM";
-  private static final String NOTIFY = "Notify";
-
-  private static final String NO_RESPONDENTS_FOR_SURVEY = "No respondents found for survey";
 
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
@@ -62,9 +53,6 @@ public class ActionService {
   private ActionPlanJobRepository actionPlanJobRepository;
   private ActionRuleRepository actionRuleRepo;
   private ActionTypeRepository actionTypeRepo;
-
-  private CollectionExerciseClientService collectionExerciseClientService;
-  private PartySvcClientService partySvcClientService;
 
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -85,8 +73,6 @@ public class ActionService {
     this.actionPlanJobRepository = actionPlanJobRepository;
     this.actionRuleRepo = actionRuleRepo;
     this.actionTypeRepo = actionTypeRepo;
-    this.collectionExerciseClientService = collectionExerciseClientService;
-    this.partySvcClientService = partySvcClientService;
     this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }
 
@@ -209,14 +195,14 @@ public class ActionService {
     List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
 
-    // For each case/rule pair create actions
+    // For each case/rule pair create an action
     cases.forEach(caze -> createActionsForCase(caze, rules));
     updatePlanAndJob(actionPlan, actionPlanJob);
   }
 
   private void createActionsForCase(ActionCase actionCase, List<ActionRule> actionRules) {
     if (isActionPlanLive(actionCase)) {
-      actionRules.forEach(rule -> createActionsForCaseAndRule(actionCase, rule));
+      actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule));
     }
   }
 
@@ -226,14 +212,14 @@ public class ActionService {
         && actionCase.getActionPlanEndDate().after(currentTime);
   }
 
-  private void createActionsForCaseAndRule(ActionCase actionCase, ActionRule actionRule) {
+  private void createActionForCaseAndRule(ActionCase actionCase, ActionRule actionRule) {
     if (hasRuleTriggered(actionRule)) {
       try {
-        createActions(actionCase, actionRule);
+        createAction(actionCase, actionRule);
       } catch (Exception ex) {
         log.with("case_id", actionCase.getId().toString())
             .with("action_rule_id", actionRule.getId().toString())
-            .error("Failed to create actions", ex);
+            .error("Failed to create action", ex);
       }
     }
   }
@@ -246,62 +232,13 @@ public class ActionService {
     return triggerDateTime.before(currentTime);
   }
 
-  private void createActions(ActionCase actionCase, ActionRule actionRule) {
-    ActionType actionType = actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK());
+  private void createAction(ActionCase actionCase, ActionRule actionRule) {
 
-    // If creating actions for business respondents, create an action per respondent
-    // Else create single action
-    if (actionCase.getSampleUnitType().equals(SampleUnitDTO.SampleUnitType.B.toString())
-        && (actionType.getHandler().equals(NOTIFY))) {
-      List<Association> enrolledAssociations = respondentsEnrolledOnCase(actionCase);
-      if (enrolledAssociations.isEmpty()) {
-        log.error(NO_RESPONDENTS_FOR_SURVEY);
-        throw new IllegalStateException(NO_RESPONDENTS_FOR_SURVEY);
-      }
-
-      enrolledAssociations.forEach(
-          association ->
-              createAction(
-                  actionCase, actionRule, actionType, UUID.fromString(association.getPartyId())));
-
-    } else {
-      createAction(actionCase, actionRule, actionType, actionCase.getPartyId());
-    }
-  }
-
-  private List<Association> respondentsEnrolledOnCase(ActionCase actionCase) {
-    PartyDTO businessParty =
-        partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
-    CollectionExerciseDTO collectionExercise =
-        collectionExerciseClientService.getCollectionExercise(actionCase.getCollectionExerciseId());
-    return associationsEnrolledForSurvey(businessParty, collectionExercise.getSurveyId());
-  }
-
-  private List<Association> associationsEnrolledForSurvey(PartyDTO party, String surveyId) {
-    return party
-        .getAssociations()
-        .stream()
-        .filter(association -> isAssociationEnabledForSurvey(association, surveyId))
-        .collect(Collectors.toList());
-  }
-
-  private boolean isAssociationEnabledForSurvey(Association association, String surveyId) {
-    return association
-        .getEnrolments()
-        .stream()
-        .anyMatch(
-            enrolment ->
-                enrolment.getSurveyId().equals(surveyId)
-                    && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED));
-  }
-
-  private void createAction(
-      ActionCase actionCase, ActionRule actionRule, ActionType actionType, UUID partyId) {
-    if (actionRepo.existsByCaseIdAndActionRuleFKAndPartyId(
-        actionCase.getId(), actionRule.getActionRulePK(), partyId)) {
+    // Only create action if it doesn't already exist
+    if (actionRepo.existsByCaseIdAndActionRuleFK(
+        actionCase.getId(), actionRule.getActionRulePK())) {
       log.with("case_id", actionCase.getId().toString())
           .with("action_rule_id", actionRule.getActionRulePK().toString())
-          .with("party_id", partyId.toString())
           .debug("Action already exists");
       return;
     }
@@ -312,16 +249,12 @@ public class ActionService {
     newAction.setManuallyCreated(false);
     newAction.setState(ActionState.SUBMITTED);
     newAction.setCreatedDateTime(new Timestamp((new Date()).getTime()));
-
     newAction.setCaseFK(actionCase.getCasePK());
     newAction.setCaseId(actionCase.getId());
-
     newAction.setActionPlanFK(actionRule.getActionPlanFK());
     newAction.setActionRuleFK(actionRule.getActionRulePK());
-    newAction.setActionType(actionType);
     newAction.setPriority(actionRule.getPriority());
-
-    newAction.setPartyId(partyId);
+    newAction.setActionType(actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK()));
 
     actionRepo.saveAndFlush(newAction);
   }
