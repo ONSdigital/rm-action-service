@@ -71,27 +71,27 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
 
   private List<Association> respondentsEnrolledOnCase(ActionCase actionCase) {
     PartyDTO businessParty =
-      partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
+        partySvcClientService.getParty(actionCase.getSampleUnitType(), actionCase.getPartyId());
     CollectionExerciseDTO collectionExercise =
-      collectionExerciseClientService.getCollectionExercise(actionCase.getCollectionExerciseId());
+        collectionExerciseClientService.getCollectionExercise(actionCase.getCollectionExerciseId());
     return associationsEnrolledForSurvey(businessParty, collectionExercise.getSurveyId());
   }
 
   private List<Association> associationsEnrolledForSurvey(PartyDTO party, String surveyId) {
     return party
-      .getAssociations()
-      .stream()
-      .filter(association -> isAssociationEnabledForSurvey(association, surveyId))
-      .collect(Collectors.toList());
+        .getAssociations()
+        .stream()
+        .filter(association -> isAssociationEnabledForSurvey(association, surveyId))
+        .collect(Collectors.toList());
   }
 
   private boolean isAssociationEnabledForSurvey(Association association, String surveyId) {
     return association
-      .getEnrolments()
-      .stream()
-      .anyMatch(
-        enrolment ->
-          enrolment.getSurveyId().equals(surveyId)
-            && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED));
+        .getEnrolments()
+        .stream()
+        .anyMatch(
+            enrolment ->
+                enrolment.getSurveyId().equals(surveyId)
+                    && enrolment.getEnrolmentStatus().equalsIgnoreCase(ENABLED));
   }
 }
