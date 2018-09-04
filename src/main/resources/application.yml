@@ -88,6 +88,8 @@ data-grid:
   list-time-to-wait-seconds: 10
   #  after app death how long should the lock on all lists remain
   lock-time-to-live-seconds: 10
+  #  how long to wait to get the lock
+  lock-time-to-wait-seconds: 10
   report-lock-time-to-live-seconds: 300
 
 # the thread that sends actions to handlers

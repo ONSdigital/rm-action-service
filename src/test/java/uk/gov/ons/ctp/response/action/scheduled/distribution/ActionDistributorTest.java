@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,13 +16,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.response.action.config.ActionDistribution;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.config.DataGrid;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
@@ -54,7 +55,7 @@ public class ActionDistributorTest {
   private ActionCase actionCase;
   private RLock lock;
 
-  @Spy private AppConfig appConfig = new AppConfig();
+  @Mock private AppConfig appConfig;
 
   @Mock private RedissonClient redissonClient;
 
@@ -71,12 +72,6 @@ public class ActionDistributorTest {
   /** Initialises Mockito and loads Class Fixtures */
   @Before
   public void setUp() throws Exception {
-    final ActionDistribution actionDistributionConfig = new ActionDistribution();
-    actionDistributionConfig.setDelayMilliSeconds(TEN);
-    actionDistributionConfig.setRetrievalMax(TEN);
-    actionDistributionConfig.setRetrySleepSeconds(TEN);
-    appConfig.setActionDistribution(actionDistributionConfig);
-
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     householdInitialContactActions =
         FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
@@ -85,10 +80,18 @@ public class ActionDistributorTest {
     actionCase = new ActionCase();
     actionCase.setSampleUnitType("H");
 
+    MockitoAnnotations.initMocks(this);
+    DataGrid dataGrid = new DataGrid();
+    dataGrid.setLockTimeToLiveSeconds(30);
+    dataGrid.setLockTimeToWaitSeconds(600);
+    when(appConfig.getDataGrid()).thenReturn(dataGrid);
+    ActionDistribution actionDistribution = new ActionDistribution();
+    actionDistribution.setRetrievalMax(1000);
+    when(appConfig.getActionDistribution()).thenReturn(actionDistribution);
+
     lock = mock(RLock.class);
     when(redissonClient.getFairLock(any())).thenReturn(lock);
-
-    MockitoAnnotations.initMocks(this);
+    when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
   }
 
   /** We retrieve no actionTypes so no exception should be thrown. */

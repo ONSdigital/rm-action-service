@@ -73,7 +73,6 @@ public abstract class ActionProcessingService {
         actionType.getResponseRequired()
             ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
             : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-
     transitionAction(action, event);
 
     actionRequests.forEach(

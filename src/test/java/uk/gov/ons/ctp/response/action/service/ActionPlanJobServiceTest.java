@@ -1,13 +1,11 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,46 +52,6 @@ public class ActionPlanJobServiceTest {
     appConfig.setPlanExecution(planExecution);
 
     MockitoAnnotations.initMocks(this);
-  }
-
-  /**
-   * Test the service method called by the endpoint where exec is forced ie the service should
-   * disregard last exec times
-   */
-  @Test
-  public void testCreateAndExecuteActionPlanJob() {
-
-    // Given
-    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
-    when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
-
-    // When
-    ActionPlanJob executedJob =
-        actionPlanJobService.createAndExecuteActionPlanJob(actionPlans.get(0));
-
-    // assert the right calls were made
-    verify(actionPlanJobRepo, times(1)).save(any(ActionPlanJob.class));
-    verify(actionService, times(1)).createScheduledActions(any(), any());
-    verify(actionPlanExecutionLockManager, times(1)).unlock(actionPlans.get(0).getName());
-
-    Assert.assertNotNull(executedJob);
-  }
-
-  /**
-   * Test that the endpoint forced exec method gracefully handles the failure to lock an action plan
-   */
-  @Test
-  public void testCreateAndExecuteActionPlanFailedLock() {
-
-    // Given
-    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
-
-    // When
-    ActionPlanJob executedJob =
-        actionPlanJobService.createAndExecuteActionPlanJob(actionPlans.get(0));
-
-    // Then
-    assertNull(executedJob);
   }
 
   @Test

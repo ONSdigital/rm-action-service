@@ -72,6 +72,7 @@ public class ActionPlanJobService {
     return actionPlanJobRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
   }
 
+  @Transactional
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
@@ -98,21 +99,18 @@ public class ActionPlanJobService {
    * Create a new ActionPlanJob and execute associated actions
    *
    * @param actionPlan Action plan to create and execute job for
-   * @return ActionPlanJob that was created or null if it has not been created.
    */
-  @Transactional
-  public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
+  private void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
       log.with("action_plan_id", actionPlan.getId()).debug("Could not get manager lock");
-      return null;
+      return;
     }
 
     try {
       // Action plan job has to be created before actions
       ActionPlanJob job = createActionPlanJob(actionPlan);
       actionSvc.createScheduledActions(actionPlan, job);
-      return job;
     } finally {
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }

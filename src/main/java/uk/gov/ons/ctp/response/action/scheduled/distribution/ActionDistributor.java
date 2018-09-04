@@ -3,10 +3,12 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -26,8 +28,8 @@ class ActionDistributor {
 
   private static final String lockPrefix = "ActionDistributionLock-";
 
-  private final AppConfig appConfig;
-  private final RedissonClient redissonClient;
+  private AppConfig appConfig;
+  private RedissonClient redissonClient;
 
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
@@ -57,6 +59,7 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes the actions to
    * action exporter or notify gateway
    */
+  @Transactional
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
@@ -66,12 +69,24 @@ class ActionDistributor {
     String actionTypeName = actionType.getName();
     RLock lock = redissonClient.getFairLock(lockPrefix + actionTypeName);
     try {
-      List<Action> actions =
-          actionRepo.findSubmittedOrCancelledByActionTypeName(
-              actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-      actions.forEach(this::processAction);
-    } finally {
-      lock.unlock();
+      // Wait for a lock. Automatically unlock after a certain amount of time to prevent issues
+      // when lock holder crashes or Redis crashes causing permanent lockout
+      if (lock.tryLock(
+          appConfig.getDataGrid().getLockTimeToWaitSeconds(),
+          appConfig.getDataGrid().getLockTimeToLiveSeconds(),
+          TimeUnit.SECONDS)) {
+        try {
+          List<Action> actions =
+              actionRepo.findSubmittedOrCancelledByActionTypeName(
+                  actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
+          actions.forEach(this::processAction);
+        } finally {
+          // Always unlock the distributed lock
+          lock.unlock();
+        }
+      }
+    } catch (InterruptedException ex) {
+      // Ignored - process stopped while waiting for lock
     }
   }
 
