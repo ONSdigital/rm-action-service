@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
-import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
@@ -23,8 +22,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 public abstract class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
@@ -32,12 +30,11 @@ public abstract class ActionProcessingService {
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String DATE_FORMAT_IN_SOCIAL_LETTER = "dd/MM";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
-  public static final String ENABLED = "ENABLED";
-  public static final String PENDING = "PENDING";
   public static final String ACTIVE = "ACTIVE";
   public static final String CREATED = "CREATED";
-
-  @Autowired private CaseSvcClientService caseSvcClientService;
+  public static final String ENABLED = "ENABLED";
+  public static final String NOTIFY = "Notify";
+  public static final String PENDING = "PENDING";
 
   @Autowired private ActionRepository actionRepo;
 
@@ -49,75 +46,75 @@ public abstract class ActionProcessingService {
 
   private ActionRequestDecorator[] decorators;
 
-  @Autowired private ActionRequestValidator validator;
-
   public abstract ActionRequestContextFactory getActionRequestDecoratorContextFactory();
 
   public ActionProcessingService(ActionRequestDecorator[] decorators) {
     this.decorators = decorators;
   }
 
-  public List<ActionRequest> prepareActionRequests(Action action) {
+  /**
+   * Distributes requests for a single action
+   *
+   * @param action the action to deal with
+   */
+  @Transactional
+  public void processActionRequests(final Action action) throws CTPException {
+    log.with("action_id", action.getId()).debug("Processing actionRequest");
+
+    final ActionType actionType = action.getActionType();
+    if (!valid(actionType)) {
+      log.with("action_id", action.getId()).error("ActionType is not defined for action");
+      throw new IllegalStateException();
+    }
+
+    List<ActionRequest> actionRequests = prepareActionRequests(action);
+
+    ActionDTO.ActionEvent event =
+        actionType.getResponseRequired()
+            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
+            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+
+    transitionAction(action, event);
+
+    actionRequests.forEach(
+        actionRequest ->
+            actionInstructionPublisher.sendActionInstruction(
+                actionType.getHandler(), actionRequest));
+  }
+
+  private List<ActionRequest> prepareActionRequests(Action action) {
     final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
     final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
 
     ArrayList<ActionRequest> actionRequests = new ArrayList<>();
-    if (context.getCaseDetails().getSampleUnitType().equals("B")
-        && context.getAction().getActionType().getHandler().equals("Notify")) {
-      List<PartyDTO> respondentParties = context.getChildParties();
-
-      respondentParties.forEach(
-          p -> {
-            context.setChildParties(Collections.singletonList(p));
-            ActionRequest actionRequest = new ActionRequest();
-            Arrays.stream(this.decorators)
-                .forEach(d -> d.decorateActionRequest(actionRequest, context));
-            actionRequests.add(actionRequest);
-          });
-
+    if (isBusinessNotification(context)) {
+      context
+          .getChildParties()
+          .forEach(
+              p -> {
+                context.setChildParties(Collections.singletonList(p));
+                ActionRequest actionRequest = prepareActionRequest(context);
+                actionRequests.add(actionRequest);
+              });
     } else {
-      ActionRequest actionRequest = new ActionRequest();
-      Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+      ActionRequest actionRequest = prepareActionRequest(context);
       actionRequests.add(actionRequest);
     }
-
     return actionRequests;
   }
 
-  /**
-   * Deal with a single action - the transaction boundary is here.
-   *
-   * <p>The processing requires numerous calls to Case service, to write to our own action table and
-   * to publish to queue.
-   *
-   * @param action the action to deal with
-   */
-  @Transactional(
-      propagation = Propagation.REQUIRED,
-      readOnly = false,
-      rollbackFor = Exception.class)
-  public void processActionRequest(final Action action) throws CTPException {
-    log.with("action_id", action.getId())
-        .with("case_id", action.getCaseId())
-        .debug("processing actionRequest");
+  private boolean isBusinessNotification(ActionRequestContext context) {
+    return (context
+            .getCaseDetails()
+            .getSampleUnitType()
+            .equals(SampleUnitDTO.SampleUnitType.B.name())
+        && context.getAction().getActionType().getHandler().equals(NOTIFY));
+  }
 
-    final ActionType actionType = action.getActionType();
-    if (valid(actionType)) {
-
-      final List<ActionRequest> actionRequests = prepareActionRequests(action);
-      actionRequests.forEach(
-          ar -> actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), ar));
-
-      final ActionDTO.ActionEvent event =
-          actionType.getResponseRequired()
-              ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
-              : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-      transitionAction(action, event);
-      caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
-    } else {
-      log.with("action_id", action.getId())
-          .error("Unexpected situation. actionType is not defined for action");
-    }
+  private ActionRequest prepareActionRequest(ActionRequestContext context) {
+    ActionRequest actionRequest = new ActionRequest();
+    Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+    return actionRequest;
   }
 
   /**
@@ -139,10 +136,6 @@ public abstract class ActionProcessingService {
 
     actionInstructionPublisher.sendActionInstruction(
         action.getActionType().getHandler(), prepareActionCancel(action));
-
-    // advise casesvc to create a corresponding caseevent for our action
-    caseSvcClientService.createNewCaseEvent(
-        action, CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED);
   }
 
   /**

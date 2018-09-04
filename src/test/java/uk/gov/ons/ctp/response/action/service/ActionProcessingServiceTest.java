@@ -46,7 +46,6 @@ import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestCon
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
@@ -157,16 +156,13 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequest(contextAction);
+    businessActionProcessingService.processActionRequests(contextAction);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, times(1))
-        .createNewCaseEvent(any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CREATED));
-    // TODO Be more specific on the Action below once CTPA-1390 has been discussed & implemented
     verify(actionInstructionPublisher, times(1))
         .sendActionInstruction(
             eq(ACTIONEXPORTER),
@@ -196,48 +192,42 @@ public class ActionProcessingServiceTest {
             .actionTypePK(5)
             .build());
     context.setChildParties(Collections.singletonList(partys.get(1)));
-    businessActionProcessingService.processActionRequest(contextAction);
+    businessActionProcessingService.processActionRequests(contextAction);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, times(1))
-        .createNewCaseEvent(any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CREATED));
     verify(actionInstructionPublisher, times(1))
         .sendActionInstruction(
             eq(ACTIONEXPORTER),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
-  @Test
+  @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestNoActionType() throws CTPException {
     final Action action = new Action();
-    businessActionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequests(action);
 
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, never())
-        .createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             any(String.class),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
-  @Test
+  @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
     final Action action = new Action();
     action.setActionType(ActionType.builder().build());
-    businessActionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequests(action);
 
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, never())
-        .createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             any(String.class),
@@ -256,14 +246,12 @@ public class ActionProcessingServiceTest {
 
     Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
-    businessActionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequests(action);
 
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, never())
-        .createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             any(String.class),
@@ -277,53 +265,16 @@ public class ActionProcessingServiceTest {
 
     Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
-    businessActionProcessingService.processActionRequest(action);
+    businessActionProcessingService.processActionRequests(action);
 
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, never())
-        .createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             any(String.class),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  /**
-   * An exception is thrown when creating a CaseEvent after the Action's state was transitioned and
-   * persisted OK.
-   */
-  @Test(expected = RuntimeException.class)
-  public void testProcessActionRequestCaseEventCreationThrowsException() throws CTPException {
-
-    // Given
-    when(caseSvcClientService.createNewCaseEvent(
-            any(Action.class), any(CategoryDTO.CategoryName.class)))
-        .thenThrow(new RuntimeException(REST_ERROR_MSG));
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
-        .thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
-    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
-        .thenReturn(context);
-
-    // When
-    businessActionProcessingService.processActionRequest(contextAction);
-
-    // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(partySvcClientService, never()).getParty(eq(SAMPLE_UNIT_TYPE_HI), any(UUID.class));
-    verify(actionInstructionPublisher, times(1))
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-    verify(caseSvcClientService, times(1))
-        .createNewCaseEvent(any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CREATED));
   }
 
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
@@ -347,8 +298,6 @@ public class ActionProcessingServiceTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, never())
-        .createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             any(String.class),
@@ -372,51 +321,10 @@ public class ActionProcessingServiceTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, never())
-        .createNewCaseEvent(any(Action.class), any(CategoryDTO.CategoryName.class));
     verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             any(String.class),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  /**
-   * An exception is thrown when creating a CaseEvent after the Action's state was transitioned and
-   * persisted OK.
-   */
-  @Test
-  public void testProcessActionCancelCaseEventCreationThrowsException() throws CTPException {
-    when(caseSvcClientService.createNewCaseEvent(
-            any(Action.class), any(CategoryDTO.CategoryName.class)))
-        .thenThrow(new RuntimeException(REST_ERROR_MSG));
-
-    try {
-      final Action action = new Action();
-      action.setActionType(
-          ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
-      action.setId(ACTION_ID);
-      businessActionProcessingService.processActionCancel(action);
-      fail();
-    } catch (final RuntimeException e) {
-      assertEquals(REST_ERROR_MSG, e.getMessage());
-    }
-
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
-        ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
-    verify(actionInstructionPublisher, times(1))
-        .sendActionInstruction(eq(ACTIONEXPORTER), actionCaptor.capture());
-    final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel =
-        (ActionCancel) actionCaptor.getValue();
-    assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
-    assertTrue(publishedActionCancel.isResponseRequired());
-    assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
-    verify(caseSvcClientService, times(1))
-        .createNewCaseEvent(
-            any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
   }
 
   @Test
@@ -431,9 +339,6 @@ public class ActionProcessingServiceTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(caseSvcClientService, times(1))
-        .createNewCaseEvent(
-            any(Action.class), eq(CategoryDTO.CategoryName.ACTION_CANCELLATION_CREATED));
 
     final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
         ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
@@ -456,7 +361,7 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequest(contextAction);
+    businessActionProcessingService.processActionRequests(contextAction);
 
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);

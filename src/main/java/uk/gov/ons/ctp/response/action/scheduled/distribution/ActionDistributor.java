@@ -2,11 +2,11 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.util.Arrays;
 import java.util.List;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -24,7 +24,10 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 class ActionDistributor {
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
+  private static final String lockPrefix = "ActionDistributionLock-";
+
   private final AppConfig appConfig;
+  private final RedissonClient redissonClient;
 
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
@@ -35,12 +38,14 @@ class ActionDistributor {
 
   public ActionDistributor(
       AppConfig appConfig,
+      RedissonClient redissonClient,
       ActionRepository actionRepo,
       ActionCaseRepository actionCaseRepo,
       ActionTypeRepository actionTypeRepo,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
       @Qualifier("social") ActionProcessingService socialActionProcessingService) {
     this.appConfig = appConfig;
+    this.redissonClient = redissonClient;
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
     this.actionTypeRepo = actionTypeRepo;
@@ -51,74 +56,37 @@ class ActionDistributor {
   /**
    * Called on schedule to check for submitted actions then creates and distributes the actions to
    * action exporter or notify gateway
-   *
-   * @return the info for the health endpoint regarding the distribution just performed
    */
-  @Transactional
-  public DistributionInfo distribute() {
-    final DistributionInfo distInfo = new DistributionInfo();
+  public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
-
-    for (final ActionType actionType : actionTypes) {
-      final List<InstructionCount> instructionCounts = processActionType(actionType);
-      distInfo.getInstructionCounts().addAll(instructionCounts);
-    }
-    return distInfo;
+    actionTypes.forEach(this::processActionType);
   }
 
-  private List<InstructionCount> processActionType(final ActionType actionType) {
-    final InstructionCount requestCount =
-        InstructionCount.builder()
-            .actionTypeName(actionType.getName())
-            .instruction(DistributionInfo.Instruction.REQUEST)
-            .count(0)
-            .build();
-    final InstructionCount cancelCount =
-        InstructionCount.builder()
-            .actionTypeName(actionType.getName())
-            .instruction(DistributionInfo.Instruction.CANCEL_REQUEST)
-            .count(0)
-            .build();
-
+  private void processActionType(final ActionType actionType) {
+    String actionTypeName = actionType.getName();
+    RLock lock = redissonClient.getFairLock(lockPrefix + actionTypeName);
     try {
-      List<Action> actions = retrieveActions(actionType);
-      processActions(actions, requestCount, cancelCount);
-    } catch (Exception e) {
-      log.with("action_type", actionType).error("Failed to process", e);
-    }
-    return Arrays.asList(requestCount, cancelCount);
-  }
-
-  private List<Action> retrieveActions(final ActionType actionType) {
-    return actionRepo.findSubmittedOrCancelledByActionTypeName(
-        actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-  }
-
-  private void processActions(
-      final List<Action> actions,
-      final InstructionCount requestCount,
-      final InstructionCount cancelCount) {
-    for (Action action : actions) {
-      try {
-        processAction(action, requestCount, cancelCount);
-      } catch (Exception e) {
-        log.with("action_id", action.getId())
-            .error("Could not process action. Will be retried at next schedule", e);
-      }
+      List<Action> actions =
+          actionRepo.findSubmittedOrCancelledByActionTypeName(
+              actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
+      actions.forEach(this::processAction);
+    } finally {
+      lock.unlock();
     }
   }
 
-  private void processAction(
-      Action action, InstructionCount requestCount, InstructionCount cancelCount)
-      throws CTPException {
+  private void processAction(Action action) {
     ActionProcessingService ap = getActionProcessingService(action);
 
-    if (action.getState().equals(ActionState.SUBMITTED)) {
-      ap.processActionRequest(action);
-      requestCount.increment();
-    } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
-      ap.processActionCancel(action);
-      cancelCount.increment();
+    try {
+      if (action.getState().equals(ActionState.SUBMITTED)) {
+        ap.processActionRequests(action);
+      } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
+        ap.processActionCancel(action);
+      }
+    } catch (CTPException ex) {
+      log.with("action_id", action.getId().toString())
+          .error("Failed to transition action. Will be retried at next schedule");
     }
   }
 
@@ -133,6 +101,7 @@ class ActionDistributor {
         return socialActionProcessingService;
 
       case B:
+      case BI:
         return businessActionProcessingService;
 
       default:

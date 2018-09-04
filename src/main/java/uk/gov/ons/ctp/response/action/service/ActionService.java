@@ -190,7 +190,6 @@ public class ActionService {
     return actionRepo.saveAndFlush(action);
   }
 
-  @Transactional
   public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
     List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
@@ -214,13 +213,7 @@ public class ActionService {
 
   private void createActionForCaseAndRule(ActionCase actionCase, ActionRule actionRule) {
     if (hasRuleTriggered(actionRule)) {
-      try {
-        createAction(actionCase, actionRule);
-      } catch (Exception ex) {
-        log.with("case_id", actionCase.getId().toString())
-            .with("action_rule_id", actionRule.getId().toString())
-            .error("Failed to create action", ex);
-      }
+      createAction(actionCase, actionRule);
     }
   }
 
@@ -237,9 +230,6 @@ public class ActionService {
     // Only create action if it doesn't already exist
     if (actionRepo.existsByCaseIdAndActionRuleFK(
         actionCase.getId(), actionRule.getActionRulePK())) {
-      log.with("case_id", actionCase.getId().toString())
-          .with("action_rule_id", actionRule.getActionRulePK().toString())
-          .debug("Action already exists");
       return;
     }
 

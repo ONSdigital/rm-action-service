@@ -24,14 +24,6 @@ public class DistributionScheduler {
   /** Scheduled execution of the Action Distributor */
   @Scheduled(fixedDelayString = "#{appConfig.actionDistribution.delayMilliSeconds}")
   public void run() {
-    DistributionInfo distInfo = actionDistributor.distribute();
-    Integer requestsCount = distInfo.getInstructionCounts().get(0).getCount();
-    Integer cancelledCount = distInfo.getInstructionCounts().get(1).getCount();
-    if (requestsCount > 0) {
-      log.with("count", requestsCount).debug("Action requests created");
-    }
-    if (cancelledCount > 0) {
-      log.with("count", cancelledCount).debug("Actions requests cancelled");
-    }
+    actionDistributor.distribute();
   }
 }

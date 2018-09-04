@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
@@ -75,23 +76,11 @@ public class ActionPlanJobService {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
         actionPlan -> {
-          if (shouldCreateAndExecuteActionPlanJob(actionPlan)) {
+          if (!hasActionPlanBeenRunSinceLastSchedule(actionPlan)
+              && hasActionableCases(actionPlan)) {
             createAndExecuteActionPlanJob(actionPlan);
           }
         });
-  }
-
-  private boolean shouldCreateAndExecuteActionPlanJob(ActionPlan actionPlan) {
-    if (hasActionPlanBeenRunSinceLastSchedule(actionPlan)) {
-      log.with("action_plan_id", actionPlan.getId())
-          .debug("Job for plan has been run since last wake up - skipping");
-      return false;
-    } else if (!hasActionableCases(actionPlan)) {
-      log.with("action_plan_id", actionPlan.getId()).debug("No actionable cases for action plan");
-      return false;
-    } else {
-      return true;
-    }
   }
 
   private boolean hasActionableCases(ActionPlan actionPlan) {
@@ -111,6 +100,7 @@ public class ActionPlanJobService {
    * @param actionPlan Action plan to create and execute job for
    * @return ActionPlanJob that was created or null if it has not been created.
    */
+  @Transactional
   public ActionPlanJob createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
