@@ -64,6 +64,7 @@ public class ActionProcessingServiceTest {
   private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action Statetransitionfailed.";
   private static final String CENSUS_SURVEY_ID = "Census2021";
   private static final String DB_ERROR_MSG = "DB is KO.";
+  private static final String NOTIFY = "Notify";
   private static final String REST_ERROR_MSG = "REST call is KO.";
   private static final String SAMPLE_UNIT_TYPE_HI = "HI";
 
@@ -96,6 +97,8 @@ public class ActionProcessingServiceTest {
   private List<CaseDetailsDTO> caseDetails;
   private List<CollectionExerciseDTO> collectionExercises;
   private List<PartyDTO> partys;
+  private PartyDTO businessParty;
+  private List<PartyDTO> respondentParties;
   private List<SurveyDTO> surveys;
 
   private ActionRequestContext context;
@@ -110,34 +113,45 @@ public class ActionProcessingServiceTest {
 
     // Load test data
     partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
+    businessParty = partys.get(0);
+    respondentParties = partys.subList(1, 4);
+
     caseDetails = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
     collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
     surveys = FixtureHelper.loadClassFixtures(SurveyDTO[].class);
 
     // Set up context
+    context = createContext();
+
+    MockitoAnnotations.initMocks(this);
+  }
+
+  private ActionRequestContext createContext() {
     context = new ActionRequestContext();
     contextActionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
     context.setActionPlan(contextActionPlan);
     context.setCaseDetails(caseDetails.get(0));
-    context.setParentParty(partys.get(0));
+    context.setParentParty(businessParty);
     context.setCollectionExercise(collectionExercises.get(0));
     context.setSurvey(surveys.get(0));
     context.setSampleUnitType(SampleUnitType.B);
+    context.setAction(createContextAction(ACTIONEXPORTER));
+    return context;
+  }
 
+  private Action createContextAction(String handler) {
     contextAction = new Action();
     contextAction.setId(ACTION_ID);
     contextAction.setActionType(
-        ActionType.builder()
-            .responseRequired(Boolean.TRUE)
-            .handler(ACTIONEXPORTER)
-            .actionTypePK(1)
-            .build());
+      ActionType.builder()
+        .responseRequired(Boolean.TRUE)
+        .handler(handler)
+        .actionTypePK(1)
+        .build());
     contextAction.setActionPlanFK(ACTION_PLAN_FK);
     contextAction.setCaseId(CASE_ID);
     contextAction.setPriority(1);
-    context.setAction(contextAction);
-
-    MockitoAnnotations.initMocks(this);
+    return contextAction;
   }
 
   /**
@@ -145,7 +159,7 @@ public class ActionProcessingServiceTest {
    * way to producing an ActionRequest and publishing it.
    */
   @Test
-  public void testProcessActionRequestHappyPathParentUnit() throws CTPException {
+  public void testProcessActionRequest() throws CTPException {
 
     // Given
     when(actionSvcStateTransitionManager.transition(
@@ -174,24 +188,20 @@ public class ActionProcessingServiceTest {
    * way to producing an ActionRequest and publishing it.
    */
   @Test
-  public void testProcessActionRequestHappyPathChildUnit() throws CTPException {
+  public void testProcessActionRequestBusinessNotification() throws CTPException {
 
     // Given
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenReturn(ActionDTO.ActionState.PENDING);
     when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
+    context.setCaseDetails(caseDetails.get(1));
+    context.setAction(createContextAction(NOTIFY));
+    context.setChildParties(respondentParties);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
 
     // When
-    contextAction.setActionType(
-        ActionType.builder()
-            .responseRequired(Boolean.TRUE)
-            .handler(ACTIONEXPORTER)
-            .actionTypePK(5)
-            .build());
-    context.setChildParties(Collections.singletonList(partys.get(1)));
     businessActionProcessingService.processActionRequests(contextAction);
 
     // Then
@@ -199,9 +209,9 @@ public class ActionProcessingServiceTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, times(1))
+    verify(actionInstructionPublisher, times(3))
         .sendActionInstruction(
-            eq(ACTIONEXPORTER),
+            eq(NOTIFY),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
