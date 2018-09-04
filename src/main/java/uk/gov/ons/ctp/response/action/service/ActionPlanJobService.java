@@ -50,7 +50,7 @@ public class ActionPlanJobService {
   @CoverageIgnore
   public List<ActionPlanJob> findActionPlanJobsForActionPlan(final UUID actionPlanId)
       throws CTPException {
-    log.debug("Entering findActionPlanJobsForActionPlan with {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanJobsForActionPlan");
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
       throw new CTPException(
@@ -81,9 +81,9 @@ public class ActionPlanJobService {
                   executedJobs.add(job);
                 }
               } else {
-                log.debug(
-                    "Job for plan {} has been run since last wake up - skipping",
-                    actionPlan.getActionPlanPK());
+                log.with("action_plan_id", actionPlan.getId())
+                    .with("action_plan_pk", actionPlan.getActionPlanPK())
+                    .debug("Job for plan has been run since last wake up - skipping");
               }
             });
     return executedJobs;
@@ -100,18 +100,18 @@ public class ActionPlanJobService {
     final ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
 
     if (actionPlan == null) {
-      log.debug("Action plan {} is null", actionPlanPK);
+      log.with("action_plan_pk", actionPlanPK).debug("Action plan is null");
       return null;
     }
 
     if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
-      log.debug("No open cases for action plan {}", actionPlanPK);
+      log.with("action_plan_pk", actionPlanPK).debug("No open cases for action plan");
 
       return null;
     }
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.debug("Could not get lock on action plan {}", actionPlanPK);
+      log.with("action_plan_pk", actionPlanPK).debug("Could not get lock on action plan");
 
       return null;
     }
@@ -126,7 +126,7 @@ public class ActionPlanJobService {
       actionSvc.createScheduledActions(job.getActionPlanJobPK());
       return job;
     } finally {
-      log.debug("Releasing lock on action plan {}", actionPlanPK);
+      log.with("action_plan_pk", actionPlanPK).debug("Releasing lock on action plan");
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }
   }
@@ -138,10 +138,9 @@ public class ActionPlanJobService {
     actionPlanJobTemplate.setUpdatedDateTime(now);
     actionPlanJobTemplate.setId(UUID.randomUUID());
     final ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJobTemplate);
-    log.info(
-        "Running actionplanjobid {} actionplanid {}",
-        createdJob.getActionPlanJobPK(),
-        createdJob.getActionPlanFK());
+    log.with("action_plan_job_pk", createdJob.getActionPlanJobPK())
+        .with("action_plan_pk", createdJob.getActionPlanFK())
+        .info("Running actionplanjob");
     return createdJob;
   }
 }

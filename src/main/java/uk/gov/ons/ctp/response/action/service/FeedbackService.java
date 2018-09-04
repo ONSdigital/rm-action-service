@@ -67,18 +67,16 @@ public class FeedbackService {
           caseSvcClientService.createNewCaseEvent(action, category);
         }
       } else {
-        log.error(
-            "Feedback Service unable to decipher the outcome {}"
-                + " from feedback - ignoring this feedback",
-            feedback.getOutcome());
+        log.with("outcome", feedback.getOutcome())
+            .error(
+                "Feedback Service unable to decipher the outcome from feedback, ignoring feedback");
         throw new CTPException(
             CTPException.Fault.SYSTEM_ERROR,
             String.format("Outcome % unknown", feedback.getOutcome()));
       }
     } else {
-      log.error(
-          "Feedback Service unable to find action id {} from feedback - ignoring this feedback",
-          feedback.getActionId());
+      log.with("action_id", feedback.getActionId())
+          .error("Feedback Service unable to find actionId from feedback - ignoring this feedback");
       throw new CTPException(
           CTPException.Fault.SYSTEM_ERROR,
           String.format("ActionID %s unknown", feedback.getActionId()));

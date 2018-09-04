@@ -57,7 +57,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   @RequestMapping(method = RequestMethod.GET)
   public final ResponseEntity<List<ActionPlanDTO>> findActionPlans(
       final @RequestParam HashMap<String, String> selectors) {
-    log.info("Retrieving action plans, Selectors: {}", selectors);
+    log.with(selectors).debug("Retrieving action plans with selectors");
 
     final List<ActionPlan> actionPlans;
     if (!selectors.isEmpty()) {
@@ -66,7 +66,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
       actionPlans = actionPlanService.findActionPlans();
     }
 
-    log.info("Successfully retrieved action plans, Selectors={}", selectors);
+    log.with(selectors).debug("Successfully retrieved action plans with selectors");
     final List<ActionPlanDTO> actionPlanDTOs =
         mapperFacade.mapAsList(actionPlans, ActionPlanDTO.class);
     return CollectionUtils.isEmpty(actionPlanDTOs)
@@ -84,7 +84,7 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/{actionplanid}", method = RequestMethod.GET)
   public final ActionPlanDTO findActionPlanByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
-    log.info("Entering findActionPlanByActionPlanId with {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanByActionPlanId");
     final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
     if (actionPlan == null) {
       throw new CTPException(
@@ -106,8 +106,9 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   public final ResponseEntity<ActionPlanDTO> createActionPlan(
       @RequestBody @Valid final ActionPlanPostRequestDTO request, final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.info(
-        "Creating action plan, Name: {}, Selectors: {}", request.getName(), request.getSelectors());
+    log.with("name", request.getName())
+        .with("selectors", request.getSelectors())
+        .debug("Creating action plan");
 
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action plan: ", bindingResult);
@@ -153,10 +154,8 @@ public class ActionPlanEndpoint implements CTPEndpoint {
       @RequestBody(required = false) @Valid final ActionPlanPutRequestDTO request,
       final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.info(
-        "UpdateActionPlanByActionPlanId with actionplanid {} - actionPlan {}",
-        actionPlanId,
-        request);
+    log.with("action_plan_id", actionPlanId)
+        .debug("UpdateActionPlanByActionPlanId with actionplanid");
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for update action plan: ", bindingResult);
     }

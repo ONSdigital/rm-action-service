@@ -61,7 +61,7 @@ public final class ActionEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/{actionid}", method = RequestMethod.GET)
   public ActionDTO findActionByActionId(@PathVariable("actionid") final UUID actionId)
       throws CTPException {
-    log.info("Entering findActionByActionId with {}", actionId);
+    log.with("action_id", actionId).debug("Entering findActionByActionId");
     final Action action = actionService.findActionById(actionId);
     if (action == null) {
       throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_FOUND, actionId);
@@ -82,7 +82,7 @@ public final class ActionEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/case/{caseid}", method = RequestMethod.GET)
   public ResponseEntity<List<ActionDTO>> findActionsByCaseId(
       @PathVariable("caseid") final UUID caseId) {
-    log.info("Entering findActionsByCaseId...");
+    log.debug("Entering findActionsByCaseId...");
     final List<Action> actions = actionService.findActionsByCaseId(caseId);
     if (CollectionUtils.isEmpty(actions)) {
       return ResponseEntity.noContent().build();
@@ -106,20 +106,22 @@ public final class ActionEndpoint implements CTPEndpoint {
 
     if (actionType != null) {
       if (state != null) {
-        log.info("Entering findActionsByTypeAndState with {} {}", actionType, state);
+        log.with("action_type", actionType)
+            .with("state", state)
+            .debug("Entering findActionsByTypeAndState");
         actions =
             actionService.findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(
                 actionType, state);
       } else {
-        log.info("Entering findActionsByType with {}", actionType);
+        log.with("action_type", actionType).debug("Entering findActionsByType");
         actions = actionService.findActionsByType(actionType);
       }
     } else {
       if (state != null) {
-        log.info("Entering findActionsByState with {}", state);
+        log.with("state", state).debug("Entering findActionsByState");
         actions = actionService.findActionsByState(state);
       } else {
-        log.info("Entering findAllActionsOrderedByCreatedDateTimeDescending");
+        log.debug("Entering findAllActionsOrderedByCreatedDateTimeDescending");
         actions = actionService.findAllActionsOrderedByCreatedDateTimeDescending();
       }
     }
@@ -146,7 +148,7 @@ public final class ActionEndpoint implements CTPEndpoint {
       final @RequestBody @Valid ActionPostRequestDTO actionPostRequestDTO,
       final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.debug("Entering createAdhocAction with actionPostRequestDTO {}", actionPostRequestDTO);
+    log.with("action_post_request", actionPostRequestDTO).debug("Entering createAdhocAction");
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action: ", bindingResult);
     }
@@ -192,7 +194,9 @@ public final class ActionEndpoint implements CTPEndpoint {
       @RequestBody(required = false) @Valid final ActionPutRequestDTO actionPutRequestDTO,
       final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.info("Updating Action with {} - {}", actionId, actionPutRequestDTO);
+    log.with("action_id", actionId)
+        .with("action_put_request", actionPutRequestDTO)
+        .debug("Updating Action");
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for update action: ", bindingResult);
     }
@@ -224,7 +228,7 @@ public final class ActionEndpoint implements CTPEndpoint {
       consumes = "application/json")
   public ResponseEntity<List<ActionDTO>> cancelActions(@PathVariable("caseid") final UUID caseId)
       throws CTPException {
-    log.info("Cancelling Actions for {}", caseId);
+    log.with("case_id", caseId).info("Cancelling Actions");
 
     final ActionCase caze = actionCaseService.findActionCase(caseId);
     if (caze == null) {
@@ -258,7 +262,9 @@ public final class ActionEndpoint implements CTPEndpoint {
       @RequestBody @Valid final ActionFeedbackRequestDTO actionFeedbackRequestDTO,
       final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.info("Feedback for Action {} - {}", actionId, actionFeedbackRequestDTO);
+    log.with("action_id", actionId)
+        .with("action_feedback_request", actionFeedbackRequestDTO)
+        .debug("Feedback for Action");
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for feedback action: ", bindingResult);
     }

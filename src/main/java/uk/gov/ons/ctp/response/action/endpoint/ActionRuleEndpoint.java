@@ -60,7 +60,7 @@ public class ActionRuleEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/actionplan/{actionplanid}", method = RequestMethod.GET)
   public ResponseEntity<List<ActionRuleDTO>> findActionRulesByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
-    log.info("Entering findActionRulesByActionPlanId...");
+    log.with("action_plan_id", actionPlanId).debug("Entering findActionRulesByActionPlanId...");
 
     final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
     if (actionPlan == null) {
@@ -89,8 +89,8 @@ public class ActionRuleEndpoint implements CTPEndpoint {
       final @RequestBody @Valid ActionRulePostRequestDTO actionRulePostRequestDTO,
       final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.debug(
-        "Entering createActionRule with actionRulePostRequestDTO {}", actionRulePostRequestDTO);
+    log.with("action_rule_post_request", actionRulePostRequestDTO)
+        .debug("Entering createActionRule");
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for create action rule: ", bindingResult);
     }
@@ -144,7 +144,9 @@ public class ActionRuleEndpoint implements CTPEndpoint {
       @RequestBody(required = false) @Valid final ActionRulePutRequestDTO actionRulePutRequestDTO,
       final BindingResult bindingResult)
       throws CTPException, InvalidRequestException {
-    log.info("Updating Action Rule with {} - {}", actionRuleId, actionRulePutRequestDTO);
+    log.with("action_rule_id", actionRuleId)
+        .with("action_rule_put_request", actionRulePutRequestDTO)
+        .debug("Updating Action Rule");
     if (bindingResult.hasErrors()) {
       throw new InvalidRequestException("Binding errors for update action rule: ", bindingResult);
     }

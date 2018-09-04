@@ -50,7 +50,9 @@ public class CollectionExerciseClientService {
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    log.info("collectionExerciseUrl = " + uriComponents.toUriString());
+    log.with("collection_exericse_id", collectionExcerciseId)
+        .with("uri", uriComponents.toUri())
+        .debug("Retrieving collection exercise");
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
@@ -61,13 +63,11 @@ public class CollectionExerciseClientService {
       try {
         result = objectMapper.readValue(responseBody, CollectionExerciseDTO.class);
       } catch (final IOException e) {
-        final String msg = String.format("cause = %s - message = %s", e.getCause(), e.getMessage());
-        log.error(msg);
-        log.error("Stacktrace: ", e);
+        log.error("Unable to read collection exercise response", e);
       }
     }
 
-    log.info("made call to collection Exercise and retrieved {}", result);
+    log.with("collection_exercise", result).debug("made call to collection Exercise");
     return result;
   }
 }

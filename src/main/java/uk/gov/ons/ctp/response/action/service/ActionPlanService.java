@@ -37,25 +37,25 @@ public class ActionPlanService {
 
   @CoverageIgnore
   public List<ActionPlan> findActionPlansBySelectors(final HashMap<String, String> selectors) {
-    log.debug("Finding action plans by selectors, selectors: {}", selectors);
+    log.with(selectors).debug("Finding action plans by selectors");
     return this.actionPlanRepo.findBySelectorsIn(selectors);
   }
 
   @CoverageIgnore
   public ActionPlan findActionPlan(final Integer actionPlanKey) {
-    log.debug("Entering findActionPlan with primary key {}", actionPlanKey);
+    log.with("action_plan_pk", actionPlanKey).debug("Entering findActionPlan with primary key");
     return this.actionPlanRepo.findOne(actionPlanKey);
   }
 
   @CoverageIgnore
   public ActionPlan findActionPlanById(final UUID actionPlanId) {
-    log.debug("Entering findActionPlanById with id {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanById with id");
     return this.actionPlanRepo.findById(actionPlanId);
   }
 
   @CoverageIgnore
   public ActionPlan findActionPlanByName(final String name) {
-    log.debug("Entering findActionPlanByName with name {}", name);
+    log.with("action_plan_name", name).debug("Entering findActionPlanByName with name");
     return this.actionPlanRepo.findByName(name);
   }
 
@@ -64,18 +64,16 @@ public class ActionPlanService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public ActionPlan createActionPlan(final ActionPlan actionPlan) {
-    log.debug(
-        "Creating action plan, Name: {}, Selectors: {}",
-        actionPlan.getName(),
-        actionPlan.getSelectors());
+    log.with("selectors", actionPlan.getSelectors())
+        .with("action_plan_name", actionPlan.getName())
+        .debug("Creating action plan");
 
     ActionPlan savedActionPlan = saveActionPlan(actionPlan);
 
-    log.debug(
-        "Successfully created action plan, Name: {}, ActionPlanId: {}, Selectors: {}",
-        actionPlan.getName(),
-        actionPlan.getId(),
-        actionPlan.getSelectors());
+    log.with("selectors", actionPlan.getSelectors())
+        .with("action_plan_name", actionPlan.getName())
+        .with("action_plan_id", actionPlan.getId())
+        .debug("Successfully created action plan");
     return savedActionPlan;
   }
 
@@ -90,7 +88,7 @@ public class ActionPlanService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public ActionPlan updateActionPlan(final UUID actionPlanId, final ActionPlan actionPlan) {
-    log.debug("Updating action plan, ActionPlanId: {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Updating action plan");
     ActionPlan existingActionPlan = this.actionPlanRepo.findById(actionPlanId);
     if (existingActionPlan != null) {
       boolean needsUpdate = false;
