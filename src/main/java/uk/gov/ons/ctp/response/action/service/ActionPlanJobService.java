@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
 
 import com.godaddy.logging.Logger;
@@ -72,7 +73,11 @@ public class ActionPlanJobService {
     return actionPlanJobRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
   }
 
-  @Transactional
+  /**
+   * Create a new ActionPlanJob and create associated actions for all action plans with cases in the
+   * action.case table
+   */
+  @Transactional(propagation = REQUIRES_NEW)
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
@@ -95,11 +100,6 @@ public class ActionPlanJobService {
         || actionPlan.getLastRunDateTime().before(lastExecutionTime));
   }
 
-  /**
-   * Create a new ActionPlanJob and execute associated actions
-   *
-   * @param actionPlan Action plan to create and execute job for
-   */
   private void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
@@ -121,7 +121,7 @@ public class ActionPlanJobService {
     actionPlanJob.setActionPlanFK(actionPlan.getActionPlanPK());
     actionPlanJob.setCreatedBy(CREATED_BY_SYSTEM);
     actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
-    Timestamp now = nowUTC();
+    final Timestamp now = nowUTC();
     actionPlanJob.setCreatedDateTime(now);
     actionPlanJob.setUpdatedDateTime(now);
     actionPlanJob.setId(UUID.randomUUID());

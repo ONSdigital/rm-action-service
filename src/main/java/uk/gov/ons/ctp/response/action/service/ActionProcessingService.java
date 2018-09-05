@@ -27,6 +27,7 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 public abstract class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
 
+  public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String DATE_FORMAT_IN_SOCIAL_LETTER = "dd/MM";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
@@ -64,7 +65,7 @@ public abstract class ActionProcessingService {
     final ActionType actionType = action.getActionType();
     if (!valid(actionType)) {
       log.with("action_id", action.getId()).error("ActionType is not defined for action");
-      throw new IllegalStateException();
+      throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
     }
 
     List<ActionRequest> actionRequests = prepareActionRequests(action);

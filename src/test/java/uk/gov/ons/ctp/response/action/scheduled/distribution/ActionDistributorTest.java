@@ -44,8 +44,6 @@ import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionDistributorTest {
 
-  private static final int TEN = 10;
-
   private static final String HOUSEHOLD_INITIAL_CONTACT = "HouseholdInitialContact";
   private static final String HOUSEHOLD_UPLOAD_IAC = "HouseholdUploadIAC";
 
@@ -127,6 +125,7 @@ public class ActionDistributorTest {
         .findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
     verify(actionRepo, times(1))
         .findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
+    verify(lock, times(2)).unlock();
 
     // Assertions for calls to actionProcessingService & processActionRequests
     final ArgumentCaptor<Action> actionCaptorForActionRequest =

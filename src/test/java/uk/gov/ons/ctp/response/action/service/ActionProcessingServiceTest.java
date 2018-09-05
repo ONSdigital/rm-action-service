@@ -143,23 +143,20 @@ public class ActionProcessingServiceTest {
     contextAction = new Action();
     contextAction.setId(ACTION_ID);
     contextAction.setActionType(
-      ActionType.builder()
-        .responseRequired(Boolean.TRUE)
-        .handler(handler)
-        .actionTypePK(1)
-        .build());
+        ActionType.builder()
+            .responseRequired(Boolean.TRUE)
+            .handler(handler)
+            .actionTypePK(1)
+            .build());
     contextAction.setActionPlanFK(ACTION_PLAN_FK);
     contextAction.setCaseId(CASE_ID);
     contextAction.setPriority(1);
     return contextAction;
   }
 
-  /**
-   * Happy path for an action linked to a case for a PARENT sample unit (a H one), ie we go all the
-   * way to producing an ActionRequest and publishing it.
-   */
+  /** Happy path for processing an B case business action */
   @Test
-  public void testProcessActionRequest() throws CTPException {
+  public void testProcessActionRequestBCaseBusiness() throws CTPException {
 
     // Given
     when(actionSvcStateTransitionManager.transition(
@@ -183,12 +180,9 @@ public class ActionProcessingServiceTest {
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
-  /**
-   * Happy path for an action linked to a case for a CHILD sample unit (a HI one), ie we go all the
-   * way to producing an ActionRequest and publishing it.
-   */
+  /** Happy path for processing an B case respondent action */
   @Test
-  public void testProcessActionRequestBusinessNotification() throws CTPException {
+  public void testProcessActionRequestBCaseRespondentsNotification() throws CTPException {
 
     // Given
     when(actionSvcStateTransitionManager.transition(
@@ -211,8 +205,7 @@ public class ActionProcessingServiceTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(actionInstructionPublisher, times(3))
         .sendActionInstruction(
-            eq(NOTIFY),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+            eq(NOTIFY), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
   @Test(expected = IllegalStateException.class)
