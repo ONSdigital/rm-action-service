@@ -16,6 +16,6 @@ public class ActionReportService {
   public void createReport() {
     log.debug("Entering createReport...");
     final boolean reportResult = actionReportRepository.miStoredProcedure();
-    log.debug("Just ran the mi report and result is {}", reportResult);
+    log.with("report", reportResult).debug("Just ran the mi report");
   }
 }

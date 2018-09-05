@@ -74,7 +74,7 @@ public class ActionRuleService {
     }
 
     if (needsUpdate) {
-      log.debug("updating action with {}", existingActionRule);
+      log.with("updated_action_rule", existingActionRule).debug("updating action");
       existingActionRule = actionRuleRepo.saveAndFlush(existingActionRule);
     }
 

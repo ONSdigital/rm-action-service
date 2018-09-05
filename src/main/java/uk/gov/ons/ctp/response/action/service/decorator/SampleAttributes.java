@@ -14,7 +14,8 @@ public class SampleAttributes implements ActionRequestDecorator {
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final ActionAddress actionAddress = new ActionAddress();
     Map<String, String> sampleAttribs = context.getSampleAttributes().getAttributes();
-    log.debug("sampleAttributesDTO received: " + context.getSampleAttributes().toString());
+    log.with("sample_attributes", context.getSampleAttributes().toString())
+        .debug("sampleAttributesDTO received");
 
     actionAddress.setLine1(sampleAttribs.get("ADDRESS_LINE1"));
     actionAddress.setLine2(sampleAttribs.get("ADDRESS_LINE2"));

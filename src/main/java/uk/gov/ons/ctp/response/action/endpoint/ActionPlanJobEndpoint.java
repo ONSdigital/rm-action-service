@@ -57,7 +57,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/jobs/{actionplanjobid}", method = RequestMethod.GET)
   public final ActionPlanJobDTO findActionPlanJobById(
       @PathVariable("actionplanjobid") final UUID actionPlanJobId) throws CTPException {
-    log.info("Entering findActionPlanJobById with {}", actionPlanJobId);
+    log.with("action_plan_id", actionPlanJobId).debug("Entering findActionPlanJobById");
     final ActionPlanJob actionPlanJob = actionPlanJobService.findActionPlanJob(actionPlanJobId);
 
     if (actionPlanJob == null) {
@@ -82,7 +82,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/{actionplanid}/jobs", method = RequestMethod.GET)
   public final ResponseEntity<List<ActionPlanJobDTO>> findAllActionPlanJobsByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
-    log.info("Entering findAllActionPlanJobsByActionPlanId with {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Entering findAllActionPlanJobsByActionPlanId");
     final List<ActionPlanJob> actionPlanJobs =
         actionPlanJobService.findActionPlanJobsForActionPlan(actionPlanId);
     if (CollectionUtils.isEmpty(actionPlanJobs)) {
@@ -111,7 +111,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
       final @RequestBody @Valid ActionPlanJobRequestDTO actionPlanJobRequestDTO,
       final BindingResult binding)
       throws CTPException, InvalidRequestException {
-    log.info("Entering executeActionPlan with {}", actionPlanId);
+    log.with("action_plan_id", actionPlanId).debug("Entering executeActionPlan");
 
     if (binding.hasErrors()) {
       throw new InvalidRequestException("Binding errors for execute action plan: ", binding);

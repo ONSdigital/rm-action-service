@@ -29,10 +29,9 @@ public class ActionFeedbackReceiver {
       inputChannel = "actionFeedbackTransformed",
       adviceChain = "actionFeedbackRetryAdvice")
   public void acceptFeedback(final ActionFeedback feedback) throws CTPException {
-    log.debug(
-        "processing action feedback {} for action id {}",
-        feedback.getOutcome(),
-        feedback.getActionId());
+    log.with("outcome", feedback.getOutcome())
+        .with("action_id", feedback.getActionId())
+        .debug("processing action feedback");
     feedbackService.acceptFeedback(feedback);
   }
 }

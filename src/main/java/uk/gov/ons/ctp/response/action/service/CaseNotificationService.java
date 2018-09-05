@@ -84,22 +84,24 @@ public class CaseNotificationService {
           } catch (final CTPException e) {
             // TODO CTPA-1373 Do we really want to catch this. Should be let to go through.
             // TODO CTPA-1373 What happens with other notif?
-            log.error(String.format("message = %s - cause = %s", e.getMessage(), e.getCause()));
-            log.error("Stacktrace: ", e);
+            log.error("unable to cancel action", e);
           }
           final ActionCase actionCaseToDelete = actionCaseRepo.findById(caseId);
           if (actionCaseToDelete != null) {
             actionCaseRepo.delete(actionCaseToDelete);
           } else {
-            log.warn("Unexpected situation where actionCaseToDelete is null for caseId {}", caseId);
+            log.with("case_id", caseId)
+                .warn("Unexpected situation where actionCaseToDelete is null");
           }
           break;
         default:
-          log.warn("Unknown Case lifecycle event {}", notification.getNotificationType());
+          log.with("notification_type", notification.getNotificationType())
+              .warn("Unknown Case lifecycle event");
           break;
       }
     } else {
-      log.warn("Cannot accept CaseNotification for non-existent actionplan {}", actionPlanIdStr);
+      log.with("action_plan_id", actionPlanIdStr)
+          .warn("Cannot accept CaseNotification for non-existent actionplan");
     }
 
     actionCaseRepo.flush();
@@ -115,9 +117,8 @@ public class CaseNotificationService {
    */
   private void checkAndSaveCase(final ActionCase actionCase) {
     if (actionCaseRepo.findById(actionCase.getId()) != null) {
-      log.error(
-          "CaseNotification illiciting case creation for an existing case id {}",
-          actionCase.getId());
+      log.with("case_id", actionCase.getId())
+          .error("CaseNotification illiciting case creation for an existing case");
     } else {
       actionCaseRepo.save(actionCase);
     }
