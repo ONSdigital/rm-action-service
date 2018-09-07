@@ -32,11 +32,15 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
     ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
-    setParties(context);
+    if (context.getSampleUnitType().equals(SampleUnitType.B)) {
+      setPartiesBCase(context);
+    } else if (context.getSampleUnitType().equals(SampleUnitType.BI)) {
+      setPartiesBICase(context);
+    }
     return context;
   }
 
-  private void setParties(ActionRequestContext context) {
+  private void setPartiesBCase(ActionRequestContext context) {
     PartyDTO businessParty =
         partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
             SampleUnitType.B.name(),
@@ -44,6 +48,17 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
             context.getSurvey().getId());
     context.setParentParty(businessParty);
 
+    List<PartyDTO> respondentParties = getRespondentParties(businessParty);
+    context.setChildParties(respondentParties);
+  }
+
+  private void setPartiesBICase(ActionRequestContext context) {
+    PartyDTO businessParty =
+        partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+            SampleUnitType.B.name(),
+            context.getCaseDetails().getCaseGroup().getPartyId(),
+            context.getSurvey().getId());
+    context.setParentParty(businessParty);
     List<PartyDTO> respondentParties = getRespondentParties(businessParty);
     context.setChildParties(respondentParties);
   }

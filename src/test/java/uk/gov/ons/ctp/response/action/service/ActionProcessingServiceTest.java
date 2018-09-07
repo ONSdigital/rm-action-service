@@ -59,7 +59,7 @@ public class ActionProcessingServiceTest {
 
   private static final Integer ACTION_PLAN_FK = 1;
 
-  private static final String ACTIONEXPORTER = "actionExporter";
+  private static final String PRINTER = "Printer";
   private static final String ACTION_PLAN_NAME = "action plan 1";
   private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action Statetransitionfailed.";
   private static final String CENSUS_SURVEY_ID = "Census2021";
@@ -135,7 +135,7 @@ public class ActionProcessingServiceTest {
     context.setCollectionExercise(collectionExercises.get(0));
     context.setSurvey(surveys.get(0));
     context.setSampleUnitType(SampleUnitType.B);
-    context.setAction(createContextAction(ACTIONEXPORTER));
+    context.setAction(createContextAction(PRINTER));
     return context;
   }
 
@@ -176,8 +176,7 @@ public class ActionProcessingServiceTest {
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(actionInstructionPublisher, times(1))
         .sendActionInstruction(
-            eq(ACTIONEXPORTER),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+            eq(PRINTER), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
 
   /** Happy path for processing an B case respondent action */
@@ -334,7 +333,7 @@ public class ActionProcessingServiceTest {
   public void testProcessActionCancelHappyPath() throws CTPException {
     final Action action = new Action();
     action.setActionType(
-        ActionType.builder().responseRequired(Boolean.TRUE).handler(ACTIONEXPORTER).build());
+        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
     action.setId(ACTION_ID);
     businessActionProcessingService.processActionCancel(action);
 
@@ -346,7 +345,7 @@ public class ActionProcessingServiceTest {
     final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
         ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
     verify(actionInstructionPublisher, times(1))
-        .sendActionInstruction(eq(ACTIONEXPORTER), actionCaptor.capture());
+        .sendActionInstruction(eq(PRINTER), actionCaptor.capture());
     final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel =
         (ActionCancel) actionCaptor.getValue();
     assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
@@ -360,6 +359,7 @@ public class ActionProcessingServiceTest {
     CaseDetailsDTO caseDetails = createCaseDetails();
     caseDetails.setCaseRef("Case ref");
     context.setCaseDetails(caseDetails);
+    context.setSampleUnitType(SampleUnitType.B);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
 
@@ -368,7 +368,7 @@ public class ActionProcessingServiceTest {
 
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);
-    verify(actionInstructionPublisher).sendActionInstruction(eq(ACTIONEXPORTER), captor.capture());
+    verify(actionInstructionPublisher).sendActionInstruction(eq(PRINTER), captor.capture());
     assertEquals("Case ref", captor.getValue().getCaseRef());
   }
 

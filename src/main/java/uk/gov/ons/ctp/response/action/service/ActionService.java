@@ -233,6 +233,9 @@ public class ActionService {
       return;
     }
 
+    log.with("case_id", actionCase.getId().toString())
+        .with("action_rule_id", actionRule.getId().toString())
+        .info("Creating action");
     Action newAction = new Action();
     newAction.setId(UUID.randomUUID());
     newAction.setCreatedBy(SYSTEM);

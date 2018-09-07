@@ -6,7 +6,6 @@ import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -82,8 +81,7 @@ public class ActionPlanJobService {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
         actionPlan -> {
-          if (!hasActionPlanBeenRunSinceLastSchedule(actionPlan)
-              && hasActionableCases(actionPlan)) {
+          if (hasActionableCases(actionPlan)) {
             createAndExecuteActionPlanJob(actionPlan);
           }
         });
@@ -93,12 +91,14 @@ public class ActionPlanJobService {
     return actionCaseRepo.countByActionPlanFK(actionPlan.getActionPlanPK()) > 0;
   }
 
-  private boolean hasActionPlanBeenRunSinceLastSchedule(ActionPlan actionPlan) {
-    final Date lastExecutionTime =
-        new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
-    return !(actionPlan.getLastRunDateTime() == null
-        || actionPlan.getLastRunDateTime().before(lastExecutionTime));
-  }
+  //  private boolean hasActionPlanBeenRunSinceLastSchedule(ActionPlan actionPlan) {
+  //    if (actionPlan.getLastRunDateTime() == null) {
+  //      return false;
+  //    }
+  //    final Date lastExecutionTime =
+  //        new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
+  //    return actionPlan.getLastRunDateTime().after(lastExecutionTime);
+  //  }
 
   private void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
 
