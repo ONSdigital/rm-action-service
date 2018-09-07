@@ -221,4 +221,28 @@ public class CaseSvcClientService {
     }
     return result;
   }
+
+  /**
+   * Generate a new IAC for specified case
+   * @param caseId Case you want to update with a new generated IAC
+   * @return The new IAC
+   */
+  public String generateNewIacForCase(final UUID caseId) {
+    String iac = null;
+
+    final UriComponents uriComponents =
+      restUtility.createUriComponents(
+        appConfig.getCaseSvc().getGenerateNewIacForCase(), null, caseId);
+
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+
+    final ResponseEntity<String> responseEntity =
+      restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity, String.class);
+
+    if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
+      iac = responseEntity.getBody();
+    }
+
+    return iac;
+  }
 }
