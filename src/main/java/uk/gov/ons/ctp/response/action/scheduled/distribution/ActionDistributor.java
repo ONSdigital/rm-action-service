@@ -20,7 +20,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 /**
@@ -50,7 +49,8 @@ class ActionDistributor {
   private ActionProcessingService socialActionProcessingService;
 
   @Autowired private ActionCaseRepository actionCaseRepo;
-  private CaseSvcClientService caseSvcClientService;
+
+  @Autowired private CaseSvcClientService caseSvcClientService;
 
   /**
    * wake up on schedule and check for submitted actions, enrich and distribute them to spring
@@ -135,7 +135,7 @@ class ActionDistributor {
       Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
       throws CTPException {
 
-    if (action.getActionType().getActionTypeNameEnum() == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+    if (action.getActionType().getName().equals("SOCIALREM")) {
       caseSvcClientService.generateNewIacForCase(action.getCaseId());
     }
 
