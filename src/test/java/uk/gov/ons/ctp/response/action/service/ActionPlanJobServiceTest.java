@@ -47,7 +47,7 @@ public class ActionPlanJobServiceTest {
 
     when(actionPlanRepo.findAll()).thenReturn(actionPlans);
     when(actionCaseRepo.countByActionPlanFK(any(Integer.class)))
-      .thenReturn(Integer.toUnsignedLong(1));
+        .thenReturn(Integer.toUnsignedLong(1));
     when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
     when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
   }

@@ -38,13 +38,14 @@ public class ActionRuleServiceTest {
 
   @Before
   public void setUp() {
-    actionRule = ActionRule.builder()
-      .id(ACTION_RULE_ID_1)
-      .priority(1)
-      .description("test description")
-      .triggerDateTime(OffsetDateTime.now())
-      .name("BSNOT+0")
-      .build();
+    actionRule =
+        ActionRule.builder()
+            .id(ACTION_RULE_ID_1)
+            .priority(1)
+            .description("test description")
+            .triggerDateTime(OffsetDateTime.now())
+            .name("BSNOT+0")
+            .build();
 
     MockitoAnnotations.initMocks(this);
   }

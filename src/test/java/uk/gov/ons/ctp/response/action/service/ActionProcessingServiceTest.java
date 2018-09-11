@@ -2,7 +2,6 @@ package uk.gov.ons.ctp.response.action.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
@@ -119,11 +118,11 @@ public class ActionProcessingServiceTest {
     MockitoAnnotations.initMocks(this);
 
     when(actionSvcStateTransitionManager.transition(
-      any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
-      .thenReturn(ActionDTO.ActionState.PENDING);
+            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+        .thenReturn(ActionDTO.ActionState.PENDING);
     when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
-      .thenReturn(context);
+        .thenReturn(context);
   }
 
   private ActionRequestContext createContext() {
