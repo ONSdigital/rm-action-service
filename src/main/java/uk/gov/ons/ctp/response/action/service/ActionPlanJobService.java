@@ -91,17 +91,7 @@ public class ActionPlanJobService {
     return actionCaseRepo.countByActionPlanFK(actionPlan.getActionPlanPK()) > 0;
   }
 
-  //  private boolean hasActionPlanBeenRunSinceLastSchedule(ActionPlan actionPlan) {
-  //    if (actionPlan.getLastRunDateTime() == null) {
-  //      return false;
-  //    }
-  //    final Date lastExecutionTime =
-  //        new Date(nowUTC().getTime() - appConfig.getPlanExecution().getDelayMilliSeconds());
-  //    return actionPlan.getLastRunDateTime().after(lastExecutionTime);
-  //  }
-
   private void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
-
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
       log.with("action_plan_id", actionPlan.getId()).debug("Could not get manager lock");
       return;

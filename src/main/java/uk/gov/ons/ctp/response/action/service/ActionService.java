@@ -17,8 +17,6 @@ import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
-import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
-import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -64,8 +62,6 @@ public class ActionService {
       ActionPlanJobRepository actionPlanJobRepository,
       ActionRuleRepository actionRuleRepo,
       ActionTypeRepository actionTypeRepo,
-      CollectionExerciseClientService collectionExerciseClientService,
-      PartySvcClientService partySvcClientService,
       StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
@@ -222,7 +218,8 @@ public class ActionService {
     Timestamp triggerDateTime =
         Timestamp.valueOf(
             LocalDateTime.ofInstant(rule.getTriggerDateTime().toInstant(), ZoneOffset.UTC));
-    return triggerDateTime.before(currentTime);
+    final Timestamp dayBefore = new Timestamp(currentTime.getTime() - (1000 * 60 * 60 * 24));
+    return triggerDateTime.before(currentTime) && triggerDateTime.after(dayBefore);
   }
 
   private void createAction(ActionCase actionCase, ActionRule actionRule) {
