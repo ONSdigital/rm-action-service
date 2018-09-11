@@ -68,19 +68,15 @@ public class ActionPlanService {
         .with("action_plan_name", actionPlan.getName())
         .debug("Creating action plan");
 
-    ActionPlan savedActionPlan = saveActionPlan(actionPlan);
+    actionPlan.setActionPlanPK(null);
+    actionPlan.setId(UUID.randomUUID());
+    ActionPlan savedActionPlan = this.actionPlanRepo.saveAndFlush(actionPlan);
 
     log.with("selectors", actionPlan.getSelectors())
         .with("action_plan_name", actionPlan.getName())
         .with("action_plan_id", actionPlan.getId())
         .debug("Successfully created action plan");
     return savedActionPlan;
-  }
-
-  private ActionPlan saveActionPlan(final ActionPlan actionPlan) {
-    actionPlan.setActionPlanPK(null);
-    actionPlan.setId(UUID.randomUUID());
-    return this.actionPlanRepo.saveAndFlush(actionPlan);
   }
 
   @Transactional(

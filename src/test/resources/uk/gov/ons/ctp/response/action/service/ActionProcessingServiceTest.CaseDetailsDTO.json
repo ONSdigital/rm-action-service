@@ -22,27 +22,6 @@
         "subCategory":"subcat",
         "createdBy":"me",
         "description":"desc"
-      },
-      {
-        "createdDateTime":1460736159699,
-        "category":"GENERAL_ENQUIRY",
-        "subCategory":"subcat",
-        "createdBy":"me",
-        "description":"desc"
-      },
-      {
-        "createdDateTime":1460736159699,
-        "category":"GENERAL_ENQUIRY",
-        "subCategory":"subcat",
-        "createdBy":"me",
-        "description":"desc"
-      },
-      {
-        "createdDateTime":1460736159699,
-        "category":"GENERAL_ENQUIRY",
-        "subCategory":"subcat",
-        "createdBy":"me",
-        "description":"desc"
       }
     ],
     "caseGroup":
@@ -69,27 +48,6 @@
       }
     ],
     "caseEvents": [
-      {
-        "createdDateTime":1460736159699,
-        "category":"GENERAL_ENQUIRY",
-        "subCategory":"subcat",
-        "createdBy":"me",
-        "description":"desc"
-      },
-      {
-        "createdDateTime":1460736159699,
-        "category":"GENERAL_ENQUIRY",
-        "subCategory":"subcat",
-        "createdBy":"me",
-        "description":"desc"
-      },
-      {
-        "createdDateTime":1460736159699,
-        "category":"GENERAL_ENQUIRY",
-        "subCategory":"subcat",
-        "createdBy":"me",
-        "description":"desc"
-      },
       {
         "createdDateTime":1460736159699,
         "category":"GENERAL_ENQUIRY",

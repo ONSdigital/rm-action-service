@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Before;
@@ -44,12 +43,8 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
@@ -62,17 +57,11 @@ public class ActionProcessingServiceTest {
   private static final String PRINTER = "Printer";
   private static final String ACTION_PLAN_NAME = "action plan 1";
   private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action Statetransitionfailed.";
-  private static final String CENSUS_SURVEY_ID = "Census2021";
   private static final String DB_ERROR_MSG = "DB is KO.";
   private static final String NOTIFY = "Notify";
-  private static final String REST_ERROR_MSG = "REST call is KO.";
-  private static final String SAMPLE_UNIT_TYPE_HI = "HI";
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
-  private static final UUID COLLECTION_EXERCISE_ID =
-      UUID.fromString("c2124abc-10c6-4c7c-885a-779d185a03a4");
-  private static final UUID PARTY_ID = UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c86");
 
   @InjectMocks private BusinessActionProcessingService businessActionProcessingService;
 
@@ -95,6 +84,8 @@ public class ActionProcessingServiceTest {
   @Mock private ActionPlanRepository actionPlanRepo;
 
   private List<CaseDetailsDTO> caseDetails;
+  private CaseDetailsDTO hCase;
+  private CaseDetailsDTO bCase;
   private List<CollectionExerciseDTO> collectionExercises;
   private List<PartyDTO> partys;
   private PartyDTO businessParty;
@@ -117,6 +108,8 @@ public class ActionProcessingServiceTest {
     respondentParties = partys.subList(1, 4);
 
     caseDetails = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
+    hCase = caseDetails.get(0);
+    bCase = caseDetails.get(1);
     collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
     surveys = FixtureHelper.loadClassFixtures(SurveyDTO[].class);
 
@@ -124,13 +117,20 @@ public class ActionProcessingServiceTest {
     context = createContext();
 
     MockitoAnnotations.initMocks(this);
+
+    when(actionSvcStateTransitionManager.transition(
+      any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+      .thenReturn(ActionDTO.ActionState.PENDING);
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
+    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
+      .thenReturn(context);
   }
 
   private ActionRequestContext createContext() {
     context = new ActionRequestContext();
     contextActionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
     context.setActionPlan(contextActionPlan);
-    context.setCaseDetails(caseDetails.get(0));
+    context.setCaseDetails(bCase);
     context.setParentParty(businessParty);
     context.setCollectionExercise(collectionExercises.get(0));
     context.setSurvey(surveys.get(0));
@@ -158,13 +158,7 @@ public class ActionProcessingServiceTest {
   @Test
   public void testProcessActionRequestBCaseBusiness() throws CTPException {
 
-    // Given
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
-        .thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
-    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
-        .thenReturn(context);
+    // Given setUp()
 
     // When
     businessActionProcessingService.processActionRequests(contextAction);
@@ -184,11 +178,6 @@ public class ActionProcessingServiceTest {
   public void testProcessActionRequestBCaseRespondentsNotification() throws CTPException {
 
     // Given
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
-        .thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
-    context.setCaseDetails(caseDetails.get(1));
     context.setAction(createContextAction(NOTIFY));
     context.setChildParties(respondentParties);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
@@ -209,9 +198,10 @@ public class ActionProcessingServiceTest {
 
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestNoActionType() throws CTPException {
-    final Action action = new Action();
-    businessActionProcessingService.processActionRequests(action);
+    // Given/When
+    businessActionProcessingService.processActionRequests(new Action());
 
+    // Then
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
@@ -223,10 +213,12 @@ public class ActionProcessingServiceTest {
 
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
-    final Action action = new Action();
+    // Given/When
+    Action action = new Action();
     action.setActionType(ActionType.builder().build());
     businessActionProcessingService.processActionRequests(action);
 
+    // Then
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
@@ -239,17 +231,18 @@ public class ActionProcessingServiceTest {
   /** An exception is thrown when transitioning the state of the Action */
   @Test(expected = CTPException.class)
   public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
-    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
-        .thenReturn(context);
+    // Given
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
+    // When
     Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     businessActionProcessingService.processActionRequests(action);
 
+    // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
@@ -263,12 +256,15 @@ public class ActionProcessingServiceTest {
   /** An exception is thrown when saving the Action after its state was transitioned */
   @Test(expected = RuntimeException.class)
   public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
+    // Given
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
+    // When
     Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
     businessActionProcessingService.processActionRequests(action);
 
+    // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
@@ -280,22 +276,20 @@ public class ActionProcessingServiceTest {
   }
 
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
-  @Test
+  @Test(expected = CTPException.class)
   public void testProcessActionCancelStateTransitionException() throws CTPException {
+
+    // Given
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
-    try {
-      final Action action = new Action();
-      businessActionProcessingService.processActionCancel(action);
-      fail();
-    } catch (final CTPException e) {
-      assertEquals(CTPException.Fault.SYSTEM_ERROR, e.getFault());
-      assertEquals(ACTION_STATE_TRANSITION_ERROR_MSG, e.getMessage());
-    }
+    // When
+    final Action action = new Action();
+    businessActionProcessingService.processActionCancel(action);
 
+    // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
@@ -307,18 +301,16 @@ public class ActionProcessingServiceTest {
   }
 
   /** Scenario where the action's state transitions OK but issue while persisting action to DB */
-  @Test
+  @Test(expected = RuntimeException.class)
   public void testProcessActionCancelPersistingException() throws CTPException {
+    // Given
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
-    try {
-      final Action action = new Action();
-      businessActionProcessingService.processActionCancel(action);
-      fail();
-    } catch (final RuntimeException e) {
-      assertEquals(DB_ERROR_MSG, e.getMessage());
-    }
+    // When
+    final Action action = new Action();
+    businessActionProcessingService.processActionCancel(action);
 
+    // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
@@ -331,12 +323,14 @@ public class ActionProcessingServiceTest {
 
   @Test
   public void testProcessActionCancelHappyPath() throws CTPException {
+    // Given/When
     final Action action = new Action();
     action.setActionType(
         ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
     action.setId(ACTION_ID);
     businessActionProcessingService.processActionCancel(action);
 
+    // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
@@ -356,10 +350,6 @@ public class ActionProcessingServiceTest {
   @Test
   public void testCaseRefShouldBeOnActionRequest() throws CTPException {
     // Given
-    CaseDetailsDTO caseDetails = createCaseDetails();
-    caseDetails.setCaseRef("Case ref");
-    context.setCaseDetails(caseDetails);
-    context.setSampleUnitType(SampleUnitType.B);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
 
@@ -369,36 +359,6 @@ public class ActionProcessingServiceTest {
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);
     verify(actionInstructionPublisher).sendActionInstruction(eq(PRINTER), captor.capture());
-    assertEquals("Case ref", captor.getValue().getCaseRef());
-  }
-
-  private CollectionExerciseDTO createCollectionExercise() {
-    CollectionExerciseDTO collectionExercise = new CollectionExerciseDTO();
-    collectionExercise.setSurveyId(CENSUS_SURVEY_ID);
-    return collectionExercise;
-  }
-
-  private CaseDetailsDTO createCaseDetails() {
-    CaseDetailsDTO caseDetails = new CaseDetailsDTO();
-    caseDetails.setCaseEvents(Collections.emptyList());
-    caseDetails.setSampleUnitType(SampleUnitDTO.SampleUnitType.H.toString());
-    caseDetails.setCaseGroup(createCaseGroup());
-    caseDetails.setPartyId(PARTY_ID);
-    caseDetails.setId(UUID.randomUUID());
-    return caseDetails;
-  }
-
-  private CaseGroupDTO createCaseGroup() {
-    CaseGroupDTO caseGroup = new CaseGroupDTO();
-    caseGroup.setCaseGroupStatus(CaseGroupStatus.INPROGRESS);
-    caseGroup.setCollectionExerciseId(COLLECTION_EXERCISE_ID);
-    return caseGroup;
-  }
-
-  private PartyDTO createParty() {
-    PartyDTO party = new PartyDTO();
-    party.setAttributes(new Attributes());
-    party.setAssociations(Collections.emptyList());
-    return party;
+    assertEquals(context.getCaseDetails().getCaseRef(), captor.getValue().getCaseRef());
   }
 }

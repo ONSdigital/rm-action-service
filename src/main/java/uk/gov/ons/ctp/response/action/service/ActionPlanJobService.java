@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
@@ -28,8 +27,6 @@ public class ActionPlanJobService {
   public static final String CREATED_BY_SYSTEM = "SYSTEM";
   public static final String NO_ACTIONPLAN_MSG = "ActionPlan not found for id %s";
 
-  private AppConfig appConfig;
-
   private ActionCaseRepository actionCaseRepo;
   private ActionPlanRepository actionPlanRepo;
   private ActionPlanJobRepository actionPlanJobRepo;
@@ -39,13 +36,11 @@ public class ActionPlanJobService {
   private DistributedLockManager actionPlanExecutionLockManager;
 
   public ActionPlanJobService(
-      AppConfig appConfig,
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
       ActionPlanJobRepository actionPlanJobRepo,
       ActionService actionSvc,
       DistributedLockManager actionPlanExecutionLockManager) {
-    this.appConfig = appConfig;
     this.actionCaseRepo = actionCaseRepo;
     this.actionPlanRepo = actionPlanRepo;
     this.actionPlanJobRepo = actionPlanJobRepo;
@@ -76,7 +71,7 @@ public class ActionPlanJobService {
    * Create a new ActionPlanJob and create associated actions for all action plans with cases in the
    * action.case table
    */
-  @Transactional(propagation = REQUIRES_NEW)
+  @Transactional
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(
@@ -91,7 +86,8 @@ public class ActionPlanJobService {
     return actionCaseRepo.countByActionPlanFK(actionPlan.getActionPlanPK()) > 0;
   }
 
-  private void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
+  @Transactional(propagation = REQUIRES_NEW)
+  public void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
       log.with("action_plan_id", actionPlan.getId()).debug("Could not get manager lock");
       return;
