@@ -15,7 +15,6 @@ import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 public class PartyAndContact implements ActionRequestDecorator {
   private static final Logger log = LoggerFactory.getLogger(PartyAndContact.class);
@@ -23,71 +22,55 @@ public class PartyAndContact implements ActionRequestDecorator {
   private static final String PRINTER = "Printer";
   private static final String INVALID_SAMPLE_UNIT_TYPE_AND_HANDLER =
       "Invalid sample unit type and handler combination";
+  private static final String WRONG_NUMBER_OF_RESPONDENT_PARTIES =
+      "There should only one respondent party per notify request, instead there are %s";
 
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final PartyDTO businessParty = context.getParentParty();
+    // We should only have one respondent party per request now
     final List<PartyDTO> respondentParties = context.getChildParties();
+
     final Attributes businessUnitAttributes = businessParty.getAttributes();
     actionRequest.setRegion(businessUnitAttributes.getRegion());
+    actionRequest.setEnrolmentStatus(getEnrolmentStatus(businessParty));
 
     final ActionContact actionContact = new ActionContact();
     actionContact.setRuName(businessUnitAttributes.getName());
     actionContact.setTradingStyle(generateTradingStyle(businessUnitAttributes));
-
-    if (context.getSampleUnitType().equals(SampleUnitDTO.SampleUnitType.BI)) {
-      decorateBIcase(actionRequest, context, actionContact);
-    } else if (isNotifyType(context)) {
-      decorateBCaseNotifyType(respondentParties, actionRequest, actionContact);
+    if (isNotifyType(context)) {
+      decorateNotifyType(respondentParties, actionRequest, actionContact);
     } else if (isPrinterType(context)) {
-      decorateBCasePrinterType(context, actionRequest, actionContact);
+      decoratePrinterType(respondentParties, actionRequest, actionContact);
     } else {
       throw new IllegalStateException(INVALID_SAMPLE_UNIT_TYPE_AND_HANDLER);
     }
-
     actionRequest.setContact(actionContact);
-    actionRequest.setEnrolmentStatus(getEnrolmentStatus(businessParty));
   }
 
-  private void decorateBIcase(
-      ActionRequest actionRequest, ActionRequestContext context, ActionContact contact) {
-    PartyDTO respondentParty = context.getChildParties().get(0);
-    actionRequest.setRespondentStatus(respondentParty.getStatus());
-    Attributes respondentAttributes = respondentParty.getAttributes();
-    populateContactDetails(respondentAttributes, contact);
-  }
+  private String getEnrolmentStatus(final PartyDTO parentParty) {
+    final List<String> enrolmentStatuses = new ArrayList<>();
 
-  private void decorateBCaseNotifyType(
-      List<PartyDTO> respondentParties, ActionRequest actionRequest, ActionContact actionContact) {
-    PartyDTO respondentParty = respondentParties.get(0);
-    actionRequest.setRespondentStatus(respondentParty.getStatus());
-
-    final Attributes respondentAttributes = respondentParty.getAttributes();
-    populateContactDetails(respondentAttributes, actionContact);
-  }
-
-  private void decorateBCasePrinterType(
-      ActionRequestContext context, ActionRequest actionRequest, ActionContact actionContact) {
-    actionRequest.setRespondentStatus(parseRespondentStatuses(context.getChildParties()));
-    List<PartyDTO> createdChildParties =
-        filterListByStatus(context.getChildParties(), ActionProcessingService.CREATED);
-
-    if (createdChildParties != null && createdChildParties.size() > 0) {
-      actionRequest.setIac(""); // Don't want to send this to the business, breaks if null
-
-      final PartyDTO createdStatusChildParty = createdChildParties.get(0);
-
-      final Attributes childAttributes = createdStatusChildParty.getAttributes();
-      populateContactDetails(childAttributes, actionContact);
+    final List<Association> associations = parentParty.getAssociations();
+    if (associations != null) {
+      for (Association association : associations) {
+        for (Enrolment enrolment : association.getEnrolments()) {
+          enrolmentStatuses.add(enrolment.getEnrolmentStatus());
+        }
+      }
     }
-  }
 
-  private boolean isNotifyType(ActionRequestContext context) {
-    return context.getAction().getActionType().getHandler().equals(NOTIFY);
-  }
+    String enrolmentStatus = null;
 
-  private boolean isPrinterType(ActionRequestContext context) {
-    return context.getAction().getActionType().getHandler().equals(PRINTER);
+    if (enrolmentStatuses.contains(ActionProcessingService.PENDING)) {
+      enrolmentStatus = ActionProcessingService.PENDING;
+    }
+
+    if (enrolmentStatuses.contains(ActionProcessingService.ENABLED)) {
+      enrolmentStatus = ActionProcessingService.ENABLED;
+    }
+
+    return enrolmentStatus;
   }
 
   private String generateTradingStyle(final Attributes businessUnitAttributes) {
@@ -99,11 +82,47 @@ public class PartyAndContact implements ActionRequestDecorator {
     return tradeStyles.stream().filter(Objects::nonNull).collect(Collectors.joining(" "));
   }
 
+  private boolean isNotifyType(ActionRequestContext context) {
+    return context.getAction().getActionType().getHandler().equals(NOTIFY);
+  }
+
+  private void decorateNotifyType(
+      List<PartyDTO> respondentParties, ActionRequest actionRequest, ActionContact actionContact) {
+    if (respondentParties.size() != 1) {
+      throw new IllegalStateException(
+          String.format(WRONG_NUMBER_OF_RESPONDENT_PARTIES, respondentParties.size()));
+    }
+    PartyDTO respondentParty = respondentParties.get(0);
+    actionRequest.setRespondentStatus(respondentParty.getStatus());
+    populateContactDetails(respondentParty.getAttributes(), actionContact);
+  }
+
+  private boolean isPrinterType(ActionRequestContext context) {
+    return context.getAction().getActionType().getHandler().equals(PRINTER);
+  }
+
+  private void decoratePrinterType(
+      List<PartyDTO> respondentParties, ActionRequest actionRequest, ActionContact actionContact) {
+    actionRequest.setRespondentStatus(parseRespondentStatuses(respondentParties));
+    List<PartyDTO> createdRespondentParties =
+        filterListByStatus(respondentParties, ActionProcessingService.CREATED);
+    if (createdRespondentParties != null && createdRespondentParties.size() > 0) {
+      actionRequest.setIac(""); // Don't want to send this to the business, breaks if null
+      populateContactDetails(createdRespondentParties.get(0).getAttributes(), actionContact);
+    }
+  }
+
   private void populateContactDetails(
       final Attributes attributes, final ActionContact actionContact) {
     actionContact.setForename(attributes.getFirstName());
     actionContact.setSurname(attributes.getLastName());
     actionContact.setEmailAddress(attributes.getEmailAddress());
+  }
+
+  private List<PartyDTO> filterListByStatus(List<PartyDTO> parties, String status) {
+    return parties == null
+        ? null
+        : parties.stream().filter(p -> p.getStatus().equals(status)).collect(Collectors.toList());
   }
 
   private String parseRespondentStatuses(final List<PartyDTO> childParties) {
@@ -127,36 +146,5 @@ public class PartyAndContact implements ActionRequestDecorator {
     }
 
     return respondentStatus;
-  }
-
-  private List<PartyDTO> filterListByStatus(List<PartyDTO> parties, String status) {
-    return parties == null
-        ? null
-        : parties.stream().filter(p -> p.getStatus().equals(status)).collect(Collectors.toList());
-  }
-
-  private String getEnrolmentStatus(final PartyDTO parentParty) {
-    final List<String> enrolmentStatuses = new ArrayList<>();
-
-    final List<Association> associations = parentParty.getAssociations();
-    if (associations != null) {
-      for (final Association association : associations) {
-        for (final Enrolment enrolment : association.getEnrolments()) {
-          enrolmentStatuses.add(enrolment.getEnrolmentStatus());
-        }
-      }
-    }
-
-    String enrolmentStatus = null;
-
-    if (enrolmentStatuses.contains(ActionProcessingService.PENDING)) {
-      enrolmentStatus = ActionProcessingService.PENDING;
-    }
-
-    if (enrolmentStatuses.contains(ActionProcessingService.ENABLED)) {
-      enrolmentStatus = ActionProcessingService.ENABLED;
-    }
-
-    return enrolmentStatus;
   }
 }
