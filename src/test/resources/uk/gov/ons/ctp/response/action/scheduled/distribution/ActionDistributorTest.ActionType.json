@@ -1,18 +1,26 @@
 [
   {
     "actionTypePK": 1,
-    "name": "HouseholdInitialContact",
-    "description": "Household Initial Contact",
+    "name": "SOCIALNOT",
+    "description": "Enrolment Invitation Letter",
     "handler": "Printer",
     "canCancel": false,
-    "responseRequired": true
+    "responseRequired": false
   },
   {
     "actionTypePK": 2,
-    "name": "HouseholdUploadIAC",
-    "description": "Household upload IAC",
-    "handler": "HHSurvey",
+    "name": "SOCIALSNE",
+    "description": "Survey Reminder Notification",
+    "handler": "Notify",
     "canCancel": true,
-    "responseRequired": true
+    "responseRequired": false
+  },
+  {
+    "actionTypePK": 3,
+    "name": "BSNOT",
+    "description": "Enrolment Invitation Letter",
+    "handler": "Printer",
+    "canCancel": true,
+    "responseRequired": false
   }
 ]

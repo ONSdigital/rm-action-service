@@ -1,18 +1,22 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
-import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -20,6 +24,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import uk.gov.ons.ctp.common.FixtureHelper;
+import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.config.ActionDistribution;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.DataGrid;
@@ -31,26 +36,21 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
-/**
- * Test the ActionDistributor
- *
- * <p>Important reminder on the standing data held in json files: - case
- * 3382981d-3df0-464e-9c95-aea7aee80c81 is linked with a SUBMITTED action so expect 1 ActionRequest
- * - case 3382981d-3df0-464e-9c95-aea7aee80c82 is linked with a CANCEL_SUBMITTED action so expect 1
- * ActionCancel - case 3382981d-3df0-464e-9c95-aea7aee80c83 is linked with a SUBMITTED action so
- * expect 1 ActionRequest - case 3382981d-3df0-464e-9c95-aea7aee80c84 is linked with a
- * CANCEL_SUBMITTED action so expect 1 ActionCancel - all actions have responseRequired = true
- */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionDistributorTest {
 
-  private static final String HOUSEHOLD_INITIAL_CONTACT = "HouseholdInitialContact";
-  private static final String HOUSEHOLD_UPLOAD_IAC = "HouseholdUploadIAC";
+  private static final String SOCIALNOT = "SOCIALNOT";
+  private static final String SOCIALSNE = "SOCIALSNE";
+  private static final String BSNOT = "BSNOT";
 
   private List<ActionType> actionTypes;
-  private List<Action> householdInitialContactActions;
-  private List<Action> householdUploadIACActions;
-  private ActionCase actionCase;
+  private List<Action> actions;
+  private List<Action> socialNotificationActions;
+  private List<Action> socialRemindersActions;
+  private List<Action> businessEnrolmentActions;
+  private ActionCase bActionCase;
+  private ActionCase hActionCase;
+  private ActionCase fActionCase;
   private RLock lock;
 
   @Mock private AppConfig appConfig;
@@ -61,7 +61,11 @@ public class ActionDistributorTest {
 
   @Mock private ActionTypeRepository actionTypeRepo;
 
-  @Mock private ActionProcessingService actionProcessingService;
+  @Mock(name = "businessActionProcessingService")
+  private ActionProcessingService businessActionProcessingService;
+
+  @Mock(name = "socialActionProcessingService")
+  private ActionProcessingService socialActionProcessingService;
 
   @Mock private ActionCaseRepository actionCaseRepo;
 
@@ -71,12 +75,16 @@ public class ActionDistributorTest {
   @Before
   public void setUp() throws Exception {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
-    householdInitialContactActions =
-        FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_INITIAL_CONTACT);
-    householdUploadIACActions =
-        FixtureHelper.loadClassFixtures(Action[].class, HOUSEHOLD_UPLOAD_IAC);
-    actionCase = new ActionCase();
-    actionCase.setSampleUnitType("H");
+    actions = FixtureHelper.loadClassFixtures(Action[].class);
+    socialNotificationActions = actions.subList(0, 2);
+    socialRemindersActions = actions.subList(2, 4);
+    businessEnrolmentActions = actions.subList(4, 6);
+    bActionCase = new ActionCase();
+    bActionCase.setSampleUnitType("B");
+    hActionCase = new ActionCase();
+    hActionCase.setSampleUnitType("H");
+    fActionCase = new ActionCase();
+    fActionCase.setSampleUnitType("F");
 
     MockitoAnnotations.initMocks(this);
     DataGrid dataGrid = new DataGrid();
@@ -90,65 +98,80 @@ public class ActionDistributorTest {
     lock = mock(RLock.class);
     when(redissonClient.getFairLock(any())).thenReturn(lock);
     when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
-  }
+    when(actionCaseRepo.findById(any())).thenReturn(bActionCase);
 
-  /** We retrieve no actionTypes so no exception should be thrown. */
-  @Test
-  public void testExceptionNotThrowWhenNoActionTypes() {
-    when(actionTypeRepo.findAll()).thenReturn(new ArrayList<>());
-    actionDistributor.distribute();
-  }
-
-  /**
-   * Happy Path with 2 ActionRequests and 2 ActionCancels for a H case
-   *
-   * @throws Exception oops
-   */
-  @Test
-  public void testHappyPathParentCase() throws Exception {
-    ActionCase acase = new ActionCase();
-    acase.setSampleUnitType("B");
-    when(actionCaseRepo.findById(any())).thenReturn(acase);
-
+    // 3 action types (SOCIALNOT, SOCIALSNE, BSNOT)
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
-    when(actionRepo.findSubmittedOrCancelledByActionTypeName(
-            eq(HOUSEHOLD_INITIAL_CONTACT), anyInt()))
-        .thenReturn(householdInitialContactActions);
-    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC), anyInt()))
-        .thenReturn(householdUploadIACActions);
 
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(SOCIALNOT), anyInt()))
+        .thenReturn(socialNotificationActions);
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(SOCIALSNE), anyInt()))
+        .thenReturn(socialRemindersActions);
+    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(BSNOT), anyInt()))
+        .thenReturn(businessEnrolmentActions);
+  }
+
+  /** Happy Path with 1 ActionRequest and 1 ActionCancel for a B case */
+  @Test
+  public void testHappyPathBCase() throws Exception {
+    // Given setUp
+    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+
+    // When
     actionDistributor.distribute();
 
-    verify(actionTypeRepo).findAll();
-    // Assertions for calls in method retrieveActions
-    verify(actionRepo, times(1))
-        .findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_INITIAL_CONTACT), anyInt());
-    verify(actionRepo, times(1))
-        .findSubmittedOrCancelledByActionTypeName(eq(HOUSEHOLD_UPLOAD_IAC), anyInt());
+    // Then
+    verify(businessActionProcessingService, times(1)).processActionRequests(any());
+    verify(businessActionProcessingService, times(1)).processActionCancel(any());
+
+    verify(lock, times(1)).unlock();
+  }
+
+  /** Happy Path with 2 ActionRequests and 2 ActionCancels for a H case */
+  @Test
+  public void testHappyPathHCase() throws Exception {
+    // Given
+    when(actionTypeRepo.findAll()).thenReturn(actionTypes.subList(0, 2));
+    when(actionCaseRepo.findById(any())).thenReturn(hActionCase);
+
+    // When
+    actionDistributor.distribute();
+
+    // Then
+    verify(socialActionProcessingService, times(2)).processActionRequests(any());
+    verify(socialActionProcessingService, times(2)).processActionCancel(any());
+
     verify(lock, times(2)).unlock();
+  }
 
-    // Assertions for calls to actionProcessingService & processActionRequests
-    final ArgumentCaptor<Action> actionCaptorForActionRequest =
-        ArgumentCaptor.forClass(Action.class);
-    verify(actionProcessingService, times(2))
-        .processActionRequests(actionCaptorForActionRequest.capture());
-    List<Action> actionsList = actionCaptorForActionRequest.getAllValues();
-    assertEquals(2, actionsList.size());
-    List<Action> expectedActionsList = new ArrayList<>();
-    expectedActionsList.add(householdInitialContactActions.get(0));
-    expectedActionsList.add(householdUploadIACActions.get(0));
-    assertEquals(expectedActionsList, actionsList);
+  @Test
+  public void testInterruptedGettingLock() throws Exception {
+    // Given
+    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class)))
+        .thenThrow(InterruptedException.class);
 
-    // Assertions for calls to actionProcessingService & processActionCancel
-    final ArgumentCaptor<Action> actionCaptorForActionCancel =
-        ArgumentCaptor.forClass(Action.class);
-    verify(actionProcessingService, times(2))
-        .processActionCancel(actionCaptorForActionCancel.capture());
-    actionsList = actionCaptorForActionCancel.getAllValues();
-    assertEquals(2, actionsList.size());
-    expectedActionsList = new ArrayList<>();
-    expectedActionsList.add(householdInitialContactActions.get(1));
-    expectedActionsList.add(householdUploadIACActions.get(1));
-    assertEquals(expectedActionsList, actionsList);
+    // When
+    actionDistributor.distribute();
+
+    // Then can't get lock so nothing happens
+    verify(businessActionProcessingService, never()).processActionRequests(any());
+    verify(socialActionProcessingService, never()).processActionCancel(any());
+    verify(businessActionProcessingService, never()).processActionRequests(any());
+    verify(socialActionProcessingService, never()).processActionCancel(any());
+    verify(lock, never()).unlock();
+  }
+
+  @Test
+  public void testProcessActionRequestsThrowsCTPException() throws Exception {
+    // Given
+    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    doThrow(CTPException.class).when(businessActionProcessingService).processActionRequests(any());
+
+    // When
+    actionDistributor.distribute();
+
+    // Then
+    verify(lock, times(1)).unlock();
   }
 }
