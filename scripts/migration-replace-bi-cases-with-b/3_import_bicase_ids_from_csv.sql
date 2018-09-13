@@ -1,0 +1,1 @@
+COPY casesvc.temp_cases(bicaseid) FROM STDIN WITH CSV;
