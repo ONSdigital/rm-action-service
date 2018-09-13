@@ -17,6 +17,8 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitTyp
 public class BusinessActionRequestContextFactory implements ActionRequestContextFactory {
   private static final Logger log =
       LoggerFactory.getLogger(BusinessActionRequestContextFactory.class);
+  private static final String SAMPLE_UNIT_TYPE_NOT_SUPPORTED =
+    "Only sample unit type B supported, sampleUnitType=%s not supported";
 
   private final PartySvcClientService partySvcClientService;
 
@@ -34,8 +36,9 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
     ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
     if (context.getSampleUnitType().equals(SampleUnitType.B)) {
       setPartiesBCase(context);
-    } else if (context.getSampleUnitType().equals(SampleUnitType.BI)) {
-      setPartiesBICase(context);
+    } else {
+      throw new IllegalStateException(
+        String.format(SAMPLE_UNIT_TYPE_NOT_SUPPORTED, context.getSampleUnitType().toString()));
     }
     return context;
   }
@@ -48,17 +51,6 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
             context.getSurvey().getId());
     context.setParentParty(businessParty);
 
-    List<PartyDTO> respondentParties = getRespondentParties(businessParty);
-    context.setChildParties(respondentParties);
-  }
-
-  private void setPartiesBICase(ActionRequestContext context) {
-    PartyDTO businessParty =
-        partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
-            SampleUnitType.B.name(),
-            context.getCaseDetails().getCaseGroup().getPartyId(),
-            context.getSurvey().getId());
-    context.setParentParty(businessParty);
     List<PartyDTO> respondentParties = getRespondentParties(businessParty);
     context.setChildParties(respondentParties);
   }
