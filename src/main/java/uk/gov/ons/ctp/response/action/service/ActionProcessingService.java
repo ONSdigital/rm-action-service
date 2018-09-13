@@ -86,6 +86,8 @@ public abstract class ActionProcessingService {
     final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
     final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
 
+    // If action is sampleUnitType B and handler type NOTIFY
+    // then create an action request per respondent
     ArrayList<ActionRequest> actionRequests = new ArrayList<>();
     if (isBusinessNotification(context)) {
       context

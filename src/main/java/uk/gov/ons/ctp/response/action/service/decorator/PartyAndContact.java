@@ -28,7 +28,6 @@ public class PartyAndContact implements ActionRequestDecorator {
   @Override
   public void decorateActionRequest(ActionRequest actionRequest, ActionRequestContext context) {
     final PartyDTO businessParty = context.getParentParty();
-    // We should only have one respondent party per request now
     final List<PartyDTO> respondentParties = context.getChildParties();
 
     final Attributes businessUnitAttributes = businessParty.getAttributes();
@@ -88,6 +87,7 @@ public class PartyAndContact implements ActionRequestDecorator {
 
   private void decorateNotifyType(
       List<PartyDTO> respondentParties, ActionRequest actionRequest, ActionContact actionContact) {
+    // We should only have one respondent party per notify request now
     if (respondentParties.size() != 1) {
       throw new IllegalStateException(
           String.format(WRONG_NUMBER_OF_RESPONDENT_PARTIES, respondentParties.size()));
