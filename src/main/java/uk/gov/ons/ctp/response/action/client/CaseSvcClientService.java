@@ -28,6 +28,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventCreationRequestDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseIACDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
 
@@ -44,7 +45,9 @@ public class CaseSvcClientService {
   @Qualifier("caseSvcClient")
   private RestUtility restUtility;
 
-  @Autowired private ObjectMapper objectMapper;
+  @Qualifier("customObjectMapper")
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Retryable(
       value = {RestClientException.class},
@@ -228,8 +231,7 @@ public class CaseSvcClientService {
    * @param caseId Case you want to update with a new generated IAC
    * @return The new IAC
    */
-  public String generateNewIacForCase(final UUID caseId) {
-    String iac = null;
+  public CaseIACDTO generateNewIacForCase(final UUID caseId) {
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
@@ -237,13 +239,9 @@ public class CaseSvcClientService {
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    final ResponseEntity<String> responseEntity =
-        restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity, String.class);
+    final ResponseEntity<CaseIACDTO> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity, CaseIACDTO.class);
 
-    if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
-      iac = responseEntity.getBody();
-    }
-
-    return iac;
+    return responseEntity.getBody();
   }
 }
