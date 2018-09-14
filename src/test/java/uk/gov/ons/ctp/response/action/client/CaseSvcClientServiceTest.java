@@ -38,7 +38,6 @@ public class CaseSvcClientServiceTest {
 
   @Mock private AppConfig appConfig;
 
-
   @Before
   public void setup() {
     caseId = UUID.randomUUID();

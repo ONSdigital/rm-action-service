@@ -235,7 +235,7 @@ public class CaseSvcClientService {
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
-            appConfig.getCaseSvc().getGenerateNewIacForCase(), null, caseId);
+            appConfig.getCaseSvc().getGenerateNewIacForCasePostPath(), null, caseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
