@@ -1,7 +1,5 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
-
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
@@ -60,7 +58,7 @@ public abstract class ActionProcessingService {
    *
    * @param action the action to deal with
    */
-  @Transactional(propagation = REQUIRES_NEW)
+  @Transactional
   public void processActionRequests(final Action action) throws CTPException {
     log.with("action_id", action.getId()).debug("Processing actionRequest");
 
