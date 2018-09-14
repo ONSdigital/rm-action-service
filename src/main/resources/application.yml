@@ -112,7 +112,7 @@ case-svc:
   case-events-by-case-post-path: /cases/{caseid}/events
   address-by-uprn-get-path: /addresses/{uprn}
   case-type-by-id-path: /casetypes/{casetypeid}
-  generate-new-iac-for-case: /cases/{caseid}/iac
+  generate-new-iac-for-case-post-path: /cases/{caseid}/iac
   connection-config:
     scheme: http
     host: localhost

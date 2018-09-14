@@ -28,8 +28,6 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseIACDTO;
 @RunWith(MockitoJUnitRunner.class)
 public class CaseSvcClientServiceTest {
 
-  private final String CASE_GEN_IAC = "/cases/{caseid}/iac";
-
   private UUID caseId;
 
   @InjectMocks private CaseSvcClientService client;
@@ -55,7 +53,7 @@ public class CaseSvcClientServiceTest {
     CaseSvc casesvc = mock(CaseSvc.class);
 
     when(appConfig.getCaseSvc()).thenReturn(casesvc);
-    when(casesvc.getGenerateNewIacForCase()).thenReturn(CASE_GEN_IAC);
+
     when(restUtility.createUriComponents(any(String.class), any(), any()))
         .thenReturn(uriComponents);
     when(restUtility.createHttpEntity(isNull())).thenReturn(mock(HttpEntity.class));
