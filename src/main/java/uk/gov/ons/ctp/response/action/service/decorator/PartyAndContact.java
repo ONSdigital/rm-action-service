@@ -60,15 +60,11 @@ public class PartyAndContact implements ActionRequestDecorator {
     }
 
     String enrolmentStatus = null;
-
-    if (enrolmentStatuses.contains(ActionProcessingService.PENDING)) {
-      enrolmentStatus = ActionProcessingService.PENDING;
-    }
-
     if (enrolmentStatuses.contains(ActionProcessingService.ENABLED)) {
       enrolmentStatus = ActionProcessingService.ENABLED;
+    } else if (enrolmentStatuses.contains(ActionProcessingService.PENDING)) {
+      enrolmentStatus = ActionProcessingService.PENDING;
     }
-
     return enrolmentStatus;
   }
 
