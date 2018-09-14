@@ -18,7 +18,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   private static final Logger log =
       LoggerFactory.getLogger(BusinessActionRequestContextFactory.class);
   private static final String SAMPLE_UNIT_TYPE_NOT_SUPPORTED =
-    "Only sample unit type B supported, sampleUnitType=%s not supported";
+      "Only sample unit type B supported, sampleUnitType=%s not supported";
 
   private final PartySvcClientService partySvcClientService;
 
@@ -35,15 +35,15 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
     ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
     if (context.getSampleUnitType().equals(SampleUnitType.B)) {
-      setPartiesBCase(context);
+      setParties(context);
     } else {
       throw new IllegalStateException(
-        String.format(SAMPLE_UNIT_TYPE_NOT_SUPPORTED, context.getSampleUnitType().toString()));
+          String.format(SAMPLE_UNIT_TYPE_NOT_SUPPORTED, context.getSampleUnitType().toString()));
     }
     return context;
   }
 
-  private void setPartiesBCase(ActionRequestContext context) {
+  private void setParties(ActionRequestContext context) {
     PartyDTO businessParty =
         partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
             SampleUnitType.B.name(),
@@ -55,7 +55,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
     context.setChildParties(respondentParties);
   }
 
-  public List<PartyDTO> getRespondentParties(final PartyDTO businessParty) {
+  public List<PartyDTO> getRespondentParties(PartyDTO businessParty) {
     final List<String> respondentPartyIds =
         businessParty
             .getAssociations()

@@ -106,9 +106,9 @@ class ActionDistributor {
   }
 
   private ActionProcessingService getActionProcessingService(Action action) {
-    ActionCase acase = actionCaseRepo.findById(action.getCaseId());
+    ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
     SampleUnitDTO.SampleUnitType caseType =
-        SampleUnitDTO.SampleUnitType.valueOf(acase.getSampleUnitType());
+        SampleUnitDTO.SampleUnitType.valueOf(actionCase.getSampleUnitType());
 
     switch (caseType) {
       case H:
