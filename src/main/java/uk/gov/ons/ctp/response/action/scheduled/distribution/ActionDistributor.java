@@ -135,7 +135,9 @@ class ActionDistributor {
       Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
       throws CTPException {
 
-    if (action.getActionType().getName().equals("SOCIALREM")) {
+    if (action.getActionType().getName().equals("SOCIALREM")
+        && action.getActionType().getActionTypeNameEnum()
+            == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
       caseSvcClientService.generateNewIacForCase(action.getCaseId());
     }
 
