@@ -197,7 +197,7 @@ public class ActionRuleEndpointIT {
     actionRuleDto.setActionPlanId(actionPlanDTO.getId());
     actionRuleDto.setDescription("Notification file");
     actionRuleDto.setName("Notifaction");
-    actionRuleDto.setActionTypeName(ActionType.BSNL);
+    actionRuleDto.setActionTypeName(ActionTypes.BSNL);
     return actionRuleDto;
   }
 }

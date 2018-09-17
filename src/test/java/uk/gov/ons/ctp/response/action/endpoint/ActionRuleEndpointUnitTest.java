@@ -42,6 +42,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePutRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionTypes;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
@@ -59,8 +60,7 @@ public final class ActionRuleEndpointUnitTest {
       UUID.fromString("a0b9fe16-4e08-11e8-9c2d-fa7ae01bbebc");
   private static final UUID ACTION_PLAN_ID_1 =
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
-  private static final uk.gov.ons.ctp.response.action.representation.ActionType ACTION_TYPE =
-      uk.gov.ons.ctp.response.action.representation.ActionType.BSNOT;
+  private static final ActionTypes ACTION_TYPE = ActionTypes.BSNOT;
   @InjectMocks private ActionRuleEndpoint actionRuleEndpoint;
   @Mock private ActionRuleService actionRuleService;
   @Mock private ActionPlanService actionPlanService;
@@ -344,7 +344,7 @@ public final class ActionRuleEndpointUnitTest {
   }
 
   private ActionRulePostRequestDTO createActionRulePostRequestDTO(
-      UUID actionPlanId, uk.gov.ons.ctp.response.action.representation.ActionType actionTypeName) {
+      UUID actionPlanId, ActionTypes actionTypeName) {
     ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
     actionRulePostRequestDTO.setActionPlanId(actionPlanId);
     actionRulePostRequestDTO.setActionTypeName(actionTypeName);

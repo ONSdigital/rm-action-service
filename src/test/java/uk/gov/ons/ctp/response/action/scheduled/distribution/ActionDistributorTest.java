@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -43,6 +44,7 @@ import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
  * CANCEL_SUBMITTED action so expect 1 ActionCancel - all actions have responseRequired = true
  */
 @RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class ActionDistributorTest {
 
   private static final int TEN = 10;
