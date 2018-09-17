@@ -47,7 +47,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionTypes;
+import uk.gov.ons.ctp.response.action.representation.ActionType;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
@@ -138,7 +138,7 @@ public class PlanSchedulerIT {
     actionRuleDto.setActionPlanId(actionPlanDTO.getId());
     actionRuleDto.setDescription("Notification file");
     actionRuleDto.setName("Notifaction");
-    actionRuleDto.setActionTypeName(ActionTypes.BSNL);
+    actionRuleDto.setActionTypeName(ActionType.BSNL);
     actionRuleDto.setPriority(3);
 
     HttpResponse<ActionRuleDTO> response =
@@ -192,7 +192,7 @@ public class PlanSchedulerIT {
             config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
     BlockingQueue<String> queue =
         listener.listen(ExchangeType.Direct, "action-outbound-exchange", "Action.Printer.binding");
-    int timeout = 10;
+    int timeout = 4;
     return queue.poll(timeout, TimeUnit.SECONDS);
   }
 

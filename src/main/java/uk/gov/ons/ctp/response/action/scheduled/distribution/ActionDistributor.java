@@ -19,7 +19,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
-import uk.gov.ons.ctp.response.action.representation.ActionTypes;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
@@ -136,7 +135,7 @@ class ActionDistributor {
       Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
       throws CTPException {
 
-    if (action.getActionType().getActionTypeNameEnum() == ActionTypes.SOCIALREM) {
+    if (action.getActionType().getName().equals("SOCIALREM")) {
       caseSvcClientService.generateNewIacForCase(action.getCaseId());
     }
 

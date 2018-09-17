@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
-import uk.gov.ons.ctp.response.action.representation.ActionTypes;
 
 /** Domain model object. */
 @CoverageIgnore
@@ -43,8 +42,8 @@ public class ActionType implements Serializable {
    *
    * @return gotten
    */
-  public ActionTypes getActionTypeNameEnum() {
-    return ActionTypes.valueOf(this.name);
+  public uk.gov.ons.ctp.response.action.representation.ActionType getActionTypeNameEnum() {
+    return uk.gov.ons.ctp.response.action.representation.ActionType.valueOf(this.name);
   }
 
   /**
@@ -52,7 +51,8 @@ public class ActionType implements Serializable {
    *
    * @param actionTypeEnum Action Type Enum to set action type name
    */
-  public void setNameFromActionTypeEnum(ActionTypes actionTypeEnum) {
+  public void setNameFromActionTypeEnum(
+      uk.gov.ons.ctp.response.action.representation.ActionType actionTypeEnum) {
     this.name = actionTypeEnum.toString();
   }
 }

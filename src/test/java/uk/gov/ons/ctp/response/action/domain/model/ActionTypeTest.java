@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
-import uk.gov.ons.ctp.response.action.representation.ActionTypes;
 
 public class ActionTypeTest {
 
@@ -12,9 +11,12 @@ public class ActionTypeTest {
   public void setsActionTypeNameWithActionTypeEnum() {
     ActionType actionType = new ActionType();
 
-    actionType.setNameFromActionTypeEnum(ActionTypes.BSNE);
+    actionType.setNameFromActionTypeEnum(
+        uk.gov.ons.ctp.response.action.representation.ActionType.BSNE);
 
-    assertThat(actionType.getName(), is(ActionTypes.BSNE.toString()));
+    assertThat(
+        actionType.getName(),
+        is(uk.gov.ons.ctp.response.action.representation.ActionType.BSNE.toString()));
   }
 
   @Test
@@ -23,6 +25,8 @@ public class ActionTypeTest {
 
     actionType.setName("BSNE");
 
-    assertThat(actionType.getActionTypeNameEnum(), is(ActionTypes.BSNE));
+    assertThat(
+        actionType.getActionTypeNameEnum(),
+        is(uk.gov.ons.ctp.response.action.representation.ActionType.BSNE));
   }
 }
