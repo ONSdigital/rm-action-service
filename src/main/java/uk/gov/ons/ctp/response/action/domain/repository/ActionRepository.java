@@ -95,7 +95,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
   List<Action> findByStateOrderByCreatedDateTimeDesc(ActionDTO.ActionState state);
 
   /**
-   * Return all actions for given case id and action rule
+   * Return boolean for if any actions exist for a given case id and action rule
    *
    * @param caseId UUID of associated case
    * @param actionRuleFK reference to action rule

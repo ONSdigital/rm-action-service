@@ -39,4 +39,3 @@ applications:
     endpoints_enabled: ENDPOINT_ENABLED
     security_user_name: REPLACE_BA_USERNAME
     security_user_password: REPLACE_BA_PASSWORD
-    planExecution_delayMilliSeconds: 60000

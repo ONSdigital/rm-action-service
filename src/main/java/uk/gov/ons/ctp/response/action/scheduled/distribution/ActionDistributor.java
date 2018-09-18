@@ -56,7 +56,7 @@ class ActionDistributor {
   }
 
   /**
-   * Called on schedule to check for submitted actions then creates and distributes the actions to
+   * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
   @Transactional

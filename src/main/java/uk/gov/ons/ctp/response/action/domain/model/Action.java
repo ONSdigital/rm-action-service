@@ -124,20 +124,6 @@ public class Action implements Serializable {
       return map.get(priorityLevel);
     }
 
-    /**
-     * Getter
-     *
-     * @return gotten
-     */
-    public int getLevel() {
-      return this.level;
-    }
-
-    /**
-     * Getter
-     *
-     * @return gotten
-     */
     public String getName() {
       return this.name;
     }
