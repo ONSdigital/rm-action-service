@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+- changeSet:
+    id: 12-1
+    author: Damien Lloyd
+    changes:
+    - sqlFile:
+        comment: Allow reminder letters for social surveys to be cancellable
+        path: make_social_rem_letters_cancellable.sql
+        relativeToChangelogFile: true
+        splitStatements: false
