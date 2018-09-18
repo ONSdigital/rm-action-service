@@ -45,9 +45,7 @@ public class CaseSvcClientService {
   @Qualifier("caseSvcClient")
   private RestUtility restUtility;
 
-  @Qualifier("customObjectMapper")
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
   @Retryable(
       value = {RestClientException.class},
