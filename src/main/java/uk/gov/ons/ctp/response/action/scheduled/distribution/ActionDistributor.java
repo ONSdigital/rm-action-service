@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
@@ -24,6 +25,7 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 /** This is the service class that distributes actions to downstream services */
 @Component
 class ActionDistributor {
+
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
   private static final String lockPrefix = "ActionDistributionLock-";
@@ -35,6 +37,8 @@ class ActionDistributor {
   private ActionCaseRepository actionCaseRepo;
   private ActionTypeRepository actionTypeRepo;
 
+  private CaseSvcClientService caseSvcClientService;
+
   private ActionProcessingService businessActionProcessingService;
   private ActionProcessingService socialActionProcessingService;
 
@@ -44,6 +48,7 @@ class ActionDistributor {
       ActionRepository actionRepo,
       ActionCaseRepository actionCaseRepo,
       ActionTypeRepository actionTypeRepo,
+      CaseSvcClientService caseSvcClientService,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
       @Qualifier("social") ActionProcessingService socialActionProcessingService) {
     this.appConfig = appConfig;
@@ -51,6 +56,7 @@ class ActionDistributor {
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
     this.actionTypeRepo = actionTypeRepo;
+    this.caseSvcClientService = caseSvcClientService;
     this.businessActionProcessingService = businessActionProcessingService;
     this.socialActionProcessingService = socialActionProcessingService;
   }
@@ -92,6 +98,12 @@ class ActionDistributor {
 
   private void processAction(Action action) {
     ActionProcessingService ap = getActionProcessingService(action);
+
+    // If social reminder action type then generate new IAC
+    if (action.getActionType().getActionTypeNameEnum()
+        == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+      caseSvcClientService.generateNewIacForCase(action.getCaseId());
+    }
 
     try {
       if (action.getState().equals(ActionState.SUBMITTED)) {
