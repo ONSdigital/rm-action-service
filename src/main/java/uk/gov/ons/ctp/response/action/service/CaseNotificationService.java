@@ -27,6 +27,8 @@ public class CaseNotificationService {
   private static final String ACTION_PLAN_NOT_FOUND = "No action plan found with id: %s";
   private static final String ACTION_CASE_ALREADY_EXISTS = "Action case already exists with id: %s";
   private static final String ACTION_CASE_NOT_FOUND = "No action case found with id: %s";
+  private static final String INVALID_NOTIFICATION_TYPE =
+      "Invalid notification type, notification_type=%s";
   private static final int TRANSACTION_TIMEOUT = 30;
 
   private final ActionCaseRepository actionCaseRepo;
@@ -73,9 +75,9 @@ public class CaseNotificationService {
         break;
 
       default:
-        log.with("notification_type", notification.getNotificationType())
-            .warn("Unknown case notification type", notification.getNotificationType());
-        throw new IllegalArgumentException("Invalid notification type");
+        throw new IllegalArgumentException(
+            String.format(
+                INVALID_NOTIFICATION_TYPE, notification.getNotificationType().toString()));
     }
     actionCaseRepo.flush();
   }

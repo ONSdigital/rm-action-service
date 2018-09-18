@@ -186,6 +186,10 @@ public class ActionService {
     return actionRepo.saveAndFlush(action);
   }
 
+  @Transactional(
+      propagation = Propagation.REQUIRED,
+      readOnly = false,
+      timeout = TRANSACTION_TIMEOUT)
   public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
     List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
