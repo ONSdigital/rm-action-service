@@ -9,7 +9,7 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK":1,
-      "name":"HouseholdInitialContact",
+      "name":"SOCIALSNE",
       "description":"Household Initial Contact",
       "handler":"Printer",
       "canCancel":false,
@@ -31,7 +31,7 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK":1,
-      "name":"HouseholdInitialContact",
+      "name":"SOCIALSNE",
       "description":"Household Initial Contact",
       "handler":"Printer",
       "canCancel":false,

@@ -35,8 +35,6 @@ class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
-  private static final String SOCIALREM = "SOCIALREM";
-
   @Autowired private AppConfig appConfig;
 
   @Autowired private ActionRepository actionRepo;
@@ -138,9 +136,8 @@ class ActionDistributor {
       Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
       throws CTPException {
 
-    if (action.getActionType().getName().equals(SOCIALREM)
-        && action.getActionType().getActionTypeNameEnum()
-            == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+    if (action.getActionType().getActionTypeNameEnum()
+        == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
       caseSvcClientService.generateNewIacForCase(action.getCaseId());
     }
 

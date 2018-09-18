@@ -1,7 +1,7 @@
 [
   {
     "actionTypePK": 1,
-    "name": "HouseholdInitialContact",
+    "name": "SOCIALNOT",
     "description": "Household Initial Contact",
     "handler": "Printer",
     "canCancel": false,
@@ -9,7 +9,7 @@
   },
   {
     "actionTypePK": 2,
-    "name": "HouseholdUploadIAC",
+    "name": "SOCIALSNE",
     "description": "Household upload IAC",
     "handler": "HHSurvey",
     "canCancel": true,
