@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -47,8 +48,8 @@ public class ActionDistributorTest {
 
   private static final int TEN = 10;
 
-  private static final String HOUSEHOLD_INITIAL_CONTACT = "HouseholdInitialContact";
-  private static final String HOUSEHOLD_UPLOAD_IAC = "HouseholdUploadIAC";
+  private static final String HOUSEHOLD_INITIAL_CONTACT = "SOCIALNOT";
+  private static final String HOUSEHOLD_UPLOAD_IAC = "SOCIALSNE";
 
   private List<ActionType> actionTypes;
   private List<Action> householdInitialContactActions;
@@ -108,7 +109,7 @@ public class ActionDistributorTest {
         new InstructionCount(HOUSEHOLD_UPLOAD_IAC, DistributionInfo.Instruction.REQUEST, 0));
     expectedCountList.add(
         new InstructionCount(HOUSEHOLD_UPLOAD_IAC, DistributionInfo.Instruction.CANCEL_REQUEST, 0));
-    assertTrue(countList.equals(expectedCountList));
+    assertThat(countList).isEqualTo(expectedCountList);
 
     // Assertions for calls in method retrieveActions
     verify(actionRepo, times(1))
@@ -160,7 +161,7 @@ public class ActionDistributorTest {
         new InstructionCount(HOUSEHOLD_UPLOAD_IAC, DistributionInfo.Instruction.REQUEST, 1));
     expectedCountList.add(
         new InstructionCount(HOUSEHOLD_UPLOAD_IAC, DistributionInfo.Instruction.CANCEL_REQUEST, 1));
-    assertTrue(countList.equals(expectedCountList));
+    assertThat(countList).isEqualTo(expectedCountList);
 
     verify(actionTypeRepo).findAll();
 
@@ -180,7 +181,7 @@ public class ActionDistributorTest {
     List<Action> expectedActionsList = new ArrayList<>();
     expectedActionsList.add(householdInitialContactActions.get(0));
     expectedActionsList.add(householdUploadIACActions.get(0));
-    assertTrue(expectedActionsList.equals(actionsList));
+    assertThat(expectedActionsList).isEqualTo(actionsList);
 
     // Assertions for calls to actionProcessingService & processActionCancel
     final ArgumentCaptor<Action> actionCaptorForActionCancel =

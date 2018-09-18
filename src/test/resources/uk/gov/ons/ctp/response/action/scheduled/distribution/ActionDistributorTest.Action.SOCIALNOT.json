@@ -9,8 +9,8 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK":1,
-      "name":"HouseholdInitialContact",
-      "description":"Household Initial Contact",
+      "name":"SOCIALNOT",
+      "description":"Social notification",
       "handler":"Printer",
       "canCancel":false,
       "responseRequired":true
@@ -31,8 +31,8 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK":1,
-      "name":"HouseholdInitialContact",
-      "description":"Household Initial Contact",
+      "name":"SOCIALNOT",
+      "description":"Social notification",
       "handler":"Printer",
       "canCancel":false,
       "responseRequired":true
