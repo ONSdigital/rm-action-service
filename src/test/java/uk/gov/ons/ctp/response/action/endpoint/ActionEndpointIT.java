@@ -1,9 +1,5 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static org.assertj.core.api.Java6Assertions.assertThat;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.godaddy.logging.Logger;
@@ -11,16 +7,6 @@ import com.godaddy.logging.LoggerFactory;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -52,6 +38,22 @@ import uk.gov.ons.tools.rabbit.SimpleMessageBase;
 import uk.gov.ons.tools.rabbit.SimpleMessageListener;
 import uk.gov.ons.tools.rabbit.SimpleMessageSender;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+
 /** Integration tests for action endpoints */
 @ContextConfiguration
 @ActiveProfiles("test")
@@ -79,6 +81,38 @@ public class ActionEndpointIT {
   public void setup() {
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(mapper);
+  }
+
+  @Test
+  public void ensureIncompleteCasesAreSentToField() throws Exception {
+    UUID collexId = UUID.fromString("3116a1bd-3a84-4761-ae30-4916c4e7120a");
+    UUID sampleUnitId = UUID.randomUUID();
+
+    ActionPlanDTO actionPlan = createActionPlan();
+
+    // Create mocks
+    createCollectionExerciseMock(collexId);
+    CaseDetailsDTO case_details_dto = createCaseDetailsMock(collexId, actionPlan.getId());
+    createSurveyDetailsMock();
+    createCaseEventMock(case_details_dto.getId());
+    SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
+
+    SimpleMessageSender sender = getMessageSender();
+    SimpleMessageListener listener = getMessageListener();
+
+    BlockingQueue<String> queue =
+      listener.listen(
+        SimpleMessageBase.ExchangeType.Direct,
+        "action-outbound-exchange",
+        "Action.Field.binding");
+
+    String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
+    sender.sendMessageToQueue("Case.LifecycleEvents", xml);
+
+    String message = queue.poll(30, TimeUnit.SECONDS);
+    assertThat(message).isNotNull();
+
+    createAction(case_details_dto);
   }
 
   @Test

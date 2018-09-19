@@ -93,8 +93,12 @@ public abstract class ActionProcessingService {
       final ActionRequest actionRequest = prepareActionRequest(action);
 
       if (actionRequest != null) {
-        actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
+        if (actionType.getHandler().equals("Field")
+            && (actionRequest.getCaseGroupStatus().equals("NOTSTARTED")
+                || actionRequest.getCaseGroupStatus().equals("INPROGRESS")))
+          actionInstructionPublisher.sendActionInstruction("Field", actionRequest);
       }
+      else actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
 
       // advise casesvc to create a corresponding caseevent for our action
       caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
