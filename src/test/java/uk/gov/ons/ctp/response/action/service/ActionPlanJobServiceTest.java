@@ -46,8 +46,7 @@ public class ActionPlanJobServiceTest {
     MockitoAnnotations.initMocks(this);
 
     when(actionPlanRepo.findAll()).thenReturn(actionPlans);
-    when(actionCaseRepo.countByActionPlanFK(any(Integer.class)))
-        .thenReturn(Integer.toUnsignedLong(1));
+    when(actionCaseRepo.existsByActionPlanFK(any(Integer.class))).thenReturn(true);
     when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
     when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
   }
@@ -70,8 +69,7 @@ public class ActionPlanJobServiceTest {
   public void testCreateAndExecuteAllActionPlanJobsNoCases() {
 
     // Given
-    when(actionCaseRepo.countByActionPlanFK(any(Integer.class)))
-        .thenReturn(Integer.toUnsignedLong(0));
+    when(actionCaseRepo.existsByActionPlanFK(any(Integer.class))).thenReturn(false);
 
     // When
     actionPlanJobService.createAndExecuteAllActionPlanJobs();

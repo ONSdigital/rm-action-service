@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,7 +27,7 @@ class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
-  private static final String lockPrefix = "ActionDistributionLock-";
+  private static final String LOCK_PREFIX = "ActionDistributionLock-";
 
   private AppConfig appConfig;
   private RedissonClient redissonClient;
@@ -73,26 +72,17 @@ class ActionDistributor {
 
   private void processActionType(final ActionType actionType) {
     String actionTypeName = actionType.getName();
-    RLock lock = redissonClient.getFairLock(lockPrefix + actionTypeName);
-    try {
-      // Wait for a lock. Automatically unlock after a certain amount of time to prevent issues
-      // when lock holder crashes or Redis crashes causing permanent lockout
-      if (lock.tryLock(
-          appConfig.getDataGrid().getLockTimeToWaitSeconds(),
-          appConfig.getDataGrid().getLockTimeToLiveSeconds(),
-          TimeUnit.SECONDS)) {
-        try {
-          List<Action> actions =
-              actionRepo.findSubmittedOrCancelledByActionTypeName(
-                  actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-          actions.forEach(this::processAction);
-        } finally {
-          // Always unlock the distributed lock
-          lock.unlock();
-        }
+    RLock lock = redissonClient.getFairLock(LOCK_PREFIX + actionTypeName);
+    if (lock.tryLock()) {
+      try {
+        List<Action> actions =
+            actionRepo.findSubmittedOrCancelledByActionTypeName(
+                actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
+        actions.forEach(this::processAction);
+      } finally {
+        // Always unlock the distributed lock
+        lock.unlock();
       }
-    } catch (InterruptedException ex) {
-      // Ignored - process stopped while waiting for lock
     }
   }
 

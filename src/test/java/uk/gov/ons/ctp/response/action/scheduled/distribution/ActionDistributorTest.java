@@ -3,17 +3,14 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,7 +94,7 @@ public class ActionDistributorTest {
 
     lock = mock(RLock.class);
     when(redissonClient.getFairLock(any())).thenReturn(lock);
-    when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+    when(lock.tryLock()).thenReturn(true);
     when(actionCaseRepo.findById(any())).thenReturn(bActionCase);
 
     // 3 action types (SOCIALNOT, SOCIALSNE, BSNOT)
@@ -142,24 +139,6 @@ public class ActionDistributorTest {
     verify(socialActionProcessingService, times(2)).processActionCancel(any());
 
     verify(lock, times(2)).unlock();
-  }
-
-  @Test
-  public void testInterruptedGettingLock() throws Exception {
-    // Given
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
-    when(lock.tryLock(anyLong(), anyLong(), any(TimeUnit.class)))
-        .thenThrow(InterruptedException.class);
-
-    // When
-    actionDistributor.distribute();
-
-    // Then can't get lock so nothing happens
-    verify(businessActionProcessingService, never()).processActionRequests(any());
-    verify(socialActionProcessingService, never()).processActionCancel(any());
-    verify(businessActionProcessingService, never()).processActionRequests(any());
-    verify(socialActionProcessingService, never()).processActionCancel(any());
-    verify(lock, never()).unlock();
   }
 
   @Test

@@ -32,5 +32,5 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
    * @param actionPlanKey the plan id
    * @return how many cases for that plan
    */
-  Long countByActionPlanFK(Integer actionPlanKey);
+  boolean existsByActionPlanFK(Integer actionPlanKey);
 }

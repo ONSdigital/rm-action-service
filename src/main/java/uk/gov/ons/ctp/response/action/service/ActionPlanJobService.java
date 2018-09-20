@@ -83,7 +83,7 @@ public class ActionPlanJobService {
   }
 
   private boolean hasActionableCases(ActionPlan actionPlan) {
-    return actionCaseRepo.countByActionPlanFK(actionPlan.getActionPlanPK()) > 0;
+    return actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK());
   }
 
   @Transactional(propagation = REQUIRES_NEW)

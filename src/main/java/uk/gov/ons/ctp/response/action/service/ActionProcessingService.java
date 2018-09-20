@@ -64,7 +64,12 @@ public abstract class ActionProcessingService {
 
     final ActionType actionType = action.getActionType();
     if (!valid(actionType)) {
-      log.with("action_id", action.getId()).error("ActionType is not defined for action");
+      if (actionType == null) {
+        action.setActionType(ActionType.builder().name("null").build());
+      }
+      log.with("action_id", action.getId())
+          .with("action_type", action.getActionType().getName())
+          .error("ActionType is not defined for action");
       throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
     }
 
