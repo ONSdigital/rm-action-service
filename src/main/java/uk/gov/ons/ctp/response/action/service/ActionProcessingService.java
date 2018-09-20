@@ -95,16 +95,17 @@ public abstract class ActionProcessingService {
       if (actionRequest != null) {
         if (actionType.getHandler().equals("Field")
             && (actionRequest.getCaseGroupStatus().equals("NOTSTARTED")
-                || actionRequest.getCaseGroupStatus().equals("INPROGRESS")))
+                || actionRequest.getCaseGroupStatus().equals("INPROGRESS"))) {
           actionInstructionPublisher.sendActionInstruction("Field", actionRequest);
+        } else {
+          actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
+        }
+        // advise casesvc to create a corresponding caseevent for our action
+        caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
+      } else {
+        log.with("action_id", action.getId())
+            .error("Unexpected situation. actionType is not defined for action");
       }
-      else actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);
-
-      // advise casesvc to create a corresponding caseevent for our action
-      caseSvcClientService.createNewCaseEvent(action, CategoryDTO.CategoryName.ACTION_CREATED);
-    } else {
-      log.with("action_id", action.getId())
-          .error("Unexpected situation. actionType is not defined for action");
     }
   }
 

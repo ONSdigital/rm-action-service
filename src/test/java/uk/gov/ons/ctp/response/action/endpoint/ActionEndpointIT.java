@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.godaddy.logging.Logger;
@@ -7,6 +11,17 @@ import com.godaddy.logging.LoggerFactory;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -23,12 +38,11 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.common.UnirestInitialiser;
 import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
+import uk.gov.ons.ctp.response.action.representation.*;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
@@ -37,22 +51,6 @@ import uk.gov.ons.tools.rabbit.Rabbitmq;
 import uk.gov.ons.tools.rabbit.SimpleMessageBase;
 import uk.gov.ons.tools.rabbit.SimpleMessageListener;
 import uk.gov.ons.tools.rabbit.SimpleMessageSender;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static org.assertj.core.api.Java6Assertions.assertThat;
 
 /** Integration tests for action endpoints */
 @ContextConfiguration
@@ -77,47 +75,60 @@ public class ActionEndpointIT {
 
   private Mapzer mapzer;
 
+  private UUID sampleUnitId;
+
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(mapper);
+
+    sampleUnitId = UUID.randomUUID();
+    createSampleAttributesMock(sampleUnitId);
   }
 
   @Test
   public void ensureIncompleteCasesAreSentToField() throws Exception {
-    UUID collexId = UUID.fromString("3116a1bd-3a84-4761-ae30-4916c4e7120a");
-    UUID sampleUnitId = UUID.randomUUID();
+    UUID collexId = UUID.randomUUID();
 
     ActionPlanDTO actionPlan = createActionPlan();
+    createActionRule(actionPlan.getId(), ActionType.SOCIALICF);
 
     // Create mocks
     createCollectionExerciseMock(collexId);
     CaseDetailsDTO case_details_dto = createCaseDetailsMock(collexId, actionPlan.getId());
     createSurveyDetailsMock();
     createCaseEventMock(case_details_dto.getId());
-    SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
 
     SimpleMessageSender sender = getMessageSender();
     SimpleMessageListener listener = getMessageListener();
 
     BlockingQueue<String> queue =
-      listener.listen(
-        SimpleMessageBase.ExchangeType.Direct,
-        "action-outbound-exchange",
-        "Action.Field.binding");
+        listener.listen(
+            SimpleMessageBase.ExchangeType.Direct,
+            "action-outbound-exchange",
+            "Action.CaseNotificationHandled.binding");
 
     String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
     sender.sendMessageToQueue("Case.LifecycleEvents", xml);
 
-    String message = queue.poll(30, TimeUnit.SECONDS);
+    String message = queue.take();
     assertThat(message).isNotNull();
 
-    createAction(case_details_dto);
+    createAction(case_details_dto, ActionType.SOCIALICF);
+
+    BlockingQueue<String> queue2 =
+        listener.listen(
+            SimpleMessageBase.ExchangeType.Direct,
+            "action-outbound-exchange",
+            "Action.Field.binding");
+
+    String message2 = queue2.take();
+    assertThat(message2).isNotNull();
   }
 
   @Test
   public void ensureAddressPopulatedInActionRequest() throws Exception {
-    UUID collexId = UUID.fromString("3116a1bd-3a84-4761-ae30-4916c4e7120a");
+    UUID collexId = UUID.randomUUID();
     UUID sampleUnitId = UUID.randomUUID();
 
     ActionPlanDTO actionPlan = createActionPlan();
@@ -150,7 +161,7 @@ public class ActionEndpointIT {
     String message = queue.take();
     assertThat(message).isNotNull();
 
-    createAction(case_details_dto);
+    createAction(case_details_dto, ActionType.SOCIALNOT);
 
     String printer_message = queue2.take();
     assertThat(printer_message).isNotNull();
@@ -177,11 +188,11 @@ public class ActionEndpointIT {
         xmlToObject.createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes()));
   }
 
-  private void createAction(CaseDetailsDTO caseDetails) throws UnirestException {
+  private void createAction(CaseDetailsDTO caseDetails, ActionType actionType) throws UnirestException {
     ActionPostRequestDTO apord = new ActionPostRequestDTO();
     apord.setCaseId(UUID.fromString(caseDetails.getId().toString()));
-    apord.setCreatedBy("SYSTEM");
-    apord.setActionTypeName("SOCIALNOT");
+    apord.setCreatedBy("EMBRYO");
+    apord.setActionTypeName(actionType.toString());
     apord.setPriority(1);
 
     Unirest.post("http://localhost:" + this.port + "/actions")
@@ -190,6 +201,23 @@ public class ActionEndpointIT {
         .header("Content-Type", "application/json")
         .body(apord)
         .asObject(ActionPostRequestDTO.class);
+  }
+
+  public void createActionRule(UUID actionPlanId, ActionType actionType) throws UnirestException {
+    ActionRulePostRequestDTO apord = new ActionRulePostRequestDTO();
+    apord.setActionPlanId(actionPlanId);
+    apord.setActionTypeName(actionType);
+    apord.setName(actionType.toString() + new Random().nextInt(365));
+    apord.setDescription("I don't care what you are");
+    apord.setPriority(3);
+    apord.setTriggerDateTime(OffsetDateTime.now());
+
+    Unirest.post("http://localhost:" + this.port + "/actionrules")
+      .basicAuth("admin", "secret")
+      .header("accept", "application/json")
+      .header("Content-Type", "application/json")
+      .body(apord)
+      .asObject(ActionRulePostRequestDTO.class);
   }
 
   private String getCaseNotificationXml(
