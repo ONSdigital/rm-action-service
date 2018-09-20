@@ -1,12 +1,14 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
+
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -16,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -129,7 +130,7 @@ public class ActionService {
             actionSvcStateTransitionManager.transition(
                 action.getState(), ActionEvent.REQUEST_CANCELLED);
         action.setState(nextState);
-        action.setUpdatedDateTime(DateTimeUtil.nowUTC());
+        action.setUpdatedDateTime(nowUTC());
         actionRepo.saveAndFlush(action);
         flushedActions.add(action);
       }
@@ -152,7 +153,7 @@ public class ActionService {
         final ActionDTO.ActionEvent event =
             ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
         result.setSituation(actionFeedback.getSituation());
-        result.setUpdatedDateTime(DateTimeUtil.nowUTC());
+        result.setUpdatedDateTime(nowUTC());
         final ActionDTO.ActionState nextState =
             actionSvcStateTransitionManager.transition(result.getState(), event);
         result.setState(nextState);
@@ -180,7 +181,7 @@ public class ActionService {
     action.setActionType(actionType);
 
     action.setManuallyCreated(true);
-    action.setCreatedDateTime(DateTimeUtil.nowUTC());
+    action.setCreatedDateTime(nowUTC());
     action.setState(ActionState.SUBMITTED);
     action.setId(UUID.randomUUID());
     return actionRepo.saveAndFlush(action);
@@ -203,7 +204,7 @@ public class ActionService {
   }
 
   private boolean isActionPlanLive(ActionCase actionCase) {
-    final Timestamp currentTime = new Timestamp((new Date()).getTime());
+    final Timestamp currentTime = nowUTC();
     return actionCase.getActionPlanStartDate().before(currentTime)
         && actionCase.getActionPlanEndDate().after(currentTime);
   }
@@ -215,11 +216,14 @@ public class ActionService {
   }
 
   private boolean hasRuleTriggered(ActionRule rule) {
-    final Timestamp currentTime = new Timestamp((new Date()).getTime());
-    Timestamp triggerDateTime =
+    final Timestamp currentTime = nowUTC();
+    final Timestamp dayBefore =
+        Timestamp.valueOf(
+            LocalDateTime.ofInstant(
+                currentTime.toInstant().minus(1, ChronoUnit.DAYS), ZoneOffset.UTC));
+    final Timestamp triggerDateTime =
         Timestamp.valueOf(
             LocalDateTime.ofInstant(rule.getTriggerDateTime().toInstant(), ZoneOffset.UTC));
-    final Timestamp dayBefore = new Timestamp(currentTime.getTime() - (1000 * 60 * 60 * 24));
     return triggerDateTime.before(currentTime) && triggerDateTime.after(dayBefore);
   }
 
@@ -239,7 +243,7 @@ public class ActionService {
     newAction.setCreatedBy(SYSTEM);
     newAction.setManuallyCreated(false);
     newAction.setState(ActionState.SUBMITTED);
-    newAction.setCreatedDateTime(new Timestamp((new Date()).getTime()));
+    newAction.setCreatedDateTime(nowUTC());
     newAction.setCaseFK(actionCase.getCasePK());
     newAction.setCaseId(actionCase.getId());
     newAction.setActionPlanFK(actionRule.getActionPlanFK());
@@ -251,7 +255,7 @@ public class ActionService {
   }
 
   private void updatePlanAndJob(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
-    final Timestamp currentTime = DateTimeUtil.nowUTC();
+    final Timestamp currentTime = nowUTC();
     actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
     actionPlanJobRepository.saveAndFlush(actionPlanJob);
@@ -284,7 +288,7 @@ public class ActionService {
       }
 
       if (needsUpdate) {
-        existingAction.setUpdatedDateTime(DateTimeUtil.nowUTC());
+        existingAction.setUpdatedDateTime(nowUTC());
         log.with("existing_action", existingAction).debug("updating action");
         existingAction = actionRepo.saveAndFlush(existingAction);
       }
