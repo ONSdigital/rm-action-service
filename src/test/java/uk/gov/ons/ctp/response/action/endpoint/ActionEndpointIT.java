@@ -27,6 +27,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -65,6 +66,8 @@ public class ActionEndpointIT {
 
   @Autowired private ObjectMapper mapper;
 
+  @Autowired private RabbitAdmin rabbitAdmin;
+
   @Autowired private AppConfig appConfig;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(options().port(18002));
@@ -76,14 +79,17 @@ public class ActionEndpointIT {
   private Mapzer mapzer;
 
   private UUID sampleUnitId;
+  private SampleAttributesDTO sampleAttributes;
 
   @Before
   public void setup() throws Exception {
+    rabbitAdmin.purgeQueue("Action.Field", false);
+    rabbitAdmin.purgeQueue("Action.Printer", false);
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(mapper);
 
     sampleUnitId = UUID.randomUUID();
-    createSampleAttributesMock(sampleUnitId);
+    sampleAttributes = createSampleAttributesMock(sampleUnitId);
   }
 
   @Test
@@ -122,14 +128,18 @@ public class ActionEndpointIT {
             "action-outbound-exchange",
             "Action.Field.binding");
 
-    String message2 = queue2.take();
-    assertThat(message2).isNotNull();
+    String messageToField = queue2.take();
+    assertThat(messageToField).isNotNull();
+
+    ActionInstruction actionInstruction = getActionInstructionFromXml(messageToField);
+    ActionAddress address = actionInstruction.getActionRequest().getAddress();
+
+    checkAttributes(address);
   }
 
   @Test
   public void ensureAddressPopulatedInActionRequest() throws Exception {
     UUID collexId = UUID.randomUUID();
-    UUID sampleUnitId = UUID.randomUUID();
 
     ActionPlanDTO actionPlan = createActionPlan();
 
@@ -138,7 +148,6 @@ public class ActionEndpointIT {
     CaseDetailsDTO case_details_dto = createCaseDetailsMock(collexId, actionPlan.getId());
     createSurveyDetailsMock();
     createCaseEventMock(case_details_dto.getId());
-    SampleAttributesDTO sample_attributes = createSampleAttributesMock(sampleUnitId);
 
     SimpleMessageSender sender = getMessageSender();
     SimpleMessageListener listener = getMessageListener();
@@ -171,14 +180,18 @@ public class ActionEndpointIT {
     ActionRequest actionRequest = actionInstruction.getActionRequest();
     ActionAddress address = actionRequest.getAddress();
 
+    checkAttributes(address);
+  }
+
+  private void checkAttributes(ActionAddress address) {
     assertThat(address.getSampleUnitRef())
-        .isEqualTo(
-            sample_attributes.getAttributes().get("TLA")
-                + sample_attributes.getAttributes().get("REFERENCE"));
+      .isEqualTo(
+        sampleAttributes.getAttributes().get("TLA")
+          + sampleAttributes.getAttributes().get("REFERENCE"));
     assertThat(address.getLine1())
-        .isEqualTo(sample_attributes.getAttributes().get("ADDRESS_LINE1"));
-    assertThat(address.getPostcode()).isEqualTo(sample_attributes.getAttributes().get("POSTCODE"));
-    assertThat(address.getTownName()).isEqualTo(sample_attributes.getAttributes().get("TOWN_NAME"));
+      .isEqualTo(sampleAttributes.getAttributes().get("ADDRESS_LINE1"));
+    assertThat(address.getPostcode()).isEqualTo(sampleAttributes.getAttributes().get("POSTCODE"));
+    assertThat(address.getTownName()).isEqualTo(sampleAttributes.getAttributes().get("TOWN_NAME"));
   }
 
   private ActionInstruction getActionInstructionFromXml(String xml) throws JAXBException {
@@ -341,7 +354,7 @@ public class ActionEndpointIT {
     log.debug("sample_attributes to mock = " + sample_attributes_dto);
 
     this.wireMockRule.stubFor(
-        get(urlPathMatching(String.format("/samples/%s/attributes", sampleUnitId)))
+        get(urlPathMatching("/samples/(.*)/attributes"))
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
