@@ -95,7 +95,7 @@ public class ActionDistributorTest {
 
     lock = mock(RLock.class);
     when(redissonClient.getFairLock(any())).thenReturn(lock);
-    when(lock.tryLock(any(Integer.class), eq(TimeUnit.SECONDS))).thenReturn(true);
+    when(lock.tryLock(anyInt(), eq(TimeUnit.SECONDS))).thenReturn(true);
     when(actionCaseRepo.findById(any())).thenReturn(bActionCase);
 
     // 3 action types (SOCIALNOT, SOCIALSNE, BSNOT)
