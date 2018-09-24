@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+- changeSet:
+    id: 13-1
+    author: Adam Hawtin
+    changes:
+    - sqlFile:
+        comment: Make social action types cancellable
+        path: make_social_action_types_cancellable.sql
+        relativeToChangelogFile: true
+        splitStatements: false
