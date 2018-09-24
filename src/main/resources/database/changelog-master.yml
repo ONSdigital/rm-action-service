@@ -44,4 +44,3 @@ databaseChangeLog:
 
 - include:
     file: database/changes/release-14/changelog.yml
-

@@ -28,6 +28,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventCreationRequestDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
+import uk.gov.ons.ctp.response.casesvc.representation.CaseIACDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
 
@@ -220,5 +221,25 @@ public class CaseSvcClientService {
       }
     }
     return result;
+  }
+
+  /**
+   * Generate a new IAC for specified case
+   *
+   * @param caseId Case you want to update with a new generated IAC
+   * @return The new IAC
+   */
+  public CaseIACDTO generateNewIacForCase(final UUID caseId) {
+
+    final UriComponents uriComponents =
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getGenerateNewIacForCasePostPath(), null, caseId);
+
+    final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
+
+    final ResponseEntity<CaseIACDTO> responseEntity =
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, httpEntity, CaseIACDTO.class);
+
+    return responseEntity.getBody();
   }
 }
