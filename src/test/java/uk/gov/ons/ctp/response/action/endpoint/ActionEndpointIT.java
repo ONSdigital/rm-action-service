@@ -39,7 +39,6 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.common.UnirestInitialiser;
 import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
@@ -185,11 +184,10 @@ public class ActionEndpointIT {
 
   private void checkAttributes(ActionAddress address) {
     assertThat(address.getSampleUnitRef())
-      .isEqualTo(
-        sampleAttributes.getAttributes().get("TLA")
-          + sampleAttributes.getAttributes().get("REFERENCE"));
-    assertThat(address.getLine1())
-      .isEqualTo(sampleAttributes.getAttributes().get("ADDRESS_LINE1"));
+        .isEqualTo(
+            sampleAttributes.getAttributes().get("TLA")
+                + sampleAttributes.getAttributes().get("REFERENCE"));
+    assertThat(address.getLine1()).isEqualTo(sampleAttributes.getAttributes().get("ADDRESS_LINE1"));
     assertThat(address.getPostcode()).isEqualTo(sampleAttributes.getAttributes().get("POSTCODE"));
     assertThat(address.getTownName()).isEqualTo(sampleAttributes.getAttributes().get("TOWN_NAME"));
   }
@@ -201,7 +199,8 @@ public class ActionEndpointIT {
         xmlToObject.createUnmarshaller().unmarshal(new ByteArrayInputStream(xml.getBytes()));
   }
 
-  private void createAction(CaseDetailsDTO caseDetails, ActionType actionType) throws UnirestException {
+  private void createAction(CaseDetailsDTO caseDetails, ActionType actionType)
+      throws UnirestException {
     ActionPostRequestDTO apord = new ActionPostRequestDTO();
     apord.setCaseId(UUID.fromString(caseDetails.getId().toString()));
     apord.setCreatedBy("EMBRYO");
@@ -226,11 +225,11 @@ public class ActionEndpointIT {
     apord.setTriggerDateTime(OffsetDateTime.now());
 
     Unirest.post("http://localhost:" + this.port + "/actionrules")
-      .basicAuth("admin", "secret")
-      .header("accept", "application/json")
-      .header("Content-Type", "application/json")
-      .body(apord)
-      .asObject(ActionRulePostRequestDTO.class);
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(apord)
+        .asObject(ActionRulePostRequestDTO.class);
   }
 
   private String getCaseNotificationXml(

@@ -71,7 +71,6 @@ class ActionDistributor {
   }
 
   private List<InstructionCount> processActionType(final ActionType actionType) {
-    log.with("action_type", actionType.getName()).debug("Dealing with actionType");
     final InstructionCount requestCount =
         InstructionCount.builder()
             .actionTypeName(actionType.getName())
@@ -98,7 +97,7 @@ class ActionDistributor {
       final List<Action> actions,
       final InstructionCount requestCount,
       final InstructionCount cancelCount) {
-    log.with(actions).debug("Dealing with actions");
+
     for (final Action action : actions) {
       try {
         processAction(action, requestCount, cancelCount);
@@ -152,11 +151,9 @@ class ActionDistributor {
     List<Action> actions =
         actionRepo.findSubmittedOrCancelledByActionTypeName(
             actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-    String actionIds =
-        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(","));
-    log.with("action_type", actionType.getName())
-        .with("action_ids", actionIds)
-        .debug("RETRIEVED action ids");
+
+    actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(","));
+
     return actions;
   }
 }
