@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
@@ -31,6 +32,7 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
  */
 @Component
 class ActionDistributor {
+
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
   @Autowired private AppConfig appConfig;
@@ -48,6 +50,8 @@ class ActionDistributor {
   private ActionProcessingService socialActionProcessingService;
 
   @Autowired private ActionCaseRepository actionCaseRepo;
+
+  @Autowired private CaseSvcClientService caseSvcClientService;
 
   /**
    * wake up on schedule and check for submitted actions, enrich and distribute them to spring
@@ -130,6 +134,12 @@ class ActionDistributor {
   private void processAction(
       Action action, final InstructionCount requestCount, final InstructionCount cancelCount)
       throws CTPException {
+
+    if (action.getActionType().getActionTypeNameEnum()
+        == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+      caseSvcClientService.generateNewIacForCase(action.getCaseId());
+    }
+
     ActionProcessingService ap = getActionProcessingService(action);
 
     if (action.getState().equals(ActionState.SUBMITTED)) {

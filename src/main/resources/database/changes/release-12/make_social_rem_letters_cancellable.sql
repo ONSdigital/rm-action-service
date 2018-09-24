@@ -1,0 +1,1 @@
+UPDATE action.actiontype SET cancancel = true WHERE name = 'SOCIALREM';
