@@ -10,9 +10,10 @@ UPDATE casesvc.temp_cases AS tc1
                       AND c1.sampleunittype = 'B') AS bicasegroup2
  WHERE tc1.bicaseid = bicasegroup2.bicaseid;
 
--- Set B cases to be ACTIONABLE
+-- Set B cases to be ACTIONABLE and update action plans
 UPDATE casesvc."case"
-   SET statefk = 'ACTIONABLE'
+   SET statefk = 'ACTIONABLE',
+       actionplanid = casesvc.temp_cases.actionplanid
   FROM casesvc.temp_cases
  WHERE casesvc."case".id = casesvc.temp_cases.bcaseid;
 

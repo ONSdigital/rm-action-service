@@ -14,7 +14,7 @@ psql "{CASE_POSTGRES_URI}" -f 2_create_temp_cases_table.sql
 
 Copy the BI case id's from the csv to the temporary table
 ```
-psql "{CASE_POSTGRES_URI}" -c "COPY casesvc.temp_cases(bicaseid) FROM STDIN WITH CSV;" < temp_cases.csv
+psql "{CASE_POSTGRES_URI}" -c "COPY casesvc.temp_cases(bicaseid, actionplanid) FROM STDIN WITH CSV;" < temp_cases.csv
 ```
 ac
 Copy B case id's into temporary table
