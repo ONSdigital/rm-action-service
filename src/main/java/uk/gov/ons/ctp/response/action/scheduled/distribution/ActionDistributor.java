@@ -61,7 +61,7 @@ class ActionDistributor {
    */
   @Transactional
   public DistributionInfo distribute() {
-    log.debug("ActionDistributor awoken...");
+
     final DistributionInfo distInfo = new DistributionInfo();
     final List<ActionType> actionTypes = actionTypeRepo.findAll();
 
@@ -70,7 +70,6 @@ class ActionDistributor {
       distInfo.getInstructionCounts().addAll(instructionCounts);
     }
 
-    log.debug("ActionDistributor going back to sleep");
     return distInfo;
   }
 
