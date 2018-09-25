@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
 
 import java.util.*;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,7 +77,8 @@ public class ActionProcessingServiceTest {
   private static final UUID PARTY_ID = UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c86");
   private static final UUID PARTY_ID_PARENT_FOR_CASE_ID_2 =
       UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c81");
-  private static final UUID SAMPLE_UNIT_ID = UUID.fromString("3e6add83-e43d-4f52-954f-4109be506c86");
+  private static final UUID SAMPLE_UNIT_ID =
+      UUID.fromString("3e6add83-e43d-4f52-954f-4109be506c86");
 
   @Spy private AppConfig appConfig = new AppConfig();
 
@@ -553,7 +553,7 @@ public class ActionProcessingServiceTest {
     action.setPriority(3);
 
     final ActionPlan actionPlan =
-      ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
 
     ActionRequestContext context = new ActionRequestContext();
     context.setCaseDetails(createCaseDetails());
