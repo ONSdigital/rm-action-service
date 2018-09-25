@@ -1,6 +1,5 @@
-package uk.gov.ons.ctp.response.action.service;
+package uk.gov.ons.ctp.response.action.scheduled.plan;
 
-import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
 
 import com.godaddy.logging.Logger;
@@ -8,24 +7,23 @@ import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
-import net.sourceforge.cobertura.CoverageIgnore;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
-import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
+import uk.gov.ons.ctp.response.action.service.ActionService;
 
 @Service
-public class ActionPlanJobService {
-  private static final Logger log = LoggerFactory.getLogger(ActionPlanJobService.class);
+public class ActionPlanJobExecutor {
+  private static final Logger log = LoggerFactory.getLogger(ActionPlanJobExecutor.class);
 
   public static final String CREATED_BY_SYSTEM = "SYSTEM";
-  public static final String NO_ACTIONPLAN_MSG = "ActionPlan not found for id %s";
 
   private ActionCaseRepository actionCaseRepo;
   private ActionPlanRepository actionPlanRepo;
@@ -35,7 +33,7 @@ public class ActionPlanJobService {
 
   private DistributedLockManager actionPlanExecutionLockManager;
 
-  public ActionPlanJobService(
+  public ActionPlanJobExecutor(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
       ActionPlanJobRepository actionPlanJobRepo,
@@ -48,30 +46,12 @@ public class ActionPlanJobService {
     this.actionPlanExecutionLockManager = actionPlanExecutionLockManager;
   }
 
-  @CoverageIgnore
-  public ActionPlanJob findActionPlanJob(final UUID actionPlanJobId) {
-    log.with("action_plan_job_id", actionPlanJobId).debug("Entering findActionPlanJob");
-    return actionPlanJobRepo.findById(actionPlanJobId);
-  }
-
-  @CoverageIgnore
-  public List<ActionPlanJob> findActionPlanJobsForActionPlan(final UUID actionPlanId)
-      throws CTPException {
-    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanJobsForActionPlan");
-    final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
-    if (actionPlan == null) {
-      throw new CTPException(
-          CTPException.Fault.RESOURCE_NOT_FOUND, NO_ACTIONPLAN_MSG, actionPlanId);
-    }
-
-    return actionPlanJobRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
-  }
-
   /**
-   * Create a new ActionPlanJob and create associated actions for all action plans with cases in the
-   * action.case table
+   * On a schedule create a new ActionPlanJob and create associated actions for all action plans
+   * with cases in the action.case table
    */
   @Transactional
+  @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(this::createAndExecuteActionPlanJobs);

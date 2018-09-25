@@ -1,4 +1,4 @@
-package uk.gov.ons.ctp.response.action.service;
+package uk.gov.ons.ctp.response.action.scheduled.plan;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -20,12 +20,13 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.action.service.ActionService;
 
 /** Tests for the ActionPlanJobServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
-public class ActionPlanJobServiceTest {
+public class ActionPlanJobExecutorTest {
 
-  @InjectMocks private ActionPlanJobService actionPlanJobService;
+  @InjectMocks private ActionPlanJobExecutor actionPlanJobExecutor;
 
   @Mock private ActionService actionService;
   @Mock private DistributedLockManager actionPlanExecutionLockManager;
@@ -57,7 +58,7 @@ public class ActionPlanJobServiceTest {
     // Given setUp()
 
     // When
-    actionPlanJobService.createAndExecuteAllActionPlanJobs();
+    actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
 
     // Then
     verify(actionPlanJobRepo, times(2)).save(any(ActionPlanJob.class));
@@ -72,7 +73,7 @@ public class ActionPlanJobServiceTest {
     when(actionCaseRepo.existsByActionPlanFK(any(Integer.class))).thenReturn(false);
 
     // When
-    actionPlanJobService.createAndExecuteAllActionPlanJobs();
+    actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
 
     // Then
     verify(actionPlanJobRepo, never()).save(any(ActionPlanJob.class));
@@ -87,7 +88,7 @@ public class ActionPlanJobServiceTest {
     when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
 
     // When
-    actionPlanJobService.createAndExecuteAllActionPlanJobs();
+    actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
 
     // Then
     verify(actionPlanJobRepo, never()).save(any(ActionPlanJob.class));

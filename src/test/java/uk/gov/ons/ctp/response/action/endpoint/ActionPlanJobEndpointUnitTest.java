@@ -13,8 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.ons.ctp.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.ACTION_PLAN_JOB_NOT_FOUND;
-import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.CREATED_BY_SYSTEM;
-import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.NO_ACTIONPLAN_MSG;
+import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.NO_ACTIONPLAN_MSG;
+import static uk.gov.ons.ctp.response.action.scheduled.plan.ActionPlanJobExecutor.CREATED_BY_SYSTEM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +39,9 @@ import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
-import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 /** ActionPlanJobEndpoint Unit tests */
@@ -74,7 +75,8 @@ public class ActionPlanJobEndpointUnitTest {
 
   @InjectMocks private ActionPlanJobEndpoint actionPlanJobEndpoint;
 
-  @Mock private ActionPlanJobService actionPlanJobService;
+  @Mock private ActionPlanRepository actionPlanRepo;
+  @Mock private ActionPlanJobRepository actionPlanJobRepo;
   @Mock private ActionPlanService actionPlanService;
 
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
@@ -110,10 +112,7 @@ public class ActionPlanJobEndpointUnitTest {
    */
   @Test
   public void findActionPlanJobsForActionPlanNotFound() throws Exception {
-    when(actionPlanJobService.findActionPlanJobsForActionPlan(ACTIONPLANID_NOTFOUND))
-        .thenThrow(
-            new CTPException(
-                CTPException.Fault.RESOURCE_NOT_FOUND, NO_ACTIONPLAN_MSG, ACTIONPLANID_NOTFOUND));
+    when(actionPlanRepo.findById(ACTION_PLAN_JOBID_NOTFOUND)).thenReturn(null);
 
     final ResultActions actions =
         mockMvc.perform(getJson(String.format("/actionplans/%s/jobs", ACTIONPLANID_NOTFOUND)));
@@ -136,7 +135,8 @@ public class ActionPlanJobEndpointUnitTest {
    */
   @Test
   public void findActionPlanJobsForActionPlanNoActionPlanJob() throws Exception {
-    when(actionPlanJobService.findActionPlanJobsForActionPlan(ACTIONPLANID))
+    when(actionPlanRepo.findById(ACTIONPLANID)).thenReturn(actionPlans.get(0));
+    when(actionPlanJobRepo.findByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
         .thenReturn(new ArrayList<>());
 
     final ResultActions actions =
@@ -156,7 +156,8 @@ public class ActionPlanJobEndpointUnitTest {
    */
   @Test
   public void findActionPlanJobFoundForActionPlan() throws Exception {
-    when(actionPlanJobService.findActionPlanJobsForActionPlan(ACTIONPLANID))
+    when(actionPlanRepo.findById(ACTIONPLANID)).thenReturn(actionPlans.get(0));
+    when(actionPlanJobRepo.findByActionPlanFK(actionPlans.get(0).getActionPlanPK()))
         .thenReturn(actionPlanJobs);
 
     final ResultActions actions =
@@ -238,7 +239,7 @@ public class ActionPlanJobEndpointUnitTest {
    */
   @Test
   public void findActionPlanJobUnCheckedException() throws Exception {
-    when(actionPlanJobService.findActionPlanJob(ACTION_PLAN_JOBID_NOTFOUND))
+    when(actionPlanJobRepo.findById(ACTION_PLAN_JOBID_NOTFOUND))
         .thenThrow(new IllegalArgumentException(OUR_EXCEPTION_MESSAGE));
 
     final ResultActions actions =
@@ -260,8 +261,7 @@ public class ActionPlanJobEndpointUnitTest {
    */
   @Test
   public void findActionPlanJob() throws Exception {
-    when(actionPlanJobService.findActionPlanJob(ACTION_PLAN_JOB_ID_1))
-        .thenReturn(actionPlanJobs.get(0));
+    when(actionPlanJobRepo.findById(ACTION_PLAN_JOB_ID_1)).thenReturn(actionPlanJobs.get(0));
     when(actionPlanService.findActionPlan(any(Integer.class))).thenReturn(actionPlans.get(0));
 
     final ResultActions actions =

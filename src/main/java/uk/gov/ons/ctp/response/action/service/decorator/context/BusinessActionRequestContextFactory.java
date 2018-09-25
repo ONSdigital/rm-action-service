@@ -33,7 +33,7 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
 
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
-    ActionRequestContext context = this.defaultFactory.getActionRequestDecoratorContext(action);
+    ActionRequestContext context = defaultFactory.getActionRequestDecoratorContext(action);
     if (context.getSampleUnitType().equals(SampleUnitType.B)) {
       setParties(context);
     } else {
