@@ -617,7 +617,6 @@ public class ActionProcessingServiceTest {
   private CaseGroupDTO createCaseGroup(CaseGroupStatus status) {
     CaseGroupDTO caseGroup = new CaseGroupDTO();
     caseGroup.setCaseGroupStatus(status);
-    //    caseGroup.setCaseGroupStatus(CaseGroupStatus.INPROGRESS);
     caseGroup.setCollectionExerciseId(COLLECTION_EXERCISE_ID);
     return caseGroup;
   }
