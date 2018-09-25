@@ -1,26 +1,9 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
-
-import java.util.*;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -54,6 +37,13 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
+
 /** Tests for the ActionProcessingServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionProcessingServiceTest {
@@ -78,7 +68,8 @@ public class ActionProcessingServiceTest {
   private static final UUID PARTY_ID = UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c86");
   private static final UUID PARTY_ID_PARENT_FOR_CASE_ID_2 =
       UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c81");
-  private static final UUID SAMPLE_UNIT_ID = UUID.fromString("3e6add83-e43d-4f52-954f-4109be506c86");
+  private static final UUID SAMPLE_UNIT_ID =
+      UUID.fromString("3e6add83-e43d-4f52-954f-4109be506c86");
 
   @Spy private AppConfig appConfig = new AppConfig();
 
@@ -553,7 +544,7 @@ public class ActionProcessingServiceTest {
     action.setPriority(3);
 
     final ActionPlan actionPlan =
-      ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
 
     ActionRequestContext context = new ActionRequestContext();
     context.setCaseDetails(createCaseDetails());
