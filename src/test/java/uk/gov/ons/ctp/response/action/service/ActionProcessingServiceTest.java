@@ -513,7 +513,7 @@ public class ActionProcessingServiceTest {
   @Test
   public void testCaseRefShouldBeOnActionRequest() throws CTPException {
     // Given
-    CaseDetailsDTO caseDetails = createCaseDetails();
+    CaseDetailsDTO caseDetails = createCaseDetails(CaseGroupStatus.INPROGRESS);
     caseDetails.setCaseRef("Case ref");
     ActionRequestContext context = new ActionRequestContext();
 
@@ -548,7 +548,23 @@ public class ActionProcessingServiceTest {
   }
 
   @Test
-  public void testThatFieldCasesAreHandledAccordingly() throws Exception {
+  public void testINPROGRESSCasesAreSentToField() throws Exception {
+    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.INPROGRESS, 1);
+  }
+
+  @Test
+  public void testNOTSTARTEDCasesAreSentToField() throws Exception {
+    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.NOTSTARTED, 1);
+  }
+
+  @Test
+  public void testCOMPLETECasesAreNotSentToField() throws Exception {
+    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.COMPLETE, 0);
+  }
+
+  /** Function to test whether cases are sent to field. */
+  private void testThatFieldCasesAreHandledAccordingly(
+      CaseGroupStatus status, Integer numberOfCalls) throws Exception {
     final Action action = new Action();
     action.setId(ACTION_ID);
     action.setCaseId(CASE_ID);
@@ -560,7 +576,7 @@ public class ActionProcessingServiceTest {
         ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
 
     ActionRequestContext context = new ActionRequestContext();
-    context.setCaseDetails(createCaseDetails());
+    context.setCaseDetails(createCaseDetails(status));
     context.setCollectionExercise(createCollectionExercise());
     context.setSurvey(new SurveyDTO());
     context.setAction(action);
@@ -578,7 +594,7 @@ public class ActionProcessingServiceTest {
 
     socialActionProcessingService.processActionRequest(action);
 
-    verify(actionInstructionPublisher, times(1))
+    verify(actionInstructionPublisher, times(numberOfCalls))
         .sendActionInstruction(eq("Field"), any(ActionRequest.class));
   }
 
@@ -588,19 +604,20 @@ public class ActionProcessingServiceTest {
     return collectionExercise;
   }
 
-  private CaseDetailsDTO createCaseDetails() {
+  private CaseDetailsDTO createCaseDetails(CaseGroupStatus status) {
     CaseDetailsDTO caseDetails = new CaseDetailsDTO();
     caseDetails.setCaseEvents(Collections.emptyList());
     caseDetails.setSampleUnitType(SampleUnitDTO.SampleUnitType.H.toString());
-    caseDetails.setCaseGroup(createCaseGroup());
+    caseDetails.setCaseGroup(createCaseGroup(status));
     caseDetails.setPartyId(PARTY_ID);
     caseDetails.setId(UUID.randomUUID());
     return caseDetails;
   }
 
-  private CaseGroupDTO createCaseGroup() {
+  private CaseGroupDTO createCaseGroup(CaseGroupStatus status) {
     CaseGroupDTO caseGroup = new CaseGroupDTO();
-    caseGroup.setCaseGroupStatus(CaseGroupStatus.INPROGRESS);
+    caseGroup.setCaseGroupStatus(status);
+    //    caseGroup.setCaseGroupStatus(CaseGroupStatus.INPROGRESS);
     caseGroup.setCollectionExerciseId(COLLECTION_EXERCISE_ID);
     return caseGroup;
   }
