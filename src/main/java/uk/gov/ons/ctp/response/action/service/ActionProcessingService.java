@@ -95,8 +95,8 @@ public abstract class ActionProcessingService {
       if (actionRequest != null) {
         if (actionType.getHandler().equals("Field")) {
           if (actionRequest.getCaseGroupStatus().equals("NOTSTARTED")
-            || actionRequest.getCaseGroupStatus().equals("INPROGRESS")) {
-              actionInstructionPublisher.sendActionInstruction("Field", actionRequest);
+              || actionRequest.getCaseGroupStatus().equals("INPROGRESS")) {
+            actionInstructionPublisher.sendActionInstruction("Field", actionRequest);
           }
         } else {
           actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionRequest);

@@ -1,9 +1,29 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
@@ -36,13 +56,6 @@ import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
 
 /** Tests for the ActionProcessingServiceImpl */
 @RunWith(MockitoJUnitRunner.class)

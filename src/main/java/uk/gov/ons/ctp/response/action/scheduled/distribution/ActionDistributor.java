@@ -4,7 +4,6 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -160,8 +159,6 @@ class ActionDistributor {
     List<Action> actions =
         actionRepo.findSubmittedOrCancelledByActionTypeName(
             actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-
-    actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(","));
 
     return actions;
   }
