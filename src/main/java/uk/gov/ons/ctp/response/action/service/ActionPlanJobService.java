@@ -74,20 +74,15 @@ public class ActionPlanJobService {
   @Transactional
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
-    actionPlans.forEach(
-        actionPlan -> {
-          if (hasActionableCases(actionPlan)) {
-            createAndExecuteActionPlanJob(actionPlan);
-          }
-        });
+    actionPlans.forEach(this::createAndExecuteActionPlanJobs);
   }
 
-  private boolean hasActionableCases(ActionPlan actionPlan) {
-    return actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK());
-  }
+  private void createAndExecuteActionPlanJobs(final ActionPlan actionPlan) {
+    // If no cases exist in action.case table for given action plan don't create action plan job
+    if (!actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK())) {
+      return;
+    }
 
-  @Transactional(propagation = REQUIRES_NEW)
-  public void createAndExecuteActionPlanJob(final ActionPlan actionPlan) {
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
       log.with("action_plan_id", actionPlan.getId()).debug("Could not get manager lock");
       return;
