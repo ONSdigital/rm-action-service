@@ -15,7 +15,7 @@ psql "{ACTION_POSTGRES_URI}" -f 2_create_temporary_table_in_action.sql
 
 Copy case ids from the csv to temporary table
 ```
-psql "{ACTION_POSTGRES_URI}" -c "COPY actionsvc.temp_cases(case_id) FROM STDIN WITH CSV;" < temp_cases.csv
+psql "{ACTION_POSTGRES_URI}" -c "COPY action.temp_cases(case_id) FROM STDIN WITH CSV;" < temp_cases.csv
 ```
 
 Delete completed cases from action service
