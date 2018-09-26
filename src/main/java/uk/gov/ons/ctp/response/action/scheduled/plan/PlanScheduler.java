@@ -28,7 +28,6 @@ public class PlanScheduler implements HealthIndicator {
    */
   @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void run() {
-    log.info("Executing ActionPlans");
     try {
       executionInfo = new PlanExecutionInfo();
       executionInfo.setExecutedJobs(actionPlanJobServiceImpl.createAndExecuteAllActionPlanJobs());

@@ -12,7 +12,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +52,7 @@ import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.party.representation.Attributes;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
@@ -78,6 +81,8 @@ public class ActionProcessingServiceTest {
   private static final UUID PARTY_ID = UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c86");
   private static final UUID PARTY_ID_PARENT_FOR_CASE_ID_2 =
       UUID.fromString("2e6add83-e43d-4f52-954f-4109be506c81");
+  private static final UUID SAMPLE_UNIT_ID =
+      UUID.fromString("3e6add83-e43d-4f52-954f-4109be506c86");
 
   @Spy private AppConfig appConfig = new AppConfig();
 
@@ -104,6 +109,8 @@ public class ActionProcessingServiceTest {
   @Mock private ActionRequestContextFactory decoratorContextFactory;
 
   @InjectMocks private BusinessActionProcessingService businessActionProcessingService;
+
+  @InjectMocks private SocialActionProcessingServiceImpl socialActionProcessingService;
 
   private List<CaseDetailsDTO> caseDetailsDTOs;
   private List<CollectionExerciseDTO> collectionExerciseDTOs;
@@ -506,7 +513,7 @@ public class ActionProcessingServiceTest {
   @Test
   public void testCaseRefShouldBeOnActionRequest() throws CTPException {
     // Given
-    CaseDetailsDTO caseDetails = createCaseDetails();
+    CaseDetailsDTO caseDetails = createCaseDetails(CaseGroupStatus.INPROGRESS);
     caseDetails.setCaseRef("Case ref");
     ActionRequestContext context = new ActionRequestContext();
 
@@ -540,25 +547,76 @@ public class ActionProcessingServiceTest {
     assertEquals("Case ref", captor.getValue().getCaseRef());
   }
 
+  @Test
+  public void testINPROGRESSCasesAreSentToField() throws Exception {
+    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.INPROGRESS, 1);
+  }
+
+  @Test
+  public void testNOTSTARTEDCasesAreSentToField() throws Exception {
+    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.NOTSTARTED, 1);
+  }
+
+  @Test
+  public void testCOMPLETECasesAreNotSentToField() throws Exception {
+    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.COMPLETE, 0);
+  }
+
+  /** Function to test whether cases are sent to field. */
+  private void testThatFieldCasesAreHandledAccordingly(
+      CaseGroupStatus status, Integer numberOfCalls) throws Exception {
+    final Action action = new Action();
+    action.setId(ACTION_ID);
+    action.setCaseId(CASE_ID);
+    action.setActionType(
+        ActionType.builder().handler("Field").name("SOCIALICF").responseRequired(true).build());
+    action.setPriority(3);
+
+    final ActionPlan actionPlan =
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+
+    ActionRequestContext context = new ActionRequestContext();
+    context.setCaseDetails(createCaseDetails(status));
+    context.setCollectionExercise(createCollectionExercise());
+    context.setSurvey(new SurveyDTO());
+    context.setAction(action);
+    context.setActionPlan(actionPlan);
+    context.setSampleAttributes(createSampleAttributes());
+
+    when(actionSvcStateTransitionManager.transition(
+            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
+        .thenReturn(ActionDTO.ActionState.PENDING);
+
+    when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
+        .thenReturn(context);
+
+    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
+
+    socialActionProcessingService.processActionRequest(action);
+
+    verify(actionInstructionPublisher, times(numberOfCalls))
+        .sendActionInstruction(eq("Field"), any(ActionRequest.class));
+  }
+
   private CollectionExerciseDTO createCollectionExercise() {
     CollectionExerciseDTO collectionExercise = new CollectionExerciseDTO();
     collectionExercise.setSurveyId(CENSUS_SURVEY_ID);
     return collectionExercise;
   }
 
-  private CaseDetailsDTO createCaseDetails() {
+  private CaseDetailsDTO createCaseDetails(CaseGroupStatus status) {
     CaseDetailsDTO caseDetails = new CaseDetailsDTO();
     caseDetails.setCaseEvents(Collections.emptyList());
     caseDetails.setSampleUnitType(SampleUnitDTO.SampleUnitType.H.toString());
-    caseDetails.setCaseGroup(createCaseGroup());
+    caseDetails.setCaseGroup(createCaseGroup(status));
     caseDetails.setPartyId(PARTY_ID);
     caseDetails.setId(UUID.randomUUID());
     return caseDetails;
   }
 
-  private CaseGroupDTO createCaseGroup() {
+  private CaseGroupDTO createCaseGroup(CaseGroupStatus status) {
     CaseGroupDTO caseGroup = new CaseGroupDTO();
-    caseGroup.setCaseGroupStatus(CaseGroupStatus.INPROGRESS);
+    caseGroup.setCaseGroupStatus(status);
     caseGroup.setCollectionExerciseId(COLLECTION_EXERCISE_ID);
     return caseGroup;
   }
@@ -568,5 +626,16 @@ public class ActionProcessingServiceTest {
     party.setAttributes(new Attributes());
     party.setAssociations(Collections.emptyList());
     return party;
+  }
+
+  private SampleAttributesDTO createSampleAttributes() {
+    SampleAttributesDTO attribs = new SampleAttributesDTO();
+    Map<String, String> attrs = new HashMap<>();
+    attrs.put("Country", "E");
+
+    attribs.setId(SAMPLE_UNIT_ID);
+    attribs.setAttributes(attrs);
+
+    return attribs;
   }
 }

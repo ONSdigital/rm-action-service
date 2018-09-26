@@ -43,14 +43,12 @@ public class ActionPlanJobService {
 
   @CoverageIgnore
   public ActionPlanJob findActionPlanJob(final UUID actionPlanJobId) {
-    log.debug("Entering findActionPlanJob with id {}", actionPlanJobId);
     return actionPlanJobRepo.findById(actionPlanJobId);
   }
 
   @CoverageIgnore
   public List<ActionPlanJob> findActionPlanJobsForActionPlan(final UUID actionPlanId)
       throws CTPException {
-    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanJobsForActionPlan");
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
       throw new CTPException(
@@ -100,19 +98,14 @@ public class ActionPlanJobService {
     final ActionPlan actionPlan = actionPlanRepo.findOne(actionPlanPK);
 
     if (actionPlan == null) {
-      log.with("action_plan_pk", actionPlanPK).debug("Action plan is null");
       return null;
     }
 
     if (actionCaseRepo.countByActionPlanFK(actionPlanPK) == 0) {
-      log.with("action_plan_pk", actionPlanPK).debug("No open cases for action plan");
-
       return null;
     }
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.with("action_plan_pk", actionPlanPK).debug("Could not get lock on action plan");
-
       return null;
     }
 
@@ -126,7 +119,6 @@ public class ActionPlanJobService {
       actionSvc.createScheduledActions(job.getActionPlanJobPK());
       return job;
     } finally {
-      log.with("action_plan_pk", actionPlanPK).debug("Releasing lock on action plan");
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }
   }
@@ -138,9 +130,6 @@ public class ActionPlanJobService {
     actionPlanJobTemplate.setUpdatedDateTime(now);
     actionPlanJobTemplate.setId(UUID.randomUUID());
     final ActionPlanJob createdJob = actionPlanJobRepo.save(actionPlanJobTemplate);
-    log.with("action_plan_job_pk", createdJob.getActionPlanJobPK())
-        .with("action_plan_pk", createdJob.getActionPlanFK())
-        .info("Running actionplanjob");
     return createdJob;
   }
 }
