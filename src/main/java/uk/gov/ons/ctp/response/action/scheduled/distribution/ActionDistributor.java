@@ -4,7 +4,6 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -61,7 +60,7 @@ class ActionDistributor {
    */
   @Transactional
   public DistributionInfo distribute() {
-    log.debug("ActionDistributor awoken...");
+
     final DistributionInfo distInfo = new DistributionInfo();
     final List<ActionType> actionTypes = actionTypeRepo.findAll();
 
@@ -70,12 +69,10 @@ class ActionDistributor {
       distInfo.getInstructionCounts().addAll(instructionCounts);
     }
 
-    log.debug("ActionDistributor going back to sleep");
     return distInfo;
   }
 
   private List<InstructionCount> processActionType(final ActionType actionType) {
-    log.with("action_type", actionType.getName()).debug("Dealing with actionType");
     final InstructionCount requestCount =
         InstructionCount.builder()
             .actionTypeName(actionType.getName())
@@ -102,7 +99,7 @@ class ActionDistributor {
       final List<Action> actions,
       final InstructionCount requestCount,
       final InstructionCount cancelCount) {
-    log.with(actions).debug("Dealing with actions");
+
     for (final Action action : actions) {
       try {
         processAction(action, requestCount, cancelCount);
@@ -162,11 +159,7 @@ class ActionDistributor {
     List<Action> actions =
         actionRepo.findSubmittedOrCancelledByActionTypeName(
             actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
-    String actionIds =
-        actions.stream().map(a -> a.getActionPK().toString()).collect(Collectors.joining(","));
-    log.with("action_type", actionType.getName())
-        .with("action_ids", actionIds)
-        .debug("RETRIEVED action ids");
+
     return actions;
   }
 }
