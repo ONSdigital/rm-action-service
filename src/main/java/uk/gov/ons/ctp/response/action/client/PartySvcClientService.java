@@ -99,7 +99,7 @@ public class PartySvcClientService {
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
-    log.with("response_entity", responseEntity).debug("Party service response");
+    log.debug("Successfully retrieved party service response");
 
     PartyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {

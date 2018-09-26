@@ -1,0 +1,1 @@
+COPY action.temp_cases(case_id) FROM STDIN WITH CSV;
