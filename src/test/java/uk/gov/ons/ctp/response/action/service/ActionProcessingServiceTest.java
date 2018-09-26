@@ -557,11 +557,6 @@ public class ActionProcessingServiceTest {
     testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.NOTSTARTED, 1);
   }
 
-  @Test
-  public void testCOMPLETECasesAreNotSentToField() throws Exception {
-    testThatFieldCasesAreHandledAccordingly(CaseGroupStatus.COMPLETE, 0);
-  }
-
   /** Function to test whether cases are sent to field. */
   private void testThatFieldCasesAreHandledAccordingly(
       CaseGroupStatus status, Integer numberOfCalls) throws Exception {
