@@ -109,8 +109,8 @@ public class PlanSchedulerIT {
     UnirestInitialiser.initialise(objectMapper);
     actionCaseRepository.deleteAllInBatch();
     actionRepository.deleteAllInBatch();
-    actionPlanJobRepository.deleteAllInBatch();
     actionRuleRepository.deleteAllInBatch();
+    actionPlanJobRepository.deleteAllInBatch();
     actionPlanRepository.deleteAllInBatch();
   }
 
