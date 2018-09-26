@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+- changeSet:
+    id: 14-0
+    author: Hugh Brace
+    changes:
+    - sqlFile:
+        comment: Adding a new action type under Field
+        path: add_action_type_for_field.sql
+        relativeToChangelogFile: true
+        splitStatements: false

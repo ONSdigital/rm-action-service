@@ -24,10 +24,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
-import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
-import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
-import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -62,9 +58,9 @@ public class ActionProcessingServiceTest {
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
   private static final UUID CASE_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d4");
 
-  @InjectMocks private BusinessActionProcessingService businessActionProcessingService;
-
   @Spy private AppConfig appConfig = new AppConfig();
+
+  @InjectMocks private BusinessActionProcessingService businessActionProcessingService;
 
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
@@ -74,25 +70,17 @@ public class ActionProcessingServiceTest {
   @Mock private ActionRequestValidator validator;
   @Mock private ActionRequestContextFactory decoratorContextFactory;
 
-  @Mock private CaseSvcClientService caseSvcClientService;
-  @Mock private CollectionExerciseClientService collectionExerciseClientService;
-  @Mock private PartySvcClientService partySvcClientService;
-  @Mock private SurveySvcClientService surveySvcClientService;
-
   @Mock private ActionRepository actionRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
 
-  private List<CaseDetailsDTO> caseDetails;
   private CaseDetailsDTO hCase;
   private CaseDetailsDTO bCase;
   private List<CollectionExerciseDTO> collectionExercises;
-  private List<PartyDTO> partys;
   private PartyDTO businessParty;
   private List<PartyDTO> respondentParties;
   private List<SurveyDTO> surveys;
 
   private ActionRequestContext context;
-  private ActionPlan contextActionPlan;
   private Action contextAction;
 
   /** Initialises Mockito and loads Class Fixtures */
@@ -102,11 +90,11 @@ public class ActionProcessingServiceTest {
     appConfig.setCaseSvc(caseSvcConfig);
 
     // Load test data
-    partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
+    List<PartyDTO> partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
     businessParty = partys.get(0);
     respondentParties = partys.subList(1, 4);
 
-    caseDetails = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
+    List<CaseDetailsDTO> caseDetails = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
     hCase = caseDetails.get(0);
     bCase = caseDetails.get(1);
     collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
@@ -127,7 +115,8 @@ public class ActionProcessingServiceTest {
 
   private ActionRequestContext createContext() {
     context = new ActionRequestContext();
-    contextActionPlan = ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
+    ActionPlan contextActionPlan =
+        ActionPlan.builder().name(ACTION_PLAN_NAME).id(UUID.randomUUID()).build();
     context.setActionPlan(contextActionPlan);
     context.setCaseDetails(bCase);
     context.setParentParty(businessParty);
