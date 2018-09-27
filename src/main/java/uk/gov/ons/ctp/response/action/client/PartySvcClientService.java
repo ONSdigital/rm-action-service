@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -28,38 +27,28 @@ import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 public class PartySvcClientService {
   private static final Logger log = LoggerFactory.getLogger(PartySvcClientService.class);
 
-  @Autowired private AppConfig appConfig;
-
-  @Autowired private RestTemplate restTemplate;
-
-  @Autowired
-  @Qualifier("partySvcClient")
+  private AppConfig appConfig;
+  private RestTemplate restTemplate;
   private RestUtility restUtility;
+  private ObjectMapper objectMapper;
 
-  @Autowired private ObjectMapper objectMapper;
+  public PartySvcClientService(
+      AppConfig appConfig,
+      RestTemplate restTemplate,
+      @Qualifier("partySvcClient") RestUtility restUtility,
+      @Qualifier("customObjectMapper") ObjectMapper objectMapper) {
+    this.appConfig = appConfig;
+    this.restTemplate = restTemplate;
+    this.restUtility = restUtility;
+    this.objectMapper = objectMapper;
+  }
 
   @Retryable(
       value = {RestClientException.class},
       maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
-  public PartyDTO getParty(final String sampleUnitType, final UUID partyId) {
-    log.with("sample_unit_type", sampleUnitType)
-        .with("party_id", partyId.toString())
-        .debug("Retrieving party");
-    final UriComponents uriComponents =
-        restUtility.createUriComponents(
-            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-            null,
-            sampleUnitType,
-            partyId);
-
-    return makePartyServiceRequest(uriComponents);
-  }
-
   public PartyDTO getParty(final String sampleUnitType, final String partyId) {
-    log.with("sample_unit_type", sampleUnitType)
-        .with("party_id", partyId)
-        .debug("entering get party");
+    log.with("sample_unit_type", sampleUnitType).with("party_id", partyId).debug("Getting party");
     final UriComponents uriComponents =
         restUtility.createUriComponents(
             appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
@@ -82,7 +71,7 @@ public class PartySvcClientService {
         .debug("Retrieving party");
 
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
-    queryParams.put("survey_id", Arrays.asList(surveyId));
+    queryParams.put("survey_id", Collections.singletonList(surveyId));
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
@@ -99,7 +88,6 @@ public class PartySvcClientService {
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
-    log.debug("Successfully retrieved party service response");
 
     PartyDTO result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -107,7 +95,7 @@ public class PartySvcClientService {
       try {
         result = objectMapper.readValue(responseBody, PartyDTO.class);
       } catch (final IOException e) {
-        log.error("Unable to read party response", e);
+        log.error("Could not read value", e);
       }
     }
 

@@ -1,33 +1,24 @@
 package uk.gov.ons.ctp.response.action.endpoint;
 
-import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
-
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import javax.validation.Valid;
 import ma.glasnost.orika.MapperFacade;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobRequestDTO;
-import uk.gov.ons.ctp.response.action.service.ActionPlanJobService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 
 /** The REST endpoint controller for ActionPlanJobs. */
@@ -37,14 +28,24 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionPlanJobEndpoint.class);
 
   public static final String ACTION_PLAN_JOB_NOT_FOUND = "ActionPlanJob not found for id %s";
+  public static final String NO_ACTIONPLAN_MSG = "ActionPlan not found for id %s";
 
-  @Autowired private ActionPlanJobService actionPlanJobService;
+  private final ActionPlanRepository actionPlanRepo;
+  private final ActionPlanJobRepository actionPlanJobRepo;
+  private final ActionPlanService actionPlanService;
 
-  @Autowired private ActionPlanService actionPlanService;
+  private final MapperFacade mapperFacade;
 
-  @Qualifier("actionBeanMapper")
-  @Autowired
-  private MapperFacade mapperFacade;
+  public ActionPlanJobEndpoint(
+      ActionPlanRepository actionPlanRepo,
+      ActionPlanJobRepository actionPlanJobRepo,
+      ActionPlanService actionPlanService,
+      @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
+    this.actionPlanRepo = actionPlanRepo;
+    this.actionPlanJobRepo = actionPlanJobRepo;
+    this.actionPlanService = actionPlanService;
+    this.mapperFacade = mapperFacade;
+  }
 
   /**
    * This method returns the associated action plan job for the specified action plan job id.
@@ -58,7 +59,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   public final ActionPlanJobDTO findActionPlanJobById(
       @PathVariable("actionplanjobid") final UUID actionPlanJobId) throws CTPException {
     log.with("action_plan_id", actionPlanJobId).debug("Entering findActionPlanJobById");
-    final ActionPlanJob actionPlanJob = actionPlanJobService.findActionPlanJob(actionPlanJobId);
+    final ActionPlanJob actionPlanJob = actionPlanJobRepo.findById(actionPlanJobId);
 
     if (actionPlanJob == null) {
       throw new CTPException(
@@ -82,63 +83,21 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/{actionplanid}/jobs", method = RequestMethod.GET)
   public final ResponseEntity<List<ActionPlanJobDTO>> findAllActionPlanJobsByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
-    log.with("action_plan_id", actionPlanId).debug("Entering findAllActionPlanJobsByActionPlanId");
+    log.with("action_plan_id", actionPlanId)
+        .debug("Retrieving action plans jobs for given action plan id");
+    final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+    if (actionPlan == null) {
+      throw new CTPException(
+          CTPException.Fault.RESOURCE_NOT_FOUND, NO_ACTIONPLAN_MSG, actionPlanId);
+    }
+
     final List<ActionPlanJob> actionPlanJobs =
-        actionPlanJobService.findActionPlanJobsForActionPlan(actionPlanId);
+        actionPlanJobRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
     if (CollectionUtils.isEmpty(actionPlanJobs)) {
       return ResponseEntity.noContent().build();
     } else {
       return ResponseEntity.ok(buildActionPlanJobDTOs(actionPlanJobs, actionPlanId));
     }
-  }
-
-  /**
-   * To create a new Action Plan Job having received an action plan id and some json
-   *
-   * @param actionPlanId the given action plan id.
-   * @param actionPlanJobRequestDTO the ActionPlanJobRequestDTO representation of the provided json
-   * @param binding collects errors thrown by update
-   * @return the created ActionPlanJobDTO
-   * @throws CTPException summats went wrong
-   * @throws InvalidRequestException if binding errors
-   */
-  @RequestMapping(
-      value = "/{actionplanid}/jobs",
-      method = RequestMethod.POST,
-      consumes = "application/json")
-  public final ResponseEntity<ActionPlanJobDTO> executeActionPlan(
-      @PathVariable("actionplanid") final UUID actionPlanId,
-      final @RequestBody @Valid ActionPlanJobRequestDTO actionPlanJobRequestDTO,
-      final BindingResult binding)
-      throws CTPException, InvalidRequestException {
-    log.with("action_plan_id", actionPlanId).debug("Entering executeActionPlan");
-
-    if (binding.hasErrors()) {
-      throw new InvalidRequestException("Binding errors for execute action plan: ", binding);
-    }
-
-    final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
-    if (actionPlan == null) {
-      throw new CTPException(
-          CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
-    }
-    ActionPlanJob job = mapperFacade.map(actionPlanJobRequestDTO, ActionPlanJob.class);
-    job.setActionPlanFK(actionPlan.getActionPlanPK());
-    job = actionPlanJobService.createAndExecuteActionPlanJob(job);
-    if (job == null) {
-      throw new CTPException(
-          CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
-    }
-    final ActionPlanJobDTO result = mapperFacade.map(job, ActionPlanJobDTO.class);
-    result.setActionPlanId(actionPlanId);
-
-    final String newResourceUrl =
-        ServletUriComponentsBuilder.fromCurrentRequest()
-            .buildAndExpand(result.getId())
-            .toUri()
-            .toString();
-
-    return ResponseEntity.created(URI.create(newResourceUrl)).body(result);
   }
 
   /**

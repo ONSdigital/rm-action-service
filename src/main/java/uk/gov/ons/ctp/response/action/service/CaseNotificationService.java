@@ -4,7 +4,6 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.sql.Timestamp;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,109 +17,143 @@ import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
 
 /**
- * Save to Action.Case table for case creation life cycle events, delete for case close life cycle
- * events.
+ * Service for receiving notifications from case service. Creates/Updates/Deletes cases in the
+ * action.case table.
  */
 @Service
 public class CaseNotificationService {
   private static final Logger log = LoggerFactory.getLogger(CaseNotificationService.class);
 
+  private static final String ACTION_PLAN_NOT_FOUND = "No action plan found with id: %s";
+  private static final String ACTION_CASE_ALREADY_EXISTS = "Action case already exists with id: %s";
+  private static final String ACTION_CASE_NOT_FOUND = "No action case found with id: %s";
+  private static final String INVALID_NOTIFICATION_TYPE =
+      "Invalid notification type, notification_type=%s";
   private static final int TRANSACTION_TIMEOUT = 30;
 
-  @Autowired private ActionCaseRepository actionCaseRepo;
+  private final ActionCaseRepository actionCaseRepo;
+  private final ActionPlanRepository actionPlanRepo;
 
-  @Autowired private ActionPlanRepository actionPlanRepo;
+  private final ActionService actionService;
 
-  @Autowired private ActionService actionService;
+  private final CollectionExerciseClientService collectionSvcClientService;
 
-  @Autowired private CollectionExerciseClientService collectionSvcClientServiceImpl;
+  public CaseNotificationService(
+      ActionCaseRepository actionCaseRepo,
+      ActionPlanRepository actionPlanRepo,
+      ActionService actionService,
+      CollectionExerciseClientService collectionSvcClientService) {
+    this.actionCaseRepo = actionCaseRepo;
+    this.actionPlanRepo = actionPlanRepo;
+    this.actionService = actionService;
+    this.collectionSvcClientService = collectionSvcClientService;
+  }
 
   @Transactional(
       propagation = Propagation.REQUIRED,
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public void acceptNotification(final CaseNotification notification) throws CTPException {
-    final String actionPlanIdStr = notification.getActionPlanId();
-    final UUID actionPlanId = UUID.fromString(actionPlanIdStr);
-    final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
-    final UUID caseId = UUID.fromString(notification.getCaseId());
-    final UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
-    UUID partyId = null;
-    if (notification.getPartyId() != null) {
-      partyId = UUID.fromString(notification.getPartyId());
+
+    UUID caseId = UUID.fromString(notification.getCaseId());
+
+    switch (notification.getNotificationType()) {
+      case REPLACED:
+      case ACTIVATED:
+        ActionCase actionCase = createActionCase(notification);
+        saveActionCase(actionCase);
+        break;
+
+      case ACTIONPLAN_CHANGED:
+        updateActionCase(caseId, UUID.fromString(notification.getActionPlanId()));
+        break;
+
+      case DISABLED:
+      case DEACTIVATED:
+        actionService.cancelActions(caseId);
+        deleteActionCase(caseId);
+        break;
+
+      default:
+        throw new IllegalArgumentException(
+            String.format(
+                INVALID_NOTIFICATION_TYPE, notification.getNotificationType().toString()));
     }
-    final String sampleUnitIdStr = notification.getSampleUnitId();
-    final UUID sampleUnitId = sampleUnitIdStr == null ? null : UUID.fromString(sampleUnitIdStr);
-    final String sampleUnitType = notification.getSampleUnitType();
-
-    if (actionPlan != null) {
-      final ActionCase actionCase =
-          ActionCase.builder()
-              .id(caseId)
-              .sampleUnitId(sampleUnitId)
-              .actionPlanId(actionPlanId)
-              .actionPlanFK(actionPlan.getActionPlanPK())
-              .collectionExerciseId(collectionExerciseId)
-              .partyId(partyId)
-              .sampleUnitType(sampleUnitType)
-              .build();
-
-      switch (notification.getNotificationType()) {
-        case REPLACED:
-        case ACTIVATED:
-          final CollectionExerciseDTO collectionExercise =
-              collectionSvcClientServiceImpl.getCollectionExercise(collectionExerciseId);
-          actionCase.setActionPlanStartDate(
-              new Timestamp(collectionExercise.getScheduledStartDateTime().getTime()));
-          actionCase.setActionPlanEndDate(
-              new Timestamp(collectionExercise.getScheduledEndDateTime().getTime()));
-          checkAndSaveCase(actionCase);
-          break;
-
-        case DISABLED:
-        case DEACTIVATED:
-          try {
-            actionService.cancelActions(caseId);
-          } catch (final CTPException e) {
-            // TODO CTPA-1373 Do we really want to catch this. Should be let to go through.
-            // TODO CTPA-1373 What happens with other notif?
-            log.error("unable to cancel action", e);
-          }
-          final ActionCase actionCaseToDelete = actionCaseRepo.findById(caseId);
-          if (actionCaseToDelete != null) {
-            actionCaseRepo.delete(actionCaseToDelete);
-          } else {
-            log.with("case_id", caseId)
-                .warn("Unexpected situation where actionCaseToDelete is null");
-          }
-          break;
-        default:
-          log.with("notification_type", notification.getNotificationType())
-              .warn("Unknown Case lifecycle event");
-          break;
-      }
-    } else {
-      log.with("action_plan_id", actionPlanIdStr)
-          .warn("Cannot accept CaseNotification for non-existent actionplan");
-    }
-
     actionCaseRepo.flush();
   }
 
-  /**
-   * In the event that the actions service is incorrectly sent a notification that indicates we
-   * should create a case for an already existing caseid, quietly error else save it as a new entry.
-   * If we were to allow the save to go ahead we would get a JPA exception, which would result in
-   * the notification going back to the queue and us retrying again and again
-   *
-   * @param actionCase the case to check and save
-   */
-  private void checkAndSaveCase(final ActionCase actionCase) {
-    if (actionCaseRepo.findById(actionCase.getId()) != null) {
-      log.with("case_id", actionCase.getId())
-          .error("CaseNotification illiciting case creation for an existing case");
-    } else {
-      actionCaseRepo.save(actionCase);
+  private ActionCase createActionCase(CaseNotification notification) {
+    UUID actionPlanId = UUID.fromString(notification.getActionPlanId());
+    ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+    if (actionPlan == null) {
+      throw new IllegalStateException(
+          String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
     }
+    UUID caseId = UUID.fromString(notification.getCaseId());
+    UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
+    UUID partyId =
+        notification.getPartyId() == null ? null : UUID.fromString(notification.getPartyId());
+    UUID sampleUnitId =
+        notification.getSampleUnitId() == null
+            ? null
+            : UUID.fromString(notification.getSampleUnitId());
+
+    CollectionExerciseDTO collectionExercise =
+        collectionSvcClientService.getCollectionExercise(collectionExerciseId);
+    Timestamp startDateTime =
+        new Timestamp(collectionExercise.getScheduledStartDateTime().getTime());
+    Timestamp endDateTime = new Timestamp(collectionExercise.getScheduledEndDateTime().getTime());
+    return ActionCase.builder()
+        .id(caseId)
+        .sampleUnitId(sampleUnitId)
+        .actionPlanId(actionPlanId)
+        .actionPlanFK(actionPlan.getActionPlanPK())
+        .collectionExerciseId(collectionExerciseId)
+        .actionPlanStartDate(startDateTime)
+        .actionPlanEndDate(endDateTime)
+        .partyId(partyId)
+        .sampleUnitType(notification.getSampleUnitType())
+        .build();
+  }
+
+  private void saveActionCase(ActionCase actionCase) {
+    if (actionCaseRepo.findById(actionCase.getId()) != null) {
+      log.with("case_id", actionCase.getId().toString())
+          .error("Can't create case as it already exists");
+      throw new IllegalStateException(
+          String.format(ACTION_CASE_ALREADY_EXISTS, actionCase.getId().toString()));
+    }
+    actionCaseRepo.save(actionCase);
+  }
+
+  private void updateActionCase(UUID actionCaseId, UUID actionPlanId) {
+    ActionCase existingCase = actionCaseRepo.findById(actionCaseId);
+    if (existingCase == null) {
+      log.with("case_id", actionCaseId.toString()).error("No case found to update");
+      throw new IllegalStateException(
+          String.format(ACTION_CASE_NOT_FOUND, actionCaseId.toString()));
+    }
+    ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+    if (actionPlan == null) {
+      log.with("action_plan_id", actionPlanId.toString()).error("No action plan found");
+      throw new IllegalStateException(
+          String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
+    }
+    existingCase.setActionPlanFK(actionPlan.getActionPlanPK());
+    existingCase.setActionPlanId(actionPlanId);
+    log.with("case_id", actionCaseId.toString())
+        .with("action_plan_id", actionPlanId.toString())
+        .debug("Updating case action plan");
+    actionCaseRepo.save(existingCase);
+  }
+
+  private void deleteActionCase(UUID actionCaseId) {
+    ActionCase actionCaseToDelete = actionCaseRepo.findById(actionCaseId);
+    if (actionCaseToDelete == null) {
+      log.with("case_id", actionCaseId.toString()).warn("No case found to delete");
+      return;
+    }
+    log.with("case_id", actionCaseId.toString()).debug("Deleting case");
+    actionCaseRepo.delete(actionCaseToDelete);
   }
 }

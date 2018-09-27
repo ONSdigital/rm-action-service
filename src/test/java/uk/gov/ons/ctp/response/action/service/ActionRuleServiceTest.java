@@ -34,19 +34,11 @@ public class ActionRuleServiceTest {
 
   @Mock private ActionRuleRepository actionRuleRepo;
 
-  /**
-   * Initialises Mockito and loads Class Fixtures
-   *
-   * @throws Exception exception thrown
-   */
-  @Before
-  public void setUp() throws Exception {
-    MockitoAnnotations.initMocks(this);
-  }
+  private ActionRule actionRule;
 
-  @Test
-  public void testUpdateActionRuleCallsSave() throws Exception {
-    final ActionRule actionRule =
+  @Before
+  public void setUp() {
+    actionRule =
         ActionRule.builder()
             .id(ACTION_RULE_ID_1)
             .priority(1)
@@ -54,32 +46,44 @@ public class ActionRuleServiceTest {
             .triggerDateTime(OffsetDateTime.now())
             .name("BSNOT+0")
             .build();
-    when(actionRuleRepo.findById(ACTION_RULE_ID_1)).thenReturn(actionRule);
-    when(actionRuleRepo.saveAndFlush(any())).then(returnsFirstArg());
 
-    actionRuleService.updateActionRule(actionRule);
-
-    verify(actionRuleRepo, times(1)).saveAndFlush(any());
+    MockitoAnnotations.initMocks(this);
   }
 
   @Test
-  public void testUpdateActionRuleNoActionRuleFound() throws Exception {
-    final ActionRule actionRule = ActionRule.builder().id(ACTION_RULE_ID_1).build();
+  public void testUpdateActionRuleCallsSave() {
+    // Given
+    when(actionRuleRepo.findById(ACTION_RULE_ID_1)).thenReturn(actionRule);
+    when(actionRuleRepo.saveAndFlush(any())).then(returnsFirstArg());
 
-    final ActionRule existingAction = actionRuleService.updateActionRule(actionRule);
+    // When
+    actionRuleService.updateActionRule(actionRule);
 
+    // Then
+    verify(actionRuleRepo, times(1)).saveAndFlush(actionRule);
+  }
+
+  @Test
+  public void testUpdateActionRuleNoActionRuleFound() {
+    // Given
+    ActionRule actionRuleNotFound = ActionRule.builder().id(ACTION_RULE_ID_1).build();
+
+    // When
+    ActionRule existingAction = actionRuleService.updateActionRule(actionRuleNotFound);
+
+    // Then
     verify(actionRuleRepo, times(0)).saveAndFlush(any());
     assertThat(existingAction, is(nullValue()));
   }
 
   @Test
-  public void testUpdateActionNoUpdate() throws Exception {
-    final ActionRule actionRule = ActionRule.builder().id(ACTION_RULE_ID_2).build();
+  public void testUpdateActionNoUpdate() {
+    final ActionRule actionRuleNoUpdate = ActionRule.builder().id(ACTION_RULE_ID_2).build();
 
-    when(actionRuleRepo.findById(ACTION_RULE_ID_2)).thenReturn(actionRule);
-    final ActionRule existingAction = actionRuleService.updateActionRule(actionRule);
+    when(actionRuleRepo.findById(ACTION_RULE_ID_2)).thenReturn(actionRuleNoUpdate);
+    final ActionRule existingAction = actionRuleService.updateActionRule(actionRuleNoUpdate);
 
     verify(actionRuleRepo, times(0)).saveAndFlush(any());
-    assertThat(existingAction, is(actionRule));
+    assertThat(existingAction, is(actionRuleNoUpdate));
   }
 }

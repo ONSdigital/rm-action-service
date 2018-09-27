@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.domain.repository;
 
 import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.PotentialAction;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 
 /** JPA Data Repository. */
@@ -97,28 +95,11 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
   List<Action> findByStateOrderByCreatedDateTimeDesc(ActionDTO.ActionState state);
 
   /**
-   * @param actionPlanId Action Plan primary key filter criteria
-   * @return Return all true if case exists with active action plan
+   * Return boolean for if any actions exist for a given case id and action rule
+   *
+   * @param caseId UUID of associated case
+   * @param actionRuleFK reference to action rule
+   * @return Action returns an action is
    */
-  @Query(
-      "SELECT "
-          + "new uk.gov.ons.ctp.response.action.domain.model.PotentialAction("
-          + "c.id, c.casePK, r.actionPlanFK, r.actionRulePK, t, r.priority) "
-          + "FROM ActionCase c, ActionRule r, ActionType t "
-          + "WHERE r.actionPlanFK = c.actionPlanFK "
-          + "AND c.actionPlanStartDate <= :currentTime "
-          + "AND c.actionPlanEndDate >= :currentTime "
-          + "AND r.triggerDateTime <= :currentTime "
-          + "AND c.actionPlanFK = :actionPlanId "
-          + "AND t.actionTypePK = r.actionTypeFK "
-          + "AND NOT EXISTS ("
-          + "   SELECT a "
-          + "   FROM Action a "
-          + "   WHERE a.actionPlanFK = :actionPlanId"
-          + "   AND a.caseId = c.id"
-          + "   AND a.caseFK = c.casePK"
-          + "   AND a.actionRuleFK = r.actionRulePK"
-          + "   AND a.actionType.actionTypePK = r.actionTypeFK )")
-  List<PotentialAction> findPotentialActionsActiveDate(
-      @Param("actionPlanId") Integer actionPlanId, @Param("currentTime") Timestamp currentTime);
+  boolean existsByCaseIdAndActionRuleFK(UUID caseId, Integer actionRuleFK);
 }

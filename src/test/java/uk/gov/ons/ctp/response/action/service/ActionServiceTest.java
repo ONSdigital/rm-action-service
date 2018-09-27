@@ -1,18 +1,16 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -25,15 +23,19 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
+import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
+import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
+import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
-import uk.gov.ons.ctp.response.action.domain.model.PotentialAction;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
@@ -42,10 +44,11 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 import uk.gov.ons.response.survey.representation.SurveyDTO;
 
-/** Tests for ActionServiceImpl */
+/** Tests for ActionService */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionServiceTest {
 
@@ -56,21 +59,27 @@ public class ActionServiceTest {
 
   @InjectMocks private ActionService actionService;
 
-  @Mock private ActionCaseRepository actionCaseRepository;
-
-  @Mock private ActionPlanJobRepository actionPlanJobRepository;
-
-  @Mock private ActionPlanRepository actionPlanRepository;
-
-  @Mock private ActionRepository actionRepo;
-
-  @Mock private ActionTypeRepository actionTypeRepo;
-
   @Mock private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
 
+  @Mock private ActionRepository actionRepo;
+  @Mock private ActionCaseRepository actionCaseRepo;
+  @Mock private ActionPlanRepository actionPlanRepo;
+  @Mock private ActionPlanJobRepository actionPlanJobRepo;
+  @Mock private ActionRuleRepository actionRuleRepo;
+  @Mock private ActionTypeRepository actionTypeRepo;
+
+  @Mock private CollectionExerciseClientService collectionExerciseClientService;
+  @Mock private PartySvcClientService partySvcClientService;
+
   private List<Action> actions;
+  private List<ActionCase> actionCases;
+  private ActionCase actionBCase;
   private List<ActionFeedback> actionFeedback;
-  private List<ActionType> actionType;
+  private List<ActionRule> actionRules;
+  private List<ActionType> actionTypes;
+  private ActionPlanJob actionPlanJob;
+  private List<CollectionExerciseDTO> collectionExercises;
+  private List<PartyDTO> partys;
 
   /**
    * Initialises Mockito and loads Class Fixtures
@@ -80,9 +89,18 @@ public class ActionServiceTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+
     actions = FixtureHelper.loadClassFixtures(Action[].class);
+    actionCases = FixtureHelper.loadClassFixtures(ActionCase[].class);
+    actionBCase = actionCases.get(0);
     actionFeedback = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
-    actionType = FixtureHelper.loadClassFixtures(ActionType[].class);
+    actionRules = FixtureHelper.loadClassFixtures(ActionRule[].class);
+    actionRules.forEach(actionRule -> actionRule.setTriggerDateTime(OffsetDateTime.now()));
+    actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
+    actionPlanJob = new ActionPlanJob();
+
+    collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
+    partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
   }
 
   @Test
@@ -160,8 +178,8 @@ public class ActionServiceTest {
 
   @Test
   public void checkCreateActionIsSaved() {
-    when(actionTypeRepo.findByName(ACTION_TYPENAME)).thenReturn(actionType.get(0));
-    actionService.createAction(actions.get(0));
+    when(actionTypeRepo.findByName(ACTION_TYPENAME)).thenReturn(actionTypes.get(0));
+    actionService.createAdHocAction(actions.get(0));
     verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
   }
 
@@ -194,80 +212,24 @@ public class ActionServiceTest {
   }
 
   @Test
-  public void testCreateScheduledActionsWithoutAnActionPlanJobNothingHappens() {
-    actionService.createScheduledActions(1);
+  public void testCreateScheduledActions() {
 
-    assertEquals(0, actionRepo.count());
-  }
+    // Given
+    when(actionCaseRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionCases.get(0)));
+    when(actionRuleRepo.findByActionPlanFK(any()))
+        .thenReturn(Collections.singletonList(actionRules.get(0)));
+    when(actionTypeRepo.findByActionTypePK(any())).thenReturn(actionTypes.get(0));
 
-  @Test
-  public void testCreateScheduledActionsWithNoActiveCaseDoesNotCreateActions() {
-    //// Given
-    // Create Action Plan
-    final int actionPlanPK = 1;
-    final ActionPlan actionPlan = mock(ActionPlan.class);
+    // When
+    ActionPlan actionPlan = new ActionPlan();
+    actionPlan.setActionPlanPK(1);
+    actionService.createScheduledActions(actionPlan, actionPlanJob);
 
-    // Create Action Plan Job for Action Plan
-    final int actionPlanJobPK = 1;
-    final ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
-    when(actionPlanJob.getActionPlanFK()).thenReturn(actionPlanPK);
-
-    when(actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobPK)).thenReturn(actionPlanJob);
-    when(actionPlanRepository.findByActionPlanPK(actionPlanPK)).thenReturn(actionPlan);
-
-    when(actionRepo.findPotentialActionsActiveDate(eq(actionPlanPK), any(Timestamp.class)))
-        .thenReturn(new ArrayList<>());
-
-    //// When
-    actionService.createScheduledActions(actionPlanJobPK);
-
-    //// Then
-    // action plan has been updated
-    verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
-
-    // action plan job has been updated
-    verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
-
-    // did not attempt to create actions
-    verify(actionRepo, times(0)).save(any(Action.class));
-    verify(actionRepo, times(1)).flush();
-  }
-
-  @Test
-  public void testCreateScheduledActionsWithActiveCaseCreatesActions() {
-    //// Given
-    // Create Action Plan
-    final int actionPlanPK = 1;
-    final ActionPlan actionPlan = mock(ActionPlan.class);
-    when(actionPlan.getActionPlanPK()).thenReturn(actionPlanPK);
-
-    // Create Action Plan Job for Action Plan
-    final int actionPlanJobPK = 1;
-    final ActionPlanJob actionPlanJob = mock(ActionPlanJob.class);
-    when(actionPlanJob.getActionPlanFK()).thenReturn(actionPlanPK);
-
-    final List<PotentialAction> potentialActions = new ArrayList<>();
-    final PotentialAction potentialAction = mock(PotentialAction.class);
-    potentialActions.add(potentialAction);
-
-    when(actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobPK)).thenReturn(actionPlanJob);
-    when(actionPlanRepository.findByActionPlanPK(actionPlanPK)).thenReturn(actionPlan);
-    when(actionRepo.findPotentialActionsActiveDate(eq(actionPlanPK), any(Timestamp.class)))
-        .thenReturn(potentialActions);
-
-    //// When
-    actionService.createScheduledActions(actionPlanJobPK);
-
-    //// Then
-    // action plan has been updated
-    verify(actionPlan, times(1)).setLastRunDateTime(any(Timestamp.class));
-
-    // action plan job has been updated
-    verify(actionPlanJob, times(1)).complete(any(Timestamp.class));
-
-    // attempted to create actions
-    verify(actionRepo, times(1)).save(any(Action.class));
-    verify(actionRepo, times(1)).flush();
+    // Then
+    verify(actionRepo, times(1)).saveAndFlush(any());
+    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    verify(actionPlanJobRepo, times(1)).saveAndFlush(any());
   }
 
   @Test

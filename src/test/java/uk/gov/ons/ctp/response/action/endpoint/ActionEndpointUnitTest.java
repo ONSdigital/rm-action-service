@@ -21,7 +21,7 @@ import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAd
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_UPDATED;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.CASE_NOT_FOUND;
-import static uk.gov.ons.ctp.response.action.service.ActionPlanJobService.CREATED_BY_SYSTEM;
+import static uk.gov.ons.ctp.response.action.scheduled.plan.ActionPlanJobExecutor.CREATED_BY_SYSTEM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -830,7 +830,7 @@ public final class ActionEndpointUnitTest {
         .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
 
     verify(actionCaseService, times(1)).findActionCase(ACTION_ID_2_CASE_ID);
-    verify(actionService, never()).createAction(any(Action.class));
+    verify(actionService, never()).createAdHocAction(any(Action.class));
   }
 
   /**
@@ -841,7 +841,7 @@ public final class ActionEndpointUnitTest {
   @Test
   public void createActionGoodJsonProvidedAndExistingParentCase() throws Exception {
     when(actionCaseService.findActionCase(ACTION_ID_2_CASE_ID)).thenReturn(actionCases.get(0));
-    when(actionService.createAction(any(Action.class))).thenReturn(actions.get(1));
+    when(actionService.createAdHocAction(any(Action.class))).thenReturn(actions.get(1));
 
     final ResultActions resultActions =
         mockMvc.perform(postJson("/actions", ACTION_CREATE_VALID_JSON));
@@ -857,7 +857,7 @@ public final class ActionEndpointUnitTest {
         .andExpect(jsonPath("$.priority", is(2)));
 
     verify(actionCaseService, times(1)).findActionCase(ACTION_ID_2_CASE_ID);
-    verify(actionService, times(1)).createAction(any(Action.class));
+    verify(actionService, times(1)).createAdHocAction(any(Action.class));
   }
 
   /**

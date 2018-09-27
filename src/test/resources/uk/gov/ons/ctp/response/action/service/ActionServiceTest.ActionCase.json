@@ -1,0 +1,23 @@
+[
+  {
+    "casePK": 1,
+    "id": "7bc5d41b-0549-40b3-ba76-42f6d4cf3fdb",
+    "actionPlanFK": 1,
+    "actionPlanId": "7bc5d41b-0549-40b3-ba76-42f6d4cf3fdc",
+    "actionPlanStartDate": "2017-04-23T18:25:43.511Z",
+    "actionPlanEndDate": "2020-08-23T18:25:43.511Z",
+    "collectionExerciseId": "7bc5d41b-0549-40b3-ba76-42f6d4cf3fdd",
+    "partyId": "7bc5d41b-0549-40b3-ba76-42f6d4cf3fde",
+    "sampleUnitType": "B"
+  },
+  {
+    "casePK": 3,
+    "id": "8bc5d41b-0549-40b3-ba76-42f6d4cf3fdb",
+    "actionPlanFK": 2,
+    "actionPlanId": "7bc5d41b-0549-40b3-ba76-42f6d4cf3fdc",
+    "actionPlanStartDate": "2017-04-23T18:25:43.511Z",
+    "actionPlanEndDate": "2020-08-23T18:25:43.511Z",
+    "collectionExerciseId": "8bc5d41b-0549-40b3-ba76-42f6d4cf3fdd",
+    "sampleUnitType": "H"
+  }
+]
