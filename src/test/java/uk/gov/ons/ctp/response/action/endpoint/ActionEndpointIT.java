@@ -92,7 +92,7 @@ public class ActionEndpointIT {
   }
 
   @Test
-  public void ensureIncompleteCasesAreSentToField() throws Exception {
+  public void testIncompleteCasesAreSentToField() throws Exception {
     UUID collexId = UUID.randomUUID();
 
     ActionPlanDTO actionPlan = createActionPlan();
@@ -100,7 +100,8 @@ public class ActionEndpointIT {
 
     // Create mocks
     createCollectionExerciseMock(collexId);
-    CaseDetailsDTO case_details_dto = createCaseDetailsMock(collexId, actionPlan.getId());
+    CaseDetailsDTO case_details_dto =
+        createCaseDetailsMock(UUID.randomUUID(), collexId, actionPlan.getId());
     createSurveyDetailsMock();
     createCaseEventMock(case_details_dto.getId());
 
@@ -138,14 +139,15 @@ public class ActionEndpointIT {
   }
 
   @Test
-  public void ensureAddressPopulatedInActionRequest() throws Exception {
+  public void testAddressPopulatedInActionRequest() throws Exception {
     UUID collexId = UUID.randomUUID();
 
     ActionPlanDTO actionPlan = createActionPlan();
 
     // Create mocks
     createCollectionExerciseMock(collexId);
-    CaseDetailsDTO case_details_dto = createCaseDetailsMock(collexId, actionPlan.getId());
+    CaseDetailsDTO case_details_dto =
+        createCaseDetailsMock(UUID.randomUUID(), collexId, actionPlan.getId());
     createSurveyDetailsMock();
     createCaseEventMock(case_details_dto.getId());
 
@@ -313,10 +315,10 @@ public class ActionEndpointIT {
                     .withBody(String.format(f, collexID.toString()))));
   }
 
-  private CaseDetailsDTO createCaseDetailsMock(UUID collexId, UUID actionPlanId)
+  private CaseDetailsDTO createCaseDetailsMock(UUID caseId, UUID collexId, UUID actionPlanId)
       throws IOException {
     String f = loadResourceAsString(ActionEndpointIT.class, "ActionEndpointIT.CaseDetailsDTO.json");
-    String case_details = String.format(f, actionPlanId, collexId);
+    String case_details = String.format(f, caseId, actionPlanId, collexId);
     CaseDetailsDTO case_details_dto = mapper.readValue(case_details, CaseDetailsDTO.class);
 
     this.wireMockRule.stubFor(

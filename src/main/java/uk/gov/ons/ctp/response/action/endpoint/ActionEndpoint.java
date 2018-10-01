@@ -164,7 +164,7 @@ public final class ActionEndpoint implements CTPEndpoint {
       if (actionPlan != null) {
         action.setActionPlanFK(actionPlan.getActionPlanPK());
       }
-      action = actionService.createAction(action);
+      action = actionService.createAdHocAction(action);
 
       final ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
       final String newResourceUrl =

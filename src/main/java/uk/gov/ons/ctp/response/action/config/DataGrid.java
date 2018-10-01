@@ -11,6 +11,7 @@ public class DataGrid {
   private String password;
   private Integer listTimeToWaitSeconds;
   private Integer listTimeToLiveSeconds;
+  private Integer lockTimeToWaitSeconds;
   private Integer lockTimeToLiveSeconds;
   private Integer reportLockTimeToLiveSeconds;
 }

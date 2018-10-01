@@ -1,0 +1,68 @@
+[
+  {
+    "id": "2e6add83-e43d-4f52-954f-4109be506c86",
+    "sampleUnitType": "B",
+    "sampleSummaryId": null,
+    "sampleUnitRef": "222",
+    "attributes": {
+      "entref": "bob",
+      "entname1": "07235235235235235",
+      "entname2": "test@test.com"
+    },
+    "associations": [
+      {
+        "partyId": "2e6add83-e43d-4f52-954f-4109be506c86",
+        "enrolments": [
+          {
+            "name": "Joe bloggs",
+            "surveyId": "7bc5d41b-0549-40b3-ba76-42f6d4cf0000",
+            "enrolmentStatus": "ENABLED"
+          }
+        ]
+      },
+      {
+        "partyId": "2e6add83-e43d-4f52-954f-4109be506c87",
+        "enrolments": [
+          {
+            "name": "Steve bloggs",
+            "surveyId": "7bc5d41b-0549-40b3-ba76-42f6d4cf0000",
+            "enrolmentStatus": "ENABLED"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2e6add83-e43d-4f52-954f-4109be506c87",
+    "sampleUnitType": "B",
+    "sampleSummaryId": null,
+    "sampleUnitRef": "222",
+    "attributes": {
+      "entref": "bob",
+      "entname1": "07235235235235235",
+      "entname2": "test@test.com"
+    },
+    "associations": [
+      {
+        "partyId": "2e6add83-e43d-4f52-954f-4109be506c86",
+        "enrolments": [
+          {
+            "name": "Joe bloggs",
+            "surveyId": "7bc5d41b-0549-40b3-ba76-42f6d4cf0001",
+            "enrolmentStatus": "ENABLED"
+          }
+        ]
+      },
+      {
+        "partyId": "2e6add83-e43d-4f52-954f-4109be506c87",
+        "enrolments": [
+          {
+            "name": "Steve bloggs",
+            "surveyId": "7bc5d41b-0549-40b3-ba76-42f6d4cf0001",
+            "enrolmentStatus": "ENABLED"
+          }
+        ]
+      }
+    ]
+  }
+]
