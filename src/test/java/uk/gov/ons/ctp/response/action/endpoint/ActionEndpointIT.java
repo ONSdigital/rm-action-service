@@ -134,6 +134,7 @@ public class ActionEndpointIT {
     ActionAddress address = actionInstruction.getActionRequest().getAddress();
 
     checkAttributes(address);
+    assertThat(actionInstruction.getActionRequest().getReturnByDate()).isNotEmpty();
   }
 
   @Test
