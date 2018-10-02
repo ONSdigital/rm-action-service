@@ -119,6 +119,11 @@ public class ActionSvcStateTransitionManagerFactory implements StateTransitionMa
     transitionMapForCancelled.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLED);
     transitions.put(ActionState.CANCELLED, transitionMapForCancelled);
 
+    // RERUN
+    final Map<ActionEvent, ActionState> transitionMapForReRun = new HashMap<>();
+    transitionMapForReRun.put(ActionEvent.REQUEST_RERUN, ActionState.SUBMITTED);
+    transitions.put(ActionState.ABORTED, transitionMapForReRun);
+
     final StateTransitionManager<ActionState, ActionEvent> actionStateTransitionManager =
         new BasicStateTransitionManager<>(transitions);
 
