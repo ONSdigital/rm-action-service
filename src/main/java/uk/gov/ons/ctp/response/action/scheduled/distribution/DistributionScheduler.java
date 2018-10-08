@@ -24,6 +24,10 @@ public class DistributionScheduler {
   /** Scheduled execution of the Action Distributor */
   @Scheduled(fixedDelayString = "#{appConfig.actionDistribution.delayMilliSeconds}")
   public void run() {
-    actionDistributor.distribute();
+    try {
+      actionDistributor.distribute();
+    } catch (Exception ex) {
+      log.error("Uncaught exception", ex);
+    }
   }
 }

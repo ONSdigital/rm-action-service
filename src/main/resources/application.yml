@@ -87,7 +87,7 @@ data-grid:
   # when we try and create a list of ids being distrib how long should we wait to get the lock
   list-time-to-wait-seconds: 10
   #  after app death how long should the lock on all lists remain
-  lock-time-to-live-seconds: 10
+  lock-time-to-live-seconds: 3600
 
   report-lock-time-to-live-seconds: 300
 

@@ -58,8 +58,8 @@ public abstract class ActionProcessingService {
    *
    * @param action the action to deal with
    */
-  @Transactional
-  public void processActionRequests(final Action action) throws CTPException {
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void processActionRequests(final Action action) {
     log.with("action_id", action.getId()).debug("Processing actionRequest");
 
     final ActionType actionType = action.getActionType();
@@ -128,7 +128,7 @@ public abstract class ActionProcessingService {
       propagation = Propagation.REQUIRED,
       readOnly = false,
       rollbackFor = Exception.class)
-  public void processActionCancel(final Action action) throws CTPException {
+  public void processActionCancel(final Action action) {
     log.with("action_id", action.getId())
         .with("case_id", action.getCaseId())
         .with("action_plan_pk", action.getActionPlanFK())
@@ -167,10 +167,15 @@ public abstract class ActionProcessingService {
    * @param event the event to transition the action with
    * @throws CTPException if action state transition error
    */
-  private void transitionAction(final Action action, final ActionDTO.ActionEvent event)
-      throws CTPException {
-    final ActionDTO.ActionState nextState =
-        actionSvcStateTransitionManager.transition(action.getState(), event);
+  private void transitionAction(final Action action, final ActionDTO.ActionEvent event) {
+    ActionDTO.ActionState nextState = null;
+
+    try {
+      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    } catch (CTPException ctpExeption) {
+      throw new IllegalStateException();
+    }
+
     action.setState(nextState);
     action.setSituation(null);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());

@@ -64,7 +64,7 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
-  @Transactional
+  @Transactional(readOnly = true)
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
@@ -91,15 +91,16 @@ class ActionDistributor {
   }
 
   private void processAction(Action action) {
-    ActionProcessingService ap = getActionProcessingService(action);
-
-    // If social reminder action type then generate new IAC
-    if (action.getActionType().getActionTypeNameEnum()
-        == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
-      caseSvcClientService.generateNewIacForCase(action.getCaseId());
-    }
-
+    log.with("action_id", action.getId().toString()).info("Processing action");
     try {
+      ActionProcessingService ap = getActionProcessingService(action);
+
+      // If social reminder action type then generate new IAC
+      if (action.getActionType().getActionTypeNameEnum()
+          == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+        caseSvcClientService.generateNewIacForCase(action.getCaseId());
+      }
+
       if (action.getState().equals(ActionState.SUBMITTED)) {
         ap.processActionRequests(action);
       } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
@@ -108,13 +109,19 @@ class ActionDistributor {
     } catch (Exception ex) {
       // We intentionally catch all exceptions here.
       // If one action fails to process we still want to try and process the remaining actions
-      log.with("action_id", action.getId().toString())
-          .error("Failed to process action. Will be retried at next schedule");
+      log.with("action", action)
+          .error("Failed to process action. Will be retried at next schedule", ex);
     }
   }
 
   private ActionProcessingService getActionProcessingService(Action action) {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
+
+    if (actionCase == null) {
+      log.with("action", action).error("Cannot find case for action");
+      throw new IllegalStateException();
+    }
+
     SampleUnitDTO.SampleUnitType caseType =
         SampleUnitDTO.SampleUnitType.valueOf(actionCase.getSampleUnitType());
 
