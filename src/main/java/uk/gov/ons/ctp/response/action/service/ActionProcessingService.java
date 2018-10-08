@@ -58,7 +58,7 @@ public abstract class ActionProcessingService {
    *
    * @param action the action to deal with
    */
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void processActionRequests(final Action action) throws CTPException {
     log.with("action_id", action.getId()).debug("Processing actionRequest");
 
