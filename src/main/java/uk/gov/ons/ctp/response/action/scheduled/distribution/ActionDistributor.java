@@ -8,7 +8,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -64,7 +63,6 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
-  @Transactional
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
