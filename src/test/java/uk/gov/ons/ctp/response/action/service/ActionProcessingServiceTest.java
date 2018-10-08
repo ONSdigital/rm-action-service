@@ -111,6 +111,7 @@ public class ActionProcessingServiceTest {
     when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
+    when(actionRepo.findById(eq(ACTION_ID))).thenReturn(contextAction);
   }
 
   private ActionRequestContext createContext() {
@@ -149,7 +150,7 @@ public class ActionProcessingServiceTest {
     // Given setUp()
 
     // When
-    businessActionProcessingService.processActionRequests(contextAction);
+    businessActionProcessingService.processActionRequests(ACTION_ID);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -164,15 +165,17 @@ public class ActionProcessingServiceTest {
   /** Happy path for processing an B case respondent action */
   @Test
   public void testProcessActionRequestBCaseRespondentsNotification() throws CTPException {
+    Action notifyAction = createContextAction(NOTIFY);
+    when(actionRepo.findById(eq(ACTION_ID))).thenReturn(notifyAction);
 
     // Given
-    context.setAction(createContextAction(NOTIFY));
+    context.setAction(notifyAction);
     context.setChildParties(respondentParties);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequests(contextAction);
+    businessActionProcessingService.processActionRequests(ACTION_ID);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -186,8 +189,13 @@ public class ActionProcessingServiceTest {
 
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestNoActionType() throws CTPException {
-    // Given/When
-    businessActionProcessingService.processActionRequests(new Action());
+    UUID newActionId = UUID.randomUUID();
+
+    // Given
+    when(actionRepo.findById(eq(newActionId))).thenReturn(new Action());
+
+    // When
+    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, never())
@@ -201,10 +209,15 @@ public class ActionProcessingServiceTest {
 
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
-    // Given/When
+    UUID newActionId = UUID.randomUUID();
     Action action = new Action();
     action.setActionType(ActionType.builder().build());
-    businessActionProcessingService.processActionRequests(action);
+
+    // Given/When
+    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
+
+    // Given
+    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, never())
@@ -219,16 +232,19 @@ public class ActionProcessingServiceTest {
   /** An exception is thrown when transitioning the state of the Action */
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
+    UUID newActionId = UUID.randomUUID();
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+
     // Given
+    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
     // When
-    Action action = new Action();
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
-    businessActionProcessingService.processActionRequests(action);
+    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -244,13 +260,15 @@ public class ActionProcessingServiceTest {
   /** An exception is thrown when saving the Action after its state was transitioned */
   @Test(expected = RuntimeException.class)
   public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
+    UUID newActionId = UUID.randomUUID();
+    Action action = new Action();
+    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+
     // Given
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
     // When
-    Action action = new Action();
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
-    businessActionProcessingService.processActionRequests(action);
+    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -266,16 +284,18 @@ public class ActionProcessingServiceTest {
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
   @Test(expected = IllegalStateException.class)
   public void testProcessActionCancelStateTransitionException() throws CTPException {
+    UUID newActionId = UUID.randomUUID();
+    Action action = new Action();
 
     // Given
+    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
     // When
-    final Action action = new Action();
-    businessActionProcessingService.processActionCancel(action);
+    businessActionProcessingService.processActionCancel(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -291,12 +311,15 @@ public class ActionProcessingServiceTest {
   /** Scenario where the action's state transitions OK but issue while persisting action to DB */
   @Test(expected = RuntimeException.class)
   public void testProcessActionCancelPersistingException() throws CTPException {
+    UUID newActionId = UUID.randomUUID();
+    Action action = new Action();
+
     // Given
+    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
     // When
-    final Action action = new Action();
-    businessActionProcessingService.processActionCancel(action);
+    businessActionProcessingService.processActionCancel(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -311,12 +334,17 @@ public class ActionProcessingServiceTest {
 
   @Test
   public void testProcessActionCancelHappyPath() throws CTPException {
-    // Given/When
+    UUID newActionId = UUID.randomUUID();
     final Action action = new Action();
     action.setActionType(
         ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
-    action.setId(ACTION_ID);
-    businessActionProcessingService.processActionCancel(action);
+    action.setId(newActionId);
+
+    // Given
+    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
+
+    // When
+    businessActionProcessingService.processActionCancel(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -330,7 +358,7 @@ public class ActionProcessingServiceTest {
         .sendActionInstruction(eq(PRINTER), actionCaptor.capture());
     final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel =
         (ActionCancel) actionCaptor.getValue();
-    assertEquals(ACTION_ID.toString(), publishedActionCancel.getActionId());
+    assertEquals(newActionId.toString(), publishedActionCancel.getActionId());
     assertTrue(publishedActionCancel.isResponseRequired());
     assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
   }
@@ -342,7 +370,7 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequests(contextAction);
+    businessActionProcessingService.processActionRequests(ACTION_ID);
 
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);

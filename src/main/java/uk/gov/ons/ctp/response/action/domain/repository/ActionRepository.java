@@ -2,13 +2,15 @@ package uk.gov.ons.ctp.response.action.domain.repository;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
 /** JPA Data Repository. */
 @Repository
@@ -56,26 +58,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
   List<Action> findByActionTypeNameAndStateOrderByCreatedDateTimeDesc(
       String actionTypeName, ActionDTO.ActionState state);
 
-  /**
-   * @param actionTypeName ActionTypeName filter criteria
-   * @param limit how many actions to return at most
-   * @return Return all SUBMITTED or CANCEL_SUBMITTE Dactions for the specified actionTypeName
-   */
-  @Query(
-      value =
-          "SELECT "
-              + " a.* "
-              + "FROM action.action a "
-              + " LEFT OUTER JOIN action.actionType at "
-              + " ON a.actiontypefk = actiontypepk "
-              + "WHERE "
-              + " at.name = :actionTypeName "
-              + " AND (a.statefk in ('SUBMITTED', 'CANCEL_SUBMITTED')) "
-              + "ORDER BY updatedDateTime asc "
-              + "LIMIT :limit",
-      nativeQuery = true)
-  List<Action> findSubmittedOrCancelledByActionTypeName(
-      @Param("actionTypeName") String actionTypeName, @Param("limit") int limit);
+  Stream<Action> findByActionTypeAndStateIn(ActionType actionType, Set<ActionState> states);
 
   /**
    * Return all actions for the specified actionTypeName.
