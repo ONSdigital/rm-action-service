@@ -64,7 +64,7 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
-  @Transactional(readOnly = true)
+  @Transactional
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
@@ -91,8 +91,8 @@ class ActionDistributor {
   }
 
   private void processAction(Action action) {
-    log.with("action_id", action.getId().toString()).info("Processing action");
     try {
+      log.with("action_id", action.getId().toString()).info("Processing action");
       ActionProcessingService ap = getActionProcessingService(action);
 
       // If social reminder action type then generate new IAC
