@@ -117,11 +117,11 @@ class ActionDistributor {
   private ActionProcessingService getActionProcessingService(Action action) {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
 
-    if(actionCase == null) {
+    if (actionCase == null) {
       log.with("action", action).error("Cannot find case for action");
       throw new IllegalStateException();
     }
-    
+
     SampleUnitDTO.SampleUnitType caseType =
         SampleUnitDTO.SampleUnitType.valueOf(actionCase.getSampleUnitType());
 
