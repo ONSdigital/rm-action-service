@@ -72,8 +72,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
               + " at.name = :actionTypeName "
               + " AND (a.statefk in ('SUBMITTED', 'CANCEL_SUBMITTED')) "
               + "ORDER BY updatedDateTime asc "
-              + "LIMIT :limit "
-              + "FOR UPDATE SKIP LOCKED",
+              + "LIMIT :limit",
       nativeQuery = true)
   List<Action> findSubmittedOrCancelledByActionTypeName(
       @Param("actionTypeName") String actionTypeName, @Param("limit") int limit);

@@ -217,7 +217,7 @@ public class ActionProcessingServiceTest {
   }
 
   /** An exception is thrown when transitioning the state of the Action */
-  @Test(expected = CTPException.class)
+  @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
     // Given
     when(actionSvcStateTransitionManager.transition(
@@ -264,7 +264,7 @@ public class ActionProcessingServiceTest {
   }
 
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
-  @Test(expected = CTPException.class)
+  @Test(expected = IllegalStateException.class)
   public void testProcessActionCancelStateTransitionException() throws CTPException {
 
     // Given

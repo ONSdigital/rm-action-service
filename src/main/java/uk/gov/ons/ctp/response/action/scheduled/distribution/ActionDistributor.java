@@ -8,6 +8,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -63,6 +64,7 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
+  @Transactional(readOnly = true)
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
@@ -89,15 +91,15 @@ class ActionDistributor {
   }
 
   private void processAction(Action action) {
-    ActionProcessingService ap = getActionProcessingService(action);
-
-    // If social reminder action type then generate new IAC
-    if (action.getActionType().getActionTypeNameEnum()
-        == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
-      caseSvcClientService.generateNewIacForCase(action.getCaseId());
-    }
-
     try {
+      ActionProcessingService ap = getActionProcessingService(action);
+
+      // If social reminder action type then generate new IAC
+      if (action.getActionType().getActionTypeNameEnum()
+          == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+        caseSvcClientService.generateNewIacForCase(action.getCaseId());
+      }
+
       if (action.getState().equals(ActionState.SUBMITTED)) {
         ap.processActionRequests(action);
       } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
@@ -106,8 +108,8 @@ class ActionDistributor {
     } catch (Exception ex) {
       // We intentionally catch all exceptions here.
       // If one action fails to process we still want to try and process the remaining actions
-      log.with("action_id", action.getId().toString())
-          .error("Failed to process action. Will be retried at next schedule");
+      log.with("action", action)
+          .error("Failed to process action. Will be retried at next schedule", ex);
     }
   }
 
