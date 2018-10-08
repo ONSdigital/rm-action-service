@@ -91,6 +91,7 @@ class ActionDistributor {
   }
 
   private void processAction(Action action) {
+    log.with("action_id", action.getId().toString()).info("Processing action");
     try {
       ActionProcessingService ap = getActionProcessingService(action);
 
