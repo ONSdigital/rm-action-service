@@ -31,6 +31,7 @@ class ActionDistributor {
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
+  private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
 
   private AppConfig appConfig;
   private RedissonClient redissonClient;
@@ -67,7 +68,7 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
-  @Transactional(timeout = 3600)
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
