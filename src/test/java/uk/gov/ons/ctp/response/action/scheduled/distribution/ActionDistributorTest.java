@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,9 +44,9 @@ public class ActionDistributorTest {
 
   private List<ActionType> actionTypes;
   private List<Action> actions;
-  private List<Action> socialNotificationActions;
-  private List<Action> socialRemindersActions;
-  private List<Action> businessEnrolmentActions;
+  private Stream<Action> socialNotificationActions;
+  private Stream<Action> socialRemindersActions;
+  private Stream<Action> businessEnrolmentActions;
   private ActionCase bActionCase;
   private ActionCase hActionCase;
   private ActionCase fActionCase;
@@ -74,9 +75,9 @@ public class ActionDistributorTest {
   public void setUp() throws Exception {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     actions = FixtureHelper.loadClassFixtures(Action[].class);
-    socialNotificationActions = actions.subList(0, 2);
-    socialRemindersActions = actions.subList(2, 4);
-    businessEnrolmentActions = actions.subList(4, 6);
+    socialNotificationActions = actions.subList(0, 2).stream();
+    socialRemindersActions = actions.subList(2, 4).stream();
+    businessEnrolmentActions = actions.subList(4, 6).stream();
     bActionCase = new ActionCase();
     bActionCase.setSampleUnitType("B");
     hActionCase = new ActionCase();
@@ -90,7 +91,6 @@ public class ActionDistributorTest {
     dataGrid.setLockTimeToWaitSeconds(600);
     when(appConfig.getDataGrid()).thenReturn(dataGrid);
     ActionDistribution actionDistribution = new ActionDistribution();
-    actionDistribution.setRetrievalMax(1000);
     when(appConfig.getActionDistribution()).thenReturn(actionDistribution);
 
     lock = mock(RLock.class);
@@ -101,12 +101,18 @@ public class ActionDistributorTest {
     // 3 action types (SOCIALNOT, SOCIALSNE, BSNOT)
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
 
-    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(SOCIALNOT), anyInt()))
-        .thenReturn(socialNotificationActions);
-    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(SOCIALSNE), anyInt()))
-        .thenReturn(socialRemindersActions);
-    when(actionRepo.findSubmittedOrCancelledByActionTypeName(eq(BSNOT), anyInt()))
-        .thenReturn(businessEnrolmentActions);
+    for (ActionType actionType : actionTypes) {
+      if (actionType.getName().equals(SOCIALNOT)) {
+        when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
+            .thenReturn(socialNotificationActions);
+      } else if (actionType.getName().equals(SOCIALSNE)) {
+        when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
+            .thenReturn(socialRemindersActions);
+      } else if (actionType.getName().equals(BSNOT)) {
+        when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
+            .thenReturn(businessEnrolmentActions);
+      }
+    }
   }
 
   /** Happy Path with 1 ActionRequest and 1 ActionCancel for a B case */

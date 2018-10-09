@@ -2,8 +2,11 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import com.google.common.collect.Sets;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,6 +31,7 @@ class ActionDistributor {
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
+  private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
 
   private AppConfig appConfig;
   private RedissonClient redissonClient;
@@ -64,7 +68,7 @@ class ActionDistributor {
    * Called on schedule to check for submitted actions then creates and distributes requests to
    * action exporter or notify gateway
    */
-  @Transactional
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
@@ -76,9 +80,9 @@ class ActionDistributor {
     try {
       if (lock.tryLock(appConfig.getDataGrid().getLockTimeToLiveSeconds(), TimeUnit.SECONDS)) {
         try {
-          List<Action> actions =
-              actionRepo.findSubmittedOrCancelledByActionTypeName(
-                  actionType.getName(), appConfig.getActionDistribution().getRetrievalMax());
+          Set<ActionState> actionStates =
+              Sets.newHashSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
+          Stream<Action> actions = actionRepo.findByActionTypeAndStateIn(actionType, actionStates);
           actions.forEach(this::processAction);
         } finally {
           // Always unlock the distributed lock
@@ -102,9 +106,9 @@ class ActionDistributor {
       }
 
       if (action.getState().equals(ActionState.SUBMITTED)) {
-        ap.processActionRequests(action);
+        ap.processActionRequests(action.getId());
       } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
-        ap.processActionCancel(action);
+        ap.processActionCancel(action.getId());
       }
     } catch (Exception ex) {
       // We intentionally catch all exceptions here.
