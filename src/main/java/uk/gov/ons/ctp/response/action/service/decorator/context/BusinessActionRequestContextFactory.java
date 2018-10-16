@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.service.decorator.context;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,11 +45,15 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
   }
 
   private void setParties(ActionRequestContext context) {
+    List<String> desiredEnrolmentStatuses = new ArrayList<>();
+    desiredEnrolmentStatuses.add("ENABLED");
+    desiredEnrolmentStatuses.add("PENDING");
     PartyDTO businessParty =
         partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
             SampleUnitType.B.name(),
             context.getCaseDetails().getPartyId(),
-            context.getSurvey().getId());
+            context.getSurvey().getId(),
+            desiredEnrolmentStatuses);
     context.setParentParty(businessParty);
 
     List<PartyDTO> respondentParties = getRespondentParties(businessParty);
