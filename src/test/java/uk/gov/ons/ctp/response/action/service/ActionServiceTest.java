@@ -238,7 +238,25 @@ public class ActionServiceTest {
     CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
     ActionRequest actionRequest = new ActionRequest();
 
-    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.H);
+    ActionRequestContext context =
+        createActionRequestContext(SampleUnitDTO.SampleUnitType.H, "SOCIALNOT");
+
+    decorator.decorateActionRequest(actionRequest, context);
+
+    assertThat(actionRequest.getReturnByDate())
+        .isEqualTo(
+            expectedDateFormat.format(
+                context.getCollectionExercise().getScheduledReturnDateTime()));
+  }
+
+  @Test
+  public void ensureReturnByDateFormattedForSocialICF() {
+    SimpleDateFormat expectedDateFormat = new SimpleDateFormat("dd/MM/YYYY");
+    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
+    ActionRequest actionRequest = new ActionRequest();
+
+    ActionRequestContext context =
+        createActionRequestContext(SampleUnitDTO.SampleUnitType.H, "SOCIALICF");
 
     decorator.decorateActionRequest(actionRequest, context);
 
@@ -255,7 +273,8 @@ public class ActionServiceTest {
     CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
     ActionRequest actionRequest = new ActionRequest();
 
-    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.B);
+    ActionRequestContext context =
+        createActionRequestContext(SampleUnitDTO.SampleUnitType.B, "BSNOT");
 
     decorator.decorateActionRequest(actionRequest, context);
 
@@ -266,7 +285,7 @@ public class ActionServiceTest {
   }
 
   private ActionRequestContext createActionRequestContext(
-      SampleUnitDTO.SampleUnitType sampleUnitType) {
+      SampleUnitDTO.SampleUnitType sampleUnitType, String actionTypeStr) {
     ActionRequestContext context = new ActionRequestContext();
     Date date = new Date();
 
@@ -274,6 +293,12 @@ public class ActionServiceTest {
     collectionExercise.setExerciseRef("123");
     collectionExercise.setUserDescription("Test Description");
     collectionExercise.setScheduledReturnDateTime(new Timestamp(date.getTime()));
+
+    Action action = new Action();
+    ActionType actionType = new ActionType();
+    actionType.setName(actionTypeStr);
+    action.setActionType(actionType);
+    context.setAction(action);
     context.setCollectionExercise(collectionExercise);
 
     SurveyDTO survey = new SurveyDTO();
