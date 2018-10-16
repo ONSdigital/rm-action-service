@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -70,8 +72,13 @@ public class PartySvcClientService {
         .with("survey_id", surveyId)
         .debug("Retrieving party");
 
+    List<String> desiredEnrolmentStatuses = new ArrayList<>();
+    desiredEnrolmentStatuses.add("ENABLED");
+    desiredEnrolmentStatuses.add("PENDING");
+
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.put("survey_id", Collections.singletonList(surveyId));
+    queryParams.put("enrolments", desiredEnrolmentStatuses);
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
