@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
+import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -52,6 +53,7 @@ public class ActionService {
   private ActionPlanJobRepository actionPlanJobRepository;
   private ActionRuleRepository actionRuleRepo;
   private ActionTypeRepository actionTypeRepo;
+  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
 
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -294,5 +296,25 @@ public class ActionService {
       }
     }
     return existingAction;
+  }
+
+  @Transactional(rollbackFor = Exception.class)
+  public void rerunAction(final List<UUID> actionIds) throws CTPException {
+    for (UUID actionId : actionIds) {
+      Action actionToReRun = actionRepo.findById(actionId);
+      log.with("action_id", actionId.toString()).debug("Rerunning Aborted Action");
+
+      if (actionToReRun == null) {
+        throw new CTPException(
+            CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_FOUND, actionId.toString());
+      }
+
+      actionToReRun.setUpdatedDateTime(DateTimeUtil.nowUTC());
+      final ActionDTO.ActionState nextState =
+          actionSvcStateTransitionManager.transition(
+              actionToReRun.getState(), ActionEvent.REQUEST_RERUN);
+      actionToReRun.setState(nextState);
+      actionRepo.saveAndFlush(actionToReRun);
+    }
   }
 }
