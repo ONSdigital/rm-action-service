@@ -4,6 +4,7 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -69,7 +70,8 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
             .collect(Collectors.toList());
     return respondentPartyIds
         .stream()
-        .map(id -> partySvcClientService.getParty(SampleUnitType.BI.toString(), id))
+        .map(
+            id -> partySvcClientService.getParty(SampleUnitType.BI.toString(), UUID.fromString(id)))
         .collect(Collectors.toList());
   }
 }

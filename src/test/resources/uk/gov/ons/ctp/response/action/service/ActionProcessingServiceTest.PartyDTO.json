@@ -10,7 +10,7 @@
     },
     "associations": [
       {
-        "partyId": "partyID",
+        "partyId": "f19d3e22-2600-4d6f-8a2e-cb4320aa0cdc",
         "enrolments": [
           {
             "name": "Joe bloggs",
@@ -25,7 +25,7 @@
         ]
       },
       {
-        "partyId": "partyID2",
+        "partyId": "8e164cbe-5e95-4ba1-8277-37831aa4fc2c",
         "enrolments": [
           {
             "name": "Steve bloggs",

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,10 +41,10 @@ public class BusinessActionRequestContextFactoryTest {
     final PartyDTO respondentCreatedBI = partyDTOs.get(CREATED_BI);
 
     when(partySvcClientService.getParty(
-            "BI", partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId()))
+            "BI", UUID.fromString(partyDTOs.get(B_PARTY).getAssociations().get(0).getPartyId())))
         .thenReturn(respondentSuspendedBI);
     when(partySvcClientService.getParty(
-            "BI", partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId()))
+            "BI", UUID.fromString(partyDTOs.get(B_PARTY).getAssociations().get(1).getPartyId())))
         .thenReturn(respondentCreatedBI);
 
     final List<PartyDTO> actualChildPartyList =
