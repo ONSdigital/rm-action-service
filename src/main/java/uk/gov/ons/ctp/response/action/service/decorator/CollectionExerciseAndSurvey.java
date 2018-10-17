@@ -26,7 +26,9 @@ public class CollectionExerciseAndSurvey implements ActionRequestDecorator {
 
       DateFormat dateFormat;
 
-      if (context.getSampleUnitType() == SampleUnitDTO.SampleUnitType.H) {
+      if (context.getSampleUnitType() == SampleUnitDTO.SampleUnitType.H
+          && context.getAction().getActionType().getActionTypeNameEnum()
+              != uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALICF) {
         dateFormat = new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_SOCIAL_LETTER);
       } else {
         dateFormat = new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);

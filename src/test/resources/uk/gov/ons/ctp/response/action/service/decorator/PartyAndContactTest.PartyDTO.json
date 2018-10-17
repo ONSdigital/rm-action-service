@@ -1,0 +1,96 @@
+[
+  {
+    "id": "2e6add83-e43d-4f52-954f-4109be506c86",
+    "sampleUnitType": "B",
+    "sampleUnitRef": "222",
+    "attributes": {
+      "name": "Business name",
+      "region": "GB",
+      "tradstyle1": "trading-as 1",
+      "tradstyle2": "trading-as 2",
+      "tradstyle3": "trading-as 3"
+    },
+    "associations": [
+      {
+        "partyId": "cd592e0f-8d07-407b-b75d-e01fbdae8233",
+        "enrolments": [
+          {
+            "name": "Business Register and Employment Survey",
+            "surveyId": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef87",
+            "enrolmentStatus": "ENABLED"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2e6add83-e43d-4f52-954f-4109be506c86",
+    "sampleUnitType": "B",
+    "sampleUnitRef": "222",
+    "attributes": {
+      "name": "Business name",
+      "region": "GB",
+      "tradstyle1": "trading-as 1",
+      "tradstyle2": "trading-as 2",
+      "tradstyle3": "trading-as 3"
+    },
+    "associations": [
+      {
+        "partyId": "cd592e0f-8d07-407b-b75d-e01fbdae8233",
+        "enrolments": [
+          {
+            "name": "Business Register and Employment Survey",
+            "surveyId": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef87",
+            "enrolmentStatus": "PENDING"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cd592e0f-8d07-407b-b75d-e01fbdae8233",
+    "sampleUnitType": "BI",
+    "status": "ACTIVE",
+    "attributes": {
+      "firstName": "Jacky",
+      "lastName": "Turner",
+      "emailAddress": "Jacky.Turner@email.com"
+    },
+    "associations": [
+      {
+        "enrolments": [
+          {
+            "name": "Business Register and Employment Survey",
+            "surveyId": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef87",
+            "enrolmentStatus": "ENABLED"
+          }
+        ],
+        "partyId": "2e6add83-e43d-4f52-954f-4109be506c86",
+        "sampleUnitRef": "222"
+      }
+    ]
+  },
+  {
+    "id": "cd592e0f-8d07-407b-b75d-e01fbdae8233",
+    "sampleUnitType": "BI",
+    "status": "CREATED",
+    "attributes": {
+      "firstName": "Bobby",
+      "lastName": "Turner",
+      "emailAddress": "Bobby.Turner@email.com"
+    },
+    "associations": [
+      {
+        "enrolments": [
+          {
+            "name": "Business Register and Employment Survey",
+            "surveyId": "cb0711c3-0ac8-41d3-ae0e-567e5ea1ef87",
+            "enrolmentStatus": "PENDING"
+          }
+        ],
+        "partyId": "2e6add83-e43d-4f52-954f-4109be506c86",
+        "sampleUnitRef": "222"
+      }
+    ]
+  }
+]

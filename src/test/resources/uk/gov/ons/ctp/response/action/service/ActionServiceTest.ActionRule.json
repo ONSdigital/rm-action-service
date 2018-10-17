@@ -1,0 +1,20 @@
+[
+  {
+    "id": "7bc5d41b-0549-40b3-0000-42f6d4cf0000",
+    "actionRulePK": 1,
+    "actionPlanFK": 1,
+    "actionTypeFK": 1,
+    "name": "Action Rule 1",
+    "description": "The first action rule",
+    "priority": 1
+  },
+  {
+    "id": "7bc5d41b-0549-40b3-0000-42f6d4cf0000",
+    "actionRulePK": 2,
+    "actionPlanFK": 1,
+    "actionTypeFK": 5,
+    "name": "Notification email",
+    "description": "Notification email",
+    "priority": 1
+  }
+]

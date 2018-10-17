@@ -91,6 +91,14 @@ An `HTTP 404 Not Found` status code is returned if the case with the specified I
 ]
 ```
 
+A 'HTTP 204 No Content' status code is returned when the aborted action with the specified ID has been rescheduled.
+A 'HTTP 404 Not Found' status code is returned when a invalid ID is specified.
+A 'HTTP 400 Bad Request' status code is returned when trying to rerun an action in a non aborted state.
+
+## Aborted Actions can be Rerun
+* `PUT /actions/rerun?actionId={actionId}` will rerun the action specified for the given ID.
+
+
 An `HTTP 404 Not Found` status code is returned if the case with the specified ID could not be found. An `HTTP 204 No Content` status code is returned if there are no actions to be cancelled.
 
 ## Get Action

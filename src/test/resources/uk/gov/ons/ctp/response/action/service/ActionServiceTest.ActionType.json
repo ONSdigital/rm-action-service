@@ -14,5 +14,13 @@
     "handler": "HHSurvey",
     "canCancel": true,
     "responseRequired": true
+  },
+  {
+    "actionTypePK": 5,
+    "name": "BSNE",
+    "description": "Business Survey Notification Email",
+    "handler": "Notify",
+    "canCancel": true,
+    "responseRequired": false
   }
 ]

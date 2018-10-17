@@ -27,6 +27,7 @@ import javax.xml.bind.JAXBContext;
 import org.junit.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ResourceLoader;
@@ -93,7 +94,9 @@ public class PlanSchedulerIT {
 
   @Autowired private ActionRuleRepository actionRuleRepository;
 
-  @Autowired private ObjectMapper objectMapper;
+  @Qualifier("customObjectMapper")
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Autowired private RabbitAdmin admin;
 
@@ -109,8 +112,8 @@ public class PlanSchedulerIT {
     UnirestInitialiser.initialise(objectMapper);
     actionCaseRepository.deleteAllInBatch();
     actionRepository.deleteAllInBatch();
-    actionPlanJobRepository.deleteAllInBatch();
     actionRuleRepository.deleteAllInBatch();
+    actionPlanJobRepository.deleteAllInBatch();
     actionPlanRepository.deleteAllInBatch();
   }
 
@@ -192,7 +195,7 @@ public class PlanSchedulerIT {
             config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
     BlockingQueue<String> queue =
         listener.listen(ExchangeType.Direct, "action-outbound-exchange", "Action.Printer.binding");
-    int timeout = 4;
+    int timeout = 10;
     return queue.poll(timeout, TimeUnit.SECONDS);
   }
 
@@ -358,7 +361,7 @@ public class PlanSchedulerIT {
     OffsetDateTime endDate = OffsetDateTime.now().plusDays(2);
     mockGetCollectionExercise(startDate, endDate, surveyId, collectionExcerciseId);
 
-    OffsetDateTime triggerDateTime = OffsetDateTime.now().minusDays(1);
+    OffsetDateTime triggerDateTime = OffsetDateTime.now().minusHours(12);
     ActionRuleDTO actionRule = createActionRule(actionPlan, triggerDateTime);
 
     UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");

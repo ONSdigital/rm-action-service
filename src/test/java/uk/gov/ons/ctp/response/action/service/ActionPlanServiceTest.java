@@ -42,35 +42,23 @@ public class ActionPlanServiceTest {
   private static final String SELECTOR_VALUE = "selectorValue";
 
   private List<ActionPlan> actionPlans;
+  private ActionPlan actionPlan;
   private HashMap<String, String> selectors;
 
   /** Before the test */
   @Before
   public void setUp() throws Exception {
-    MockitoAnnotations.initMocks(this);
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
+    actionPlan = actionPlans.get(0);
     selectors = new HashMap<>();
     selectors.put(SELECTOR_KEY, SELECTOR_VALUE);
-  }
 
-  @Test
-  public void testFindActionPlansBySelectors() {
-    // Given
-    when(this.actionPlanRepo.findBySelectorsIn(any())).thenReturn(actionPlans);
-
-    // When
-    ActionPlan actionPlan = actionPlans.get(0);
-    List<ActionPlan> foundActionPlans =
-        actionPlanService.findActionPlansBySelectors(actionPlan.getSelectors());
-
-    // Then
-    assertEquals(foundActionPlans.get(0).getSelectors(), actionPlan.getSelectors());
+    MockitoAnnotations.initMocks(this);
   }
 
   @Test
   public void testCreateActionPlan() {
     // Given
-    ActionPlan actionPlan = actionPlans.get(0);
     when(actionPlanRepo.saveAndFlush(any())).thenReturn(actionPlan);
 
     // When
@@ -78,19 +66,18 @@ public class ActionPlanServiceTest {
 
     // Then
     verify(actionPlanRepo, times(1)).saveAndFlush(createdActionPlan);
-    assertEquals(createdActionPlan.getName(), createdActionPlan.getName());
-    assertEquals(createdActionPlan.getDescription(), createdActionPlan.getDescription());
+    assertEquals(createdActionPlan.getName(), actionPlan.getName());
+    assertEquals(createdActionPlan.getDescription(), actionPlan.getDescription());
   }
 
   @Test
   public void testUpdateActionPlanDescription() {
     // Given
-    ActionPlan actionPlan = actionPlans.get(0);
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
     ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
     savedActionPlan.setDescription(UPDATED_DESCRIPTION);
-    when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
+    when(actionPlanRepo.saveAndFlush(savedActionPlan)).thenReturn(savedActionPlan);
 
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
@@ -99,19 +86,18 @@ public class ActionPlanServiceTest {
         actionPlanService.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
 
     // Then
-    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    verify(actionPlanRepo, times(1)).saveAndFlush(savedActionPlan);
     assertEquals(updatedActionPlan.getDescription(), UPDATED_DESCRIPTION);
   }
 
   @Test
   public void testUpdateActionPlanRunTime() {
     // Given
-    ActionPlan actionPlan = actionPlans.get(0);
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
     ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
     savedActionPlan.setLastRunDateTime(UPDATED_TIMESTAMP);
-    when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
+    when(actionPlanRepo.saveAndFlush(savedActionPlan)).thenReturn(savedActionPlan);
 
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
@@ -120,19 +106,18 @@ public class ActionPlanServiceTest {
         actionPlanService.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
 
     // Then
-    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    verify(actionPlanRepo, times(1)).saveAndFlush(savedActionPlan);
     assertEquals(updatedActionPlan.getLastRunDateTime(), UPDATED_TIMESTAMP);
   }
 
   @Test
   public void testUpdateActionPlanSelectors() {
     // Given
-    ActionPlan actionPlan = actionPlans.get(0);
     when(actionPlanRepo.findById(ACTION_PLAN_ID)).thenReturn(actionPlan);
 
     ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
     savedActionPlan.setSelectors(selectors);
-    when(actionPlanRepo.saveAndFlush(any())).thenReturn(savedActionPlan);
+    when(actionPlanRepo.saveAndFlush(savedActionPlan)).thenReturn(savedActionPlan);
 
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
@@ -141,7 +126,7 @@ public class ActionPlanServiceTest {
         actionPlanService.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
 
     // Then
-    verify(actionPlanRepo, times(1)).saveAndFlush(any());
+    verify(actionPlanRepo, times(1)).saveAndFlush(savedActionPlan);
     assertEquals(updatedActionPlan.getSelectors(), actionPlan.getSelectors());
   }
 }

@@ -1,0 +1,1 @@
+\copy (SELECT bicaseid, bcaseid FROM casesvc.temp_cases) TO STDOUT WITH CSV;

@@ -7,7 +7,6 @@ import net.sourceforge.cobertura.CoverageIgnore;
 @CoverageIgnore
 @Data
 public class ActionDistribution {
-  private Integer retrievalMax;
   private Integer retrySleepSeconds;
   private Integer delayMilliSeconds;
 }

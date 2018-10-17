@@ -25,6 +25,7 @@ import uk.gov.ons.ctp.common.error.InvalidRequestException;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionFeedbackRequestDTO;
@@ -46,6 +47,7 @@ public final class ActionEndpoint implements CTPEndpoint {
   @Autowired private ActionService actionService;
   @Autowired private ActionPlanService actionPlanService;
   @Autowired private ActionCaseService actionCaseService;
+  @Autowired private ActionRepository actionRepo;
 
   @Qualifier("actionBeanMapper")
   @Autowired
@@ -164,7 +166,7 @@ public final class ActionEndpoint implements CTPEndpoint {
       if (actionPlan != null) {
         action.setActionPlanFK(actionPlan.getActionPlanPK());
       }
-      action = actionService.createAction(action);
+      action = actionService.createAdHocAction(action);
 
       final ActionDTO actionDTO = mapperFacade.map(action, ActionDTO.class);
       final String newResourceUrl =
@@ -241,6 +243,22 @@ public final class ActionEndpoint implements CTPEndpoint {
     } else {
       return ResponseEntity.ok(buildActionsDTOs(actions));
     }
+  }
+
+  /**
+   * PUT to re-run the aborted Actions for a specified actionId and to reschedule them .
+   *
+   * @param actionIds Action Id of the Action/s to re run
+   * @return Success for the re ran actions
+   * @throws CTPException if update operation fails
+   */
+  @RequestMapping(value = "/rerun", method = RequestMethod.PUT)
+  public ResponseEntity<List<UUID>> rerunAction(
+      @RequestParam(value = "actionId") @Valid List<UUID> actionIds) throws CTPException {
+    log.with("action_ids", actionIds).info("Re-scheduling Aborted Action");
+    actionService.rerunAction(actionIds);
+
+    return ResponseEntity.noContent().build();
   }
 
   /**

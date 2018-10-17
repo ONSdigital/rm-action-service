@@ -1,15 +1,17 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import static uk.gov.ons.ctp.common.time.DateTimeUtil.nowUTC;
+
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import net.sourceforge.cobertura.CoverageIgnore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +20,16 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
+import uk.gov.ons.ctp.response.action.domain.model.ActionRule;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
@@ -40,20 +45,35 @@ public class ActionService {
   private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
+  private static final String SYSTEM = "SYSTEM";
 
-  @Autowired private ActionRepository actionRepo;
+  private ActionRepository actionRepo;
+  private ActionCaseRepository actionCaseRepo;
+  private ActionPlanRepository actionPlanRepository;
+  private ActionPlanJobRepository actionPlanJobRepository;
+  private ActionRuleRepository actionRuleRepo;
+  private ActionTypeRepository actionTypeRepo;
+  public static final String ACTION_NOT_FOUND = "Action not found for id %s";
 
-  @Autowired private ActionCaseRepository actionCaseRepository;
-
-  @Autowired private ActionTypeRepository actionTypeRepo;
-
-  @Autowired private ActionPlanRepository actionPlanRepository;
-
-  @Autowired private ActionPlanJobRepository actionPlanJobRepository;
-
-  @Autowired
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
+
+  public ActionService(
+      ActionRepository actionRepo,
+      ActionCaseRepository actionCaseRepo,
+      ActionPlanRepository actionPlanRepository,
+      ActionPlanJobRepository actionPlanJobRepository,
+      ActionRuleRepository actionRuleRepo,
+      ActionTypeRepository actionTypeRepo,
+      StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
+    this.actionRepo = actionRepo;
+    this.actionCaseRepo = actionCaseRepo;
+    this.actionPlanRepository = actionPlanRepository;
+    this.actionPlanJobRepository = actionPlanJobRepository;
+    this.actionRuleRepo = actionRuleRepo;
+    this.actionTypeRepo = actionTypeRepo;
+    this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
+  }
 
   @CoverageIgnore
   public List<Action> findAllActionsOrderedByCreatedDateTimeDescending() {
@@ -83,12 +103,6 @@ public class ActionService {
   }
 
   @CoverageIgnore
-  public Action findActionByActionPK(final BigInteger actionKey) {
-    log.with("action_pk", actionKey).debug("Entering findActionByActionPK");
-    return actionRepo.findOne(actionKey);
-  }
-
-  @CoverageIgnore
   public Action findActionById(final UUID actionId) {
     log.with("action_id", actionId).debug("Entering findActionById");
     return actionRepo.findById(actionId);
@@ -96,7 +110,7 @@ public class ActionService {
 
   @CoverageIgnore
   public List<Action> findActionsByCaseId(final UUID caseId) {
-    log.debug("Entering findActionsByCaseId with {}", caseId);
+    log.with("case_id", caseId).debug("Entering findActionsByCaseId");
     return actionRepo.findByCaseIdOrderByCreatedDateTimeDesc(caseId);
   }
 
@@ -112,13 +126,13 @@ public class ActionService {
     for (final Action action : actions) {
       if (action.getActionType().getCanCancel()) {
         log.with("action_id", action.getId())
-            .with("action_name", action.getActionType().getName())
+            .with("action_type", action.getActionType().getName())
             .debug("Cancelling action");
         final ActionDTO.ActionState nextState =
             actionSvcStateTransitionManager.transition(
                 action.getState(), ActionEvent.REQUEST_CANCELLED);
         action.setState(nextState);
-        action.setUpdatedDateTime(DateTimeUtil.nowUTC());
+        action.setUpdatedDateTime(nowUTC());
         actionRepo.saveAndFlush(action);
         flushedActions.add(action);
       }
@@ -132,7 +146,7 @@ public class ActionService {
       timeout = TRANSACTION_TIMEOUT)
   public Action feedBackAction(final ActionFeedback actionFeedback) throws CTPException {
     final String actionId = actionFeedback.getActionId();
-    log.with("action_id", actionId).debug("Entering feedBackAction with actionId");
+    log.with("action_id", actionId).debug("Entering feedBackAction");
 
     Action result = null;
     if (!StringUtils.isEmpty(actionId)) {
@@ -141,7 +155,7 @@ public class ActionService {
         final ActionDTO.ActionEvent event =
             ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
         result.setSituation(actionFeedback.getSituation());
-        result.setUpdatedDateTime(DateTimeUtil.nowUTC());
+        result.setUpdatedDateTime(nowUTC());
         final ActionDTO.ActionState nextState =
             actionSvcStateTransitionManager.transition(result.getState(), event);
         result.setState(nextState);
@@ -156,8 +170,8 @@ public class ActionService {
       propagation = Propagation.REQUIRED,
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
-  public Action createAction(final Action action) {
-    log.with("action", action).debug("Entering createAdhocAction");
+  public Action createAdHocAction(final Action action) {
+    log.debug("Creating adhoc action");
 
     // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);
@@ -169,32 +183,81 @@ public class ActionService {
     action.setActionType(actionType);
 
     action.setManuallyCreated(true);
-    action.setCreatedDateTime(DateTimeUtil.nowUTC());
+    action.setCreatedDateTime(nowUTC());
     action.setState(ActionState.SUBMITTED);
     action.setId(UUID.randomUUID());
     return actionRepo.saveAndFlush(action);
   }
 
   @Transactional
-  public void createScheduledActions(Integer actionPlanJobId) {
-    final ActionPlanJob actionPlanJob =
-        actionPlanJobRepository.findByActionPlanJobPK(actionPlanJobId);
+  public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
+    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
+    List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
 
-    if (actionPlanJob == null) {
+    // For each case/rule pair create an action
+    cases.forEach(caze -> createActionsForCase(caze, rules));
+    updatePlanAndJob(actionPlan, actionPlanJob);
+  }
+
+  private void createActionsForCase(ActionCase actionCase, List<ActionRule> actionRules) {
+    if (isActionPlanLive(actionCase)) {
+      actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule));
+    }
+  }
+
+  private boolean isActionPlanLive(ActionCase actionCase) {
+    final Timestamp currentTime = nowUTC();
+    return actionCase.getActionPlanStartDate().before(currentTime)
+        && actionCase.getActionPlanEndDate().after(currentTime);
+  }
+
+  private void createActionForCaseAndRule(ActionCase actionCase, ActionRule actionRule) {
+    if (hasRuleTriggered(actionRule)) {
+      createAction(actionCase, actionRule);
+    }
+  }
+
+  private boolean hasRuleTriggered(ActionRule rule) {
+    final Timestamp currentTime = nowUTC();
+    final Timestamp dayBefore =
+        Timestamp.valueOf(
+            LocalDateTime.ofInstant(
+                currentTime.toInstant().minus(1, ChronoUnit.DAYS), ZoneOffset.UTC));
+    final Timestamp triggerDateTime =
+        Timestamp.valueOf(
+            LocalDateTime.ofInstant(rule.getTriggerDateTime().toInstant(), ZoneOffset.UTC));
+    return triggerDateTime.before(currentTime) && triggerDateTime.after(dayBefore);
+  }
+
+  private void createAction(ActionCase actionCase, ActionRule actionRule) {
+
+    // Only create action if it doesn't already exist
+    if (actionRepo.existsByCaseIdAndActionRuleFK(
+        actionCase.getId(), actionRule.getActionRulePK())) {
       return;
     }
 
-    final ActionPlan actionPlan =
-        actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanFK());
-    final Timestamp currentTime = new Timestamp((new Date()).getTime());
+    log.with("case_id", actionCase.getId().toString())
+        .with("action_rule_id", actionRule.getId().toString())
+        .info("Creating action");
+    Action newAction = new Action();
+    newAction.setId(UUID.randomUUID());
+    newAction.setCreatedBy(SYSTEM);
+    newAction.setManuallyCreated(false);
+    newAction.setState(ActionState.SUBMITTED);
+    newAction.setCreatedDateTime(nowUTC());
+    newAction.setCaseFK(actionCase.getCasePK());
+    newAction.setCaseId(actionCase.getId());
+    newAction.setActionPlanFK(actionRule.getActionPlanFK());
+    newAction.setActionRuleFK(actionRule.getActionRulePK());
+    newAction.setPriority(actionRule.getPriority());
+    newAction.setActionType(actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK()));
 
-    actionRepo
-        .findPotentialActionsActiveDate(actionPlan.getActionPlanPK(), currentTime)
-        .stream()
-        .map(pa -> Action.fromPotentialAction(pa, currentTime))
-        .forEach(a -> actionRepo.save(a));
-    actionRepo.flush();
+    actionRepo.saveAndFlush(newAction);
+  }
 
+  private void updatePlanAndJob(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
+    final Timestamp currentTime = nowUTC();
     actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
     actionPlanJobRepository.saveAndFlush(actionPlanJob);
@@ -213,23 +276,45 @@ public class ActionService {
       boolean needsUpdate = false;
 
       final Integer newPriority = action.getPriority();
+      log.with("new_priority", newPriority).debug("Got priority");
       if (newPriority != null) {
         needsUpdate = true;
         existingAction.setPriority(newPriority);
       }
 
       final String newSituation = action.getSituation();
+      log.with("new_situation", newSituation).debug("Got situation");
       if (newSituation != null) {
         needsUpdate = true;
         existingAction.setSituation(newSituation);
       }
 
       if (needsUpdate) {
-        existingAction.setUpdatedDateTime(DateTimeUtil.nowUTC());
-        log.with("updated_action", existingAction).debug("updating action");
+        existingAction.setUpdatedDateTime(nowUTC());
+        log.with("existing_action", existingAction).debug("updating action");
         existingAction = actionRepo.saveAndFlush(existingAction);
       }
     }
     return existingAction;
+  }
+
+  @Transactional(rollbackFor = Exception.class)
+  public void rerunAction(final List<UUID> actionIds) throws CTPException {
+    for (UUID actionId : actionIds) {
+      Action actionToReRun = actionRepo.findById(actionId);
+      log.with("action_id", actionId.toString()).debug("Rerunning Aborted Action");
+
+      if (actionToReRun == null) {
+        throw new CTPException(
+            CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_FOUND, actionId.toString());
+      }
+
+      actionToReRun.setUpdatedDateTime(DateTimeUtil.nowUTC());
+      final ActionDTO.ActionState nextState =
+          actionSvcStateTransitionManager.transition(
+              actionToReRun.getState(), ActionEvent.REQUEST_RERUN);
+      actionToReRun.setState(nextState);
+      actionRepo.saveAndFlush(actionToReRun);
+    }
   }
 }
