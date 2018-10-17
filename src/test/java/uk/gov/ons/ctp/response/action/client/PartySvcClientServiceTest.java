@@ -56,6 +56,35 @@ public class PartySvcClientServiceTest {
   }
 
   @Test
+  public void testGetParty() {
+    PartySvc partySvc = new PartySvc();
+    partySvc.getPartyBySampleUnitTypeAndIdPath();
+
+    given(appConfig.getPartySvc()).willReturn(partySvc);
+
+    UriComponents uriComponents =
+        UriComponentsBuilder.newInstance()
+            .path(partySvc.getPartyBySampleUnitTypeAndIdPath())
+            .queryParams(null)
+            .build();
+
+    HttpEntity httpEntity = new HttpEntity(null, null);
+    given(restUtility.createUriComponents(any(String.class), any(), any(), any()))
+        .willReturn(uriComponents);
+    given(restUtility.createHttpEntity(isNull())).willReturn(httpEntity);
+
+    ResponseEntity<PartyDTO> responseEntity = new ResponseEntity(businessParty, HttpStatus.OK);
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(PartyDTO.class)))
+        .thenReturn(responseEntity);
+
+    PartyDTO result = client.getParty("B", UUID.fromString(businessParty.getId()));
+
+    assertThat(result.getSampleUnitType().equals('B'));
+    assertThat(result.getId().equals(businessParty.getId()));
+  }
+
+  @Test
   public void testGetPartyWithAssociationsFilteredBySurvey() {
     PartySvc partySvc = new PartySvc();
     partySvc.setPartyBySampleUnitTypeAndIdPath("test:path");
