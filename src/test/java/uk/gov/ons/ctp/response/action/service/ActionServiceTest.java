@@ -10,10 +10,7 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
+import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
@@ -67,6 +65,7 @@ public class ActionServiceTest {
   @Mock private ActionPlanJobRepository actionPlanJobRepo;
   @Mock private ActionRuleRepository actionRuleRepo;
   @Mock private ActionTypeRepository actionTypeRepo;
+  @Mock private ActionService actionServiceRepo;
 
   @Mock private CollectionExerciseClientService collectionExerciseClientService;
   @Mock private PartySvcClientService partySvcClientService;
@@ -209,6 +208,25 @@ public class ActionServiceTest {
 
     verify(actionRepo, times(0)).saveAndFlush(any());
     assertThat(existingAction).isEqualTo(actions.get(3));
+  }
+
+  @Test
+  public void testRerunAction() throws CTPException {
+    final List<UUID> actionIDs = new ArrayList<>();
+    actionIDs.add(ACTION_ID_3);
+    when(actionRepo.findById(ACTION_ID_3)).thenReturn(actions.get(3));
+    actionService.rerunAction(actionIDs);
+
+    verify(actionRepo, times(1)).saveAndFlush(any());
+  }
+
+  @Test(expected = CTPException.class)
+  public void testRerunActionNoActionFound() throws CTPException {
+    final List<UUID> actionIDs = new ArrayList<>();
+    actionIDs.add(ACTION_ID_3);
+
+    when(actionRepo.findById(ACTION_ID_3)).thenReturn(null);
+    actionService.rerunAction(actionIDs);
   }
 
   @Test

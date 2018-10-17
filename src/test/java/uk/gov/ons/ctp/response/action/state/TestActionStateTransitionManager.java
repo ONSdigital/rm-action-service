@@ -92,6 +92,10 @@ public class TestActionStateTransitionManager {
     final Map<ActionEvent, ActionState> cancelledTransitions = new HashMap<>();
     cancelledTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLED);
     validTransitions.put(ActionState.CANCELLED, cancelledTransitions);
+
+    final Map<ActionEvent, ActionState> reRunTransitions = new HashMap<>();
+    reRunTransitions.put(ActionEvent.REQUEST_RERUN, ActionState.SUBMITTED);
+    validTransitions.put(ActionState.ABORTED, reRunTransitions);
   }
 
   /** test a valid transition */
