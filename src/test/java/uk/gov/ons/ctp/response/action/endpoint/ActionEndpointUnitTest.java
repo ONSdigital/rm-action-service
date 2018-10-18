@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,15 +44,18 @@ import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.common.matcher.DateMatcher;
+import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.ActionCaseService;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionService;
+import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
 
 /** ActionEndpoint Unit tests */
 public final class ActionEndpointUnitTest {
@@ -104,6 +108,8 @@ public final class ActionEndpointUnitTest {
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
   private static final String UPDATED_OUTCOME = "REQUEST_COMPLETED";
   private static final String UPDATED_SITUATION = "new situation";
+  private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager;
   private static final String ACTION_UPDATE_VALID_JSON =
       "{"
           + "\"priority\": "
@@ -194,6 +200,9 @@ public final class ActionEndpointUnitTest {
   @Mock private ActionService actionService;
   @Mock private ActionPlanService actionPlanService;
   @Mock private ActionCaseService actionCaseService;
+  @Mock private ActionRepository actionRepo;
+  @Mock private ActionSvcStateTransitionManagerFactory actionState;
+
   @Spy private MapperFacade mapperFacade = new ActionBeanMapper();
   private MockMvc mockMvc;
   private List<Action> actions;
@@ -711,6 +720,30 @@ public final class ActionEndpointUnitTest {
             jsonPath("$.createdDateTime", is(new DateMatcher(ALL_ACTIONS_CREATEDDATE_VALUE))))
         .andExpect(
             jsonPath("$.updatedDateTime", is(new DateMatcher(ALL_ACTIONS_UPDATEDDATE_VALUE))));
+  }
+
+  /**
+   * Test running aborted action with an invalid actionId
+   *
+   * @throws Exception when put does
+   */
+  @Test
+  public void rerunActionByActionId() throws Exception {
+    final List<UUID> actionIDs = new ArrayList<>();
+    actionIDs.add(ACTION_ID_1);
+
+    Action action = Action.builder().state(ActionDTO.ActionState.ABORTED).build();
+    when(actionRepo.findById(ACTION_ID_1)).thenReturn(action);
+
+    final ResultActions resultResponse =
+        mockMvc.perform(putJson(String.format("/actions/rerun?actionId=%s", ACTION_ID_1), ""));
+
+    resultResponse
+        .andExpect(status().isNoContent())
+        .andExpect(handler().handlerType(ActionEndpoint.class))
+        .andExpect(handler().methodName("rerunAction"));
+
+    verify(actionService, atLeastOnce()).rerunAction(actionIDs);
   }
 
   /**

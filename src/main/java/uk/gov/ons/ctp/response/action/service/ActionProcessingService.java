@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,13 +54,10 @@ public abstract class ActionProcessingService {
     this.decorators = decorators;
   }
 
-  /**
-   * Distributes requests for a single action
-   *
-   * @param action the action to deal with
-   */
+  /** Distributes requests for a single action */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processActionRequests(final Action action) {
+  public void processActionRequests(final UUID actionId) {
+    Action action = actionRepo.findById(actionId);
     log.with("action_id", action.getId()).debug("Processing actionRequest");
 
     final ActionType actionType = action.getActionType();
@@ -119,16 +117,11 @@ public abstract class ActionProcessingService {
     return actionRequest;
   }
 
-  /**
-   * Deal with a single action cancel - the transaction boundary is here
-   *
-   * @param action the action to deal with
-   */
-  @Transactional(
-      propagation = Propagation.REQUIRED,
-      readOnly = false,
-      rollbackFor = Exception.class)
-  public void processActionCancel(final Action action) {
+  /** Deal with a single action cancel - the transaction boundary is here */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void processActionCancel(final UUID actionId) {
+    Action action = actionRepo.findById(actionId);
+
     log.with("action_id", action.getId())
         .with("case_id", action.getCaseId())
         .with("action_plan_pk", action.getActionPlanFK())

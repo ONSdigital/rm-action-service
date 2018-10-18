@@ -10,10 +10,7 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
+import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
@@ -67,6 +65,7 @@ public class ActionServiceTest {
   @Mock private ActionPlanJobRepository actionPlanJobRepo;
   @Mock private ActionRuleRepository actionRuleRepo;
   @Mock private ActionTypeRepository actionTypeRepo;
+  @Mock private ActionService actionServiceRepo;
 
   @Mock private CollectionExerciseClientService collectionExerciseClientService;
   @Mock private PartySvcClientService partySvcClientService;
@@ -212,6 +211,25 @@ public class ActionServiceTest {
   }
 
   @Test
+  public void testRerunAction() throws CTPException {
+    final List<UUID> actionIDs = new ArrayList<>();
+    actionIDs.add(ACTION_ID_3);
+    when(actionRepo.findById(ACTION_ID_3)).thenReturn(actions.get(3));
+    actionService.rerunAction(actionIDs);
+
+    verify(actionRepo, times(1)).saveAndFlush(any());
+  }
+
+  @Test(expected = CTPException.class)
+  public void testRerunActionNoActionFound() throws CTPException {
+    final List<UUID> actionIDs = new ArrayList<>();
+    actionIDs.add(ACTION_ID_3);
+
+    when(actionRepo.findById(ACTION_ID_3)).thenReturn(null);
+    actionService.rerunAction(actionIDs);
+  }
+
+  @Test
   public void testCreateScheduledActions() {
 
     // Given
@@ -238,7 +256,25 @@ public class ActionServiceTest {
     CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
     ActionRequest actionRequest = new ActionRequest();
 
-    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.H);
+    ActionRequestContext context =
+        createActionRequestContext(SampleUnitDTO.SampleUnitType.H, "SOCIALNOT");
+
+    decorator.decorateActionRequest(actionRequest, context);
+
+    assertThat(actionRequest.getReturnByDate())
+        .isEqualTo(
+            expectedDateFormat.format(
+                context.getCollectionExercise().getScheduledReturnDateTime()));
+  }
+
+  @Test
+  public void ensureReturnByDateFormattedForSocialICF() {
+    SimpleDateFormat expectedDateFormat = new SimpleDateFormat("dd/MM/YYYY");
+    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
+    ActionRequest actionRequest = new ActionRequest();
+
+    ActionRequestContext context =
+        createActionRequestContext(SampleUnitDTO.SampleUnitType.H, "SOCIALICF");
 
     decorator.decorateActionRequest(actionRequest, context);
 
@@ -255,7 +291,8 @@ public class ActionServiceTest {
     CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
     ActionRequest actionRequest = new ActionRequest();
 
-    ActionRequestContext context = createActionRequestContext(SampleUnitDTO.SampleUnitType.B);
+    ActionRequestContext context =
+        createActionRequestContext(SampleUnitDTO.SampleUnitType.B, "BSNOT");
 
     decorator.decorateActionRequest(actionRequest, context);
 
@@ -266,7 +303,7 @@ public class ActionServiceTest {
   }
 
   private ActionRequestContext createActionRequestContext(
-      SampleUnitDTO.SampleUnitType sampleUnitType) {
+      SampleUnitDTO.SampleUnitType sampleUnitType, String actionTypeStr) {
     ActionRequestContext context = new ActionRequestContext();
     Date date = new Date();
 
@@ -274,6 +311,12 @@ public class ActionServiceTest {
     collectionExercise.setExerciseRef("123");
     collectionExercise.setUserDescription("Test Description");
     collectionExercise.setScheduledReturnDateTime(new Timestamp(date.getTime()));
+
+    Action action = new Action();
+    ActionType actionType = new ActionType();
+    actionType.setName(actionTypeStr);
+    action.setActionType(actionType);
+    context.setAction(action);
     context.setCollectionExercise(collectionExercise);
 
     SurveyDTO survey = new SurveyDTO();
