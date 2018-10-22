@@ -122,8 +122,8 @@ class ActionDistributor {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
 
     if (actionCase == null) {
-      log.with("action", action).error("Cannot find case for action");
-      throw new IllegalStateException();
+      log.with("action", action).info("Case no longer exists for action");
+      action.setState(ActionState.ABORTED);
     }
 
     SampleUnitDTO.SampleUnitType caseType =
