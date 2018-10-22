@@ -78,15 +78,7 @@ public class PartySvcClientService {
         .with("survey_id", surveyId)
         .debug("Retrieving party");
 
-    StringBuilder commaSepEnrolmentStatuses = new StringBuilder();
-
-    for (int i = 0; i < enrolmentStatuses.size(); i++) {
-      commaSepEnrolmentStatuses.append(enrolmentStatuses.get(i));
-
-      if (i != enrolmentStatuses.size() - 1) {
-        commaSepEnrolmentStatuses.append(", ");
-      }
-    }
+    String commaSepEnrolmentStatuses = String.join(", ", enrolmentStatuses);
 
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.put("survey_id", Collections.singletonList(surveyId));
