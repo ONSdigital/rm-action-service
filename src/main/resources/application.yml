@@ -143,7 +143,7 @@ collection-exercise-svc:
 
  # calling the party svc endpoint
 party-svc:
-  party-by-sample-unit-type-and-id-path: /party-api/v1/parties/type/{sampleUnitType}/id/{partyId}
+  party-by-sample-unit-type-and-id-path: /party-api/v1/parties/id/{partyId}
   connection-config:
     scheme: http
     host: localhost
