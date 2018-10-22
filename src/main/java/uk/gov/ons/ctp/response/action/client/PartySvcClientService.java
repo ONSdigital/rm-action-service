@@ -76,6 +76,7 @@ public class PartySvcClientService {
     log.with("sample_unit_type", sampleUnitType)
         .with("party_id", partyId.toString())
         .with("survey_id", surveyId)
+        .with("enrolment_statuses", enrolmentStatuses)
         .debug("Retrieving party");
 
     String commaSepEnrolmentStatuses = String.join(", ", enrolmentStatuses);
@@ -85,7 +86,6 @@ public class PartySvcClientService {
     queryParams.put(
         "enrolment_status", Collections.singletonList(commaSepEnrolmentStatuses.toString()));
 
-    log.with(queryParams).info("QueryParams");
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
