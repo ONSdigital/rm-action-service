@@ -9,9 +9,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -20,6 +23,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
@@ -44,6 +48,9 @@ class ActionDistributor {
 
   private ActionProcessingService businessActionProcessingService;
   private ActionProcessingService socialActionProcessingService;
+
+  @Autowired
+  private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
 
   public ActionDistributor(
       AppConfig appConfig,
@@ -118,12 +125,16 @@ class ActionDistributor {
     }
   }
 
-  private ActionProcessingService getActionProcessingService(Action action) {
+  private ActionProcessingService getActionProcessingService(Action action) throws CTPException {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
 
     if (actionCase == null) {
       log.with("action", action).info("Case no longer exists for action");
-      action.setState(ActionState.ABORTED);
+      ActionState newActionState =
+          actionSvcStateTransitionManager.transition(
+              action.getState(), ActionEvent.REQUEST_CANCELLED);
+      action.setState(newActionState);
+      actionRepo.saveAndFlush(action);
     }
 
     SampleUnitDTO.SampleUnitType caseType =
