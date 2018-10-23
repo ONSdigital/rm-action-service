@@ -125,16 +125,20 @@ class ActionDistributor {
     }
   }
 
-  private ActionProcessingService getActionProcessingService(Action action) throws CTPException {
+  private ActionProcessingService getActionProcessingService(Action action) {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
 
     if (actionCase == null) {
-      log.with("action", action).info("Case no longer exists for action");
-      ActionState newActionState =
-          actionSvcStateTransitionManager.transition(
-              action.getState(), ActionEvent.REQUEST_CANCELLED);
-      action.setState(newActionState);
-      actionRepo.saveAndFlush(action);
+      try {
+        log.with("action", action).info("Case no longer exists for action");
+        ActionState newActionState =
+            actionSvcStateTransitionManager.transition(
+                action.getState(), ActionEvent.REQUEST_CANCELLED);
+        action.setState(newActionState);
+        actionRepo.saveAndFlush(action);
+      } catch (Exception ex) {
+        throw new IllegalStateException();
+      }
     }
 
     SampleUnitDTO.SampleUnitType caseType =
