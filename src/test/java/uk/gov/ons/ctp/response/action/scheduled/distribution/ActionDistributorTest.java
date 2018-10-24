@@ -5,6 +5,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.config.ActionDistribution;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.DataGrid;
@@ -33,6 +35,8 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -59,6 +63,8 @@ public class ActionDistributorTest {
   @Mock private ActionRepository actionRepo;
 
   @Mock private ActionTypeRepository actionTypeRepo;
+
+  @Mock private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
 
   @Mock(name = "businessActionProcessingService")
   private ActionProcessingService businessActionProcessingService;
@@ -158,6 +164,22 @@ public class ActionDistributorTest {
     actionDistributor.distribute();
 
     // Then
+    verify(lock, times(1)).unlock();
+  }
+
+  @Test
+  public void testNoCaseWithSampleUnitTypeB() throws Exception {
+    // Given setUp
+    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(actionCaseRepo.findById(any())).thenReturn(null);
+
+    // When
+    actionDistributor.distribute();
+
+    // Then
+    verify(businessActionProcessingService, never()).processActionRequests(any());
+    verify(businessActionProcessingService, never()).processActionCancel(any());
+
     verify(lock, times(1)).unlock();
   }
 }
