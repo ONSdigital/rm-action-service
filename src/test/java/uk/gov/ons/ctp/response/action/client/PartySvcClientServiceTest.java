@@ -58,7 +58,7 @@ public class PartySvcClientServiceTest {
   @Test
   public void testGetParty() {
     PartySvc partySvc = new PartySvc();
-    partySvc.getPartyBySampleUnitTypeAndIdPath();
+    partySvc.setPartyBySampleUnitTypeAndIdPath("test:path");
 
     given(appConfig.getPartySvc()).willReturn(partySvc);
 
@@ -69,7 +69,7 @@ public class PartySvcClientServiceTest {
             .build();
 
     HttpEntity httpEntity = new HttpEntity(null, null);
-    given(restUtility.createUriComponents(any(String.class), any(), any(), any()))
+    given(restUtility.createUriComponents(any(String.class), any(), any()))
         .willReturn(uriComponents);
     given(restUtility.createHttpEntity(isNull())).willReturn(httpEntity);
 
@@ -104,7 +104,7 @@ public class PartySvcClientServiceTest {
             .build();
 
     HttpEntity httpEntity = new HttpEntity(null, null);
-    given(restUtility.createUriComponents(any(String.class), any(), any(), any()))
+    given(restUtility.createUriComponents(any(String.class), any(), any()))
         .willReturn(uriComponents);
     given(restUtility.createHttpEntity(isNull())).willReturn(httpEntity);
 
