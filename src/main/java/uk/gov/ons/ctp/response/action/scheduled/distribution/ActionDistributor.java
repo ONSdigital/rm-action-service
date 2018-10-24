@@ -129,16 +129,18 @@ class ActionDistributor {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
 
     if (actionCase == null) {
+      log.with("action", action).info("Case no longer exists for action");
+      ActionState newActionState;
       try {
-        log.with("action", action).info("Case no longer exists for action");
-        ActionState newActionState =
+        newActionState =
             actionSvcStateTransitionManager.transition(
                 action.getState(), ActionEvent.REQUEST_CANCELLED);
-        action.setState(newActionState);
-        actionRepo.saveAndFlush(action);
-      } catch (Exception ex) {
+      } catch (CTPException ex) {
         throw new IllegalStateException();
       }
+
+      action.setState(newActionState);
+      actionRepo.saveAndFlush(action);
     }
 
     SampleUnitDTO.SampleUnitType caseType =
