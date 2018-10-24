@@ -5,27 +5,33 @@ import com.godaddy.logging.LoggerFactory;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
+import uk.gov.ons.ctp.response.action.service.decorator.ActionAndActionPlan;
+import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.decorator.CaseAndCaseEvent;
+import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
+import uk.gov.ons.ctp.response.action.service.decorator.SampleAttributes;
+import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 
 @Service
-public class SocialActionProcessingService {
+@Qualifier("social")
+public class SocialActionProcessingService extends ActionProcessingService {
 
   private static final Logger log = LoggerFactory.getLogger(SocialActionProcessingService.class);
 
   public static final String CANCELLATION_REASON = "Case closed";
   public static final String SOCIAL_ICF = "SOCIALICF";
 
-  private ActionCaseRepository actionCaseRepo;
   private ActionRepository actionRepository;
   private ActionTypeRepository actionTypeRepository;
 
@@ -33,17 +39,27 @@ public class SocialActionProcessingService {
 
   @Autowired private CaseSvcClientService caseSvcClientService;
 
+  @Autowired
+  @Qualifier("social")
+  private ActionRequestContextFactory decoratorContextFactory;
+
+  private static final ActionRequestDecorator[] SOCIAL_DECORATORS = {
+    new ActionAndActionPlan(),
+    new CaseAndCaseEvent(),
+    new CollectionExerciseAndSurvey(),
+    new SampleAttributes()
+  };
+
   public SocialActionProcessingService(
       ActionCaseRepository actionCaseRepo,
       ActionRepository actionRepository,
       ActionTypeRepository actionTypeRespository) {
-    this.actionCaseRepo = actionCaseRepo;
+    super(SOCIAL_DECORATORS);
     this.actionRepository = actionRepository;
     this.actionTypeRepository = actionTypeRespository;
   }
 
-  public boolean cancelFieldWorkReminder(UUID caseId) {
-    ActionCase actionCase = actionCaseRepo.findById(caseId);
+  public void cancelFieldWorkReminder(UUID caseId) {
     List<Action> actions = actionRepository.findByCaseId(caseId);
     ActionCancel actionCancel = null;
     for (Action action : actions) {
@@ -54,7 +70,6 @@ public class SocialActionProcessingService {
     }
     ActionType actionType = actionTypeRepository.findByName(SOCIAL_ICF);
     actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionCancel);
-    return true;
   }
 
   private ActionCancel prepareActionCancel(Action action) {
@@ -66,5 +81,10 @@ public class SocialActionProcessingService {
     actionCancel.setResponseRequired(true);
     actionCancel.setReason(CANCELLATION_REASON);
     return actionCancel;
+  }
+
+  @Override
+  public ActionRequestContextFactory getActionRequestDecoratorContextFactory() {
+    return decoratorContextFactory;
   }
 }
