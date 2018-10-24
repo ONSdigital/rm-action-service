@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +22,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
@@ -49,8 +49,8 @@ class ActionDistributor {
   private ActionProcessingService businessActionProcessingService;
   private ActionProcessingService socialActionProcessingService;
 
-  @Autowired
-  private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
+  private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager;
 
   public ActionDistributor(
       AppConfig appConfig,
@@ -60,7 +60,8 @@ class ActionDistributor {
       ActionTypeRepository actionTypeRepo,
       CaseSvcClientService caseSvcClientService,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
-      @Qualifier("social") ActionProcessingService socialActionProcessingService) {
+      @Qualifier("social") ActionProcessingService socialActionProcessingService,
+      StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.appConfig = appConfig;
     this.redissonClient = redissonClient;
     this.actionRepo = actionRepo;
@@ -69,6 +70,7 @@ class ActionDistributor {
     this.caseSvcClientService = caseSvcClientService;
     this.businessActionProcessingService = businessActionProcessingService;
     this.socialActionProcessingService = socialActionProcessingService;
+    this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }
 
   /**
@@ -136,7 +138,7 @@ class ActionDistributor {
             actionSvcStateTransitionManager.transition(
                 action.getState(), ActionEvent.REQUEST_CANCELLED);
       } catch (CTPException ex) {
-        throw new IllegalStateException();
+        throw new IllegalStateException(ex);
       }
 
       action.setState(newActionState);
