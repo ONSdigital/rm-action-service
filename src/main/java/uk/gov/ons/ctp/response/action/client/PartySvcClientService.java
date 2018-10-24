@@ -51,10 +51,7 @@ public class PartySvcClientService {
     log.with("sample_unit_type", sampleUnitType).with("party_id", partyId).debug("Getting party");
     final UriComponents uriComponents =
         restUtility.createUriComponents(
-            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-            null,
-            sampleUnitType,
-            partyId);
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), null, partyId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
@@ -84,10 +81,7 @@ public class PartySvcClientService {
 
     final UriComponents uriComponents =
         restUtility.createUriComponents(
-            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(),
-            queryParams,
-            sampleUnitType,
-            partyId);
+            appConfig.getPartySvc().getPartyBySampleUnitTypeAndIdPath(), queryParams, partyId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
