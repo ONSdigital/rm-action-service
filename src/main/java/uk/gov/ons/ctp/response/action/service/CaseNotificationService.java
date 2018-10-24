@@ -38,15 +38,19 @@ public class CaseNotificationService {
 
   private final CollectionExerciseClientService collectionSvcClientService;
 
+  private final SocialActionProcessingService socialActionProcessingService;
+
   public CaseNotificationService(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
       ActionService actionService,
-      CollectionExerciseClientService collectionSvcClientService) {
+      CollectionExerciseClientService collectionSvcClientService,
+      SocialActionProcessingService socialActionProcessingService) {
     this.actionCaseRepo = actionCaseRepo;
     this.actionPlanRepo = actionPlanRepo;
     this.actionService = actionService;
     this.collectionSvcClientService = collectionSvcClientService;
+    this.socialActionProcessingService = socialActionProcessingService;
   }
 
   @Transactional(
@@ -71,6 +75,7 @@ public class CaseNotificationService {
       case DISABLED:
       case DEACTIVATED:
         actionService.cancelActions(caseId);
+        socialActionProcessingService.cancelFieldWorkReminder(caseId);
         deleteActionCase(caseId);
         break;
 

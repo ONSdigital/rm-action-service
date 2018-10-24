@@ -38,6 +38,7 @@ public class CaseNotificationServiceTest {
 
   @Mock private ActionService actionService;
   @Mock private CollectionExerciseClientService collectionSvcClientServiceImpl;
+  @Mock private SocialActionProcessingService socialActionProcessingServiceImpl;
 
   @InjectMocks private CaseNotificationService caseNotificationService;
 
