@@ -36,6 +36,8 @@ class ActionDistributor {
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
+  private static final Set<ActionState> ACTION_STATES_TO_GET =
+      Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
   private AppConfig appConfig;
   private RedissonClient redissonClient;
@@ -88,10 +90,8 @@ class ActionDistributor {
     RLock lock = redissonClient.getFairLock(LOCK_PREFIX + actionTypeName);
     try {
       if (lock.tryLock(appConfig.getDataGrid().getLockTimeToLiveSeconds(), TimeUnit.SECONDS)) {
-        try {
-          Set<ActionState> actionStates =
-              Sets.newHashSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
-          Stream<Action> actions = actionRepo.findByActionTypeAndStateIn(actionType, actionStates);
+        try (Stream<Action> actions =
+            actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET)) {
           actions.forEach(this::processAction);
         } finally {
           // Always unlock the distributed lock
