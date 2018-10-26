@@ -75,7 +75,12 @@ public class CaseNotificationService {
       case DISABLED:
       case DEACTIVATED:
         actionService.cancelActions(caseId);
-        socialActionProcessingService.cancelFieldWorkReminder(caseId);
+        ActionCase ac = actionCaseRepo.findById(caseId);
+        if (ac != null
+            && ac.getSampleUnitType() != null
+            && ac.getSampleUnitType().equalsIgnoreCase("H")) {
+          socialActionProcessingService.cancelFieldWorkReminder(caseId);
+        }
         deleteActionCase(caseId);
         break;
 
