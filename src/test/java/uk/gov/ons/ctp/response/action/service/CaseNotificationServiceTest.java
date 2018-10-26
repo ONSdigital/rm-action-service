@@ -197,7 +197,8 @@ public class CaseNotificationServiceTest {
 
     // Then
     verify(actionService, times(1)).cancelActions(UUID.fromString(DUMMY_UUID));
-    verify(socialActionProcessingServiceImpl, times(1)).cancelFieldWorkReminder(UUID.fromString(DUMMY_UUID));
+    verify(socialActionProcessingServiceImpl, times(1))
+        .cancelFieldWorkReminder(UUID.fromString(DUMMY_UUID));
     final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
     verify(actionCaseRepo, times(1)).delete(actionCase.capture());
     verify(actionCaseRepo, times(1)).flush();
