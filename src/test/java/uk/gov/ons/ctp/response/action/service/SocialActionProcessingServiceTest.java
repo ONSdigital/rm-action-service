@@ -38,8 +38,7 @@ public class SocialActionProcessingServiceTest {
 
   @Mock ActionRequestContextFactory decoratorContextFactory;
 
-  @InjectMocks
-  private SocialActionProcessingService socialActionProcessingService;
+  @InjectMocks private SocialActionProcessingService socialActionProcessingService;
 
   private static final UUID ACTION_CASEID = UUID.fromString("7bc5d41b-0549-40b3-ba76-42f6d4cf3991");
 
@@ -62,14 +61,15 @@ public class SocialActionProcessingServiceTest {
   @Test
   public void testCancelFieldWorkerReminder() throws Exception {
     final List<Action> actions = FixtureHelper.loadClassFixtures(Action[].class);
-    final List<CaseDetailsDTO> caseDetails = FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
+    final List<CaseDetailsDTO> caseDetails =
+        FixtureHelper.loadClassFixtures(CaseDetailsDTO[].class);
     CaseDetailsDTO caseDetail = caseDetails.get(0);
     when(actionRepository.findByCaseId(ACTION_CASEID)).thenReturn(actions);
     when(actionTypeRepository.findByName(SOCIAL_ICF)).thenReturn(actionType);
     when(caseSvcClientService.getCase(ACTION_CASEID)).thenReturn(caseDetail);
     socialActionProcessingService.cancelFieldWorkReminder(caseDetail.getId());
     verify(actionInstructionPublisher, times(1))
-      .sendActionInstruction(eq(FIELD), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+        .sendActionInstruction(
+            eq(FIELD), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }
-
 }
