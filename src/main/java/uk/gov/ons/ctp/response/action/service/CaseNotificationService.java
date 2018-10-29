@@ -31,6 +31,8 @@ public class CaseNotificationService {
       "Invalid notification type, notification_type=%s";
   private static final int TRANSACTION_TIMEOUT = 30;
 
+  private static final String SOCIAL_CASE_TYPE = "H";
+
   private final ActionCaseRepository actionCaseRepo;
   private final ActionPlanRepository actionPlanRepo;
 
@@ -78,7 +80,7 @@ public class CaseNotificationService {
         ActionCase ac = actionCaseRepo.findById(caseId);
         if (ac != null
             && ac.getSampleUnitType() != null
-            && ac.getSampleUnitType().equalsIgnoreCase("H")) {
+            && ac.getSampleUnitType().equalsIgnoreCase(SOCIAL_CASE_TYPE)) {
           socialActionProcessingService.cancelFieldWorkReminder(caseId);
         }
         deleteActionCase(caseId);
