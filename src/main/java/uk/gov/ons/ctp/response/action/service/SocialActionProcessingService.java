@@ -60,6 +60,7 @@ public class SocialActionProcessingService extends ActionProcessingService {
   }
 
   public void cancelFieldWorkReminder(UUID caseId) {
+    log.with(caseId).info("Cancelling social field work reminder.");
     List<Action> actions = actionRepository.findByCaseId(caseId);
     ActionCancel actionCancel = null;
     for (Action action : actions) {
