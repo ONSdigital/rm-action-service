@@ -77,7 +77,7 @@ public class CaseNotificationService {
       case DISABLED:
       case DEACTIVATED:
         actionService.cancelActions(caseId);
-        if (notification != null & notification.getSampleUnitType() != null
+        if (notification != null && notification.getSampleUnitType() != null
             && notification.getSampleUnitType().equalsIgnoreCase(SOCIAL_CASE_TYPE)) {
           socialActionProcessingService.cancelFieldWorkReminder(caseId);
         }
