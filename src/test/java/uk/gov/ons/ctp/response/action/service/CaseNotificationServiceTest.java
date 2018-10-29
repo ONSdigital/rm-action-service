@@ -193,6 +193,7 @@ public class CaseNotificationServiceTest {
 
     // When
     caseNotification = createCaseNotification(NotificationType.DEACTIVATED);
+    caseNotification.setSampleUnitType("H");
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then
