@@ -60,13 +60,14 @@ public class SocialActionProcessingService extends ActionProcessingService {
   }
 
   public void cancelFieldWorkReminder(UUID caseId) {
-    log.with(caseId).info("Cancelling social field work reminder.");
+    log.with("case ID", caseId).info("Cancelling social field work reminder.");
     List<Action> actions = actionRepository.findByCaseId(caseId);
     ActionCancel actionCancel = null;
     for (Action action : actions) {
       ActionType at = action.getActionType();
       if (at.getName().equals(SOCIAL_ICF)) {
         actionCancel = prepareActionCancel(action);
+        log.with("actionCancel", actionCancel).info("Cancellation message.");
       }
     }
     ActionType actionType = actionTypeRepository.findByName(SOCIAL_ICF);
