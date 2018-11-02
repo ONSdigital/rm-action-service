@@ -68,10 +68,10 @@ public class SocialActionProcessingService extends ActionProcessingService {
       if (at.getName().equals(SOCIAL_ICF)) {
         actionCancel = prepareActionCancel(action);
         log.with("actionCancel", actionCancel).info("Cancellation message.");
+        ActionType actionType = actionTypeRepository.findByName(SOCIAL_ICF);
+        actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionCancel);
       }
     }
-    ActionType actionType = actionTypeRepository.findByName(SOCIAL_ICF);
-    actionInstructionPublisher.sendActionInstruction(actionType.getHandler(), actionCancel);
   }
 
   private ActionCancel prepareActionCancel(Action action) {
