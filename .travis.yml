@@ -8,6 +8,8 @@ jdk: openjdk8
 
 before_install:
   - echo "Before install"
+  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
   - "cp .maven.settings.xml $HOME/.m2/settings.xml"
 
 script:
