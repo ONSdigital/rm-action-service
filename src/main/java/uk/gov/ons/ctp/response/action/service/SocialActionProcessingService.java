@@ -20,6 +20,7 @@ import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.decorator.CaseAndCaseEvent;
 import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
 import uk.gov.ons.ctp.response.action.service.decorator.SampleAttributes;
+import uk.gov.ons.ctp.response.action.service.decorator.SampleUnitRef;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 
@@ -47,7 +48,8 @@ public class SocialActionProcessingService extends ActionProcessingService {
     new ActionAndActionPlan(),
     new CaseAndCaseEvent(),
     new CollectionExerciseAndSurvey(),
-    new SampleAttributes()
+    new SampleAttributes(),
+    new SampleUnitRef()
   };
 
   public SocialActionProcessingService(

@@ -8,7 +8,7 @@ import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.decorator.CaseAndCaseEvent;
 import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
 import uk.gov.ons.ctp.response.action.service.decorator.PartyAndContact;
-import uk.gov.ons.ctp.response.action.service.decorator.SampleUnitRefAddress;
+import uk.gov.ons.ctp.response.action.service.decorator.SampleUnitRef;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 
 @Service
@@ -20,7 +20,7 @@ public class BusinessActionProcessingService extends ActionProcessingService {
     new CaseAndCaseEvent(),
     new CollectionExerciseAndSurvey(),
     new PartyAndContact(),
-    new SampleUnitRefAddress()
+    new SampleUnitRef()
   };
 
   @Autowired

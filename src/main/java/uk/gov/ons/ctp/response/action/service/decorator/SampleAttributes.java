@@ -25,7 +25,6 @@ public class SampleAttributes implements ActionRequestDecorator {
     actionAddress.setCountry(sampleAttribs.get("COUNTRY"));
     actionAddress.setOrganisationName(sampleAttribs.get("ORGANISATION_NAME"));
 
-    actionRequest.setSampleUnitRef(context.getCaseDetails().getCaseGroup().getSampleUnitRef());
     actionRequest.setAddress(actionAddress);
   }
 }
