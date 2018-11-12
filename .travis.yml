@@ -25,9 +25,7 @@ after_success:
     fi
   - echo "TRAVIS_EVENT_TYPE=$TRAVIS_EVENT_TYPE"
   - if [ "$TRAVIS_EVENT_TYPE" == "pull_request" ]; then
-    echo "DOCKER_USERNAME=$DOCKER_USERNAME";
-    echo "DOCKER_PASSWORD=$DOCKER_PASSWORD";
-    docker login -u "DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push sdcplatform/actionsvc:$BRANCH;
     fi
   - bash <(curl -s https://codecov.io/bash)
