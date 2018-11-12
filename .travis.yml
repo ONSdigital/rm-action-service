@@ -28,6 +28,7 @@ after_success:
     echo "In Push"
     docker login -u "DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push sdcplatform/actionsvc:$BRANCH
+    fi
   - bash <(curl -s https://codecov.io/bash)
 
 notifications:
