@@ -204,8 +204,8 @@ public class ActionService {
     updatePlanAndJob(actionPlan, actionPlanJob);
   }
 
-  private void createActionsForCase(ActionCase actionCase, List<ActionRule> actionRules,
-    List<ActionType> types) {
+  private void createActionsForCase(
+      ActionCase actionCase, List<ActionRule> actionRules, List<ActionType> types) {
     if (isActionPlanLive(actionCase)) {
       actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule, types));
     }
@@ -217,8 +217,8 @@ public class ActionService {
         && actionCase.getActionPlanEndDate().after(currentTime);
   }
 
-  private void createActionForCaseAndRule(ActionCase actionCase, ActionRule actionRule,
-    List<ActionType> types) {
+  private void createActionForCaseAndRule(
+      ActionCase actionCase, ActionRule actionRule, List<ActionType> types) {
     if (hasRuleTriggered(actionRule)) {
       createAction(actionCase, actionRule, types);
     }
@@ -236,8 +236,7 @@ public class ActionService {
     return triggerDateTime.before(currentTime) && triggerDateTime.after(dayBefore);
   }
 
-  private void createAction(ActionCase actionCase, ActionRule actionRule,
-    List<ActionType> types) {
+  private void createAction(ActionCase actionCase, ActionRule actionRule, List<ActionType> types) {
 
     // Only create action if it doesn't already exist
     if (actionRepo.existsByCaseIdAndActionRuleFK(
@@ -250,10 +249,12 @@ public class ActionService {
         .info("Creating action");
 
     // OK this is a teeny bit slow, but we're going to deprecate this code soon with a sproc
-    ActionType actionType = types.stream()
-      .filter(type -> actionRule.getActionTypeFK().equals(type.getActionTypePK()))
-      .findAny()
-      .orElse(null);
+    ActionType actionType =
+        types
+            .stream()
+            .filter(type -> actionRule.getActionTypeFK().equals(type.getActionTypePK()))
+            .findAny()
+            .orElse(null);
 
     Action newAction = new Action();
     newAction.setId(UUID.randomUUID());
