@@ -245,9 +245,10 @@ public class ActionServiceTest {
     actionService.createScheduledActions(actionPlan, actionPlanJob);
 
     // Then
-    verify(actionRepo, times(1)).saveAndFlush(any());
+    verify(actionRepo, times(1)).save(any(Action.class));
     verify(actionPlanRepo, times(1)).saveAndFlush(any());
     verify(actionPlanJobRepo, times(1)).saveAndFlush(any());
+    verify(actionRepo, times(1)).flush();
   }
 
   @Test
