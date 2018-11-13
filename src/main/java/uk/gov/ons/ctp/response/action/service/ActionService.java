@@ -35,6 +35,7 @@ import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 
 /**
  * An ActionService implementation which encapsulates all business logic operating on the Action
@@ -190,9 +191,12 @@ public class ActionService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
-    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
-    List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
+  public void createScheduledActions(Integer actionPlanPk) {
+    // Action plan job has to be created before actions
+    ActionPlanJob actionPlanJob = createActionPlanJob(actionPlanPk);
+
+    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlanPk);
+    List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlanPk);
     List<ActionType> types = actionTypeRepo.findAll();
 
     // For each case/rule pair create an action
@@ -201,7 +205,7 @@ public class ActionService {
     // Now flush all the newly created actions to the DB
     actionRepo.flush();
 
-    updatePlanAndJob(actionPlan, actionPlanJob);
+    updatePlanAndJob(actionPlanJob);
   }
 
   private void createActionsForCase(
@@ -273,7 +277,10 @@ public class ActionService {
     actionRepo.save(newAction);
   }
 
-  private void updatePlanAndJob(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
+  private void updatePlanAndJob(ActionPlanJob actionPlanJob) {
+    ActionPlan actionPlan =
+        actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanJobPK());
+
     final Timestamp currentTime = nowUTC();
     actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
@@ -333,5 +340,19 @@ public class ActionService {
       actionToReRun.setState(nextState);
       actionRepo.saveAndFlush(actionToReRun);
     }
+  }
+
+  private ActionPlanJob createActionPlanJob(Integer actionPlanPk) {
+    ActionPlanJob actionPlanJob = new ActionPlanJob();
+    actionPlanJob.setActionPlanFK(actionPlanPk);
+    actionPlanJob.setCreatedBy(SYSTEM);
+    actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
+    final Timestamp now = nowUTC();
+    actionPlanJob.setCreatedDateTime(now);
+    actionPlanJob.setUpdatedDateTime(now);
+    actionPlanJob.setId(UUID.randomUUID());
+    ActionPlanJob createdJob = actionPlanJobRepository.save(actionPlanJob);
+    log.with("action_plan_job", createdJob).debug("Created action plan job");
+    return createdJob;
   }
 }

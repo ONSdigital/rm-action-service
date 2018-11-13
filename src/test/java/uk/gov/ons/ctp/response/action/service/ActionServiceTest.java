@@ -238,11 +238,11 @@ public class ActionServiceTest {
     when(actionRuleRepo.findByActionPlanFK(any()))
         .thenReturn(Collections.singletonList(actionRules.get(0)));
     when(actionTypeRepo.findByActionTypePK(any())).thenReturn(actionTypes.get(0));
+    when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJob);
+    when(actionPlanRepo.findByActionPlanPK(any())).thenReturn(new ActionPlan());
 
     // When
-    ActionPlan actionPlan = new ActionPlan();
-    actionPlan.setActionPlanPK(1);
-    actionService.createScheduledActions(actionPlan, actionPlanJob);
+    actionService.createScheduledActions(1);
 
     // Then
     verify(actionRepo, times(1)).save(any(Action.class));
