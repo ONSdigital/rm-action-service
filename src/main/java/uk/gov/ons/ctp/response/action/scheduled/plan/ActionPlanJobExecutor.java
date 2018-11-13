@@ -71,6 +71,9 @@ public class ActionPlanJobExecutor {
     try {
       // Action plan job has to be created before actions
       ActionPlanJob job = createActionPlanJob(actionPlan);
+
+      // This transaction has to be committed before the lock is released, or else duplicate
+      // actions will be created
       actionSvc.createScheduledActions(actionPlan, job);
     } finally {
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
