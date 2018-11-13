@@ -279,7 +279,7 @@ public class ActionService {
 
   private void updatePlanAndJob(ActionPlanJob actionPlanJob) {
     ActionPlan actionPlan =
-        actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanJobPK());
+        actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanFK());
 
     final Timestamp currentTime = nowUTC();
     actionPlanJob.complete(currentTime);
