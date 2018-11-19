@@ -16,9 +16,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.common.distributed.DistributedLockManager;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 
@@ -33,23 +31,19 @@ public class ActionPlanJobExecutorTest {
 
   @Mock private ActionCaseRepository actionCaseRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
-  @Mock private ActionPlanJobRepository actionPlanJobRepo;
 
   private List<ActionPlan> actionPlans;
-  private List<ActionPlanJob> actionPlanJobs;
 
   /** Initialises Mockito */
   @Before
   public void setUp() throws Exception {
     actionPlans = FixtureHelper.loadClassFixtures(ActionPlan[].class);
-    actionPlanJobs = FixtureHelper.loadClassFixtures(ActionPlanJob[].class);
 
     MockitoAnnotations.initMocks(this);
 
     when(actionPlanRepo.findAll()).thenReturn(actionPlans);
     when(actionCaseRepo.existsByActionPlanFK(any(Integer.class))).thenReturn(true);
     when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
-    when(actionPlanJobRepo.save(any(ActionPlanJob.class))).thenReturn(actionPlanJobs.get(0));
   }
 
   @Test
@@ -61,8 +55,7 @@ public class ActionPlanJobExecutorTest {
     actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
 
     // Then
-    verify(actionPlanJobRepo, times(2)).save(any(ActionPlanJob.class));
-    verify(actionService, times(2)).createScheduledActions(any(), any());
+    verify(actionService, times(2)).createScheduledActions(any());
     verify(actionPlanExecutionLockManager, times(2)).unlock(actionPlans.get(0).getName());
   }
 
@@ -76,8 +69,7 @@ public class ActionPlanJobExecutorTest {
     actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
 
     // Then
-    verify(actionPlanJobRepo, never()).save(any(ActionPlanJob.class));
-    verify(actionService, never()).createScheduledActions(any(), any());
+    verify(actionService, never()).createScheduledActions(any());
     verify(actionPlanExecutionLockManager, never()).unlock(actionPlans.get(0).getName());
   }
 
@@ -91,8 +83,7 @@ public class ActionPlanJobExecutorTest {
     actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
 
     // Then
-    verify(actionPlanJobRepo, never()).save(any(ActionPlanJob.class));
-    verify(actionService, never()).createScheduledActions(any(), any());
+    verify(actionService, never()).createScheduledActions(any());
     verify(actionPlanExecutionLockManager, never()).unlock(actionPlans.get(0).getName());
   }
 }

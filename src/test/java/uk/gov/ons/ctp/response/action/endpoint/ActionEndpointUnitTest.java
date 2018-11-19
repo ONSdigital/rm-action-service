@@ -22,7 +22,6 @@ import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAd
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.ACTION_NOT_UPDATED;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint.CASE_NOT_FOUND;
-import static uk.gov.ons.ctp.response.action.scheduled.plan.ActionPlanJobExecutor.CREATED_BY_SYSTEM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,6 +107,7 @@ public final class ActionEndpointUnitTest {
   private static final String OUR_EXCEPTION_MESSAGE = "this is what we throw";
   private static final String UPDATED_OUTCOME = "REQUEST_COMPLETED";
   private static final String UPDATED_SITUATION = "new situation";
+  private static final String CREATED_BY_SYSTEM = "SYSTEM";
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
   private static final String ACTION_UPDATE_VALID_JSON =
