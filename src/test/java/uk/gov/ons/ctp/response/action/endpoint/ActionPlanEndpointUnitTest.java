@@ -19,7 +19,6 @@ import static uk.gov.ons.ctp.common.MvcHelper.putJson;
 import static uk.gov.ons.ctp.common.error.RestExceptionHandler.INVALID_JSON;
 import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
-import static uk.gov.ons.ctp.response.action.scheduled.plan.ActionPlanJobExecutor.CREATED_BY_SYSTEM;
 
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +56,8 @@ public class ActionPlanEndpointUnitTest {
       UUID.fromString("0009e978-0932-463b-a2a1-b45cb3ffcb2a");
   private static final UUID ACTION_PLAN_3_ID =
       UUID.fromString("0009e978-0932-a2a1-463b-b45cb3ffcb2a");
+
+  private static final String CREATED_BY_SYSTEM = "SYSTEM";
 
   private static final String ACTION_PLAN_1_NAME = "C1O331D10E";
   private static final String ACTION_PLAN_2_NAME = "C1O331D10F";

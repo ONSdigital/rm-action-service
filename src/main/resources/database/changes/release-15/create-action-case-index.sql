@@ -1,0 +1,1 @@
+CREATE INDEX action_caseid_index ON action.action USING btree (caseid);

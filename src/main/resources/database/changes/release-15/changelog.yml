@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+- changeSet:
+    id: 15-0
+    author: Nick Grant
+    changes:
+    - sqlFile:
+        comment: Add an index on caseid to prevent table-scanning when checking for existing actions
+        path: create-action-case-index.sql
+        relativeToChangelogFile: true
+        splitStatements: false

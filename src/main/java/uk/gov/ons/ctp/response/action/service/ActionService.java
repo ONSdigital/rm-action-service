@@ -35,6 +35,7 @@ import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
+import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 
 /**
  * An ActionService implementation which encapsulates all business logic operating on the Action
@@ -189,19 +190,28 @@ public class ActionService {
     return actionRepo.saveAndFlush(action);
   }
 
-  @Transactional
-  public void createScheduledActions(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
-    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
-    List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlan.getActionPlanPK());
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void createScheduledActions(Integer actionPlanPk) {
+    // Action plan job has to be created before actions
+    ActionPlanJob actionPlanJob = createActionPlanJob(actionPlanPk);
+
+    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlanPk);
+    List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlanPk);
+    List<ActionType> types = actionTypeRepo.findAll();
 
     // For each case/rule pair create an action
-    cases.forEach(caze -> createActionsForCase(caze, rules));
-    updatePlanAndJob(actionPlan, actionPlanJob);
+    cases.forEach(caze -> createActionsForCase(caze, rules, types));
+
+    // Now flush all the newly created actions to the DB
+    actionRepo.flush();
+
+    updatePlanAndJob(actionPlanJob);
   }
 
-  private void createActionsForCase(ActionCase actionCase, List<ActionRule> actionRules) {
+  private void createActionsForCase(
+      ActionCase actionCase, List<ActionRule> actionRules, List<ActionType> types) {
     if (isActionPlanLive(actionCase)) {
-      actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule));
+      actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule, types));
     }
   }
 
@@ -211,9 +221,10 @@ public class ActionService {
         && actionCase.getActionPlanEndDate().after(currentTime);
   }
 
-  private void createActionForCaseAndRule(ActionCase actionCase, ActionRule actionRule) {
+  private void createActionForCaseAndRule(
+      ActionCase actionCase, ActionRule actionRule, List<ActionType> types) {
     if (hasRuleTriggered(actionRule)) {
-      createAction(actionCase, actionRule);
+      createAction(actionCase, actionRule, types);
     }
   }
 
@@ -229,7 +240,7 @@ public class ActionService {
     return triggerDateTime.before(currentTime) && triggerDateTime.after(dayBefore);
   }
 
-  private void createAction(ActionCase actionCase, ActionRule actionRule) {
+  private void createAction(ActionCase actionCase, ActionRule actionRule, List<ActionType> types) {
 
     // Only create action if it doesn't already exist
     if (actionRepo.existsByCaseIdAndActionRuleFK(
@@ -240,6 +251,15 @@ public class ActionService {
     log.with("case_id", actionCase.getId().toString())
         .with("action_rule_id", actionRule.getId().toString())
         .info("Creating action");
+
+    // OK this is a teeny bit slow, but we're going to deprecate this code soon with a sproc
+    ActionType actionType =
+        types
+            .stream()
+            .filter(type -> actionRule.getActionTypeFK().equals(type.getActionTypePK()))
+            .findAny()
+            .orElse(null);
+
     Action newAction = new Action();
     newAction.setId(UUID.randomUUID());
     newAction.setCreatedBy(SYSTEM);
@@ -251,12 +271,16 @@ public class ActionService {
     newAction.setActionPlanFK(actionRule.getActionPlanFK());
     newAction.setActionRuleFK(actionRule.getActionRulePK());
     newAction.setPriority(actionRule.getPriority());
-    newAction.setActionType(actionTypeRepo.findByActionTypePK(actionRule.getActionTypeFK()));
+    newAction.setActionType(actionType);
 
-    actionRepo.saveAndFlush(newAction);
+    // Don't flush, because it will massively affect performance... do it once all actions created
+    actionRepo.save(newAction);
   }
 
-  private void updatePlanAndJob(ActionPlan actionPlan, ActionPlanJob actionPlanJob) {
+  private void updatePlanAndJob(ActionPlanJob actionPlanJob) {
+    ActionPlan actionPlan =
+        actionPlanRepository.findByActionPlanPK(actionPlanJob.getActionPlanFK());
+
     final Timestamp currentTime = nowUTC();
     actionPlanJob.complete(currentTime);
     actionPlan.setLastRunDateTime(currentTime);
@@ -316,5 +340,19 @@ public class ActionService {
       actionToReRun.setState(nextState);
       actionRepo.saveAndFlush(actionToReRun);
     }
+  }
+
+  private ActionPlanJob createActionPlanJob(Integer actionPlanPk) {
+    ActionPlanJob actionPlanJob = new ActionPlanJob();
+    actionPlanJob.setActionPlanFK(actionPlanPk);
+    actionPlanJob.setCreatedBy(SYSTEM);
+    actionPlanJob.setState(ActionPlanJobDTO.ActionPlanJobState.SUBMITTED);
+    final Timestamp now = nowUTC();
+    actionPlanJob.setCreatedDateTime(now);
+    actionPlanJob.setUpdatedDateTime(now);
+    actionPlanJob.setId(UUID.randomUUID());
+    ActionPlanJob createdJob = actionPlanJobRepository.save(actionPlanJob);
+    log.with("action_plan_job", createdJob).debug("Created action plan job");
+    return createdJob;
   }
 }
