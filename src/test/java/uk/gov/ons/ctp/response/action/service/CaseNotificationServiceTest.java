@@ -38,6 +38,7 @@ public class CaseNotificationServiceTest {
 
   @Mock private ActionService actionService;
   @Mock private CollectionExerciseClientService collectionSvcClientServiceImpl;
+  @Mock private SocialActionProcessingService socialActionProcessingServiceImpl;
 
   @InjectMocks private CaseNotificationService caseNotificationService;
 
@@ -177,6 +178,28 @@ public class CaseNotificationServiceTest {
     // Then
     verify(actionService, times(1)).cancelActions(UUID.fromString(DUMMY_UUID));
 
+    final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
+    verify(actionCaseRepo, times(1)).delete(actionCase.capture());
+    verify(actionCaseRepo, times(1)).flush();
+  }
+
+  @Test
+  public void testSocialAcceptNotificationDeactivated() throws Exception {
+    // Given
+    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
+    ActionCase ac = new ActionCase();
+    ac.setSampleUnitType("H");
+    when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(ac);
+
+    // When
+    caseNotification = createCaseNotification(NotificationType.DEACTIVATED);
+    caseNotification.setSampleUnitType("H");
+    caseNotificationService.acceptNotification(caseNotification);
+
+    // Then
+    verify(actionService, times(1)).cancelActions(UUID.fromString(DUMMY_UUID));
+    verify(socialActionProcessingServiceImpl, times(1))
+        .cancelFieldWorkReminder(UUID.fromString(DUMMY_UUID));
     final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
     verify(actionCaseRepo, times(1)).delete(actionCase.capture());
     verify(actionCaseRepo, times(1)).flush();

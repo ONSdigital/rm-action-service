@@ -13,7 +13,6 @@
 	},
 	"address": 
 	{
-		"sampleUnitRef": "br",
     	"type": "B",
     	"estabType": "B",
     	"locality": "v",
@@ -30,6 +29,7 @@
 	"caseId": "1e82ab27-7d18-4c6f-89d8-766c651f9ca0",
 	"priority": "MEDIUM",
 	"caseRef": "fff",
-	"iac": "235235235235"
+	"iac": "235235235235",
+	"sampleUnitRef": "br"
 }
 ]

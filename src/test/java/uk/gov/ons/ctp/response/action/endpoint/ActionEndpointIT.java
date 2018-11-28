@@ -135,6 +135,10 @@ public class ActionEndpointIT {
     ActionAddress address = actionInstruction.getActionRequest().getAddress();
 
     checkAttributes(address);
+    assertThat(actionInstruction.getActionRequest().getSampleUnitRef())
+        .isEqualTo(
+            sampleAttributes.getAttributes().get("TLA")
+                + sampleAttributes.getAttributes().get("REFERENCE"));
     assertThat(actionInstruction.getActionRequest().getReturnByDate()).isNotEmpty();
   }
 
@@ -183,13 +187,13 @@ public class ActionEndpointIT {
     ActionAddress address = actionRequest.getAddress();
 
     checkAttributes(address);
-  }
-
-  private void checkAttributes(ActionAddress address) {
-    assertThat(address.getSampleUnitRef())
+    assertThat(actionRequest.getSampleUnitRef())
         .isEqualTo(
             sampleAttributes.getAttributes().get("TLA")
                 + sampleAttributes.getAttributes().get("REFERENCE"));
+  }
+
+  private void checkAttributes(ActionAddress address) {
     assertThat(address.getLine1()).isEqualTo(sampleAttributes.getAttributes().get("ADDRESS_LINE1"));
     assertThat(address.getPostcode()).isEqualTo(sampleAttributes.getAttributes().get("POSTCODE"));
     assertThat(address.getTownName()).isEqualTo(sampleAttributes.getAttributes().get("TOWN_NAME"));

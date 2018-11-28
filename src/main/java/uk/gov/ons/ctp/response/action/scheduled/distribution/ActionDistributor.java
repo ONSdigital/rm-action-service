@@ -12,6 +12,8 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -20,6 +22,8 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
@@ -32,6 +36,8 @@ class ActionDistributor {
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
+  private static final Set<ActionState> ACTION_STATES_TO_GET =
+      Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
   private AppConfig appConfig;
   private RedissonClient redissonClient;
@@ -45,6 +51,9 @@ class ActionDistributor {
   private ActionProcessingService businessActionProcessingService;
   private ActionProcessingService socialActionProcessingService;
 
+  private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager;
+
   public ActionDistributor(
       AppConfig appConfig,
       RedissonClient redissonClient,
@@ -53,7 +62,8 @@ class ActionDistributor {
       ActionTypeRepository actionTypeRepo,
       CaseSvcClientService caseSvcClientService,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
-      @Qualifier("social") ActionProcessingService socialActionProcessingService) {
+      @Qualifier("social") ActionProcessingService socialActionProcessingService,
+      StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.appConfig = appConfig;
     this.redissonClient = redissonClient;
     this.actionRepo = actionRepo;
@@ -62,6 +72,7 @@ class ActionDistributor {
     this.caseSvcClientService = caseSvcClientService;
     this.businessActionProcessingService = businessActionProcessingService;
     this.socialActionProcessingService = socialActionProcessingService;
+    this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }
 
   /**
@@ -79,10 +90,8 @@ class ActionDistributor {
     RLock lock = redissonClient.getFairLock(LOCK_PREFIX + actionTypeName);
     try {
       if (lock.tryLock(appConfig.getDataGrid().getLockTimeToLiveSeconds(), TimeUnit.SECONDS)) {
-        try {
-          Set<ActionState> actionStates =
-              Sets.newHashSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
-          Stream<Action> actions = actionRepo.findByActionTypeAndStateIn(actionType, actionStates);
+        try (Stream<Action> actions =
+            actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET)) {
           actions.forEach(this::processAction);
         } finally {
           // Always unlock the distributed lock
@@ -122,8 +131,18 @@ class ActionDistributor {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
 
     if (actionCase == null) {
-      log.with("action", action).error("Cannot find case for action");
-      throw new IllegalStateException();
+      log.with("action", action).info("Case no longer exists for action");
+      ActionState newActionState;
+      try {
+        newActionState =
+            actionSvcStateTransitionManager.transition(
+                action.getState(), ActionEvent.REQUEST_CANCELLED);
+      } catch (CTPException ex) {
+        throw new IllegalStateException(ex);
+      }
+
+      action.setState(newActionState);
+      actionRepo.saveAndFlush(action);
     }
 
     SampleUnitDTO.SampleUnitType caseType =

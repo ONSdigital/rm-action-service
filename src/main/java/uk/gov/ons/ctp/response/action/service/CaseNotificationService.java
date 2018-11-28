@@ -31,6 +31,8 @@ public class CaseNotificationService {
       "Invalid notification type, notification_type=%s";
   private static final int TRANSACTION_TIMEOUT = 30;
 
+  private static final String SOCIAL_CASE_TYPE = "H";
+
   private final ActionCaseRepository actionCaseRepo;
   private final ActionPlanRepository actionPlanRepo;
 
@@ -38,15 +40,19 @@ public class CaseNotificationService {
 
   private final CollectionExerciseClientService collectionSvcClientService;
 
+  private final SocialActionProcessingService socialActionProcessingService;
+
   public CaseNotificationService(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
       ActionService actionService,
-      CollectionExerciseClientService collectionSvcClientService) {
+      CollectionExerciseClientService collectionSvcClientService,
+      SocialActionProcessingService socialActionProcessingService) {
     this.actionCaseRepo = actionCaseRepo;
     this.actionPlanRepo = actionPlanRepo;
     this.actionService = actionService;
     this.collectionSvcClientService = collectionSvcClientService;
+    this.socialActionProcessingService = socialActionProcessingService;
   }
 
   @Transactional(
@@ -71,6 +77,11 @@ public class CaseNotificationService {
       case DISABLED:
       case DEACTIVATED:
         actionService.cancelActions(caseId);
+        if (notification != null
+            && notification.getSampleUnitType() != null
+            && notification.getSampleUnitType().equalsIgnoreCase(SOCIAL_CASE_TYPE)) {
+          socialActionProcessingService.cancelFieldWorkReminder(caseId);
+        }
         deleteActionCase(caseId);
         break;
 
