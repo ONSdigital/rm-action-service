@@ -3,9 +3,14 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import com.google.common.collect.Sets;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -33,6 +38,9 @@ import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
+
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
+  private static final AtomicInteger actionsDistributed = new AtomicInteger();
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
@@ -90,9 +98,33 @@ class ActionDistributor {
     RLock lock = redissonClient.getFairLock(LOCK_PREFIX + actionTypeName);
     try {
       if (lock.tryLock(appConfig.getDataGrid().getLockTimeToLiveSeconds(), TimeUnit.SECONDS)) {
+        List<Callable<Boolean>> callables = new LinkedList<>();
+
         try (Stream<Action> actions =
             actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET)) {
-          actions.forEach(this::processAction);
+
+          actions.forEach(
+              action -> {
+                callables.add(
+                    () -> {
+                      if (actionsDistributed.incrementAndGet() % 100 == 0) {
+                        log.info("Distributed {} actions", actionsDistributed.get());
+                      }
+                      processAction(action);
+                      return Boolean.TRUE;
+                    });
+              });
+
+          try {
+            EXECUTOR_SERVICE.invokeAll(callables);
+          } catch (InterruptedException e) {
+            log.error(
+                "THIS IS ALSO THE WORST THING TO EVER HAPPEN IN THE ENTIRE HISTORY OF EVERYTHING "
+                    + "EVER",
+                e);
+          }
+
+          actionRepo.flush();
         } finally {
           // Always unlock the distributed lock
           lock.unlock();

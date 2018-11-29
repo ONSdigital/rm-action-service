@@ -1,7 +1,7 @@
 package uk.gov.ons.ctp.response.action.domain.repository;
 
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
@@ -16,7 +16,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
    * @param actionPlanFK the action plan
    * @return the list of (open) cases assoc with that plan
    */
-  List<ActionCase> findByActionPlanFK(Integer actionPlanFK);
+  Stream<ActionCase> findByActionPlanFK(Integer actionPlanFK);
 
   /**
    * find a case by its id - the uuid which is not the primary key btw

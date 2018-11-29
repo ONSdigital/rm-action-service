@@ -9,8 +9,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -45,6 +51,8 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 public class ActionService {
   private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
+
   private static final int TRANSACTION_TIMEOUT = 30;
   private static final String SYSTEM = "SYSTEM";
 
@@ -55,6 +63,8 @@ public class ActionService {
   private ActionRuleRepository actionRuleRepo;
   private ActionTypeRepository actionTypeRepo;
   public static final String ACTION_NOT_FOUND = "Action not found for id %s";
+
+  private static final AtomicInteger actionsCreated = new AtomicInteger();
 
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -195,17 +205,37 @@ public class ActionService {
     // Action plan job has to be created before actions
     ActionPlanJob actionPlanJob = createActionPlanJob(actionPlanPk);
 
-    List<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlanPk);
+    doStuffs(actionPlanPk);
+
+    updatePlanAndJob(actionPlanJob);
+  }
+
+  private void doStuffs(Integer actionPlanPk) {
     List<ActionRule> rules = actionRuleRepo.findByActionPlanFK(actionPlanPk);
     List<ActionType> types = actionTypeRepo.findAll();
 
-    // For each case/rule pair create an action
-    cases.forEach(caze -> createActionsForCase(caze, rules, types));
+    List<Callable<Boolean>> callables = new LinkedList<>();
+
+    try (Stream<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlanPk)) {
+      cases.forEach(
+          caze -> {
+            callables.add(
+                () -> {
+                  createActionsForCase(caze, rules, types);
+                  return Boolean.TRUE;
+                });
+          });
+    }
+
+    try {
+      EXECUTOR_SERVICE.invokeAll(callables);
+    } catch (InterruptedException e) {
+      log.error(
+          "THIS IS THE WORST THING TO EVER HAPPEN IN THE ENTIRE HISTORY OF EVERYTHING EVER", e);
+    }
 
     // Now flush all the newly created actions to the DB
     actionRepo.flush();
-
-    updatePlanAndJob(actionPlanJob);
   }
 
   private void createActionsForCase(
@@ -275,6 +305,10 @@ public class ActionService {
 
     // Don't flush, because it will massively affect performance... do it once all actions created
     actionRepo.save(newAction);
+
+    if (actionsCreated.incrementAndGet() % 500 == 0) {
+      log.info("Created {} actions", actionsCreated.get());
+    }
   }
 
   private void updatePlanAndJob(ActionPlanJob actionPlanJob) {

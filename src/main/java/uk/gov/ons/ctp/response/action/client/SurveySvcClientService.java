@@ -6,6 +6,7 @@ import com.godaddy.logging.LoggerFactory;
 import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class SurveySvcClientService {
 
   @Autowired private ObjectMapper objectMapper;
 
+  @Cacheable("surveys")
   @Retryable(
       value = {RestClientException.class},
       maxAttemptsExpression = "#{${retries.maxAttempts}}",

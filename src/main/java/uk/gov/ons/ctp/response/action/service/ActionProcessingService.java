@@ -172,7 +172,7 @@ public abstract class ActionProcessingService {
     action.setState(nextState);
     action.setSituation(null);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
+    actionRepo.save(action);
   }
 
   /**

@@ -36,7 +36,7 @@ public class CollectionExerciseClientService {
 
   @Autowired private ObjectMapper objectMapper;
 
-  @Cacheable("collectionExercise")
+  @Cacheable("collectionexercises")
   @Retryable(
       value = {RestClientException.class},
       maxAttemptsExpression = "#{${retries.maxAttempts}}",

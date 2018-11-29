@@ -233,8 +233,8 @@ public class ActionServiceTest {
   public void testCreateScheduledActions() {
 
     // Given
-    when(actionCaseRepo.findByActionPlanFK(any()))
-        .thenReturn(Collections.singletonList(actionCases.get(0)));
+    //    when(actionCaseRepo.findByActionPlanFK(any()))
+    //        .thenReturn(Collections.singletonList(actionCases.get(0)));
     when(actionRuleRepo.findByActionPlanFK(any()))
         .thenReturn(Collections.singletonList(actionRules.get(0)));
     when(actionTypeRepo.findByActionTypePK(any())).thenReturn(actionTypes.get(0));
