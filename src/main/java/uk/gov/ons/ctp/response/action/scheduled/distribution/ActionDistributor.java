@@ -39,7 +39,7 @@ class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
-  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(50);
   private static final AtomicInteger actionsDistributed = new AtomicInteger();
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";

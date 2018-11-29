@@ -51,7 +51,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 public class ActionService {
   private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
-  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(100);
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(50);
 
   private static final int TRANSACTION_TIMEOUT = 30;
   private static final String SYSTEM = "SYSTEM";

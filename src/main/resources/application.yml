@@ -59,16 +59,16 @@ spring:
     enabled: false
 
   datasource:
+    type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:postgresql://localhost:6432/postgres
     username: actionsvc
     password: actionsvc
     driverClassName: org.postgresql.Driver
     continue-on-error: true
-    tomcat:
-      initial-size: 5
-      max-active: 10
-      max-idle: 5
-      min-idle: 3
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 20
+      auto-commit: false
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -77,6 +77,11 @@ spring:
       hibernate:
         ddl-auto: update
         default_schema: action
+    hibernate:
+      ddl-auto: update
+      default_schema: action
+      connection:
+        provider_class: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
 
  # all about redis
 data-grid:
@@ -208,7 +213,7 @@ messaging:
   backoffInitial: 5000
   backoffMultiplier: 3
   backoffMax: 45000
-  consumingThreads: 1
+  consumingThreads: 30
   maxAttempts: 3
   prefetchCount: 10
   txSize: 1

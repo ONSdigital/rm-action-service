@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.scheduling.annotation.Async;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
 import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
@@ -35,7 +34,6 @@ public class CaseNotificationReceiver {
   @ServiceActivator(
       inputChannel = "caseNotificationTransformed",
       adviceChain = "caseNotificationRetryAdvice")
-  @Async
   public void acceptNotification(final CaseNotification caseNotification) throws CTPException {
 
     try {
