@@ -42,7 +42,8 @@ public class AppConfig implements AsyncConfigurer {
 
   @Bean
   public CacheManager cacheManager() {
-    return new ConcurrentMapCacheManager("collectionexercises", "surveys");
+    return new ConcurrentMapCacheManager(
+        "collectionexercises", "surveys", "actionPlans", "moreActionPlans");
   }
 
   @Override

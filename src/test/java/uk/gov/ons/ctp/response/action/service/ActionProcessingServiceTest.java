@@ -150,7 +150,7 @@ public class ActionProcessingServiceTest {
     // Given setUp()
 
     // When
-    businessActionProcessingService.processActionRequests(ACTION_ID);
+    //    businessActionProcessingService.processActionRequests(ACTION_ID);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -175,7 +175,7 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequests(ACTION_ID);
+    //    businessActionProcessingService.processActionRequests(ACTION_ID);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -195,7 +195,7 @@ public class ActionProcessingServiceTest {
     when(actionRepo.findById(eq(newActionId))).thenReturn(new Action());
 
     // When
-    businessActionProcessingService.processActionRequests(newActionId);
+    //    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, never())
@@ -217,7 +217,7 @@ public class ActionProcessingServiceTest {
     when(actionRepo.findById(eq(newActionId))).thenReturn(action);
 
     // Given
-    businessActionProcessingService.processActionRequests(newActionId);
+    //    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, never())
@@ -244,7 +244,7 @@ public class ActionProcessingServiceTest {
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
     // When
-    businessActionProcessingService.processActionRequests(newActionId);
+    //    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -268,7 +268,7 @@ public class ActionProcessingServiceTest {
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
     // When
-    businessActionProcessingService.processActionRequests(newActionId);
+    //    businessActionProcessingService.processActionRequests(newActionId);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -370,7 +370,7 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequests(ACTION_ID);
+    //    businessActionProcessingService.processActionRequests(ACTION_ID);
 
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);

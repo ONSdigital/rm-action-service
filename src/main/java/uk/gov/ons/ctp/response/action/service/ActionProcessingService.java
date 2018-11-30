@@ -2,9 +2,9 @@ package uk.gov.ons.ctp.response.action.service;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,9 +55,7 @@ public abstract class ActionProcessingService {
   }
 
   /** Distributes requests for a single action */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processActionRequests(final UUID actionId) {
-    Action action = actionRepo.findById(actionId);
+  public void processActionRequests(Action action) {
     log.with("action_id", action.getId()).debug("Processing actionRequest");
 
     final ActionType actionType = action.getActionType();
@@ -86,7 +84,7 @@ public abstract class ActionProcessingService {
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
-    ArrayList<ActionRequest> actionRequests = new ArrayList<>();
+    List<ActionRequest> actionRequests = new LinkedList<>();
     if (isBusinessNotification(context)) {
       context
           .getChildParties()

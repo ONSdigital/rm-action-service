@@ -3,6 +3,7 @@ package uk.gov.ons.ctp.response.action.domain.repository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -17,6 +18,7 @@ public interface ActionPlanRepository extends JpaRepository<ActionPlan, Integer>
    * @param id UUID id for ActionPlan
    * @return ActionPlan returns ActionPlan for associated id
    */
+  @Cacheable("moreActionPlans")
   ActionPlan findById(UUID id);
 
   /**
@@ -25,6 +27,7 @@ public interface ActionPlanRepository extends JpaRepository<ActionPlan, Integer>
    * @param actionPlanPK ActionPlan primary key
    * @return ActionPlan returns ActionPlan for associated id
    */
+  @Cacheable("actionPlans")
   ActionPlan findByActionPlanPK(Integer actionPlanPK);
 
   /**
