@@ -107,7 +107,7 @@ class ActionDistributor {
               action -> {
                 callables.add(
                     () -> {
-                      if (actionsDistributed.incrementAndGet() % 100 == 0) {
+                      if (actionsDistributed.incrementAndGet() % 500 == 0) {
                         log.info("Distributed {} actions", actionsDistributed.get());
                       }
                       processAction(action);

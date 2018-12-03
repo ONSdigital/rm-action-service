@@ -65,7 +65,7 @@ public class DefaultActionRequestContextFactory implements ActionRequestContextF
   }
 
   private CaseDetailsDTO getCase(Action action) {
-    return caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
+    return caseSvcClientService.getCaseWithIAC(action.getCaseId());
   }
 
   private CollectionExerciseDTO getCollectionExercise(CaseDetailsDTO caseDetails) {

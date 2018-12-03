@@ -124,6 +124,7 @@ public class CaseNotificationService {
         .actionPlanEndDate(endDateTime)
         .partyId(partyId)
         .sampleUnitType(notification.getSampleUnitType())
+        .processed(Boolean.FALSE)
         .build();
   }
 

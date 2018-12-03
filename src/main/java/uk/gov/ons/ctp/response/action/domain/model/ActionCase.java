@@ -66,4 +66,7 @@ public class ActionCase implements Serializable {
 
   @Column(name = "sampleunittype")
   private String sampleUnitType;
+
+  @Column(name = "processed")
+  private Boolean processed;
 }

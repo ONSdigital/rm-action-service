@@ -216,12 +216,15 @@ public class ActionService {
 
     List<Callable<Boolean>> callables = new LinkedList<>();
 
-    try (Stream<ActionCase> cases = actionCaseRepo.findByActionPlanFK(actionPlanPk)) {
+    try (Stream<ActionCase> cases =
+        actionCaseRepo.findByActionPlanFKAAndProcessedIsFalse(actionPlanPk)) {
       cases.forEach(
           caze -> {
             callables.add(
                 () -> {
                   createActionsForCase(caze, rules, types);
+                  caze.setProcessed(Boolean.TRUE);
+                  actionCaseRepo.save(caze);
                   return Boolean.TRUE;
                 });
           });
@@ -233,6 +236,9 @@ public class ActionService {
       log.error(
           "THIS IS THE WORST THING TO EVER HAPPEN IN THE ENTIRE HISTORY OF EVERYTHING EVER", e);
     }
+
+    // Flush the updates
+    actionCaseRepo.flush();
 
     // Now flush all the newly created actions to the DB
     actionRepo.flush();
