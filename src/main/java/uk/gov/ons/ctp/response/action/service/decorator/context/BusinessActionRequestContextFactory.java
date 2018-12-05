@@ -3,6 +3,7 @@ package uk.gov.ons.ctp.response.action.service.decorator.context;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.service.SpeshTimeThingamyWossname;
 import uk.gov.ons.ctp.response.party.representation.Association;
 import uk.gov.ons.ctp.response.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
@@ -49,12 +51,15 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
     List<String> desiredEnrolmentStatuses = new ArrayList<>();
     desiredEnrolmentStatuses.add("ENABLED");
     desiredEnrolmentStatuses.add("PENDING");
+    long startTime = new Date().getTime();
     PartyDTO businessParty =
         partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
             SampleUnitType.B.name(),
             context.getCaseDetails().getPartyId(),
             context.getSurvey().getId(),
             desiredEnrolmentStatuses);
+    long endTime = new Date().getTime();
+    SpeshTimeThingamyWossname.addToPartyTime(endTime - startTime);
     context.setParentParty(businessParty);
 
     List<PartyDTO> respondentParties = getRespondentParties(businessParty);

@@ -217,14 +217,12 @@ public class ActionService {
     List<Callable<Boolean>> callables = new LinkedList<>();
 
     try (Stream<ActionCase> cases =
-        actionCaseRepo.findByActionPlanFKAAndProcessedIsFalse(actionPlanPk)) {
+        actionCaseRepo.findByActionPlanFKAndProcessedIsFalse(actionPlanPk)) {
       cases.forEach(
           caze -> {
             callables.add(
                 () -> {
                   createActionsForCase(caze, rules, types);
-                  caze.setProcessed(Boolean.TRUE);
-                  actionCaseRepo.save(caze);
                   return Boolean.TRUE;
                 });
           });
@@ -261,6 +259,8 @@ public class ActionService {
       ActionCase actionCase, ActionRule actionRule, List<ActionType> types) {
     if (hasRuleTriggered(actionRule)) {
       createAction(actionCase, actionRule, types);
+      actionCase.setProcessed(Boolean.TRUE);
+      actionCaseRepo.save(actionCase);
     }
   }
 

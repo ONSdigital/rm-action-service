@@ -31,6 +31,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
+import uk.gov.ons.ctp.response.action.service.SpeshTimeThingamyWossname;
 import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
 
 /** This is the service class that distributes actions to downstream services */
@@ -39,7 +40,7 @@ class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
-  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(50);
+  private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(30);
   private static final AtomicInteger actionsDistributed = new AtomicInteger();
 
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
@@ -108,7 +109,10 @@ class ActionDistributor {
                 callables.add(
                     () -> {
                       if (actionsDistributed.incrementAndGet() % 500 == 0) {
-                        log.info("Distributed {} actions", actionsDistributed.get());
+                        log.with("party_time", SpeshTimeThingamyWossname.partyTime)
+                            .with("case_time", SpeshTimeThingamyWossname.caseTime)
+                            .with("decoration_time", SpeshTimeThingamyWossname.decorationTime)
+                            .info("Distributed {} actions", actionsDistributed.get());
                       }
                       processAction(action);
                       return Boolean.TRUE;
@@ -135,27 +139,20 @@ class ActionDistributor {
     }
   }
 
-  private void processAction(Action action) {
-    try {
-      log.with("action_id", action.getId().toString()).info("Processing action");
-      ActionProcessingService ap = getActionProcessingService(action);
+  public void processAction(Action action) {
+    log.with("action_id", action.getId().toString()).info("Processing action");
+    ActionProcessingService ap = getActionProcessingService(action);
 
-      // If social reminder action type then generate new IAC
-      if (action.getActionType().getActionTypeNameEnum()
-          == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
-        caseSvcClientService.generateNewIacForCase(action.getCaseId());
-      }
+    // If social reminder action type then generate new IAC
+    if (action.getActionType().getActionTypeNameEnum()
+        == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
+      caseSvcClientService.generateNewIacForCase(action.getCaseId());
+    }
 
-      if (action.getState().equals(ActionState.SUBMITTED)) {
-        ap.processActionRequests(action);
-      } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
-        ap.processActionCancel(action.getId());
-      }
-    } catch (Exception ex) {
-      // We intentionally catch all exceptions here.
-      // If one action fails to process we still want to try and process the remaining actions
-      log.with("action", action)
-          .error("Failed to process action. Will be retried at next schedule", ex);
+    if (action.getState().equals(ActionState.SUBMITTED)) {
+      ap.processActionRequests(action);
+    } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
+      ap.processActionCancel(action.getId());
     }
   }
 
@@ -174,7 +171,7 @@ class ActionDistributor {
       }
 
       action.setState(newActionState);
-      actionRepo.saveAndFlush(action);
+      actionRepo.save(action);
     }
 
     SampleUnitDTO.SampleUnitType caseType =

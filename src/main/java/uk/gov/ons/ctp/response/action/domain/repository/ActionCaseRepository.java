@@ -16,7 +16,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
    * @param actionPlanFK the action plan
    * @return the list of (open) cases assoc with that plan
    */
-  Stream<ActionCase> findByActionPlanFKAAndProcessedIsFalse(Integer actionPlanFK);
+  Stream<ActionCase> findByActionPlanFKAndProcessedIsFalse(Integer actionPlanFK);
 
   /**
    * find a case by its id - the uuid which is not the primary key btw

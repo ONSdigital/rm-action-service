@@ -2,7 +2,6 @@ package uk.gov.ons.ctp.response.action.service.decorator;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.util.List;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionEvent;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
@@ -18,10 +17,10 @@ public class CaseAndCaseEvent implements ActionRequestDecorator {
     actionRequest.setIac(context.getCaseDetails().getIac());
 
     final ActionEvent actionEvent = new ActionEvent();
-    List<CaseEventDTO> caseEventDTOs = context.getCaseDetails().getCaseEvents();
-
-    caseEventDTOs.forEach(
-        (caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
+    //    List<CaseEventDTO> caseEventDTOs = context.getCaseDetails().getCaseEvents();
+    //
+    //    caseEventDTOs.forEach(
+    //        (caseEventDTO) -> actionEvent.getEvents().add(formatCaseEvent(caseEventDTO)));
     actionRequest.setEvents(actionEvent);
 
     actionRequest.setCaseGroupStatus(

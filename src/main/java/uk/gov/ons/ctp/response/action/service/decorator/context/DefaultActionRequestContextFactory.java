@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.service.decorator.context;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.Date;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
@@ -10,6 +11,7 @@ import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.action.service.SpeshTimeThingamyWossname;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
 import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
@@ -65,7 +67,11 @@ public class DefaultActionRequestContextFactory implements ActionRequestContextF
   }
 
   private CaseDetailsDTO getCase(Action action) {
-    return caseSvcClientService.getCaseWithIAC(action.getCaseId());
+    long startTime = new Date().getTime();
+    CaseDetailsDTO result = caseSvcClientService.getCaseWithIAC(action.getCaseId());
+    long endTime = new Date().getTime();
+    SpeshTimeThingamyWossname.addToCaseTime(endTime - startTime);
+    return result;
   }
 
   private CollectionExerciseDTO getCollectionExercise(CaseDetailsDTO caseDetails) {

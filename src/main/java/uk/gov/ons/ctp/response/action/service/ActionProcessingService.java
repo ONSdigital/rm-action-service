@@ -4,6 +4,7 @@ import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -95,8 +96,11 @@ public abstract class ActionProcessingService {
                 actionRequests.add(actionRequest);
               });
     } else {
+      long startTime = new Date().getTime();
       ActionRequest actionRequest = prepareActionRequest(context);
       actionRequests.add(actionRequest);
+      long endTime = new Date().getTime();
+      SpeshTimeThingamyWossname.addToDecorationTime(endTime - startTime);
     }
     return actionRequests;
   }
