@@ -18,10 +18,7 @@ script:
   - mvn fmt:check verify cobertura:cobertura-integration-test
 
 after_success:
-- echo $TRAVIS_BRANCH
-- echo $TRAVIS_PULL_REQUEST
 - if ([ "$TRAVIS_BRANCH" == "rm-census" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]) || ([ "$TRAVIS_BRANCH" == "automate-census-docker-build" ]); then
-  echo "RUNNING IN HERE"
   docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
   docker tag actionsvc "${DOCKER_GCP_LOCATION}"/actionsvc;
   docker push "${DOCKER_GCP_LOCATION}"/actionsvc;
