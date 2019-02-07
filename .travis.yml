@@ -7,7 +7,7 @@ language: java
 jdk: openjdk8
 
 env:
-  - SERVICE_NAME="census-rm-actionsvc" IMAGE_NAME="$DOCKER_GCP_LOCATION$/SERVICE_NAME"
+  - SERVICE_NAME="census-rm-actionsvc" IMAGE_NAME="$DOCKER_GCP_LOCATION/$SERVICE_NAME"
 
 before_install:
   - echo "SERVICE_NAME=$SERVICE_NAME"
