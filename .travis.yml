@@ -7,11 +7,9 @@ language: java
 jdk: openjdk8
 
 env:
-  - SERVICE_NAME="census-rm-actionsvc" IMAGE_NAME="$DOCKER_GCP_LOCATION/$SERVICE_NAME"
+  - SOURCE_IMAGE_NAME="actionsvc" DESTINATION_IMAGE_NAME="$DOCKER_GCP_LOCATION/census-rm-actionsvc"
 
 before_install:
-  - echo "SERVICE_NAME=$SERVICE_NAME"
-  - echo "IMAGE_NAME=$IMAGE_NAME"
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH"
   - echo "BRANCH=$BRANCH"
@@ -25,8 +23,8 @@ script:
 after_success:
 - if ([ "$TRAVIS_BRANCH" == "rm-census" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]) || ([ "$TRAVIS_BRANCH" == "automate-census-docker-build" ]); then
   docker login -u "${DOCKER_GCP_USERNAME}" -p "${DOCKER_GCP_PASSWORD}" "${DOCKER_GCP_REGISTRY}";
-  docker tag actionsvc "${DOCKER_GCP_LOCATION}"/actionsvc;
-  docker push "${DOCKER_GCP_LOCATION}"/actionsvc;
+  docker tag "$SOURCE_IMAGE_NAME" "$DESTINATION_IMAGE_NAME";
+  docker push "$DESTINATION_IMAGE_NAME";
   fi
 - bash <(curl -s https://codecov.io/bash)
 
