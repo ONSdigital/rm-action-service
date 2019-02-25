@@ -2,8 +2,6 @@ package uk.gov.ons.ctp.response.action;
 
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.impl.ConfigurableMapper;
-import ma.glasnost.orika.impl.DefaultMapperFactory;
-import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -20,11 +18,6 @@ import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
 @Component
 @Primary
 public class ActionBeanMapper extends ConfigurableMapper {
-
-  @Override
-  public void configureFactoryBuilder(final DefaultMapperFactory.Builder builder) {
-    builder.compilerStrategy(new EclipseJdtCompilerStrategy());
-  }
 
   /**
    * This method configures the bean mapper.
