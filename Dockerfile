@@ -5,8 +5,8 @@ ARG JAR_FILE=actionsvc*.jar
 RUN apt-get update
 RUN apt-get -yq clean
 
-RUN groupadd -g 990 actionsvc && \
-    useradd -r -u 990 -g actionsvc actionsvc
+RUN groupadd --gid 990 actionsvc && \
+    useradd --create-home --system --uid 990 --gid actionsvc actionsvc
 USER actionsvc
 
 COPY target/$JAR_FILE /opt/actionsvc.jar
