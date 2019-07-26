@@ -38,9 +38,7 @@ public class CollectionExerciseClientService {
 
   @Autowired private ObjectMapper objectMapper;
 
-  private final String CACHE_NAME = "collectionExercise";
-
-  @Cacheable(CACHE_NAME)
+  @Cacheable("collectionExercise")
   @Retryable(
       value = {RestClientException.class},
       maxAttemptsExpression = "#{${retries.maxAttempts}}",
@@ -75,7 +73,7 @@ public class CollectionExerciseClientService {
     return result;
   }
 
-  @CacheEvict(cacheNames = CACHE_NAME, allEntries = true)
+  @CacheEvict(cacheNames = "collectionExercise", allEntries = true)
   @Scheduled(fixedRate = 6000)
   public void evictCache() {}
 }
