@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -36,7 +38,9 @@ public class CollectionExerciseClientService {
 
   @Autowired private ObjectMapper objectMapper;
 
-  @Cacheable("collectionExercise")
+  private final String CACHE_NAME = "collectionExercise";
+
+  @Cacheable(CACHE_NAME)
   @Retryable(
       value = {RestClientException.class},
       maxAttemptsExpression = "#{${retries.maxAttempts}}",
@@ -70,4 +74,8 @@ public class CollectionExerciseClientService {
     log.with("collection_exercise", result).debug("made call to collection Exercise");
     return result;
   }
+
+  @CacheEvict(cacheNames = CACHE_NAME, allEntries = true)
+  @Scheduled(fixedRate = 6000)
+  public void evictCache() {}
 }
