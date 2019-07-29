@@ -74,6 +74,6 @@ public class CollectionExerciseClientService {
   }
 
   @CacheEvict(cacheNames = "collectionExercise", allEntries = true)
-  @Scheduled(fixedRate = 6000)
+  @Scheduled(fixedRate = 60000)
   public void evictCache() {}
 }
