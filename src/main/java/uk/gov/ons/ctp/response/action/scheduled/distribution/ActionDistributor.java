@@ -108,6 +108,12 @@ class ActionDistributor {
       log.with("action_id", action.getId().toString()).info("Processing action");
       ActionProcessingService ap = getActionProcessingService(action);
 
+      if (ap == null) {
+        // Case no longer exists for action, has been set to REQUEST_CANCELLED
+        log.with("action_id", action.getId().toString()).info("Skipping action without case");
+        return;
+      }
+
       // If social reminder action type then generate new IAC
       if (action.getActionType().getActionTypeNameEnum()
           == uk.gov.ons.ctp.response.action.representation.ActionType.SOCIALREM) {
@@ -143,6 +149,7 @@ class ActionDistributor {
 
       action.setState(newActionState);
       actionRepo.saveAndFlush(action);
+      return null;
     }
 
     SampleUnitDTO.SampleUnitType caseType =
