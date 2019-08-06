@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import javax.xml.bind.JAXBContext;
@@ -226,7 +225,7 @@ public class ActionEndpointIT {
     ActionRulePostRequestDTO apord = new ActionRulePostRequestDTO();
     apord.setActionPlanId(actionPlanId);
     apord.setActionTypeName(actionType);
-    apord.setName(actionType.toString() + new Random().nextInt(365));
+    apord.setName(actionType.toString() + UUID.randomUUID());
     apord.setDescription("I don't care what you are");
     apord.setPriority(3);
     apord.setTriggerDateTime(OffsetDateTime.now());
@@ -260,7 +259,7 @@ public class ActionEndpointIT {
   private ActionPlanDTO createActionPlan() throws UnirestException {
     ActionPlanPostRequestDTO ap = new ActionPlanPostRequestDTO();
     ap.setCreatedBy("SYSTEM");
-    ap.setName("action-test: " + new Random().nextInt(100));
+    ap.setName("action-test: " + UUID.randomUUID());
     ap.setDescription("just testing!");
 
     HttpResponse<ActionPlanDTO> createActionPlanRes =
