@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -110,11 +111,11 @@ public class PlanSchedulerIT {
     wireMockRule.resetAll();
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(objectMapper);
-    actionCaseRepository.deleteAllInBatch();
-    actionRepository.deleteAllInBatch();
-    actionRuleRepository.deleteAllInBatch();
-    actionPlanJobRepository.deleteAllInBatch();
-    actionPlanRepository.deleteAllInBatch();
+    JpaRepository<?, ?>[] repositories = {actionCaseRepository, actionRepository, actionRuleRepository, actionPlanJobRepository, actionPlanRepository};
+    for (JpaRepository<?, ?> repo : repositories) {
+      repo.deleteAllInBatch();
+      repo.flush();
+    }
   }
 
   private ActionPlanDTO createActionPlan() throws UnirestException {
