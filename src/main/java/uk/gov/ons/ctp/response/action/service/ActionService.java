@@ -128,7 +128,7 @@ public class ActionService {
       if (action.getActionType().getCanCancel()) {
         log.with("action_id", action.getId())
             .with("action_type", action.getActionType().getName())
-            .debug("Cancelling action");
+            .info("Cancelling action");
         final ActionDTO.ActionState nextState =
             actionSvcStateTransitionManager.transition(
                 action.getState(), ActionEvent.REQUEST_CANCELLED);
@@ -172,8 +172,6 @@ public class ActionService {
       readOnly = false,
       timeout = TRANSACTION_TIMEOUT)
   public Action createAdHocAction(final Action action) {
-    log.debug("Creating adhoc action");
-
     // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);
 
@@ -187,6 +185,7 @@ public class ActionService {
     action.setCreatedDateTime(nowUTC());
     action.setState(ActionState.SUBMITTED);
     action.setId(UUID.randomUUID());
+    log.with("action_id", action.getId()).info("Creating adhoc action");
     return actionRepo.saveAndFlush(action);
   }
 
@@ -326,7 +325,7 @@ public class ActionService {
   public void rerunAction(final List<UUID> actionIds) throws CTPException {
     for (UUID actionId : actionIds) {
       Action actionToReRun = actionRepo.findById(actionId);
-      log.with("action_id", actionId.toString()).debug("Rerunning Aborted Action");
+      log.with("action_id", actionId).info("Rerunning aborted action");
 
       if (actionToReRun == null) {
         throw new CTPException(

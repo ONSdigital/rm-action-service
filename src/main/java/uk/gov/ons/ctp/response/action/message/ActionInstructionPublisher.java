@@ -27,7 +27,7 @@ public class ActionInstructionPublisher {
   public void sendActionInstruction(@Header("HANDLER") final String handler, final Action action) {
     log.with("action_id", action.getActionId())
         .with("handler", handler)
-        .debug("Sending action instruction");
+        .info("Sending action instruction");
 
     final ActionInstruction instruction = new ActionInstruction();
     if (action instanceof ActionRequest) {

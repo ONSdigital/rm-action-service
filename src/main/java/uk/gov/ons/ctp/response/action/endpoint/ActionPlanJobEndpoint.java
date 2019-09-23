@@ -78,13 +78,13 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
    *
    * @param actionPlanId the given action plan id.
    * @return Returns all action plan jobs for the given action plan id.
-   * @throws CTPException summats went wrong
+   * @throws CTPException thrown when actionPlan cannot be found
    */
   @RequestMapping(value = "/{actionplanid}/jobs", method = RequestMethod.GET)
   public final ResponseEntity<List<ActionPlanJobDTO>> findAllActionPlanJobsByActionPlanId(
       @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
     log.with("action_plan_id", actionPlanId)
-        .debug("Retrieving action plans jobs for given action plan id");
+        .info("Retrieving action plans jobs for given action plan id");
     final ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
     if (actionPlan == null) {
       throw new CTPException(

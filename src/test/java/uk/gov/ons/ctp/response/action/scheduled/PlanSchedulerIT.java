@@ -111,7 +111,13 @@ public class PlanSchedulerIT {
     wireMockRule.resetAll();
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(objectMapper);
-    JpaRepository<?, ?>[] repositories = {actionCaseRepository, actionRepository, actionRuleRepository, actionPlanJobRepository, actionPlanRepository};
+    JpaRepository<?, ?>[] repositories = {
+      actionCaseRepository,
+      actionRepository,
+      actionRuleRepository,
+      actionPlanJobRepository,
+      actionPlanRepository
+    };
     for (JpaRepository<?, ?> repo : repositories) {
       repo.deleteAllInBatch();
       repo.flush();

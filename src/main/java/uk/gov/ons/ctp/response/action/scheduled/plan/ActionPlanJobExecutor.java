@@ -52,7 +52,7 @@ public class ActionPlanJobExecutor {
     }
 
     if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.with("action_plan_id", actionPlan.getId()).debug("Could not get manager lock");
+      log.with("action_plan_id", actionPlan.getId()).info("Could not get manager lock");
       return;
     }
 
@@ -60,6 +60,8 @@ public class ActionPlanJobExecutor {
       // This transaction has to be committed before the lock is released, or else duplicate
       // actions will be created
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
+    } catch (Exception e) {
+      log.error("Exception raised whilst creating scheduled actions", e);
     } finally {
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
     }

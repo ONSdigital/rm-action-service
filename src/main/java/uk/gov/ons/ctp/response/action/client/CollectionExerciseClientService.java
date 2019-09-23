@@ -54,7 +54,7 @@ public class CollectionExerciseClientService {
 
     log.with("collection_exericse_id", collectionExcerciseId)
         .with("uri", uriComponents.toUri())
-        .debug("Retrieving collection exercise");
+        .info("Retrieving collection exercise");
 
     final ResponseEntity<String> responseEntity =
         restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
