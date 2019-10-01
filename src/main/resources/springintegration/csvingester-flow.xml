@@ -12,6 +12,6 @@
     <int-file:inbound-channel-adapter id="csvIngest"
                                       directory="file:${csv-ingest.directory}" prevent-duplicates="false"
                                       filename-pattern="${csv-ingest.file-pattern}">
-        <int:poller fixed-delay="30000" />
+        <int:poller fixed-delay="3600000" />
     </int-file:inbound-channel-adapter>
 </beans>
