@@ -31,7 +31,7 @@ public class ActionFeedbackReceiver {
   public void acceptFeedback(final ActionFeedback feedback) throws CTPException {
     log.with("outcome", feedback.getOutcome())
         .with("action_id", feedback.getActionId())
-        .debug("processing action feedback");
+        .info("processing action feedback");
     feedbackService.acceptFeedback(feedback);
   }
 }

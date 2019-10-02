@@ -59,7 +59,7 @@ public class ReportScheduler {
   /** The method triggering report creation. */
   @Scheduled(cron = "#{appConfig.reportSettings.cronExpression}")
   public void createReport() {
-    log.debug("Entering createReport...");
+    log.info("Creating report");
 
     reportDistributedLatchManager.setCountDownLatch(
         DISTRIBUTED_OBJECT_KEY_REPORT_LATCH,
@@ -78,7 +78,7 @@ public class ReportScheduler {
                 "expected_running_instances",
                 reportDistributedInstanceManager.getInstanceCount(
                     DISTRIBUTED_OBJECT_KEY_INSTANCE_COUNT))
-            .error("Report run error countdownlatch timed out");
+            .warn("Report run error countdownlatch timed out");
       }
     } catch (final InterruptedException e) {
       log.error("Report run error waiting for countdownlatch", e);

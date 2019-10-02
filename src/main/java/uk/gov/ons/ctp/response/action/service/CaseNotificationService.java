@@ -164,7 +164,7 @@ public class CaseNotificationService {
       log.with("case_id", actionCaseId.toString()).warn("No case found to delete");
       return;
     }
-    log.with("case_id", actionCaseId.toString()).debug("Deleting case");
+    log.with("case_id", actionCaseId.toString()).info("Deleting case");
     actionCaseRepo.delete(actionCaseToDelete);
   }
 }

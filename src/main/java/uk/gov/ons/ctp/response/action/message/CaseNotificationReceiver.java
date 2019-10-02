@@ -38,7 +38,7 @@ public class CaseNotificationReceiver {
 
     try {
       log.with("case_id", caseNotification.getCaseId())
-          .debug("Receiving case notification for case id");
+          .info("Receiving case notification for case id");
       caseNotificationService.acceptNotification(caseNotification);
     } finally {
       try {

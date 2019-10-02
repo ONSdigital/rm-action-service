@@ -67,7 +67,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
       } catch (final IOException e) {
-        log.error("Unable to read case details response", e);
+        log.with("caseId", caseId).error("Unable to read case details response", e);
       }
     }
     return result;
@@ -93,7 +93,8 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseGroupDTO.class);
       } catch (final IOException e) {
-        log.error("Unable to read case group response", e);
+        log.with("caseGroupID", caseGroupId)
+            .error("Unable to read case group response", e);
       }
     }
     return result;
@@ -119,7 +120,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseEventDTO[].class);
       } catch (final IOException e) {
-        log.error("Unable to read case Event response", e);
+        log.with("caseId", caseId).error("Unable to read case Event response", e);
       }
     }
     return Arrays.asList(result);
@@ -147,7 +148,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
       } catch (final IOException e) {
-        log.error("Unable to read case details response", e);
+        log.with("caseId", caseId).error("Unable to read case details response", e);
       }
     }
     return result;
@@ -176,7 +177,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseDetailsDTO.class);
       } catch (final IOException e) {
-        log.error("Unable to read case details response", e);
+        log.with("caseId", caseId).error("Unable to read case details response", e);
       }
     }
     return result;
@@ -190,7 +191,7 @@ public class CaseSvcClientService {
       final Action action, final CategoryDTO.CategoryName actionCategory) {
     log.with("action_id", action.getId())
         .with("action_category", actionCategory)
-        .debug("posting caseEvent");
+        .info("Posting caseEvent");
     final UriComponents uriComponents =
         restUtility.createUriComponents(
             appConfig.getCaseSvc().getCaseEventsByCasePostPath(), null, action.getCaseId());
@@ -217,7 +218,9 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CreatedCaseEventDTO.class);
       } catch (final IOException e) {
-        log.error("Unable to read created case event response", e);
+        log.with("action_id", action.getId())
+            .with("action_category", actionCategory)
+            .error("Unable to read created case event response", e);
       }
     }
     return result;
