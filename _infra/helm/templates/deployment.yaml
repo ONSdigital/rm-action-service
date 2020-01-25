@@ -1,4 +1,3 @@
-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +22,7 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "eu.gcr.io/rm-ras-sandbox/{{ .Values.image.repositoryName }}:{{ .Values.image.tag }}"
+          image: "eu.gcr.io/ons-rasrmbs-management/{{ .Chart.Name }}:{{ .Chart.AppVersion }}"
           ports:
             - name: http-server
               containerPort: 4041
