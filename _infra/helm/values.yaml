@@ -1,0 +1,14 @@
+replicaCount: 1
+
+env: "dev"
+
+service:
+  port: 4041
+
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "2048Mi"
+  limits:
+    cpu: "1000m"
+    memory: "2048Mi"
