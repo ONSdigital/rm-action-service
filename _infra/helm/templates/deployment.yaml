@@ -100,31 +100,31 @@ spec:
           - name: RABBITMQ_PORT
             value: "5672"
           - name: CASE_SVC_CONNECTION_CONFIG_HOST
-            value: "$(CASESVC_SERVICE_HOST)"
+            value: "$(CASE_SERVICE_HOST)"
           - name: CASE_SVC_CONNECTION_CONFIG_PORT
-            value: "$(CASESVC_SERVICE_PORT)"
+            value: "$(CASE_SERVICE_PORT)"
           - name: COLLECTION_EXERCISE_SVC_CONNECTION_CONFIG_HOST
-            value: "$(COLLECTIONEXERCISESVC_SERVICE_HOST)"
+            value: "$(COLLECTION_EXERCISE_SERVICE_HOST)"
           - name: COLLECTION_EXERCISE_SVC_CONNECTION_CONFIG_PORT
-            value: "$(COLLECTIONEXERCISESVC_SERVICE_PORT)"
+            value: "$(COLLECTION_EXERCISE_SERVICE_PORT)"
           - name: DATA_GRID_ADDRESS
             value: "$(REDIS_MASTER_SERVICE_HOST):$(REDIS_MASTER_SERVICE_PORT)"
           - name: PARTY_SVC_CONNECTION_CONFIG_HOST
-            value: "$(RAS_PARTY_SERVICE_HOST)"
+            value: "$(PARTY_SERVICE_HOST)"
           - name: PARTY_SVC_CONNECTION_CONFIG_PORT
-            value: "$(RAS_PARTY_SERVICE_PORT)"
+            value: "$(PARTY_SERVICE_PORT)"
           - name: PARTY_SVC_CONNECTION_CONFIG_USERNAME
             value: "$(SECURITY_USER_NAME)"
           - name: PARTY_SVC_CONNECTION_CONFIG_PASSWORD
             value: "$(SECURITY_USER_PASSWORD)"
           - name: SURVEY_SVC_CONNECTION_CONFIG_HOST
-            value: "$(SURVEYSVC_SERVICE_HOST)"
+            value: "$(SURVEY_SERVICE_HOST)"
           - name: SURVEY_SVC_CONNECTION-CONFIG_PORT
-            value: "$(SURVEYSVC_SERVICE_PORT)"
+            value: "$(SURVEY_SERVICE_PORT)"
           - name: SAMPLE_SVC_CONNECTION_CONFIG_HOST
-            value: "$(SAMPLESVC_HOST)"
+            value: "$(SAMPLE_HOST)"
           - name: SAMPLE_SVC_CONNECTION_CONFIG_PORT
-            value: "$(SAMPLESVC_PORT)"
+            value: "$(SAMPLE_PORT)"
           - name: LIQUIBASE_USER
             value: "$(DB_USERNAME)"
           - name: LIQUIBASE_PASSWORD
@@ -138,9 +138,4 @@ spec:
           - name: SPRING_ZIPKIN_BASEURL
             value: "http://$(ZIPKIN_SERVICE_HOST):$(ZIPKIN_SERVICE_PORT)/"
           resources:
-            limits:
-              cpu: 1000m
-              memory: 2048Mi
-            requests:
-              cpu: 1000m
-              memory: 2048Mi
+            {{ toYaml .Values.resources | nindent 12 }}
