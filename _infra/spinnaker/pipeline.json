@@ -1,0 +1,21 @@
+{
+  "schema": "v2",
+  "application": "action",
+  "name": "action",
+  "template": {
+    "artifactAccount": "front50ArtifactCredentials",
+    "reference": "spinnaker://rasrmApplicationTemplate",
+    "type": "front50/pipelineTemplate"
+  },
+  "variables": {
+    "name": "action",
+    "defaultHelmChart": "action-0.1.0.tgz",
+    "helmChartMatcher": "action-.*\\.tgz"
+  },
+  "exclude": [],
+  "triggers": [],
+  "parameters": [],
+  "notifications": [],
+  "description": "",
+  "stages": []
+}
