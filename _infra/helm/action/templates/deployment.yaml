@@ -24,6 +24,20 @@ spec:
         helmVersion: {{ .Chart.Version }}
         env: {{ .Values.env }}
     spec:
+      {{- if .Values.database.managedPostgres }}
+      volumes:
+        - name: cloud-sql-certs
+          secret:
+            secretName: cloud-sql-jdbc-certs
+            defaultMode: 0444
+            items:
+            - key: "root.crt"
+              path: "root.crt"
+            - key: "postgresql.crt"
+              path: "postgresql.crt"
+            - key: "postgresql.pk8"
+              path: "postgresql.pk8"
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.name }}/{{ .Chart.Name }}:{{ .Chart.AppVersion }}"
@@ -31,6 +45,12 @@ spec:
           ports:
             - name: http-server
               containerPort: {{ .Values.container.port }}
+          {{- if .Values.database.managedPostgres }}
+          volumeMounts:
+          - name: cloud-sql-certs
+            mountPath: "/home/actionscheduler/.postgresql"
+            readOnly: true
+          {{- end}}
           readinessProbe:
             httpGet:
               path: /info
