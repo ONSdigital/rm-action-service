@@ -48,7 +48,7 @@ spec:
           {{- if .Values.database.managedPostgres }}
           volumeMounts:
           - name: cloud-sql-certs
-            mountPath: "/home/actionscheduler/.postgresql"
+            mountPath: "/root/.postgresql"
             readOnly: true
           {{- end}}
           readinessProbe:
