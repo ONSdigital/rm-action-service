@@ -179,10 +179,12 @@ spec:
             value: "$(DB_USERNAME)"
           - name: LIQUIBASE_PASSWORD
             value: "$(DB_PASSWORD)"
-          - name: SPRING_DATASOURCE_USERNAME
-            value: "$(DB_USERNAME)"
-          - name: SPRING_DATASOURCE_PASSWORD
-            value: "$(DB_PASSWORD)"
+          - name: SPRING_DATASOURCE_URL
+            {{- if .Values.database.managedPostgres }}
+            value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=verify-ca"
+            {{- else}}
+            value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable"
+            {{- end}}
           - name: SPRING_ZIPKIN_ENABLED
             value: "true"
           - name: SPRING_ZIPKIN_BASEURL
