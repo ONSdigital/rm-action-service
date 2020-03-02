@@ -128,6 +128,10 @@ spec:
             {{- else}}
             value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable"
             {{- end}}
+          - name: SPRING_DATASOURCE_USERNAME	
+            value: "$(DB_USERNAME)"	
+          - name: SPRING_DATASOURCE_PASSWORD	
+            value: "$(DB_PASSWORD)"
           - name: LIQUIBASE_URL
             value: "$(SPRING_DATASOURCE_URL)"
           - name: RABBITMQ_HOST
