@@ -24,7 +24,7 @@ spec:
         helmVersion: {{ .Chart.Version }}
         env: {{ .Values.env }}
     spec:
-      {{- if .Values.database.managedPostgres }}
+      {{- if .Values.database.sslEnabled }}
       volumes:
         - name: cloud-sql-certs
           secret:
@@ -45,7 +45,7 @@ spec:
           ports:
             - name: http-server
               containerPort: {{ .Values.container.port }}
-          {{- if .Values.database.managedPostgres }}
+          {{- if .Values.database.sslEnabled }}
           volumeMounts:
           - name: cloud-sql-certs
             mountPath: "/root/.postgresql"
@@ -180,7 +180,7 @@ spec:
           - name: LIQUIBASE_PASSWORD
             value: "$(DB_PASSWORD)"
           - name: SPRING_DATASOURCE_URL
-            {{- if .Values.database.managedPostgres }}
+            {{- if .Values.database.sslEnabled }}
             value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=verify-ca"
             {{- else}}
             value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable"
