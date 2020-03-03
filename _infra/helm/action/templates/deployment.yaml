@@ -24,33 +24,40 @@ spec:
         helmVersion: {{ .Chart.Version }}
         env: {{ .Values.env }}
     spec:
-      {{- if .Values.database.sslEnabled }}
+      {{- if .Values.database.sqlProxyEnabled }}
       volumes:
-        - name: cloud-sql-certs
+        - name: cloudsql-instance-credentials
           secret:
-            secretName: cloud-sql-jdbc-certs
+            secretName: cloudsql-proxy-credentials
             defaultMode: 0444
             items:
-            - key: "root.crt"
-              path: "root.crt"
-            - key: "postgresql.crt"
-              path: "postgresql.crt"
-            - key: "postgresql.pk8"
-              path: "postgresql.pk8"
+            - key: "credentials.json"
+              path: "credentials.json"
       {{- end }}
       containers:
+        {{- if .Values.database.sqlProxyEnabled }}
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.16
+          command: ["/cloud_sql_proxy",
+                    "-instances=<INSTANCE_CONNECTION_NAME>=tcp:3306",
+                    # If running on a VPC, the Cloud SQL proxy can connect via Private IP. See:
+                    # https://cloud.google.com/sql/docs/mysql/private-ip for more info.
+                    # "-ip_address_types=PRIVATE",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+          securityContext:
+            runAsUser: 2  # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+        {{- end }}
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.name }}/{{ .Chart.Name }}:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http-server
               containerPort: {{ .Values.container.port }}
-          {{- if .Values.database.sslEnabled }}
-          volumeMounts:
-          - name: cloud-sql-certs
-            mountPath: "/root/.postgresql"
-            readOnly: true
-          {{- end}}
           readinessProbe:
             httpGet:
               path: /info
@@ -123,11 +130,11 @@ spec:
           - name: SECURITY_BASIC_ENABLED
             value: "false"
           - name: SPRING_DATASOURCE_URL
-            {{- if .Values.database.sslEnabled }}
-            value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=verify-ca"
-            {{- else}}
+            {{- if .Values.database.sqlProxyEnabled }}
+            value: "jdbc:postgresql://127.0.0.1:5432/$(DB_NAME)"
+            {{- else }}
             value: "jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable"
-            {{- end}}
+            {{- end }}
           - name: SPRING_DATASOURCE_USERNAME	
             value: "$(DB_USERNAME)"
           - name: SPRING_DATASOURCE_PASSWORD
