@@ -54,7 +54,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: cloudsql-proxy-config
-                value: instance-connection-name
+                key: instance-connection-name
         {{- end }}
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.name }}/{{ .Chart.Name }}:{{ .Chart.AppVersion }}"
