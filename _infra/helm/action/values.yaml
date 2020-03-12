@@ -29,3 +29,6 @@ service:
 resources:
   requests:
     memory: "256Mi"
+
+managedRabbitMQ:
+  enabled: false
