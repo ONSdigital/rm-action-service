@@ -180,9 +180,9 @@ spec:
             value: "$(COLLECTION_EXERCISE_SERVICE_HOST)"
           - name: COLLECTION_EXERCISE_SVC_CONNECTION_CONFIG_PORT
             value: "$(COLLECTION_EXERCISE_SERVICE_PORT)"
-          - name: COLLECTION_SVC_CONNECTION_CONFIG_USERNAME
+          - name: COLLECTION_EXERCISE_SVC_CONNECTION_CONFIG_USERNAME
             value: "$(SECURITY_USER_NAME)"
-          - name: COLLECTION_SVC_CONNECTION_CONFIG_PASSWORD
+          - name: COLLECTION_EXERCISE_SVC_CONNECTION_CONFIG_PASSWORD
             value: "$(SECURITY_USER_PASSWORD)"
           - name: REDIS_HOST
             {{- if .Values.database.managedRedis }}
