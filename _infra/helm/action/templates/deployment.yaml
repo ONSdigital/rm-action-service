@@ -156,6 +156,10 @@ spec:
             value: "{{ .Values.container.port }}"
           - name: SECURITY_BASIC_ENABLED
             value: "false"
+          - name: REPORT_SETTINGS_CRON_EXPRESSION
+            value: "{{ .Values.report.cron }}"
+          - name: PLAN_EXECUTION_DELAY_MILLI_SECONDS
+            value: "{{ .Values.planExecutionDelayMillis }}"
           - name: SPRING_DATASOURCE_URL
             {{- if .Values.database.sqlProxyEnabled }}
             value: "jdbc:postgresql://127.0.0.1:5432/$(DB_NAME)"

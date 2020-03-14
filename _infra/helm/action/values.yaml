@@ -32,3 +32,8 @@ resources:
 
 managedRabbitMQ:
   enabled: false
+
+report:
+  cron: "0 * * * * *"
+
+planExecutionDelayMillis: 1000
