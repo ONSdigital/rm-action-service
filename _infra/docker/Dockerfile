@@ -1,7 +1,7 @@
 FROM openjdk:8-jre-slim
 
 RUN useradd docker_user && \
-    sudo usermod -aG docker docker_user
+    usermod -aG docker docker_user
 
 USER docker_user
 
