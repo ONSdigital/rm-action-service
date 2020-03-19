@@ -6,6 +6,6 @@ RUN groupadd docker && \
 
 USER docker_user
 
-COPY actionsvc.jar /opt/actionsvc.jar.
+COPY actionsvc.jar /opt/actionsvc.jar
 
 ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar /opt/actionsvc.jar" ]
