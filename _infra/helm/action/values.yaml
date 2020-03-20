@@ -37,3 +37,7 @@ report:
   cron: "0 * * * * *"
 
 planExecutionDelayMillis: 1000
+
+dns:
+  enabled: false
+  wellKnownPort: 8080
