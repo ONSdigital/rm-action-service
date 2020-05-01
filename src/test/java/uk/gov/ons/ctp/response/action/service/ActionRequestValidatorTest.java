@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseGroupStatus;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ActionRequestValidatorTest {

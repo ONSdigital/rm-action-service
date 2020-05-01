@@ -6,7 +6,7 @@ import java.util.List;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionEvent;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseEventDTO;
 
 public class CaseAndCaseEvent implements ActionRequestDecorator {
   private static final Logger log = LoggerFactory.getLogger(CaseAndCaseEvent.class);

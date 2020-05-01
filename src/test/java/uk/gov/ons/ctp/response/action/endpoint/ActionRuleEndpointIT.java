@@ -23,10 +23,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import uk.gov.ons.ctp.common.UnirestInitialiser;
-import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.representation.*;
+import uk.gov.ons.ctp.response.lib.common.UnirestInitialiser;
+import uk.gov.ons.ctp.response.lib.common.utility.Mapzer;
 
 @ContextConfiguration
 @ActiveProfiles("test")

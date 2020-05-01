@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.party.representation.Association;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
+import uk.gov.ons.ctp.response.lib.party.representation.Association;
+import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO.SampleUnitType;
 
 @Component
 @Qualifier("business")

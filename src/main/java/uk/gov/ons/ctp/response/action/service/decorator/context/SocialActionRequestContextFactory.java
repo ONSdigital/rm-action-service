@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.client.SampleSvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
-import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleAttributesDTO;
 
 @Component
 @Qualifier("social")

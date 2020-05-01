@@ -12,10 +12,10 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.service.decorator.context.BusinessActionRequestContextFactory;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
+import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BusinessActionRequestContextFactoryTest {

@@ -10,11 +10,11 @@ import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
-import uk.gov.ons.response.survey.representation.SurveyDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseGroupDTO;
+import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO.SampleUnitType;
+import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
 @Component
 public class DefaultActionRequestContextFactory implements ActionRequestContextFactory {

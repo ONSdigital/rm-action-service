@@ -5,7 +5,7 @@ import com.godaddy.logging.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupStatus;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseGroupStatus;
 
 @Service
 public class ActionRequestValidator {
