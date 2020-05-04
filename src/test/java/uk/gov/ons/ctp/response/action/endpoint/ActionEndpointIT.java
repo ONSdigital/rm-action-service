@@ -35,21 +35,21 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import uk.gov.ons.ctp.common.UnirestInitialiser;
-import uk.gov.ons.ctp.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.*;
-import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
-import uk.gov.ons.ctp.response.casesvc.message.notification.NotificationType;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
-import uk.gov.ons.tools.rabbit.Rabbitmq;
-import uk.gov.ons.tools.rabbit.SimpleMessageBase;
-import uk.gov.ons.tools.rabbit.SimpleMessageListener;
-import uk.gov.ons.tools.rabbit.SimpleMessageSender;
+import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
+import uk.gov.ons.ctp.response.lib.casesvc.message.notification.NotificationType;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.lib.common.UnirestInitialiser;
+import uk.gov.ons.ctp.response.lib.common.utility.Mapzer;
+import uk.gov.ons.ctp.response.lib.rabbit.Rabbitmq;
+import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageBase;
+import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageListener;
+import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageSender;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleAttributesDTO;
 
 /** Integration tests for action endpoints */
 @ContextConfiguration

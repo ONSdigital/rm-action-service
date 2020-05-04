@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
-import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.response.survey.representation.SurveyDTO;
+import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
+import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
 /** Impl of the service that centralizes all REST calls to the Survey service */
 @Service

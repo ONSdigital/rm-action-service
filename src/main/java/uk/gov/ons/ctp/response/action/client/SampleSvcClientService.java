@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
-import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.sample.representation.SampleAttributesDTO;
+import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleAttributesDTO;
 
 @Service
 public class SampleSvcClientService {

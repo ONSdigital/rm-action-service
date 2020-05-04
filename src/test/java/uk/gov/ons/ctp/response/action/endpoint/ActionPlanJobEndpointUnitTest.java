@@ -10,10 +10,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.ons.ctp.common.MvcHelper.getJson;
-import static uk.gov.ons.ctp.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.ACTION_PLAN_JOB_NOT_FOUND;
 import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint.NO_ACTIONPLAN_MSG;
+import static uk.gov.ons.ctp.response.lib.common.MvcHelper.getJson;
+import static uk.gov.ons.ctp.response.lib.common.utility.MockMvcControllerAdviceHelper.mockAdviceFor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +30,6 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import uk.gov.ons.ctp.common.FixtureHelper;
-import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.common.error.RestExceptionHandler;
-import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
-import uk.gov.ons.ctp.common.matcher.DateMatcher;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
@@ -42,6 +37,11 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
+import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
+import uk.gov.ons.ctp.response.lib.common.error.CTPException;
+import uk.gov.ons.ctp.response.lib.common.error.RestExceptionHandler;
+import uk.gov.ons.ctp.response.lib.common.jackson.CustomObjectMapper;
+import uk.gov.ons.ctp.response.lib.common.matcher.DateMatcher;
 
 /** ActionPlanJobEndpoint Unit tests */
 public class ActionPlanJobEndpointUnitTest {

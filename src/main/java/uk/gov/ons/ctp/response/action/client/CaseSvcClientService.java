@@ -21,16 +21,16 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
-import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventCreationRequestDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseEventDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseIACDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CategoryDTO;
-import uk.gov.ons.ctp.response.casesvc.representation.CreatedCaseEventDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseEventCreationRequestDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseEventDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseGroupDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseIACDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CategoryDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CreatedCaseEventDTO;
+import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
 
 /** Impl of the service that centralizes all REST calls to the Case service */
 @Service
@@ -93,8 +93,7 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, CaseGroupDTO.class);
       } catch (final IOException e) {
-        log.with("caseGroupID", caseGroupId)
-            .error("Unable to read case group response", e);
+        log.with("caseGroupID", caseGroupId).error("Unable to read case group response", e);
       }
     }
     return result;

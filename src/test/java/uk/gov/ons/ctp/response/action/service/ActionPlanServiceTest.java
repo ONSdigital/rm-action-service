@@ -20,10 +20,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import uk.gov.ons.ctp.common.FixtureHelper;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
+import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
 
 /** Tests for the ActionPlanJobServiceImpl */
 @RunWith(MockitoJUnitRunner.class)

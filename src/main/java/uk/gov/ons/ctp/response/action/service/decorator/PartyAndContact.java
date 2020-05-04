@@ -11,10 +11,10 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
-import uk.gov.ons.ctp.response.party.representation.Association;
-import uk.gov.ons.ctp.response.party.representation.Attributes;
-import uk.gov.ons.ctp.response.party.representation.Enrolment;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.lib.party.representation.Association;
+import uk.gov.ons.ctp.response.lib.party.representation.Attributes;
+import uk.gov.ons.ctp.response.lib.party.representation.Enrolment;
+import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 
 public class PartyAndContact implements ActionRequestDecorator {
   private static final Logger log = LoggerFactory.getLogger(PartyAndContact.class);

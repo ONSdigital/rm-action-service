@@ -22,7 +22,7 @@ import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSur
 import uk.gov.ons.ctp.response.action.service.decorator.SampleAttributes;
 import uk.gov.ons.ctp.response.action.service.decorator.SampleUnitRef;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
 
 @Service
 @Qualifier("social")

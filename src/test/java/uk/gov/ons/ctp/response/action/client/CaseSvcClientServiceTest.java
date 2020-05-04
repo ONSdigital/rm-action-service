@@ -20,10 +20,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
-import uk.gov.ons.ctp.common.rest.RestUtility;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseIACDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseIACDTO;
+import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CaseSvcClientServiceTest {

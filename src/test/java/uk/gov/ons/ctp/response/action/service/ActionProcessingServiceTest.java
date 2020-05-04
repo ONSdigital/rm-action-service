@@ -21,9 +21,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import uk.gov.ons.ctp.common.FixtureHelper;
-import uk.gov.ons.ctp.common.error.CTPException;
-import uk.gov.ons.ctp.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -37,11 +34,14 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
-import uk.gov.ons.ctp.response.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.collection.exercise.representation.CollectionExerciseDTO;
-import uk.gov.ons.ctp.response.party.representation.PartyDTO;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO.SampleUnitType;
-import uk.gov.ons.response.survey.representation.SurveyDTO;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
+import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
+import uk.gov.ons.ctp.response.lib.common.error.CTPException;
+import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
+import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO.SampleUnitType;
+import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
 /** Tests for the ActionProcessingServiceImpl */
 @RunWith(MockitoJUnitRunner.class)

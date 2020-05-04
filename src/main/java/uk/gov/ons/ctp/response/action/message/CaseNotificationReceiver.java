@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
-import uk.gov.ons.ctp.response.casesvc.message.notification.CaseNotification;
+import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
+import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
 /** Message end point for Case notification life cycle messages, please see flows.xml. */
 @CoverageIgnore

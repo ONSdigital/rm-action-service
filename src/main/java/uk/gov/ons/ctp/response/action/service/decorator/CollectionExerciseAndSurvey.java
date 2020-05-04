@@ -6,7 +6,7 @@ import java.util.Date;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
-import uk.gov.ons.ctp.response.sample.representation.SampleUnitDTO;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
 public class CollectionExerciseAndSurvey implements ActionRequestDecorator {
 

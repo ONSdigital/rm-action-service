@@ -6,9 +6,9 @@ import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.integration.annotation.ServiceActivator;
-import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.service.FeedbackService;
+import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
 /**
  * The entry point for inbound feedback messages from SpringIntegration. See the
