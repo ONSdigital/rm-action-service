@@ -286,6 +286,5 @@ spec:
             value: "$(DB_USERNAME)"
           - name: LIQUIBASE_PASSWORD
             value: "$(DB_PASSWORD)"
-          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
