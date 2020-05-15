@@ -57,6 +57,10 @@ public class ActionRequestValidator {
         && (caseInProgress(actionRequest) || caseNotStarted(actionRequest))) {
       return true;
     }
+    if (isNudgeEmail(actionType)
+        && (caseInProgress(actionRequest) || caseNotStarted(actionRequest))) {
+      return true;
+    }
     return false;
   }
 
@@ -83,6 +87,10 @@ public class ActionRequestValidator {
   }
 
   private boolean isReminderEmail(final ActionType actionType) {
+    return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(3);
+  }
+
+  private boolean isNudgeEmail(final ActionType actionType) {
     return actionType.getActionTypePK() != null && actionType.getActionTypePK().equals(3);
   }
 
