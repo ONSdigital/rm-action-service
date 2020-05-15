@@ -27,7 +27,6 @@ jobs:
   docker:
     name: Publish - GCR
     runs-on: ubuntu-latest
-    needs: [test]
     steps:
       - name: setup
         uses: actions/checkout@v2
