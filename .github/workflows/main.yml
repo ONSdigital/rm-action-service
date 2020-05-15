@@ -79,7 +79,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: failure()
 
-      - uses: eu.gcr.io/ons-rasrmbs-management/helm@latest
+      - uses: eu.gcr.io/ons-rasrmbs-management/helm:latest
         with:
           version: latest
           service_account_key: ${{ secrets.GCR_KEY }}
