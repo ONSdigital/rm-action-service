@@ -13,10 +13,10 @@ on:
 env:
   GITHUB_SHA: ${{ github.sha }}
   GITHUB_REF: ${{ github.ref }}
-  IMAGE: docker-java-hello-world-app
+  IMAGE: action
   REGISTRY_HOSTNAME: eu.gcr.io
   HOST: ${{ secrets.GOOGLE_PROJECT_ID }}
-  CHART_PATH: _infra/helm
+  CHART_PATH: _infra/helm/action
   REPO_URL: https://kubernetes-charts.storage.googleapis.com
   REPO_NAME: stable
 
@@ -45,10 +45,43 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always() # Pick up events even if the job fails or is canceled.
+  docker:
+    name: Publish - GCR
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: setup
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '270.0.0'
+          service_account_key: ${{ secrets.GCR_KEY }}
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - run: |
+          gcloud auth configure-docker
+
+      # Build the Docker image
+      - name: Build
+        run: |
+          export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+          docker build -t "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit .
+
+      # Push the Docker image to Google Container Registry
+      - name: Publish
+        run: |
+          export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
+          docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow # selectable (default: repo,message)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: failure()
 
       - name: Package helm charts
         run: |
-          helm repo add $REPO_NAME $REPO_URL
+          docker pull "$REGISTRY_HOSTNAME"/"$HOST"/helm:latest
           helm dep up $CHART_PATH
-          helm package -d ../helm-chart-build $CHART_PATH
-          ls -la ../helm-chart-build
+          helm package $CHART_PATH
+          ls
