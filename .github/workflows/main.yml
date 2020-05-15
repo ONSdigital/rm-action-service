@@ -86,7 +86,7 @@ jobs:
         uses: actions/gcloud/cli@master
         with:
           entrypoint: /bin/sh
-          args: "-c \"gcloud auth activate-service-account --key-file token.json && gcloud auth configure-docker && docker eu.gcr.io/ons-rasrmbs-management/helm:latest\""
+          args: "-c \"gcloud auth activate-service-account --key-file token.json && gcloud auth configure-docker && docker pull eu.gcr.io/ons-rasrmbs-management/helm:latest\""
         env:
           GOOGLE_APPLICATION_CREDENTIALS: token.json
       - name: test action
