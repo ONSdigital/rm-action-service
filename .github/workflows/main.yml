@@ -81,7 +81,7 @@ jobs:
         if: failure()
 
       - name: Setup service account
-          run: echo -n ${{ secrets.GCS }} | base64 -d > token.json
+        run: echo -n ${{ secrets.GCS }} | base64 -d > token.json
       - name: gql
         uses: actions/gcloud/cli@master
         with:
