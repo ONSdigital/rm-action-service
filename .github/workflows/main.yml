@@ -79,7 +79,6 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: failure()
 
-      - name: Package helm charts
       - uses: eu.gcr.io/ons-rasrmbs-management/helm
         with:
           version: latest
