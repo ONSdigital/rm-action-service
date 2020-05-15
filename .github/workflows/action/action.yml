@@ -1,0 +1,4 @@
+name: test action
+runs:
+  using: 'docker'
+  image: 'docker://eu.gcr.io/ons-rasrmbs-management/helm:latest'

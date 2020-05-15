@@ -71,6 +71,7 @@ jobs:
         run: |
           export TAG=`echo $GITHUB_REF | awk -F/ '{print $NF}'`
           docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit
+
       - uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -79,12 +80,14 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: failure()
 
-      - uses: eu.gcr.io/ons-rasrmbs-management/helm:latest
-        with:
-          version: latest
-          service_account_key: ${{ secrets.GCR_KEY }}
-      - run: |
-          docker pull "$REGISTRY_HOSTNAME"/"$HOST"/helm:latest
-          helm dep up $CHART_PATH
-          helm package $CHART_PATH
-          ls
+      - name: Setup service account
+          run: echo -n ${{ secrets.GCS }} | base64 -d > token.json
+            - name: gql
+              uses: actions/gcloud/cli@master
+              with:
+                entrypoint: /bin/sh
+                args: "-c \"gcloud auth activate-service-account --key-file token.json && gcloud auth configure-docker && docker eu.gcr.io/ons-rasrmbs-management/helm:latest\""
+              env:
+                GOOGLE_APPLICATION_CREDENTIALS: token.json
+            - name: test action
+              uses: ./action
