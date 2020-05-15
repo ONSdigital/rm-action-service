@@ -48,7 +48,6 @@ jobs:
 
       - name: Package helm charts
         run: |
-          cd chart-resource
           helm repo add $REPO_NAME $REPO_URL
           helm dep up $CHART_PATH
           helm package -d ../helm-chart-build $CHART_PATH
