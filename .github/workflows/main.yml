@@ -16,6 +16,9 @@ env:
   IMAGE: docker-java-hello-world-app
   REGISTRY_HOSTNAME: eu.gcr.io
   HOST: ${{ secrets.GOOGLE_PROJECT_ID }}
+  CHART_PATH: _infra/helm
+  REPO_URL: https://kubernetes-charts.storage.googleapis.com
+  REPO_NAME: stable
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -42,3 +45,11 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always() # Pick up events even if the job fails or is canceled.
+
+      - name: Package helm charts
+        run: |
+          cd chart-resource
+          helm repo add $REPO_NAME $REPO_URL
+          helm dep up $CHART_PATH
+          helm package -d ../helm-chart-build $CHART_PATH
+          ls -la ../helm-chart-build
