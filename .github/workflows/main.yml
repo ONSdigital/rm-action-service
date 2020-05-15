@@ -80,6 +80,10 @@ jobs:
         if: failure()
 
       - name: Package helm charts
+      - uses: eu.gcr.io/ons-rasrmbs-management/helm
+        with:
+          version: latest
+          service_account_key: ${{ secrets.GCR_KEY }}
         run: |
           docker pull "$REGISTRY_HOSTNAME"/"$HOST"/helm:latest
           helm dep up $CHART_PATH
