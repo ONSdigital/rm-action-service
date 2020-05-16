@@ -15,10 +15,10 @@ env:
   GITHUB_REF: ${{ github.ref }}
   IMAGE: action
   REGISTRY_HOSTNAME: eu.gcr.io
-  HOST: ${{ secrets.GOOGLE_PROJECT_ID }}
   CHART_PATH: _infra/helm/action
   REPO_URL: https://kubernetes-charts.storage.googleapis.com
   REPO_NAME: stable
+  HOST: ${{ secrets.GOOGLE_PROJECT_ID }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -47,10 +47,10 @@ jobs:
           gcloud auth configure-docker
       - name: Build
         run: |
-          docker build -t "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit .
+          docker build -t "$REGISTRY_HOSTNAME"/ons-rasrmbs-management/"$IMAGE":amit .
       - name: Publish
         run: |
-          docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit
+          docker push "$REGISTRY_HOSTNAME"/ons-rasrmbs-management/"$IMAGE":amit
 
       - uses: 8398a7/action-slack@v3
         with:
