@@ -51,7 +51,9 @@ jobs:
       - name: Publish
         run: |
           docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit
-
+          docker pull eu.gcr.io/ons-rasrmbs-management/helm:latest
+      - name: test action
+        uses: ./action   
       - uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
