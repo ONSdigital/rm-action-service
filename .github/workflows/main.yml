@@ -51,8 +51,10 @@ jobs:
     - name: Helm Image pull
       run: | 
         docker pull eu.gcr.io/ons-rasrmbs-management/helm:latest
-    - name: test action
+    - name: test helm
       uses: ./action
+      run: |
+        helm dep up _infra/helm/action
     - uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
