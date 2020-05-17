@@ -53,7 +53,7 @@ jobs:
         docker pull eu.gcr.io/ons-rasrmbs-management/helm:latest
     - name: test helm
       uses: ./action
-      run: |
+    - run: |
         helm dep up _infra/helm/action
     - uses: 8398a7/action-slack@v3
       with:
