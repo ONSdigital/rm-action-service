@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -17,6 +18,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 @Builder
 @Embeddable
 @AllArgsConstructor
+@JsonDeserialize(as = OutcomeHandlerId.class)
 public class OutcomeHandlerId implements Serializable {
   private static final long serialVersionUID = 3161993644341999008L;
 
