@@ -50,7 +50,7 @@ jobs:
         docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":amit
     - name: Helm Image pull
       run: | 
-        docker pull gcr.io/rm-ras-sandbox/helm:latest
+        docker pull gcr.io/ons-rasrmbs-management/helm:latest
     - name: test helm
       uses: ./action
     - run: |
