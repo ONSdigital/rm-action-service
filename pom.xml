@@ -326,7 +326,7 @@
 
     <build>
         <defaultGoal>clean install</defaultGoal>
-
+        <finalName>actionsvc</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
