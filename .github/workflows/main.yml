@@ -51,7 +51,7 @@ jobs:
       - name: Publish Charts
         if: github.ref == 'refs/heads/master'
         run: |
-          gsutil cp action-*.tgz gs://ras-rm-artifacts/act/
+          gsutil cp action-*.tgz gs://ras-rm-artifacts/action/
       - uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
