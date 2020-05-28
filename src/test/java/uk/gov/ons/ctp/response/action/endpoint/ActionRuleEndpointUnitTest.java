@@ -2,10 +2,8 @@ package uk.gov.ons.ctp.response.action.endpoint;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,9 +26,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.gov.ons.ctp.response.action.ActionBeanMapper;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -61,6 +63,8 @@ public final class ActionRuleEndpointUnitTest {
       UUID.fromString("d24b3f17-bbf8-4c71-b2f0-a4334125d79a");
   private static final uk.gov.ons.ctp.response.action.representation.ActionType ACTION_TYPE =
       uk.gov.ons.ctp.response.action.representation.ActionType.BSNOT;
+  private static final uk.gov.ons.ctp.response.action.representation.ActionType NUDGE_ACTION_TYPE =
+      uk.gov.ons.ctp.response.action.representation.ActionType.BSNUE;
   @InjectMocks private ActionRuleEndpoint actionRuleEndpoint;
   @Mock private ActionRuleService actionRuleService;
   @Mock private ActionPlanService actionPlanService;
@@ -343,6 +347,63 @@ public final class ActionRuleEndpointUnitTest {
         .andExpect(jsonPath("$.id", is(ACTION_RULE_ID_1.toString())));
   }
 
+  /**
+   * Test deleting an Action rule.
+   *
+   * @throws Exception when postJson does
+   */
+  @Test
+  public void deleteActionRuleGoodJsonProvided() throws Exception {
+    ActionRule actionRule =
+        new ActionRule(
+            ACTION_RULE_ID_3,
+            3,
+            actionPlans.get(0).getActionPlanPK(),
+            actionTypes.get(0).getActionTypePK(),
+            "BSNUE+1",
+            "TEST Nuge email deletion",
+            OffsetDateTime.now(),
+            3);
+    ResponseEntity r = new ResponseEntity(HttpStatus.ACCEPTED);
+    when(actionRuleService.deleteActionRule(any(ActionRule.class))).thenReturn(true);
+    when(actionTypeService.findActionType(any(Integer.class))).thenReturn(actionTypes.get(0));
+
+    ActionRulePutRequestDTO actionRuleDeleteRequestDTO = createActionRulePutRequestDTO();
+
+    final ResultActions resultActions =
+        mockMvc.perform(
+            deleteJson(
+                String.format("/actionrules/%s", ACTION_RULE_ID_1),
+                objectMapper.writeValueAsString(actionRuleDeleteRequestDTO)));
+
+    resultActions
+        .andExpect(status().isAccepted())
+        .andExpect(handler().handlerType(ActionRuleEndpoint.class))
+        .andExpect(handler().methodName("deleteActionRule"));
+
+    verify(actionRuleService, times(1)).deleteActionRule(any(ActionRule.class));
+  }
+
+  /**
+   * Test updating action rule not found
+   *
+   * @throws Exception when putJson does
+   */
+  @Test
+  public void deleteActionRuleByActionRuleIdNotFound() throws Exception {
+    ActionRulePutRequestDTO actionRulePutRequestDTO = createActionRulePutRequestDTO();
+    final ResultActions resultActions =
+        mockMvc.perform(
+            deleteJson(
+                String.format("/actionrules/%s", NON_EXISTING_ID),
+                objectMapper.writeValueAsString(actionRulePutRequestDTO)));
+
+    resultActions
+        .andExpect(status().isNotFound())
+        .andExpect(handler().handlerType(ActionRuleEndpoint.class))
+        .andExpect(handler().methodName("deleteActionRule"));
+  }
+
   private ActionRulePostRequestDTO createActionRulePostRequestDTO(
       UUID actionPlanId, uk.gov.ons.ctp.response.action.representation.ActionType actionTypeName) {
     ActionRulePostRequestDTO actionRulePostRequestDTO = new ActionRulePostRequestDTO();
@@ -362,5 +423,18 @@ public final class ActionRuleEndpointUnitTest {
     actionRulePutRequestDTO.setTriggerDateTime(OffsetDateTime.now());
     actionRulePutRequestDTO.setPriority(3);
     return actionRulePutRequestDTO;
+  }
+  /**
+   * Mock Http Servlet Request Builder
+   *
+   * @param url url to request
+   * @param content json content to post
+   * @return MockHttpServletRequestBuilder Mock Http Servlet Request Builder
+   */
+  public static MockHttpServletRequestBuilder deleteJson(String url, String content) {
+    return delete(url)
+        .content(content)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON);
   }
 }

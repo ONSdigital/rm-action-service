@@ -12,7 +12,9 @@ public enum ActionType {
   SOCIALREM("SOCIALREM"),
   SOCIALSNE("SOCIALSNE"),
   SOCIALPRENOT("SOCIALPRENOT"),
-  SOCIALICF("SOCIALICF");
+  SOCIALICF("SOCIALICF"),
+  BSNUE("BSNUE"),
+  BSNUL("BSNUL");
 
   private String name;
 

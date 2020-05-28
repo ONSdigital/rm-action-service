@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -164,6 +165,42 @@ public class ActionRuleEndpoint implements CTPEndpoint {
         actionTypeService.findActionType(updatedActionRule.getActionTypeFK());
     resultDTO.setActionTypeName(actionType.getActionTypeNameEnum());
     return resultDTO;
+  }
+
+  /**
+   * DELETE to delete the specified Action Rule.
+   *
+   * @param actionRuleId Id of the Action Rule to update
+   * @param actionRuleDeleteRequestDTO Incoming ActionRuleDTO with details to update
+   * @param bindingResult collects errors thrown by update
+   * @return ActionRuleDTO Returns the updated Action Rule details
+   * @throws CTPException if delete operation fails
+   * @throws InvalidRequestException if binding errors
+   */
+  @RequestMapping(
+      value = "/{actionRuleId}",
+      method = RequestMethod.DELETE,
+      consumes = "application/json")
+  public ResponseEntity deleteActionRule(
+      @PathVariable("actionRuleId") final UUID actionRuleId,
+      @RequestBody(required = false) @Valid
+          final ActionRulePutRequestDTO actionRuleDeleteRequestDTO,
+      final BindingResult bindingResult)
+      throws InvalidRequestException, CTPException {
+    log.with("action_rule_id", actionRuleId)
+        .with("action_rule_delete_request", actionRuleDeleteRequestDTO)
+        .info("deleting Action Rule");
+    if (bindingResult.hasErrors()) {
+      throw new InvalidRequestException("Binding errors for update action rule: ", bindingResult);
+    }
+    ActionRule actionRuleToUpdate = mapperFacade.map(actionRuleDeleteRequestDTO, ActionRule.class);
+    actionRuleToUpdate.setId(actionRuleId);
+    Boolean isSuccess = actionRuleService.deleteActionRule(actionRuleToUpdate);
+    if (!isSuccess) {
+      throw new CTPException(
+          CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_RULE_NOT_FOUND, actionRuleId);
+    }
+    return new ResponseEntity(HttpStatus.ACCEPTED);
   }
 
   /**

@@ -80,4 +80,17 @@ public class ActionRuleService {
 
     return existingActionRule;
   }
+
+  @Transactional(propagation = Propagation.REQUIRED, timeout = TRANSACTION_TIMEOUT)
+  public boolean deleteActionRule(final ActionRule actionRule) {
+    Boolean isSuccess = false;
+    final UUID actionRuleId = actionRule.getId();
+    ActionRule existingActionRule = actionRuleRepo.findById(actionRuleId);
+    if (existingActionRule != null) {
+      log.with("deleted_action_rule", existingActionRule).info("deleting action");
+      actionRuleRepo.delete(existingActionRule);
+      isSuccess = true;
+    }
+    return isSuccess;
+  }
 }
