@@ -140,6 +140,32 @@ public class ActionRuleEndpointIT {
     assertEquals(putRequestBody.getDescription(), updatedActionRule.getDescription());
   }
 
+  @Test
+  public void deleteCreatedActionRule() throws UnirestException {
+    // Given
+    ActionPlanDTO actionPlanDTO = createActionPlan();
+
+    ActionRulePostRequestDTO postRequestBody = createActionRulePostRequestDTO(actionPlanDTO);
+
+    HttpResponse<ActionRuleDTO> postResponse = postActionRule(postRequestBody);
+    assertEquals(201, postResponse.getStatus());
+
+    OffsetDateTime editedTriggerDateTime = OffsetDateTime.now().plusDays(3);
+
+    ActionRulePutRequestDTO deleteRequestBody = new ActionRulePutRequestDTO();
+    deleteRequestBody.setDescription(postRequestBody.getDescription());
+    deleteRequestBody.setName(postRequestBody.getName());
+    deleteRequestBody.setTriggerDateTime(editedTriggerDateTime);
+    deleteRequestBody.setPriority(postRequestBody.getPriority());
+
+    // When
+    HttpResponse<ActionRuleDTO> deleteResponse =
+        deleteActionRule(deleteRequestBody, postResponse.getBody().getId());
+
+    // Then
+    assertEquals(202, deleteResponse.getStatus());
+  }
+
   private ActionPlanDTO createActionPlan() throws UnirestException {
     ActionPlanPostRequestDTO actionPlanDto = new ActionPlanPostRequestDTO();
     actionPlanDto.setName("notification2");
@@ -167,6 +193,17 @@ public class ActionRuleEndpointIT {
         .header("Content-Type", "application/json")
         .body(postBody)
         .asObject(ActionRuleDTO.class);
+  }
+
+  private HttpResponse deleteActionRule(ActionRulePutRequestDTO putBody, UUID actionRuleId)
+      throws UnirestException {
+    return Unirest.delete(
+            "http://localhost:" + this.port + "/actionrules/" + actionRuleId.toString())
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .header("Content-Type", "application/json")
+        .body(putBody)
+        .asJson();
   }
 
   private HttpResponse<ActionRuleDTO[]> getActionRules(UUID actionPlanUUID)
@@ -197,7 +234,7 @@ public class ActionRuleEndpointIT {
     actionRuleDto.setActionPlanId(actionPlanDTO.getId());
     actionRuleDto.setDescription("Notification file");
     actionRuleDto.setName("Notifaction");
-    actionRuleDto.setActionTypeName(ActionType.BSNL);
+    actionRuleDto.setActionTypeName(ActionType.BSNUE);
     return actionRuleDto;
   }
 }

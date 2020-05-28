@@ -136,6 +136,71 @@ public class ActionRequestValidatorTest {
   }
 
   @Test
+  public void testNudgeEmailCaseInProgress() {
+    final ActionType actionType = buildNudgeEmailActionType();
+    final ActionRequest actionRequest =
+        ActionRequest.builder()
+            .withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+            .withEnrolmentStatus(ActionProcessingService.ENABLED)
+            .withRespondentStatus(ActionRequestValidator.RESPONDENTACTIVE)
+            .build();
+
+    assertTrue(validator.validate(actionType, actionRequest));
+  }
+
+  @Test
+  public void testNudgeEmailCaseNotStarted() {
+    final ActionType actionType = buildNudgeEmailActionType();
+    final ActionRequest actionRequest =
+        ActionRequest.builder()
+            .withCaseGroupStatus(CaseGroupStatus.NOTSTARTED.toString())
+            .withEnrolmentStatus(ActionProcessingService.ENABLED)
+            .withRespondentStatus(ActionRequestValidator.RESPONDENTACTIVE)
+            .build();
+
+    assertTrue(validator.validate(actionType, actionRequest));
+  }
+
+  @Test
+  public void testNudgeEmailRespondentNotActive() {
+    final ActionType actionType = buildNudgeEmailActionType();
+    final ActionRequest actionRequest =
+        ActionRequest.builder()
+            .withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+            .withEnrolmentStatus(ActionProcessingService.ENABLED)
+            .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED)
+            .build();
+
+    assertFalse(validator.validate(actionType, actionRequest));
+  }
+
+  @Test
+  public void testNudgeEmailRespondentNotEnrolled() {
+    final ActionType actionType = buildNudgeEmailActionType();
+    final ActionRequest actionRequest =
+        ActionRequest.builder()
+            .withCaseGroupStatus(CaseGroupStatus.INPROGRESS.toString())
+            .withEnrolmentStatus(ActionProcessingService.PENDING)
+            .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED)
+            .build();
+
+    assertFalse(validator.validate(actionType, actionRequest));
+  }
+
+  @Test
+  public void testNudgeEmailResponseStatusFinished() {
+    final ActionType actionType = buildNudgeEmailActionType();
+    final ActionRequest actionRequest =
+        ActionRequest.builder()
+            .withCaseGroupStatus(CaseGroupStatus.COMPLETE.toString())
+            .withEnrolmentStatus(ActionProcessingService.ENABLED)
+            .withRespondentStatus(ActionRequestValidator.RESPONDENTCREATED)
+            .build();
+
+    assertFalse(validator.validate(actionType, actionRequest));
+  }
+
+  @Test
   public void testValidReminderEmailCaseNotStarted() {
     final ActionType actionType = buildReminderEmailActionType();
     final ActionRequest actionRequest =
@@ -257,6 +322,14 @@ public class ActionRequestValidatorTest {
     return ActionType.builder()
         .actionTypePK(3)
         .name("BSNE")
+        .handler(ActionRequestValidator.NOTIFYGATEWAY)
+        .build();
+  }
+
+  private ActionType buildNudgeEmailActionType() {
+    return ActionType.builder()
+        .actionTypePK(3)
+        .name("BSNUE")
         .handler(ActionRequestValidator.NOTIFYGATEWAY)
         .build();
   }
