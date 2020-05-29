@@ -4,10 +4,10 @@ name: Build
 # events but only for the master branch
 on:
   push:
-    paths-ignore:
-    - '_infra/helm/action/Chart.yaml'
     branches: [ master ]
   pull_request:
+    paths-ignore:
+    - '_infra/helm/action/Chart.yaml'
     branches: [ master ]
 
 env:
