@@ -1,0 +1,14 @@
+openapi: 3.0.2
+info:
+    title: RAS/RM Action Service
+    description: A service for dealing with Actions - operations that are required on a survey case, such as print file batching or arranging a field visit.
+    version: "1.0"
+
+servers:
+    - url: https://localhost:8151
+      description: The default path for Action in ras-rm-docker-dev
+    - url: http://localhost:8080
+      description: The default path for Action when port-forwarding to GCP
+
+tags:
+    
