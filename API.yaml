@@ -11,4 +11,63 @@ servers:
       description: The default path for Action when port-forwarding to GCP
 
 tags:
-    
+    - name: info
+      description: Informational endpoints.
+
+paths:
+    /health:
+        get:
+            summary: Returns health information about the service.
+            description: Returns whether the service is up or not. An in-built Spring endpoint.
+            security: []
+            tags:
+                - info
+            responses:
+                '200':
+                    description: A JSON indicating whether the service is up or not.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                        example: UP
+                '404':
+                    description: The service is incorrectly configured.
+    /info:
+        get:
+            summary: Returns basic information about the service.
+            description: Returns service information. An in-built Spring endpoint.
+            security: []
+            tags:
+                - info
+            responses:
+                '200':
+                    description: A JSON of basic information about the service.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    name:
+                                        type: string
+                                        example: actionsvc
+                                    version:
+                                        type: string
+                                        example: "10.42.0"
+                                    origin:
+                                        type: string
+                                        example: "git@github.com:ONSdigital/rm-action-service.git"
+                                    commit:
+                                        type: string
+                                        example: "06752afbf05f27c923ddf42d3cd2ec9eeafd3362"
+                                    branch:
+                                        type: string
+                                        example: master
+                                    built:
+                                        type: string
+                                        format: date-time
+                                        example: "2020-06-15T08:38:34Z"
+                '404':
+                    description: The service is incorrectly configured.
