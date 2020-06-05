@@ -27,8 +27,8 @@ There are two ways of running this service
 ## API
 See [API.md](https://github.com/ONSdigital/rm-action-service/blob/master/API.md) for API documentation.
 
-## Swagger Specifications
-To view the Swagger Specifications for the Action Service, run the service and navigate to http://localhost:8151/swagger-ui.html.
+## Services consumed
+
 
 ## Copyright
 Copyright (C) 2017 Crown Copyright (Office for National Statistics)

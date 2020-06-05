@@ -13,8 +13,35 @@ servers:
 tags:
     - name: info
       description: Informational endpoints.
+    - name: actions
+      description: Endpoints for interacting with actions.
 
 paths:
+    /actions/{id}:
+        get:
+            summary: Returns the information on an action by ID.
+            description: Returns the details of the action with the given ID.
+            tags:
+                - actions
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+                    format: uuid
+                    example: 56d87c78-4741-4dd8-ae8c-7384fd1e42f2
+            responses:
+                '200':
+                    description: The action was successfully retrieved.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ActionDTO'
+                '404':
+                    description: No action found by that ID.
+                '500':
+                    description: The ID provided wasn't a valid UUID.
     /health:
         get:
             summary: Returns health information about the service.
@@ -71,3 +98,58 @@ paths:
                                         example: "2020-06-15T08:38:34Z"
                 '404':
                     description: The service is incorrectly configured.
+components:
+    schemas:
+        ActionDTO:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    example: 56d87c78-4741-4dd8-ae8c-7384fd1e42f2
+                caseId:
+                    type: string
+                    format: uuid
+                    example: 75ac47f9-0a5a-47f2-91ea-39fcff6725d1
+                actionPlanId:
+                    type: string
+                    format: uuid
+                    example: 810e9501-832b-4156-8d84-157aa026872b
+                actionRuleId:
+                    type: string
+                    format: uuid
+                    example: 1ce958b4-4c12-4f69-9573-9b10fc22ea76
+                actionTypeName:
+                    type: string
+                    example: HouseholdCreateVisit
+                createdBy:
+                    type: string
+                    example: SYSTEM
+                manuallyCreated:
+                    type: boolean
+                    example: False
+                priority:
+                    type: number
+                    format: integer
+                    example: 3
+                situation:
+                    type: string
+                    example: DERELI
+                state:
+                    type: string
+                    example: CANCEL_PENDING
+                createdDateTime:
+                    type: string
+                    format: date-time
+                    example: "2020-06-15T08:38:34Z"
+                updatedDateTime:
+                    type: string
+                    format: date-time
+                    example: "2020-06-15T08:38:34Z"
+    securitySchemes:
+        basicAuth:
+            type: http
+            scheme: basic
+
+security:
+    - basicAuth: []
