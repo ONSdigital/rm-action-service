@@ -45,7 +45,6 @@ jobs:
           PR=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
           echo "$PR"
           echo ::set-output name=pr_number::pr-"$PR"
-          echo ${{ steps.tag.outputs.pr_number }}
       - name: Run Tests
         run: |
           mvn fmt:check
