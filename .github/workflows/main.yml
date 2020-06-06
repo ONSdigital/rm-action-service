@@ -9,7 +9,6 @@ on:
     branches: [ master ]
 
 env:
-  GITHUB_REF: ${{ github.ref }}
   IMAGE: action
   REGISTRY_HOSTNAME: eu.gcr.io
   HOST: ${{ secrets.GOOGLE_PROJECT_ID }}
@@ -41,9 +40,8 @@ jobs:
 
       - name: pr docker tag
         if: github.ref != 'refs/heads/master'
-        id: dev
         run: |
-          echo ::set-output name=pr_number::pr-$(echo "$GITHUB_REF" | awk -F / '{print $3}')
+          echo ::set-env name=pr_number::pr-$(echo "$GITHUB_REF" | awk -F / '{print $3}')
           echo ${{ steps.dev.outputs.pr_number }}
       - name: Run Tests
         run: |
