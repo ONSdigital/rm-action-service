@@ -43,7 +43,7 @@ jobs:
         if: github.ref != 'refs/heads/master'
         id: tag
         run: |
-          echo ::set-output name=pr_number::pr-$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          echo ::set-output name=pr_number::pr-${GITHUB_REF#refs/pull/*/merge}
           echo ${{ steps.tag.outputs.pr_number }}
       - name: Run Tests
         run: |
