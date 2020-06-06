@@ -40,10 +40,11 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: pr docker tag
-        id: vars
+        if: github.ref != 'refs/heads/master'
+        id: tag
         run: |
           echo ::set-output name=pr_number::pr-$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          echo ${{ steps.vars.outputs.pr_number }}
+          echo ${{ steps.tag.outputs.pr_number }}
       - name: Run Tests
         run: |
           mvn fmt:check
@@ -57,11 +58,13 @@ jobs:
           gcloud auth configure-docker
         # Build the Docker image
       - name: Build Docker Image
+        if: github.ref != 'refs/heads/master'
         run: |
-          docker build -t "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":${{ steps.vars.outputs.pr_number }} .
+          docker build -t "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":${{ steps.tag.outputs.pr_number }} .
       - name: Push dev image
+        if: github.ref != 'refs/heads/master'
         run: |
-          docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":${{ steps.vars.outputs.pr_number }}
+          docker push "$REGISTRY_HOSTNAME"/"$HOST"/"$IMAGE":${{ steps.tag.outputs.pr_number }}
       - name: template helm
         run: |
           helm template _infra/helm/action
