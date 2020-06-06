@@ -44,7 +44,7 @@ jobs:
           echo ::set-env name=pr_number::pr-$(echo "$GITHUB_REF" | awk -F / '{print $3}')
           echo ${{ steps.dev.outputs.pr_number }}
           echo "$GITHUB_REF"
-          echo "$GITHUB_REF" | aww -F / '{print $3}'
+          echo "$GITHUB_REF" | awk -F / '{print $3}'
       - name: Run Tests
         run: |
           mvn fmt:check
