@@ -42,6 +42,33 @@ paths:
                     description: No action found by that ID.
                 '500':
                     description: The ID provided wasn't a valid UUID.
+    /actions/case/{id}:
+        get:
+            summary: Returns the information on actions by Case ID.
+            description: Returns the details of any actions with the related case ID.
+            tags:
+                - actions
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: string
+                    format: uuid
+                    example: 756c9376-e3d4-46bb-acbf-ea1b3e040d7b
+            responses:
+                '200':
+                    description: Returns the information on action(s) relating to the case.
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/ActionDTO'
+                '204':
+                    description: No actions were found relating to the case.
+                '500':
+                    description: The ID provided wasn't a valid UUID.
     /health:
         get:
             summary: Returns health information about the service.
