@@ -46,6 +46,24 @@ paths:
                                     $ref: '#/components/schemas/ActionDTO'
                 '204':
                     description: No actions were found based on the filters.
+        post:
+            summary: Creates an ad-hoc action.
+            description: Creates an action based on the request body, linked up to the action plan if it can be found by the case ID.
+            tags:
+                - actions
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ActionPostRequestDTO'
+            responses:
+                '201':
+                    description: The ad-hoc action was successfully created.
+                '404':
+                    description: The case specified could not be found.
+                '500':
+                    description: The request body was invalid.
     /actions/{id}:
         get:
             summary: Returns the information on an action by ID.
@@ -84,7 +102,7 @@ paths:
                   schema:
                     type: string
                     format: uuid
-                    example: 756c9376-e3d4-46bb-acbf-ea1b3e040d7b
+                    example: 75ac47f9-0a5a-47f2-91ea-39fcff6725d1
             responses:
                 '200':
                     description: Returns the information on action(s) relating to the case.
@@ -202,6 +220,31 @@ components:
                     type: string
                     format: date-time
                     example: "2020-06-15T08:38:34Z"
+        ActionPostRequestDTO:
+            type: object
+            properties:
+                caseId:
+                    type: string
+                    format: uuid
+                    example: 75ac47f9-0a5a-47f2-91ea-39fcff6725d1
+                actionTypeName:
+                    type: string
+                    example: BSREM
+                createdBy:
+                    type: string
+                    example: SYSTEM
+                priority:
+                    type: number
+                    enum:
+                        - 1
+                        - 2
+                        - 3
+                        - 4
+                        - 5
+            required:
+                - caseId
+                - actionTypeName
+                - createdBy
         ActionState:
             type: string
             enum:
