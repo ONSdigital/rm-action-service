@@ -17,6 +17,35 @@ tags:
       description: Endpoints for interacting with actions.
 
 paths:
+    /actions:
+        get:
+            summary: Returns all actions.
+            description: Returns the details of all actions optionally filtered by state and action type, ordered by most recent first.
+            tags:
+                - actions
+            parameters:
+                - in: query
+                  name: actionType
+                  required: false
+                  schema:
+                    type: string
+                    example: HouseholdCreateVisit
+                - in: query
+                  name: state
+                  required: false
+                  schema:
+                    $ref: '#/components/schemas/ActionState'
+            responses:
+                '200':
+                    description: Actions were successfully retrieved.
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/ActionDTO'
+                '204':
+                    description: No actions were found based on the filters.
     /actions/{id}:
         get:
             summary: Returns the information on an action by ID.
@@ -173,6 +202,19 @@ components:
                     type: string
                     format: date-time
                     example: "2020-06-15T08:38:34Z"
+        ActionState:
+            type: string
+            enum:
+                - SUBMITTED
+                - PENDING
+                - ABORTED
+                - ACTIVE
+                - COMPLETED
+                - DECLINED
+                - CANCEL_SUBMITTED
+                - CANCEL_PENDING
+                - CANCELLING
+                - CANCELLED
     securitySchemes:
         basicAuth:
             type: http
