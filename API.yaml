@@ -1,267 +1,1004 @@
-openapi: 3.0.2
+openapi: 3.0.1
 info:
-    title: RAS/RM Action Service
-    description: A service for dealing with Actions - operations that are required on a survey case, such as print file batching or arranging a field visit.
-    version: "1.0"
-
+  title: RAS/RM Action Service
+  description: A service for dealing with Actions - operations that are required on a survey case, such as print file batching or arranging a field visit.
+  version: "1.0"
 servers:
-    - url: https://localhost:8151
-      description: The default path for Action in ras-rm-docker-dev
-    - url: http://localhost:8080
-      description: The default path for Action when port-forwarding to GCP
-
+  - url: https://localhost:8151
+    description: The default path for Action in ras-rm-docker-dev
+  - url: http://localhost:8080
+    description: The default path for Action when port-forwarding to GCP
 tags:
-    - name: info
-      description: Informational endpoints.
-    - name: actions
-      description: Endpoints for interacting with actions.
-
+  - name: info
+    description: Informational endpoints.
+  - name: actions
+    description: Endpoints for interacting with actions.
+  - name: action-rules
+    description: Endpoints for interacting with action rules.
+  - name: action-plans
+    description: Endpoints for interacting with action plans.
+  - name: action-plan-jobs
+    description: Endpoints for interacting with action plan jobs.
 paths:
-    /actions:
-        get:
-            summary: Returns all actions.
-            description: Returns the details of all actions optionally filtered by state and action type, ordered by most recent first.
-            tags:
-                - actions
-            parameters:
-                - in: query
-                  name: actionType
-                  required: false
-                  schema:
-                    type: string
-                    example: HouseholdCreateVisit
-                - in: query
-                  name: state
-                  required: false
-                  schema:
-                    $ref: '#/components/schemas/ActionState'
-            responses:
-                '200':
-                    description: Actions were successfully retrieved.
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: '#/components/schemas/ActionDTO'
-                '204':
-                    description: No actions were found based on the filters.
-        post:
-            summary: Creates an ad-hoc action.
-            description: Creates an action based on the request body, linked up to the action plan if it can be found by the case ID.
-            tags:
-                - actions
-            requestBody:
-                required: true
+  /health:
+    get:
+        summary: Returns health information about the service.
+        description: Returns whether the service is up or not. An in-built Spring endpoint.
+        security: []
+        tags:
+            - info
+        responses:
+            '200':
+                description: A JSON indicating whether the service is up or not.
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/ActionPostRequestDTO'
-            responses:
-                '201':
-                    description: The ad-hoc action was successfully created.
-                '404':
-                    description: The case specified could not be found.
-                '500':
-                    description: The request body was invalid.
-    /actions/{id}:
-        get:
-            summary: Returns the information on an action by ID.
-            description: Returns the details of the action with the given ID.
-            tags:
-                - actions
-            parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                    type: string
-                    format: uuid
-                    example: 56d87c78-4741-4dd8-ae8c-7384fd1e42f2
-            responses:
-                '200':
-                    description: The action was successfully retrieved.
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ActionDTO'
-                '404':
-                    description: No action found by that ID.
-                '500':
-                    description: The ID provided wasn't a valid UUID.
-    /actions/case/{id}:
-        get:
-            summary: Returns the information on actions by Case ID.
-            description: Returns the details of any actions with the related case ID.
-            tags:
-                - actions
-            parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                    type: string
-                    format: uuid
-                    example: 75ac47f9-0a5a-47f2-91ea-39fcff6725d1
-            responses:
-                '200':
-                    description: Returns the information on action(s) relating to the case.
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: '#/components/schemas/ActionDTO'
-                '204':
-                    description: No actions were found relating to the case.
-                '500':
-                    description: The ID provided wasn't a valid UUID.
-    /health:
-        get:
-            summary: Returns health information about the service.
-            description: Returns whether the service is up or not. An in-built Spring endpoint.
-            security: []
-            tags:
-                - info
-            responses:
-                '200':
-                    description: A JSON indicating whether the service is up or not.
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    status:
-                                        type: string
-                                        example: UP
-                '404':
-                    description: The service is incorrectly configured.
-    /info:
-        get:
-            summary: Returns basic information about the service.
-            description: Returns service information. An in-built Spring endpoint.
-            security: []
-            tags:
-                - info
-            responses:
-                '200':
-                    description: A JSON of basic information about the service.
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    name:
-                                        type: string
-                                        example: actionsvc
-                                    version:
-                                        type: string
-                                        example: "10.42.0"
-                                    origin:
-                                        type: string
-                                        example: "git@github.com:ONSdigital/rm-action-service.git"
-                                    commit:
-                                        type: string
-                                        example: "06752afbf05f27c923ddf42d3cd2ec9eeafd3362"
-                                    branch:
-                                        type: string
-                                        example: master
-                                    built:
-                                        type: string
-                                        format: date-time
-                                        example: "2020-06-15T08:38:34Z"
-                '404':
-                    description: The service is incorrectly configured.
-components:
-    schemas:
-        ActionDTO:
-            type: object
-            properties:
-                id:
-                    type: string
-                    format: uuid
-                    example: 56d87c78-4741-4dd8-ae8c-7384fd1e42f2
-                caseId:
-                    type: string
-                    format: uuid
-                    example: 75ac47f9-0a5a-47f2-91ea-39fcff6725d1
-                actionPlanId:
-                    type: string
-                    format: uuid
-                    example: 810e9501-832b-4156-8d84-157aa026872b
-                actionRuleId:
-                    type: string
-                    format: uuid
-                    example: 1ce958b4-4c12-4f69-9573-9b10fc22ea76
-                actionTypeName:
-                    type: string
-                    example: HouseholdCreateVisit
-                createdBy:
-                    type: string
-                    example: SYSTEM
-                manuallyCreated:
-                    type: boolean
-                    example: False
-                priority:
-                    type: number
-                    format: integer
-                    example: 3
-                situation:
-                    type: string
-                    example: DERELI
-                state:
-                    type: string
-                    example: CANCEL_PENDING
-                createdDateTime:
-                    type: string
-                    format: date-time
-                    example: "2020-06-15T08:38:34Z"
-                updatedDateTime:
-                    type: string
-                    format: date-time
-                    example: "2020-06-15T08:38:34Z"
-        ActionPostRequestDTO:
-            type: object
-            properties:
-                caseId:
-                    type: string
-                    format: uuid
-                    example: 75ac47f9-0a5a-47f2-91ea-39fcff6725d1
-                actionTypeName:
-                    type: string
-                    example: BSREM
-                createdBy:
-                    type: string
-                    example: SYSTEM
-                priority:
-                    type: number
-                    enum:
-                        - 1
-                        - 2
-                        - 3
-                        - 4
-                        - 5
-            required:
-                - caseId
-                - actionTypeName
-                - createdBy
-        ActionState:
+                            type: object
+                            properties:
+                                status:
+                                    type: string
+                                    example: UP
+            '404':
+                description: The service is incorrectly configured.
+  /info:
+    get:
+        summary: Returns basic information about the service.
+        description: Returns service information. An in-built Spring endpoint.
+        security: []
+        tags:
+            - info
+        responses:
+            '200':
+                description: A JSON of basic information about the service.
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    example: actionsvc
+                                version:
+                                    type: string
+                                    example: "10.42.0"
+                                origin:
+                                    type: string
+                                    example: "git@github.com:ONSdigital/rm-action-service.git"
+                                commit:
+                                    type: string
+                                    example: "06752afbf05f27c923ddf42d3cd2ec9eeafd3362"
+                                branch:
+                                    type: string
+                                    example: master
+                                built:
+                                    type: string
+                                    format: date-time
+                                    example: "2020-06-15T08:38:34Z"
+            '404':
+                description: The service is incorrectly configured.
+  /actionplans:
+    get:
+      tags:
+        - action-plans
+      summary: findActionPlans
+      operationId: findActionPlansUsingGET
+      parameters:
+        - name: selectors
+          in: query
+          description: selectors
+          required: true
+          schema: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionPlanDTO'
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+    post:
+      tags:
+        - action-plans
+      summary: createActionPlan
+      operationId: createActionPlanUsingPOST
+      requestBody:
+        description: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionPlanPostRequestDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionPlanDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: request
+  '/actionplans/jobs/{actionplanjobid}':
+    get:
+      tags:
+        - action-plan-jobs
+      summary: findActionPlanJobById
+      operationId: findActionPlanJobByIdUsingGET
+      parameters:
+        - name: actionplanjobid
+          in: path
+          description: actionplanjobid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionPlanJobDTO'
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+  '/actionplans/{actionplanid}':
+    get:
+      tags:
+        - action-plans
+      summary: findActionPlanByActionPlanId
+      operationId: findActionPlanByActionPlanIdUsingGET
+      parameters:
+        - name: actionplanid
+          in: path
+          description: actionplanid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionPlanDTO'
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+    put:
+      tags:
+        - action-plans
+      summary: updateActionPlanByActionPlanId
+      operationId: updateActionPlanByActionPlanIdUsingPUT
+      parameters:
+        - name: actionplanid
+          in: path
+          description: actionplanid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionPlanPutRequestDTO'
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionPlanDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: request
+  '/actionplans/{actionplanid}/jobs':
+    get:
+      tags:
+        - action-plan-jobs
+      summary: findAllActionPlanJobsByActionPlanId
+      operationId: findAllActionPlanJobsByActionPlanIdUsingGET
+      parameters:
+        - name: actionplanid
+          in: path
+          description: actionplanid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionPlanJobDTO'
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+  /actionrules:
+    post:
+      tags:
+        - action-rules
+      summary: createActionRule
+      operationId: createActionRuleUsingPOST
+      requestBody:
+        description: actionRulePostRequestDTO
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRulePostRequestDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRuleDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: actionRulePostRequestDTO
+  '/actionrules/actionplan/{actionplanid}':
+    get:
+      tags:
+        - action-rules
+      summary: findActionRulesByActionPlanId
+      operationId: findActionRulesByActionPlanIdUsingGET
+      parameters:
+        - name: actionplanid
+          in: path
+          description: actionplanid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionRuleDTO'
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+  '/actionrules/{actionRuleId}':
+    put:
+      tags:
+        - action-rules
+      summary: updateActionRule
+      operationId: updateActionRuleUsingPUT
+      parameters:
+        - name: actionRuleId
+          in: path
+          description: actionRuleId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: actionRulePutRequestDTO
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRulePutRequestDTO'
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionRuleDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: actionRulePutRequestDTO
+    delete:
+      tags:
+        - action-rules
+      summary: deleteActionRule
+      operationId: deleteActionRuleUsingDELETE
+      parameters:
+        - name: actionRuleId
+          in: path
+          description: actionRuleId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: actionRuleDeleteRequestDTO
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionRulePutRequestDTO'
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseEntity'
+        '204':
+          description: No Content
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+      x-codegen-request-body-name: actionRuleDeleteRequestDTO
+  /actions:
+    get:
+      summary: Returns all actions.
+      description: Returns the details of all actions optionally filtered by state and action type, ordered by most recent first.
+      tags:
+        - actions
+      operationId: findActionsUsingGET
+      parameters:
+        - name: actiontype
+          in: query
+          description: actiontype
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: state
+          schema:
             type: string
             enum:
-                - SUBMITTED
-                - PENDING
-                - ABORTED
-                - ACTIVE
-                - COMPLETED
-                - DECLINED
-                - CANCEL_SUBMITTED
-                - CANCEL_PENDING
-                - CANCELLING
-                - CANCELLED
-    securitySchemes:
-        basicAuth:
-            type: http
-            scheme: basic
+              - SUBMITTED
+              - PENDING
+              - ABORTED
+              - ACTIVE
+              - COMPLETED
+              - DECLINED
+              - CANCEL_SUBMITTED
+              - CANCEL_PENDING
+              - CANCELLING
+              - CANCELLED
+      responses:
+        '200':
+          description: Actions were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionDTO'
+        '204':
+          description: No actions were found based on the filters.
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+    post:
+      summary: Creates an ad-hoc action.
+      description: Creates an action based on the request body, linked up to the action plan if it can be found by the case ID.
+      tags:
+        - actions
+      operationId: createAdhocActionUsingPOST
+      requestBody:
+        description: actionPostRequestDTO
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionPostRequestDTO'
+        required: true
+      responses:
+        '201':
+          description: The ad-hoc action was successfully created.
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: The case specified could not be found.
+        '500':
+          description: The request body was invalid.
+      x-codegen-request-body-name: actionPostRequestDTO
+  '/actions/case/{caseid}':
+    get:
+      summary: Returns the information on actions by Case ID.
+      description: Returns the details of any actions with the related case ID.
+      tags:
+        - actions
+      operationId: findActionsByCaseIdUsingGET
+      parameters:
+        - name: caseid
+          in: path
+          description: caseid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the information on action(s) relating to the case.
+          content:
+              application/json:
+                  schema:
+                      type: array
+                      items:
+                          $ref: '#/components/schemas/ActionDTO'
+        '204':
+          description: No actions were found relating to the case.
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '500':
+          description: The ID provided wasn't a valid UUID.
+  '/actions/case/{caseid}/cancel':
+    put:
+      tags:
+        - actions
+      summary: cancelActions
+      operationId: cancelActionsUsingPUT
+      parameters:
+        - name: caseid
+          in: path
+          description: caseid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+  /actions/rerun:
+    put:
+      tags:
+        - actions
+      summary: rerunAction
+      operationId: rerunActionUsingPUT
+      parameters:
+        - name: actionId
+          in: query
+          description: actionId
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+  '/actions/{actionid}':
+    get:
+      summary: Returns the information on an action by ID.
+      description: Returns the details of the action with the given ID.
+      tags:
+        - actions
+      operationId: findActionByActionIdUsingGET
+      parameters:
+        - name: actionid
+          in: path
+          description: actionid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The action was successfully retrieved.
+          content:
+              application/json:
+                  schema:
+                      $ref: '#/components/schemas/ActionDTO'
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: No action found by that ID.
+          content: {}
+        '500':
+          description: The ID provided wasn't a valid UUID.
+    put:
+      tags:
+        - actions
+      summary: updateAction
+      operationId: updateActionUsingPUT
+      parameters:
+        - name: actionid
+          in: path
+          description: actionid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: actionPutRequestDTO
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionPutRequestDTO'
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: actionPutRequestDTO
+  '/actions/{actionid}/feedback':
+    put:
+      tags:
+        - actions
+      summary: feedbackAction
+      operationId: feedbackActionUsingPUT
+      parameters:
+        - name: actionid
+          in: path
+          description: actionid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: actionFeedbackRequestDTO
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionFeedbackRequestDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionDTO'
+        '201':
+          description: Created
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: actionFeedbackRequestDTO
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    ActionDTO:
+      type: object
+      properties:
+        actionPlanId:
+          type: string
+        actionRuleId:
+          type: string
+        actionTypeName:
+          type: string
+        caseId:
+          type: string
+        createdBy:
+          type: string
+        createdDateTime:
+          type: string
+          format: date-time
+        id:
+          type: string
+        manuallyCreated:
+          type: boolean
+        priority:
+          type: integer
+          format: int32
+        situation:
+          type: string
+        state:
+          type: string
+          enum:
+            - SUBMITTED
+            - PENDING
+            - ABORTED
+            - ACTIVE
+            - COMPLETED
+            - DECLINED
+            - CANCEL_SUBMITTED
+            - CANCEL_PENDING
+            - CANCELLING
+            - CANCELLED
+        updatedDateTime:
+          type: string
+          format: date-time
+    ActionFeedbackRequestDTO:
+      required:
+        - outcome
+        - situation
+      type: object
+      properties:
+        outcome:
+          type: string
+          enum:
+            - REQUEST_FAILED
+            - REQUEST_ACCEPTED
+            - REQUEST_COMPLETED
+            - REQUEST_DECLINED
+            - REQUEST_COMPLETED_DEACTIVATE
+            - REQUEST_COMPLETED_DISABLE
+            - CANCELLATION_FAILED
+            - CANCELLATION_ACCEPTED
+            - CANCELLATION_COMPLETED
+        situation:
+          type: string
+    ActionPlanDTO:
+      type: object
+      properties:
+        createdBy:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+        lastRunDateTime:
+          type: string
+          format: date-time
+        name:
+          type: string
+        selectors:
+          type: object
+          additionalProperties:
+            type: string
+    ActionPlanJobDTO:
+      type: object
+      properties:
+        actionPlanId:
+          type: string
+        createdBy:
+          type: string
+        createdDateTime:
+          type: string
+          format: date-time
+        id:
+          type: string
+        state:
+          type: string
+        updatedDateTime:
+          type: string
+          format: date-time
+    ActionPlanPostRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        createdBy:
+          type: string
+        selectors:
+          type: object
+          additionalProperties:
+            type: string
+    ActionPlanPutRequestDTO:
+      type: object
+      properties:
+        description:
+          type: string
+        lastRunDateTime:
+          type: string
+          format: date-time
+        selectors:
+          type: object
+          additionalProperties:
+            type: string
+    ActionPostRequestDTO:
+      required:
+        - actionTypeName
+        - caseId
+        - createdBy
+      type: object
+      properties:
+        actionTypeName:
+          type: string
+        caseId:
+          type: string
+        createdBy:
+          type: string
+        priority:
+          type: integer
+          format: int32
+    ActionPutRequestDTO:
+      type: object
+      properties:
+        priority:
+          type: integer
+          format: int32
+        situation:
+          type: string
+    ActionRuleDTO:
+      type: object
+      properties:
+        actionTypeName:
+          type: string
+          enum:
+            - BSNOT
+            - BSREM
+            - BSSNE
+            - BSRE
+            - BSRL
+            - BSNE
+            - BSNL
+            - SOCIALNOT
+            - SOCIALREM
+            - SOCIALSNE
+            - SOCIALPRENOT
+            - SOCIALICF
+            - BSNUE
+            - BSNUL
+        description:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        priority:
+          type: integer
+          format: int32
+        triggerDateTime:
+          type: string
+          format: date-time
+    ActionRulePostRequestDTO:
+      type: object
+      properties:
+        actionPlanId:
+          type: string
+        actionTypeName:
+          type: string
+          enum:
+            - BSNOT
+            - BSREM
+            - BSSNE
+            - BSRE
+            - BSRL
+            - BSNE
+            - BSNL
+            - SOCIALNOT
+            - SOCIALREM
+            - SOCIALSNE
+            - SOCIALPRENOT
+            - SOCIALICF
+            - BSNUE
+            - BSNUL
+        name:
+          type: string
+        description:
+          type: string
+        triggerDateTime:
+          type: string
+          format: date-time
+        priority:
+          type: integer
+          format: int32
+    ActionRulePutRequestDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        triggerDateTime:
+          type: string
+          format: date-time
+        priority:
+          type: integer
+          format: int32
+    ResponseEntity:
+      type: object
+      properties:
+        body:
+          type: object
+          properties: {}
+        statusCode:
+          type: string
+          enum:
+            - '100'
+            - '101'
+            - '102'
+            - '103'
+            - '200'
+            - '201'
+            - '202'
+            - '203'
+            - '204'
+            - '205'
+            - '206'
+            - '207'
+            - '208'
+            - '226'
+            - '300'
+            - '301'
+            - '302'
+            - '303'
+            - '304'
+            - '305'
+            - '307'
+            - '308'
+            - '400'
+            - '401'
+            - '402'
+            - '403'
+            - '404'
+            - '405'
+            - '406'
+            - '407'
+            - '408'
+            - '409'
+            - '410'
+            - '411'
+            - '412'
+            - '413'
+            - '414'
+            - '415'
+            - '416'
+            - '417'
+            - '418'
+            - '419'
+            - '420'
+            - '421'
+            - '422'
+            - '423'
+            - '424'
+            - '426'
+            - '428'
+            - '429'
+            - '431'
+            - '451'
+            - '500'
+            - '501'
+            - '502'
+            - '503'
+            - '504'
+            - '505'
+            - '506'
+            - '507'
+            - '508'
+            - '509'
+            - '510'
+            - '511'
+        statusCodeValue:
+          type: integer
+          format: int32
 
 security:
-    - basicAuth: []
+  - basicAuth: []
