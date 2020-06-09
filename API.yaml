@@ -248,9 +248,10 @@ paths:
           description: Not Found
   /actionrules:
     post:
+      summary: Creates a new action rule
+      description: Creates an action rule for the specified action plan and type to trigger at the specified time.
       tags:
         - action-rules
-      summary: createActionRule
       operationId: createActionRuleUsingPOST
       requestBody:
         description: actionRulePostRequestDTO
@@ -260,26 +261,25 @@ paths:
               $ref: '#/components/schemas/ActionRulePostRequestDTO'
         required: true
       responses:
-        '200':
-          description: OK
+        '201':
+          description: The action rule was successfully created.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionRuleDTO'
-        '201':
-          description: Created
         '401':
           description: Unauthorized
         '403':
           description: Forbidden
         '404':
-          description: Not Found
+          description: The action plan or the action type weren't found.
       x-codegen-request-body-name: actionRulePostRequestDTO
   '/actionrules/actionplan/{actionplanid}':
     get:
+      summary: Gets action rules for an action plan.
+      description: Returns all action rules related to the specified action plan.
       tags:
         - action-rules
-      summary: findActionRulesByActionPlanId
       operationId: findActionRulesByActionPlanIdUsingGET
       parameters:
         - name: actionplanid
@@ -290,7 +290,7 @@ paths:
             type: string
       responses:
         '200':
-          description: OK
+          description: Zero or more action rules were found for the action plan.
           content:
             application/json:
               schema:
@@ -302,12 +302,13 @@ paths:
         '403':
           description: Forbidden
         '404':
-          description: Not Found
+          description: An action plan with the specified ID wasn't found.
   '/actionrules/{actionRuleId}':
     put:
+      summary: Updates an action rule.
+      description: Updates an action rule's priority, name, description and trigger time.
       tags:
         - action-rules
-      summary: updateActionRule
       operationId: updateActionRuleUsingPUT
       parameters:
         - name: actionRuleId
@@ -325,24 +326,25 @@ paths:
         required: false
       responses:
         '200':
-          description: OK
+          description: The action rule was successfully updated.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionRuleDTO'
-        '201':
-          description: Created
         '401':
           description: Unauthorized
         '403':
           description: Forbidden
         '404':
-          description: Not Found
+          description: An action rule with the specified ID wasn't found.
+        '500':
+          description: The ID provided wasn't a valid UUID.
       x-codegen-request-body-name: actionRulePutRequestDTO
     delete:
+      summary: Deletes an action rule.
+      description: Deletes the action rule by the specified ID.
       tags:
         - action-rules
-      summary: deleteActionRule
       operationId: deleteActionRuleUsingDELETE
       parameters:
         - name: actionRuleId
@@ -359,18 +361,14 @@ paths:
               $ref: '#/components/schemas/ActionRulePutRequestDTO'
         required: false
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseEntity'
-        '204':
-          description: No Content
+        '202':
+          description: The action rule was successfully deleted.
         '401':
           description: Unauthorized
         '403':
           description: Forbidden
+        '404':
+          description: An action rule with the specified ID wasn't found.
       x-codegen-request-body-name: actionRuleDeleteRequestDTO
   /actions:
     get:
