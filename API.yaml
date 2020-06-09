@@ -99,13 +99,10 @@ paths:
                   $ref: '#/components/schemas/ActionPlanDTO'
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
     post:
       tags:
         - action-plans
@@ -127,16 +124,12 @@ paths:
                 $ref: '#/components/schemas/ActionPlanDTO'
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
       x-codegen-request-body-name: request
   '/actionplans/jobs/{actionplanjobid}':
     get:
@@ -160,13 +153,10 @@ paths:
                 $ref: '#/components/schemas/ActionPlanJobDTO'
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
   '/actionplans/{actionplanid}':
     get:
       tags:
@@ -189,13 +179,10 @@ paths:
                 $ref: '#/components/schemas/ActionPlanDTO'
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
     put:
       tags:
         - action-plans
@@ -224,16 +211,12 @@ paths:
                 $ref: '#/components/schemas/ActionPlanDTO'
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
       x-codegen-request-body-name: request
   '/actionplans/{actionplanid}/jobs':
     get:
@@ -259,13 +242,10 @@ paths:
                   $ref: '#/components/schemas/ActionPlanJobDTO'
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
   /actionrules:
     post:
       tags:
@@ -288,16 +268,12 @@ paths:
                 $ref: '#/components/schemas/ActionRuleDTO'
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
       x-codegen-request-body-name: actionRulePostRequestDTO
   '/actionrules/actionplan/{actionplanid}':
     get:
@@ -323,13 +299,10 @@ paths:
                   $ref: '#/components/schemas/ActionRuleDTO'
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
   '/actionrules/{actionRuleId}':
     put:
       tags:
@@ -359,16 +332,12 @@ paths:
                 $ref: '#/components/schemas/ActionRuleDTO'
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
       x-codegen-request-body-name: actionRulePutRequestDTO
     delete:
       tags:
@@ -398,13 +367,10 @@ paths:
                 $ref: '#/components/schemas/ResponseEntity'
         '204':
           description: No Content
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
       x-codegen-request-body-name: actionRuleDeleteRequestDTO
   /actions:
     get:
@@ -448,10 +414,8 @@ paths:
           description: No actions were found based on the filters.
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
     post:
       summary: Creates an ad-hoc action.
       description: Creates an action based on the request body, linked up to the action plan if it can be found by the case ID.
@@ -470,10 +434,8 @@ paths:
           description: The ad-hoc action was successfully created.
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: The case specified could not be found.
         '500':
@@ -506,17 +468,16 @@ paths:
           description: No actions were found relating to the case.
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '500':
           description: The ID provided wasn't a valid UUID.
   '/actions/case/{caseid}/cancel':
     put:
+      summary: Cancels actions for a case.
+      description: Cancels all actions for the given case ID.
       tags:
         - actions
-      summary: cancelActions
       operationId: cancelActionsUsingPUT
       parameters:
         - name: caseid
@@ -527,25 +488,21 @@ paths:
             type: string
       responses:
         '200':
-          description: OK
+          description: Returns a list of the cancelled actions.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ActionDTO'
-        '201':
-          description: Created
-          content: {}
+        '204':
+          description: No actions found to cancel for that case.
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
-          description: Not Found
-          content: {}
+          description: No case found by that ID.
   /actions/rerun:
     put:
       tags:
@@ -574,16 +531,12 @@ paths:
                   type: string
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
   '/actions/{actionid}':
     get:
       summary: Returns the information on an action by ID.
@@ -607,13 +560,10 @@ paths:
                       $ref: '#/components/schemas/ActionDTO'
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: No action found by that ID.
-          content: {}
         '500':
           description: The ID provided wasn't a valid UUID.
     put:
@@ -644,16 +594,12 @@ paths:
                 $ref: '#/components/schemas/ActionDTO'
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
       x-codegen-request-body-name: actionPutRequestDTO
   '/actions/{actionid}/feedback':
     put:
@@ -684,16 +630,12 @@ paths:
                 $ref: '#/components/schemas/ActionDTO'
         '201':
           description: Created
-          content: {}
         '401':
           description: Unauthorized
-          content: {}
         '403':
           description: Forbidden
-          content: {}
         '404':
           description: Not Found
-          content: {}
       x-codegen-request-body-name: actionFeedbackRequestDTO
 components:
   securitySchemes:
