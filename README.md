@@ -3,14 +3,13 @@
 [![codecov](https://codecov.io/gh/ONSdigital/rm-action-service/branch/master/graph/badge.svg)](https://codecov.io/gh/ONSdigital/rm-action-service)
 
 # Action Service
-This repository contains the Action service. This microservice is a RESTful web service implemented using [Spring Boot](http://projects.spring.io/spring-boot/).
-It receives actionLifeCycle event messages via RabbitMQ from the action Service, which indicates what has happened to a action ie activation, deactivation etc
-The action service will execute an action plan for each action that is actionable, off of which actions are created.
-Each action follows a state transition model or path, which involves distribution of the actions to handlers, and for some types of actions, the service will expect
-feedback messages indicating successful downstream processing of the action or otherwise by the handler.
+The Action service is a RESTful web service implemented using Spring Boot. 
 
-The action service is agnostic of what any given handler will actually do with the action sent to it, and as such, will send the same format of ActionInstruction message to each handler.
-It is upto the handler to pick out what information is relevant to it from the instruction sent to it by this service.
+An action represents an operation that is required for a case. For example, posting out a paper form or arranging a field visit. They are loose-form and can represent a number of different tasks that need to happen, both manual and automatic. These are distributed to consuming services via RabbitMQ and will be picked up if they match the action's requested handler. Common handlers include Action Exporter and Notify Gateway.
+
+The Action service doesn't "understand" what a certain Action represents - the consuming services will do and will update the Action service when the action's state has been changed. Sometimes the consuming service will need more fine-grained information on the state than this service provides; for example, a Hotel Visit action for the Fieldwork Management Tool will be `ACTIVE` as soon as FWMT accepts it, but the FWMT will have sub-states such as "Visit assigned" or "Someone on-site". These are stored in the Action service as the Situation.
+
+Actions are grouped into action plans via a set of action rules that define, in terms of a day, when a certain action should be taken. Action plans are applied to cases to create actions.
 
 ## Running
 
@@ -41,6 +40,9 @@ See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API 
 ### Survey Service
 * GET /surveys/{surveyId}
 
+## Rabbit queues used
+* ActionInstruction
+
 ## Scheduled Tasks
 ### Action Distribution (default: 1s delay between invocations)
 * For each action of Action Type `SOCIALREM`, make a call to the Case service and generate a new IAC for the case.
@@ -60,6 +62,9 @@ See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API 
 * Parse each CSV line into an ActionRequest and place it into a bucket based on its Handler and whether its a `REQUEST_INSTRUCTION` or `CANCEL_INSTRUCTION`.
 * If any line fails to parse, rename the CSV file with an indication of which line needs fixing.
 * Place the Action Request(s) on the ActionInstruction queue.
+
+### Plan Execution (default: 1s delay between invocations)
+
 
 ## Copyright
 Copyright (C) 2017 Crown Copyright (Office for National Statistics)
