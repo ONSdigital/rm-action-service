@@ -56,5 +56,10 @@ See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API 
     * Create an Action Request for cancellation.
     * Place the Action Request on the ActionInstruction queue.
 
+### CSV Ingester (default: whenever a CSV file is found to ingest in /tmp/csv)
+* Parse each CSV line into an ActionRequest and place it into a bucket based on its Handler and whether its a `REQUEST_INSTRUCTION` or `CANCEL_INSTRUCTION`.
+* If any line fails to parse, rename the CSV file with an indication of which line needs fixing.
+* Place the Action Request(s) on the ActionInstruction queue.
+
 ## Copyright
 Copyright (C) 2017 Crown Copyright (Office for National Statistics)
