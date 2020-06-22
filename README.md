@@ -25,10 +25,36 @@ There are two ways of running this service
     ```
 
 ## API
-See [API.md](https://github.com/ONSdigital/rm-action-service/blob/master/API.md) for API documentation.
+See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API documentation.
 
 ## Services consumed
+### Case Service
+* POST /cases/{caseid}/iac
+* GET /cases/{caseid}
 
+### Collection Exercise Service
+* GET /collectionexercises/{id}
+
+### Party Service
+* GET /party-api/v1/parties/type/{sampleUnitType}/id/{partyId}
+
+### Survey Service
+* GET /surveys/{surveyId}
+
+## Scheduled Tasks
+### Action Distribution (default: 1s delay between invocations)
+* For each actions of Action Type `SOCIALREM`, make a call to the Case service and generate a new IAC for the case.
+* For each other action, if they're in the state `SUBMITTED`:
+    * If the action has no Action Type or a null Response Required field, throw an exception.
+    * Get information from the Collection Exercise, Party, Survey and Case services, and combine it with the Action Plan from the database to build an Action Request Context.
+    * Create an Action Request (if the Action Type is `NOTIFY` and the Case Type is `B`, create one for each child party (aka Respondent)).
+    * Use the 5 decorators in `BusinessActionProcessingService` to decorate the Action Request.
+    * Transition the action to `REQUEST_DISTRIBUTED` if a response is required or `REQUEST_COMPLETED` if not.
+    * Place the Action Request(s) on the ActionInstruction queue.
+* For each other action, if they're in the state `CANCEL_SUBMITTED`:
+    * Transition the action to `CANCELLATION_DISTRIBUTED`.
+    * Create an Action Request for cancellation.
+    * Place the Action Request on the ActionInstruction queue.
 
 ## Copyright
 Copyright (C) 2017 Crown Copyright (Office for National Statistics)
