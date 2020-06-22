@@ -43,7 +43,7 @@ See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API 
 
 ## Scheduled Tasks
 ### Action Distribution (default: 1s delay between invocations)
-* For each actions of Action Type `SOCIALREM`, make a call to the Case service and generate a new IAC for the case.
+* For each action of Action Type `SOCIALREM`, make a call to the Case service and generate a new IAC for the case.
 * For each other action, if they're in the state `SUBMITTED`:
     * If the action has no Action Type or a null Response Required field, throw an exception.
     * Get information from the Collection Exercise, Party, Survey and Case services, and combine it with the Action Plan from the database to build an Action Request Context.
