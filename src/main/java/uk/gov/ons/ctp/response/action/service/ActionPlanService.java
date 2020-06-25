@@ -90,6 +90,11 @@ public class ActionPlanService {
       boolean needsUpdate = false;
 
       final String newDescription = actionPlan.getDescription();
+      final String newName = actionPlan.getName();
+      if (newName != null) {
+        needsUpdate = true;
+        existingActionPlan.setName(newName);
+      }
       if (newDescription != null) {
         needsUpdate = true;
         existingActionPlan.setDescription(newDescription);
