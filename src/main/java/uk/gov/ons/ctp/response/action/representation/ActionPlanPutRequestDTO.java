@@ -18,4 +18,6 @@ public class ActionPlanPutRequestDTO {
   private Date lastRunDateTime;
 
   private HashMap<String, String> selectors;
+
+  private String name;
 }

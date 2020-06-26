@@ -36,6 +36,7 @@ public class ActionPlanServiceTest {
   private static final UUID ACTION_PLAN_ID =
       UUID.fromString("e71002ac-3575-47eb-b87f-cd9db92bf9a7");
   private static final String UPDATED_DESCRIPTION = "New description";
+  private static final String UPDATED_NAME = "New name";
   private static final Date UPDATED_DATE = new Date();
   private static final Timestamp UPDATED_TIMESTAMP = new Timestamp(UPDATED_DATE.getTime());
   private static final String SELECTOR_KEY = "selectorKey";
@@ -77,17 +78,20 @@ public class ActionPlanServiceTest {
 
     ActionPlan savedActionPlan = mapperFacade.map(actionPlan, ActionPlan.class);
     savedActionPlan.setDescription(UPDATED_DESCRIPTION);
+    savedActionPlan.setName(UPDATED_NAME);
     when(actionPlanRepo.saveAndFlush(savedActionPlan)).thenReturn(savedActionPlan);
 
     // When
     ActionPlan actionPlanUpdate = new ActionPlan();
     actionPlanUpdate.setDescription(UPDATED_DESCRIPTION);
+    actionPlanUpdate.setName(UPDATED_NAME);
     ActionPlan updatedActionPlan =
         actionPlanService.updateActionPlan(ACTION_PLAN_ID, actionPlanUpdate);
 
     // Then
     verify(actionPlanRepo, times(1)).saveAndFlush(savedActionPlan);
     assertEquals(updatedActionPlan.getDescription(), UPDATED_DESCRIPTION);
+    assertEquals(updatedActionPlan.getName(), UPDATED_NAME);
   }
 
   @Test
