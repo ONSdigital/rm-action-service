@@ -53,7 +53,6 @@ jobs:
           echo ::set-output name=pr_number::pr-"$PR"
       - name: Run Tests
         run: |
-          mvn fmt:check
           mvn clean verify
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
