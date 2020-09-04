@@ -1,23 +1,33 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
+import uk.gov.ons.ctp.response.action.message.PubsubOutboundGateway;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.action.service.decorator.ActionAndActionPlan;
 import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.decorator.CaseAndCaseEvent;
+import uk.gov.ons.ctp.response.action.service.decorator.CollectionExerciseAndSurvey;
+import uk.gov.ons.ctp.response.action.service.decorator.PartyAndContact;
+import uk.gov.ons.ctp.response.action.service.decorator.SampleUnitRef;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
@@ -25,7 +35,7 @@ import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
-public abstract class ActionProcessingService {
+public class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
 
   public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
@@ -38,21 +48,30 @@ public abstract class ActionProcessingService {
   public static final String NOTIFY = "Notify";
   public static final String PENDING = "PENDING";
 
-  @Autowired private ActionRepository actionRepo;
+  @Autowired
+  private ActionRepository actionRepo;
 
-  @Autowired private ActionInstructionPublisher actionInstructionPublisher;
+  @Autowired
+  private ActionInstructionPublisher actionInstructionPublisher;
+
+  @Autowired
+  @Qualifier("business")
+  private ActionRequestContextFactory decoratorContextFactory;
+
+  @Autowired
+  private PubsubOutboundGateway pubsubOutboundGateway;
 
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
 
-  private ActionRequestDecorator[] decorators;
-
-  public abstract ActionRequestContextFactory getActionRequestDecoratorContextFactory();
-
-  public ActionProcessingService(ActionRequestDecorator[] decorators) {
-    this.decorators = decorators;
-  }
+  private static final ActionRequestDecorator[] DECORATORS = {
+    new ActionAndActionPlan(),
+    new CaseAndCaseEvent(),
+    new CollectionExerciseAndSurvey(),
+    new PartyAndContact(),
+    new SampleUnitRef()
+  };
 
   /** Distributes requests for a single action */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -81,8 +100,7 @@ public abstract class ActionProcessingService {
   }
 
   private List<ActionRequest> prepareActionRequests(Action action) {
-    final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
-    final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
+    final ActionRequestContext context = decoratorContextFactory.getActionRequestDecoratorContext(action);
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
@@ -113,7 +131,7 @@ public abstract class ActionProcessingService {
 
   private ActionRequest prepareActionRequest(ActionRequestContext context) {
     ActionRequest actionRequest = new ActionRequest();
-    Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+    Arrays.stream(DECORATORS).forEach(d -> d.decorateActionRequest(actionRequest, context));
     return actionRequest;
   }
 

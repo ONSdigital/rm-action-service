@@ -31,13 +31,6 @@
 		</rabbit:queue-arguments>
 	</rabbit:queue>
 
-	<rabbit:queue name="Action.Notify" durable="true">
-		<rabbit:queue-arguments value-type="java.lang.String">
-			<entry key="x-dead-letter-exchange" value="action-deadletter-exchange" />
-			<entry key="x-dead-letter-routing-key" value="Action.Notify.binding" />
-		</rabbit:queue-arguments>
-	</rabbit:queue>
-
 	<rabbit:queue name="Action.Feedback" durable="true">
 		<rabbit:queue-arguments value-type="java.lang.String">
 			<entry key="x-dead-letter-exchange" value="action-deadletter-exchange" />
@@ -66,7 +59,6 @@
 		<rabbit:bindings>
 			<rabbit:binding queue="Action.Field" key="Action.Field.binding" />
 			<rabbit:binding queue="Action.Printer" key="Action.Printer.binding" />
-			<rabbit:binding queue="Action.Notify" key="Action.Notify.binding" />
 		</rabbit:bindings>
 	</rabbit:direct-exchange>
 

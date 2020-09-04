@@ -55,6 +55,13 @@ spring:
   application:
     name: ONS ActionService
 
+  cloud:
+    gcp:
+      project-id: ras-rm-sandbox
+      topic-id: ras-rm-notify-test
+      credentials:
+        location: file://gcp/key.json
+
   datasource:
     url: jdbc:postgresql://localhost:6432/postgres
     username: actionsvc
