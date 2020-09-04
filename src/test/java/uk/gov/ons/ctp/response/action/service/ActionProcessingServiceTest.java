@@ -60,7 +60,7 @@ public class ActionProcessingServiceTest {
 
   @Spy private AppConfig appConfig = new AppConfig();
 
-  @InjectMocks private BusinessActionProcessingService businessActionProcessingService;
+  @InjectMocks private ActionProcessingService businessActionProcessingService;
 
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>

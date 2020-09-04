@@ -1,19 +1,16 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
@@ -48,18 +45,15 @@ public class ActionProcessingService {
   public static final String NOTIFY = "Notify";
   public static final String PENDING = "PENDING";
 
-  @Autowired
-  private ActionRepository actionRepo;
+  @Autowired private ActionRepository actionRepo;
 
-  @Autowired
-  private ActionInstructionPublisher actionInstructionPublisher;
+  @Autowired private ActionInstructionPublisher actionInstructionPublisher;
 
   @Autowired
   @Qualifier("business")
   private ActionRequestContextFactory decoratorContextFactory;
 
-  @Autowired
-  private PubsubOutboundGateway pubsubOutboundGateway;
+  @Autowired private PubsubOutboundGateway pubsubOutboundGateway;
 
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
@@ -100,7 +94,8 @@ public class ActionProcessingService {
   }
 
   private List<ActionRequest> prepareActionRequests(Action action) {
-    final ActionRequestContext context = decoratorContextFactory.getActionRequestDecoratorContext(action);
+    final ActionRequestContext context =
+        decoratorContextFactory.getActionRequestDecoratorContext(action);
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent

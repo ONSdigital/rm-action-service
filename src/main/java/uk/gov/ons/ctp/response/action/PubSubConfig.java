@@ -13,8 +13,8 @@ public class PubSubConfig {
 
   @Bean
   @ServiceActivator(inputChannel = "pubsubOutputChannel")
-  public MessageHandler messageSender(PubSubTemplate pubsubTemplate,
-      @Value("${spring.cloud.gcp.topic-id}")String topic) {
+  public MessageHandler messageSender(
+      PubSubTemplate pubsubTemplate, @Value("${spring.cloud.gcp.topic-id}") String topic) {
     return new PubSubMessageHandler(pubsubTemplate, topic);
   }
 }
