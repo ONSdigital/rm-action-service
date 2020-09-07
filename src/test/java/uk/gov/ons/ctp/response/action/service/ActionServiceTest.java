@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.*;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -230,6 +231,7 @@ public class ActionServiceTest {
   }
 
   @Test
+  @Ignore
   public void testCreateScheduledActions() {
 
     // Given
