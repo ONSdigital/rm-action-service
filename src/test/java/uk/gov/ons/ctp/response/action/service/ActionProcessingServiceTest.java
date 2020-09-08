@@ -72,6 +72,7 @@ public class ActionProcessingServiceTest {
 
   @Mock private ActionRepository actionRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
+  @Mock private NotifyService notifyServiceMock;
 
   private CaseDetailsDTO hCase;
   private CaseDetailsDTO bCase;
@@ -182,7 +183,8 @@ public class ActionProcessingServiceTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, times(3))
+    verify(notifyServiceMock, times(3)).processNotification(any(ActionRequest.class));
+    verify(actionInstructionPublisher, never())
         .sendActionInstruction(
             eq(NOTIFY), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
   }

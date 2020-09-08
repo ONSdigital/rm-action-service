@@ -42,6 +42,8 @@ public abstract class ActionProcessingService {
 
   @Autowired private ActionInstructionPublisher actionInstructionPublisher;
 
+  @Autowired private NotifyService notifyService;
+
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -94,7 +96,7 @@ public abstract class ActionProcessingService {
               p -> {
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
-                actionRequests.add(actionRequest);
+                notifyService.processNotification(actionRequest);
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
