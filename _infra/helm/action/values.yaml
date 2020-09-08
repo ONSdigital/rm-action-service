@@ -20,6 +20,10 @@ database:
     nameKey: db-name
   managedRedis: false
 
+gcp:
+  project: ras-rm-sandbox
+  topic: ras-rm-notify-test
+
 container:
   port: 8080
 service:
