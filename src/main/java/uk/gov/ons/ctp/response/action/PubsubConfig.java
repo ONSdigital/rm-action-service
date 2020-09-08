@@ -11,19 +11,10 @@ import org.springframework.context.annotation.Configuration;
 public class PubsubConfig {
 
   @Bean
-  public TopicName topicName(
-      @Value("${gcp.project}") String project, @Value("${gcp.topic}") String topic) {
-    return TopicName.of(project, topic);
-  }
-
-  @Bean
-  public PublisherSupplier publisherSupplier(TopicName topicName) {
-    return () -> Publisher.newBuilder(topicName).build();
-  }
-
-  @FunctionalInterface
-  public static interface PublisherSupplier {
-
-    Publisher get() throws IOException;
+  public Publisher publisherSupplier(
+      @Value("${gcp.project}") String project, @Value("${gcp.topic}") String topic)
+      throws IOException {
+    TopicName topicName = TopicName.of(project, topic);
+    return Publisher.newBuilder(topicName).build();
   }
 }
