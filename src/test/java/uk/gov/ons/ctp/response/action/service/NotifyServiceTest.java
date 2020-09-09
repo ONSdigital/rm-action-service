@@ -26,6 +26,8 @@ public class NotifyServiceTest {
 
   @Mock private ApiFuture<String> ApiFuture;
 
+  @Mock private FeedbackService feedbackMock;
+
   private static final String actionRequestJson =
       "{"
           + "\"email_address\":null,"
