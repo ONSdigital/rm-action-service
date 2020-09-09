@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionContact;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -27,34 +28,32 @@ public class NotifyServiceTest {
 
   private static final String actionRequestJson =
       "{"
-          + "\"actionId\":\"123\","
-          + "\"responseRequired\":false,"
-          + "\"actionPlan\":null,"
-          + "\"actionType\":null,"
-          + "\"questionSet\":null,"
-          + "\"contact\":null,"
-          + "\"address\":null,"
-          + "\"legalBasis\":null,"
+          + "\"email_address\":null,"
+          + "\"classifiers\":{"
+          + "\"communication_type\":null,"
+          + "\"survey\":null,"
           + "\"region\":null,"
-          + "\"respondentStatus\":null,"
-          + "\"enrolmentStatus\":null,"
-          + "\"caseGroupStatus\":null,"
-          + "\"caseId\":null,"
-          + "\"priority\":null,"
-          + "\"caseRef\":null,"
-          + "\"iac\":null,"
-          + "\"events\":null,"
-          + "\"exerciseRef\":null,"
-          + "\"userDescription\":null,"
-          + "\"surveyName\":null,"
-          + "\"surveyRef\":null,"
-          + "\"returnByDate\":null,"
-          + "\"sampleUnitRef\":null}";
+          + "\"legal_basis\":null},"
+          + "\"personalisation\":{"
+          + "\"reporting unit reference\":null,"
+          + "\"survey id\":null,"
+          + "\"survey name\":null,"
+          + "\"firstname\":\"Joe\","
+          + "\"lastname\":null,"
+          + "\"return by date\":null,"
+          + "\"RU name\":null,"
+          + "\"trading style\":null,"
+          + "\"respondent period\":null"
+          + "}"
+          + "}";
 
   @Test
   public void willCallPublisherWithEncodedJSONString() {
     ActionRequest request = new ActionRequest();
+    ActionContact contact = new ActionContact();
+    contact.setForename("Joe");
     request.setActionId("123");
+    request.setContact(contact);
 
     Mockito.when(publisher.publish(Mockito.any(PubsubMessage.class))).thenReturn(ApiFuture);
     notifyService.processNotification(request);

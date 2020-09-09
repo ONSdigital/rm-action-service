@@ -12,6 +12,9 @@ import java.util.concurrent.ExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
+import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify;
+import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Classifiers;
+import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Personalisation;
 
 @Service
 public class NotifyService {
@@ -27,7 +30,8 @@ public class NotifyService {
     log.with(actionRequest.getActionId()).debug("Sending notification to pubsub");
 
     try {
-      String message = objectMapper.writeValueAsString(actionRequest);
+      Notify notifyPayload = buildPayload(actionRequest);
+      String message = objectMapper.writeValueAsString(notifyPayload);
 
       ByteString data = ByteString.copyFromUtf8(message);
       PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
@@ -50,5 +54,34 @@ public class NotifyService {
       log.error("A pubsub error has occured", e);
       throw new RuntimeException(e);
     }
+  }
+
+  private Notify buildPayload(ActionRequest actionRequest) {
+    Classifiers classifiers =
+        Classifiers.builder()
+            .acionType(actionRequest.getActionType())
+            .legalBasis(actionRequest.getLegalBasis())
+            .region(actionRequest.getRegion())
+            .surveyRef(actionRequest.getSurveyRef())
+            .build();
+
+    Personalisation personalisation =
+        Personalisation.builder()
+            .firstname(actionRequest.getContact().getForename())
+            .lastname(actionRequest.getContact().getSurname())
+            .reportingUnitReference(actionRequest.getSampleUnitRef())
+            .returnByDate(actionRequest.getReturnByDate())
+            .tradingSyle(actionRequest.getContact().getTradingStyle())
+            .ruName(actionRequest.getContact().getRuName())
+            .surveyId(actionRequest.getSurveyRef())
+            .surveyName(actionRequest.getSurveyName())
+            .respondentPeriod(actionRequest.getUserDescription())
+            .build();
+
+    return Notify.builder()
+        .personalisation(personalisation)
+        .classifiers(classifiers)
+        .emailAddress(actionRequest.getContact().getEmailAddress())
+        .build();
   }
 }
