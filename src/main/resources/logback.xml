@@ -67,7 +67,7 @@
             <level>DEBUG</level>
         </filter>
     </appender>
-    <root level="WARN">
+    <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
     </root>
 
