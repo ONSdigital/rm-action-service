@@ -288,11 +288,11 @@ spec:
             value: "$(SECURITY_USER_NAME)"
           - name: SAMPLE_SVC_CONNECTION_CONFIG_PASSWORD
             value: "$(SECURITY_USER_PASSWORD)"
-          - name: GOOGLE_CLOUD_PROJECT
+          - name: GCP_PROJECT
             value: "{{ .Values.gcp.project }}"
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
-          - name: PUBSUB_TOPIC
+          - name: GCP_TOPIC
             value: "{{ .Values.gcp.topic }}"
           - name: LIQUIBASE_USER
             value: "$(DB_USERNAME)"
