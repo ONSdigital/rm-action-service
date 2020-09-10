@@ -32,7 +32,7 @@ public class NotifyService {
     log.with(actionRequest.getActionId()).debug("Sending notification to pubsub");
 
     try {
-      Notify notifyPayload = buildPayload(actionRequest);
+      NotifyModel notifyPayload = buildPayload(actionRequest);
       String message = objectMapper.writeValueAsString(notifyPayload);
 
       ByteString data = ByteString.copyFromUtf8(message);
@@ -67,7 +67,7 @@ public class NotifyService {
     }
   }
 
-  private Notify buildPayload(ActionRequest actionRequest) {
+  private NotifyModel buildPayload(ActionRequest actionRequest) {
     Classifiers classifiers =
         Classifiers.builder()
             .acionType(actionRequest.getActionType())
@@ -89,10 +89,11 @@ public class NotifyService {
             .respondentPeriod(actionRequest.getUserDescription())
             .build();
 
-    return Notify.builder()
-        .personalisation(personalisation)
-        .classifiers(classifiers)
-        .emailAddress(actionRequest.getContact().getEmailAddress())
-        .build();
+    return new NotifyModel(
+        Notify.builder()
+            .personalisation(personalisation)
+            .classifiers(classifiers)
+            .emailAddress(actionRequest.getContact().getEmailAddress())
+            .build());
   }
 }

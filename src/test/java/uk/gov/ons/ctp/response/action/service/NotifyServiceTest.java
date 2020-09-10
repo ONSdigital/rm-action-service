@@ -29,7 +29,7 @@ public class NotifyServiceTest {
   @Mock private FeedbackService feedbackMock;
 
   private static final String actionRequestJson =
-      "{"
+      "{\"notify\":{"
           + "\"email_address\":null,"
           + "\"classifiers\":{"
           + "\"communication_type\":null,"
@@ -47,7 +47,7 @@ public class NotifyServiceTest {
           + "\"trading style\":null,"
           + "\"respondent period\":null"
           + "}"
-          + "}";
+          + "}}";
 
   @Test
   public void willCallPublisherWithEncodedJSONString() {
