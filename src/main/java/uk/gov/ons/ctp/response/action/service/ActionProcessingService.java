@@ -77,9 +77,14 @@ public abstract class ActionProcessingService {
     transitionAction(action, event);
 
     actionRequests.forEach(
-        actionRequest ->
+        actionRequest -> {
+          if (actionRequest.isPubsub()) {
+            notifyService.processNotification(actionRequest);
+          } else {
             actionInstructionPublisher.sendActionInstruction(
-                actionType.getHandler(), actionRequest));
+                actionType.getHandler(), actionRequest);
+          }
+        });
   }
 
   private List<ActionRequest> prepareActionRequests(Action action) {
@@ -96,7 +101,8 @@ public abstract class ActionProcessingService {
               p -> {
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
-                notifyService.processNotification(actionRequest);
+                actionRequest.setIsPubsub(true);
+                actionRequests.add(actionRequest);
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
@@ -168,7 +174,7 @@ public abstract class ActionProcessingService {
     try {
       nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
     } catch (CTPException ctpExeption) {
-      throw new IllegalStateException();
+      throw new IllegalStateException(ctpExeption);
     }
 
     action.setState(nextState);
