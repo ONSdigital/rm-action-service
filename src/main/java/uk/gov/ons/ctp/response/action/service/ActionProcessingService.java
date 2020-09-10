@@ -79,6 +79,7 @@ public abstract class ActionProcessingService {
     actionRequests.forEach(
         actionRequest -> {
           if (actionRequest.isPubsub()) {
+            log.info("Pubsub message will be forwarded to notify cloudfunction");
             notifyService.processNotification(actionRequest);
           } else {
             actionInstructionPublisher.sendActionInstruction(
