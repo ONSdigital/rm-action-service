@@ -11,13 +11,10 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.util.concurrent.ExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
-import uk.gov.ons.ctp.response.action.message.feedback.Outcome;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify;
 import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Classifiers;
 import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Personalisation;
-import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
 @Service
 public class NotifyService {
@@ -47,11 +44,11 @@ public class NotifyService {
           .with("actionId", actionRequest.getActionId())
           .debug("Notify pubsub sent sucessfully");
 
-      ActionFeedback feedback = new ActionFeedback();
-      feedback.setActionId(actionRequest.getActionId());
-      feedback.setOutcome(Outcome.REQUEST_COMPLETED);
-      feedback.setSituation("Notify Email Sent");
-      feedbackService.acceptFeedback(feedback);
+      // ActionFeedback feedback = new ActionFeedback();
+      // feedback.setActionId(actionRequest.getActionId());
+      // feedback.setOutcome(Outcome.REQUEST_COMPLETED);
+      // feedback.setSituation("Notify Email Sent");
+      // feedbackService.acceptFeedback(feedback);
 
       // this will mimic current implementation of action -> rabbit.
       // The curent processessing service does not attempt to recover from error
@@ -66,9 +63,6 @@ public class NotifyService {
       throw new RuntimeException(e);
     } catch (InterruptedException | ExecutionException e) {
       log.error("A pubsub error has occured", e);
-      throw new RuntimeException(e);
-    } catch (CTPException e) {
-      log.error("Stttaet change exception", e);
       throw new RuntimeException(e);
     }
   }
