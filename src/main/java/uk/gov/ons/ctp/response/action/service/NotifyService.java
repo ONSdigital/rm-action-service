@@ -70,7 +70,7 @@ public class NotifyService {
   private NotifyModel buildPayload(ActionRequest actionRequest) {
     Classifiers classifiers =
         Classifiers.builder()
-            .acionType(actionRequest.getActionType())
+            .actionType(actionRequest.getActionType())
             .legalBasis(actionRequest.getLegalBasis())
             .region(actionRequest.getRegion())
             .surveyRef(actionRequest.getSurveyRef())
@@ -96,4 +96,9 @@ public class NotifyService {
             .emailAddress(actionRequest.getContact().getEmailAddress())
             .build());
   }
+
+  // public Classifiers getClassifiers(final ActionRequest actionRequest) {
+  //   ClassifiersBuilder builder = Classifiers.builder();
+
+  // }
 }
