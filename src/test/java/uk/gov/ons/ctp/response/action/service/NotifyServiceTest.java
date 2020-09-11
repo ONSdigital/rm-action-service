@@ -26,16 +26,10 @@ public class NotifyServiceTest {
 
   @Mock private ApiFuture<String> ApiFuture;
 
-  @Mock private FeedbackService feedbackMock;
-
   private static final String actionRequestJson =
       "{\"notify\":{"
           + "\"email_address\":null,"
-          + "\"classifiers\":{"
-          + "\"communication_type\":null,"
-          + "\"survey\":null,"
-          + "\"region\":null,"
-          + "\"legal_basis\":null},"
+          + "\"classifiers\":{},"
           + "\"personalisation\":{"
           + "\"reporting unit reference\":null,"
           + "\"survey id\":null,"

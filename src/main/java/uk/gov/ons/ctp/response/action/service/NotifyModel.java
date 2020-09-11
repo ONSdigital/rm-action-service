@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,15 +65,19 @@ public class NotifyModel {
     public static class Classifiers {
 
       @JsonProperty("communication_type")
+      @JsonInclude(Include.NON_NULL)
       private List<String> actionTypes;
 
       @JsonProperty("survey")
+      @JsonInclude(Include.NON_NULL)
       private List<String> surveyRefs;
 
       @JsonProperty("region")
+      @JsonInclude(Include.NON_NULL)
       private List<String> regions;
 
       @JsonProperty("legal_basis")
+      @JsonInclude(Include.NON_NULL)
       private List<String> legalBasisList;
 
       public static ClassifiersBuilder builder() {

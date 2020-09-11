@@ -44,7 +44,7 @@ public class ClassifiersTest {
   @Test
   public void willCreateReminderClassifiersAsExpectedJSON() throws JsonProcessingException {
     String ExpectedReminderClassifiers =
-        "{\"communication_type\":[\"REMINDER\"],\"survey\":null,\"region\":[\"YY\"],\"legal_basis\":[\"Voluntary not stated\"]}";
+        "{\"communication_type\":[\"REMINDER\"],\"region\":[\"YY\"],\"legal_basis\":[\"Voluntary not stated\"]}";
     Classifiers classifiers =
         Classifiers.builder()
             .actionType("BSRE")

@@ -25,8 +25,6 @@ public class NotifyService {
 
   @Autowired private ObjectMapper objectMapper;
 
-  @Autowired private FeedbackService feedbackService;
-
   public void processNotification(ActionRequest actionRequest) {
 
     log.with(actionRequest.getActionId()).debug("Sending notification to pubsub");
@@ -51,13 +49,10 @@ public class NotifyService {
       // feedbackService.acceptFeedback(feedback);
 
       // this will mimic current implementation of action -> rabbit.
-      // The curent processessing service does not attempt to recover from error
-      // when sending a message to rabbit, theres not much we can do with these
-      // checked exceptions
-      // without going down the action rabbithole and i value my sanity too much for
-      // that,
-      // so do as the current implementation does and simply throw a Runtime exception
-      // up the chain.
+      // The curent processessing service does not attempt to recover from error.
+      // theres not much we can do with these checked exceptions without
+      // going down the action rabbithole. So do as the current implementation
+      // does and simply propagate a  RuntimeException up the stack.
     } catch (JsonProcessingException e) {
       log.error("Error converting an actionRequest to JSON", e);
       throw new RuntimeException(e);
