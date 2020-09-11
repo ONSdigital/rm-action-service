@@ -91,8 +91,8 @@ public class NotifyModel {
         private static final String REMINDER = "REMINDER";
         private static final String NOTIFICATION = "NOTIFICATION";
         private static final String COVID_SURVEY_ID = "283";
-        // No one knows what this region is but its required to send a number of emails
-        private static final String THE_MAKE_IT_WORK_REGION = "YY";
+        // a region of YY appears to be any region that isnt england
+        private static final String NOT_ENGLAND = "YY";
 
         private String actionType;
         private String legalBasis;
@@ -106,8 +106,9 @@ public class NotifyModel {
             actionType = NUDGE;
             return new Classifiers(actionType, surveyRef, region, legalBasis);
           }
-
-          if (!THE_MAKE_IT_WORK_REGION.equals(region)) {
+          
+          // if not not england is england. welcome to ras-rm.
+          if (!NOT_ENGLAND.equals(region)) {
             region = null;
           }
 
