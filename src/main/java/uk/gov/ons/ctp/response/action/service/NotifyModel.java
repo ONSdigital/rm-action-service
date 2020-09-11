@@ -91,17 +91,24 @@ public class NotifyModel {
         private static final String REMINDER = "REMINDER";
         private static final String NOTIFICATION = "NOTIFICATION";
         private static final String COVID_SURVEY_ID = "283";
+        // No one knows what this region is but its required to send a number of emails
+        private static final String THE_MAKE_IT_WORK_REGION = "YY";
 
         private String actionType;
         private String legalBasis;
         private String region;
         private String surveyRef;
 
-        /* This is lifted directly from the old notify-gateway.
+        /* This is lifted directly from the old notify-gateway and comms-template.
          */
         public Classifiers build() {
           if (NUDGE_EMAIL.equals(actionType)) {
             actionType = NUDGE;
+            return new Classifiers(actionType, surveyRef, region, legalBasis);
+          }
+
+          if (!THE_MAKE_IT_WORK_REGION.equals(region)) {
+            region = null;
           }
 
           if (!COVID_SURVEY_ID.equals(surveyRef)) {
