@@ -14,37 +14,35 @@ public class ClassifiersTest {
   public void willCreateNudgeClassifiers() {
     Classifiers classifiers = Classifiers.builder().actionType("BSNUE").build();
 
-    assertEquals(1, classifiers.getActionTypes().size());
-    assertEquals("NUDGE", classifiers.getActionTypes().get(0));
+    assertEquals("NUDGE", classifiers.getActionType());
   }
 
   @Test
   public void willCreateNotificationClassifiers() {
     Classifiers classifiers = Classifiers.builder().actionType("BSNE").build();
 
-    assertEquals(1, classifiers.getActionTypes().size());
-    assertEquals("NOTIFICATION", classifiers.getActionTypes().get(0));
+    assertEquals("NOTIFICATION", classifiers.getActionType());
   }
 
   @Test
   public void willAddCovidSurvey() {
     Classifiers classifiers = Classifiers.builder().actionType("BSNE").surveyRef("283").build();
 
-    assertEquals("NOTIFICATION", classifiers.getActionTypes().get(0));
-    assertEquals("283", classifiers.getSurveyRefs().get(0));
+    assertEquals("NOTIFICATION", classifiers.getActionType());
+    assertEquals("283", classifiers.getSurveyRef());
   }
 
   @Test
   public void willNotAddAnyOtherSurveySurvey() {
     Classifiers classifiers = Classifiers.builder().surveyRef("123").build();
 
-    assertNull(classifiers.getSurveyRefs());
+    assertNull(classifiers.getSurveyRef());
   }
 
   @Test
   public void willCreateReminderClassifiersAsExpectedJSON() throws JsonProcessingException {
     String ExpectedReminderClassifiers =
-        "{\"communication_type\":[\"REMINDER\"],\"region\":[\"YY\"],\"legal_basis\":[\"Voluntary not stated\"]}";
+        "{\"communication_type\":\"REMINDER\",\"region\":\"YY\",\"legal_basis\":\"Voluntary not stated\"}";
     Classifiers classifiers =
         Classifiers.builder()
             .actionType("BSRE")

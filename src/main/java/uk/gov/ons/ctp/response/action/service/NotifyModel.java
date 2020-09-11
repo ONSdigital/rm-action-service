@@ -3,8 +3,6 @@ package uk.gov.ons.ctp.response.action.service;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -66,19 +64,19 @@ public class NotifyModel {
 
       @JsonProperty("communication_type")
       @JsonInclude(Include.NON_NULL)
-      private List<String> actionTypes;
+      private String actionType;
 
       @JsonProperty("survey")
       @JsonInclude(Include.NON_NULL)
-      private List<String> surveyRefs;
+      private String surveyRef;
 
       @JsonProperty("region")
       @JsonInclude(Include.NON_NULL)
-      private List<String> regions;
+      private String region;
 
       @JsonProperty("legal_basis")
       @JsonInclude(Include.NON_NULL)
-      private List<String> legalBasisList;
+      private String legalBasis;
 
       public static ClassifiersBuilder builder() {
         return new ClassifiersBuilder();
@@ -94,45 +92,28 @@ public class NotifyModel {
         private static final String NOTIFICATION = "NOTIFICATION";
         private static final String COVID_SURVEY_ID = "283";
 
-        private List<String> actionTypes;
         private String actionType;
-        private List<String> legalBasisList;
         private String legalBasis;
-        private List<String> regions;
         private String region;
-        private List<String> surveyRefs;
         private String surveyRef;
 
-        /* This is lifted directly from the old notify-gateway */
+        /* This is lifted directly from the old notify-gateway.
+         */
         public Classifiers build() {
           if (NUDGE_EMAIL.equals(actionType)) {
-            actionTypes = new ArrayList<>();
-            actionTypes.add(NUDGE);
+            actionType = NUDGE;
           }
 
-          if (legalBasis != null) {
-            legalBasisList = new ArrayList<>();
-            legalBasisList.add(legalBasis);
-          }
-
-          if (region != null) {
-            regions = new ArrayList<>();
-            regions.add(region);
-          }
-
-          if (surveyRef != null && surveyRef.equals(COVID_SURVEY_ID)) {
-            surveyRefs = new ArrayList<>();
-            surveyRefs.add(surveyRef);
+          if (!COVID_SURVEY_ID.equals(surveyRef)) {
+            surveyRef = null;
           }
 
           if (NOTIFICATION_EMAIL.equalsIgnoreCase(actionType)) {
-            actionTypes = new ArrayList<>();
-            actionTypes.add(NOTIFICATION);
+            actionType = NOTIFICATION;
           } else if (REMINDER_EMAIL.equalsIgnoreCase(actionType)) {
-            actionTypes = new ArrayList<>();
-            actionTypes.add(REMINDER);
+            actionType = REMINDER;
           }
-          return new Classifiers(actionTypes, surveyRefs, regions, legalBasisList);
+          return new Classifiers(actionType, surveyRef, region, legalBasis);
         }
 
         public ClassifiersBuilder actionType(String actionType) {
