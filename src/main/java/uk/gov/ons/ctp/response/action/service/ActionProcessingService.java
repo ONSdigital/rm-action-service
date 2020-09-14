@@ -105,7 +105,7 @@ public abstract class ActionProcessingService {
                 ActionRequest actionRequest = prepareActionRequest(context);
                 actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
-                log.with("isPubsub", actionRequest.isPubsub()).info("Pubsub notify action added to the list")
+                log.with("isPubsub", actionRequest.isPubsub()).info("Pubsub notify action added to the list");
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
