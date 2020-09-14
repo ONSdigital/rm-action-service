@@ -100,10 +100,12 @@ public abstract class ActionProcessingService {
           .getChildParties()
           .forEach(
               p -> {
+                log.info("Creating Action request for pubsub notify");
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
                 actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
+                log.with("isPubsub", actionRequest.isPubsub()).info("Pubsub notify action added to the list")
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
