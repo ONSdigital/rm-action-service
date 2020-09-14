@@ -106,14 +106,14 @@ public class NotifyModel {
             actionType = NUDGE;
             return new Classifiers(actionType, surveyRef, region, legalBasis);
           }
-          
+
           // if not not england is england. welcome to ras-rm.
           if (!NOT_ENGLAND.equals(region)) {
-            region = null;
+            region = "";
           }
 
           if (!COVID_SURVEY_ID.equals(surveyRef)) {
-            surveyRef = null;
+            surveyRef = "";
           }
 
           if (NOTIFICATION_EMAIL.equalsIgnoreCase(actionType)) {

@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,13 +35,13 @@ public class ClassifiersTest {
   public void willNotAddAnyOtherSurveySurvey() {
     Classifiers classifiers = Classifiers.builder().surveyRef("123").build();
 
-    assertNull(classifiers.getSurveyRef());
+    assertEquals("", classifiers.getSurveyRef());
   }
 
   @Test
   public void willCreateReminderClassifiersAsExpectedJSON() throws JsonProcessingException {
     String ExpectedReminderClassifiers =
-        "{\"communication_type\":\"REMINDER\",\"region\":\"YY\",\"legal_basis\":\"Voluntary not stated\"}";
+        "{\"communication_type\":\"REMINDER\",\"survey\":\"\",\"region\":\"YY\",\"legal_basis\":\"Voluntary not stated\"}";
     Classifiers classifiers =
         Classifiers.builder()
             .actionType("BSRE")

@@ -29,7 +29,10 @@ public class NotifyServiceTest {
   private static final String actionRequestJson =
       "{\"notify\":{"
           + "\"email_address\":null,"
-          + "\"classifiers\":{},"
+          + "\"classifiers\":{"
+          + "\"survey\":\"\","
+          + "\"region\":\"\""
+          + "},"
           + "\"personalisation\":{"
           + "\"reporting unit reference\":null,"
           + "\"survey id\":null,"
