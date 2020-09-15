@@ -94,6 +94,7 @@ public abstract class ActionProcessingService {
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
+    log.with("actionId", action.getId()).info("Setting action rquest array for processing");
     ArrayList<ActionRequest> actionRequests = new ArrayList<>();
     if (isBusinessNotification(context)) {
       context
