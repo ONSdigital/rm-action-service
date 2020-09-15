@@ -104,7 +104,7 @@ public class NotifyModel {
         public Classifiers build() {
           if (NUDGE_EMAIL.equals(actionType)) {
             actionType = NUDGE;
-            return new Classifiers(actionType, surveyRef, region, legalBasis);
+            return new Classifiers(actionType, "", "", "");
           }
 
           // if not not england is england. welcome to ras-rm.

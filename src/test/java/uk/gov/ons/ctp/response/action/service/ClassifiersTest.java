@@ -53,4 +53,20 @@ public class ClassifiersTest {
     String data = mapper.writeValueAsString(classifiers);
     assertEquals(ExpectedReminderClassifiers, data);
   }
+
+  @Test
+  public void willCreateNudgeClassifiersAsExpectedJSON() throws JsonProcessingException {
+    String ExpectedReminderClassifiers =
+        "{\"communication_type\":\"NUDGE\",\"survey\":\"\",\"region\":\"\",\"legal_basis\":\"\"}";
+    Classifiers classifiers =
+        Classifiers.builder()
+            .actionType("BSNUE")
+            .region("YY")
+            .legalBasis("Voluntary not stated")
+            .build();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String data = mapper.writeValueAsString(classifiers);
+    assertEquals(ExpectedReminderClassifiers, data);
+  }
 }
