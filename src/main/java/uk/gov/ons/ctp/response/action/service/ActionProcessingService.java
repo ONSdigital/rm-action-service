@@ -60,7 +60,7 @@ public abstract class ActionProcessingService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void processActionRequests(final UUID actionId) {
     Action action = actionRepo.findById(actionId);
-    log.with("action_id", action.getId()).debug("Processing actionRequest");
+    log.with("actionId", action.getId()).debug("Processing actionRequest");
 
     final ActionType actionType = action.getActionType();
     if (!valid(actionType)) {
@@ -79,7 +79,8 @@ public abstract class ActionProcessingService {
     actionRequests.forEach(
         actionRequest -> {
           if (actionRequest.isPubsub()) {
-            log.info("Pubsub message will be forwarded to notify cloudfunction");
+            log.with("actionId", actionId.toString())
+                .info("Pubsub message will be forwarded to notify cloudfunction");
             notifyService.processNotification(actionRequest);
           } else {
             actionInstructionPublisher.sendActionInstruction(
@@ -101,12 +102,14 @@ public abstract class ActionProcessingService {
           .getChildParties()
           .forEach(
               p -> {
-                log.info("Creating Action request for pubsub notify");
+                log.with("actionId", action.getId())
+                    .info("Creating Action request for pubsub notify");
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
                 actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
                 log.with("isPubsub", actionRequest.isPubsub())
+                    .with("actionId", action.getId())
                     .info("Pubsub notify action added to the list");
               });
     } else {
