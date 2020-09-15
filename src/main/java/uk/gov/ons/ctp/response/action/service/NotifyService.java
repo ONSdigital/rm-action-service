@@ -42,12 +42,6 @@ public class NotifyService {
           .with("actionId", actionRequest.getActionId())
           .debug("Notify pubsub sent sucessfully");
 
-      // ActionFeedback feedback = new ActionFeedback();
-      // feedback.setActionId(actionRequest.getActionId());
-      // feedback.setOutcome(Outcome.REQUEST_COMPLETED);
-      // feedback.setSituation("Notify Email Sent");
-      // feedbackService.acceptFeedback(feedback);
-
       // this will mimic current implementation of action -> rabbit.
       // The curent processessing service does not attempt to recover from error.
       // theres not much we can do with these checked exceptions without
@@ -91,9 +85,4 @@ public class NotifyService {
             .emailAddress(actionRequest.getContact().getEmailAddress())
             .build());
   }
-
-  // public Classifiers getClassifiers(final ActionRequest actionRequest) {
-  //   ClassifiersBuilder builder = Classifiers.builder();
-
-  // }
 }
