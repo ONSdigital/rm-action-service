@@ -42,6 +42,8 @@ public abstract class ActionProcessingService {
 
   @Autowired private ActionInstructionPublisher actionInstructionPublisher;
 
+  @Autowired private NotifyService notifyService;
+
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -58,7 +60,7 @@ public abstract class ActionProcessingService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void processActionRequests(final UUID actionId) {
     Action action = actionRepo.findById(actionId);
-    log.with("action_id", action.getId()).debug("Processing actionRequest");
+    log.with("actionId", action.getId()).debug("Processing actionRequest");
 
     final ActionType actionType = action.getActionType();
     if (!valid(actionType)) {
@@ -75,9 +77,16 @@ public abstract class ActionProcessingService {
     transitionAction(action, event);
 
     actionRequests.forEach(
-        actionRequest ->
+        actionRequest -> {
+          if (actionRequest.isPubsub()) {
+            log.with("actionId", actionId.toString())
+                .info("Pubsub message will be forwarded to notify cloudfunction");
+            notifyService.processNotification(actionRequest);
+          } else {
             actionInstructionPublisher.sendActionInstruction(
-                actionType.getHandler(), actionRequest));
+                actionType.getHandler(), actionRequest);
+          }
+        });
   }
 
   private List<ActionRequest> prepareActionRequests(Action action) {
@@ -86,15 +95,22 @@ public abstract class ActionProcessingService {
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
+    log.with("actionId", action.getId()).info("Setting action rquest array for processing");
     ArrayList<ActionRequest> actionRequests = new ArrayList<>();
     if (isBusinessNotification(context)) {
       context
           .getChildParties()
           .forEach(
               p -> {
+                log.with("actionId", action.getId())
+                    .info("Creating Action request for pubsub notify");
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
+                actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
+                log.with("isPubsub", actionRequest.isPubsub())
+                    .with("actionId", action.getId())
+                    .info("Pubsub notify action added to the list");
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
@@ -166,7 +182,7 @@ public abstract class ActionProcessingService {
     try {
       nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
     } catch (CTPException ctpExeption) {
-      throw new IllegalStateException();
+      throw new IllegalStateException(ctpExeption);
     }
 
     action.setState(nextState);

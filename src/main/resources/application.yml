@@ -223,3 +223,7 @@ swagger-settings:
 retries:
   maxAttempts: 3
   backoff: 5000
+
+gcp:
+  project: ras-rm-sandbox
+  topic: ras-rm-notify-test
