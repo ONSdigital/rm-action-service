@@ -10,7 +10,6 @@
 
     <import resource="csvingester-flow.xml"/>
 
-    <import resource="action-feedback-inbound-flow.xml"/>
     <import resource="case-notifications-inbound-flow.xml"/>
 
     <import resource="action-instruction-outbound-flow.xml"/>
