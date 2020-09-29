@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import org.apache.commons.io.IOUtils;
@@ -120,7 +121,7 @@ public class ActionEndpointIT {
     String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
     sender.sendMessageToQueue("Case.LifecycleEvents", xml);
 
-    String message = queue.take();
+    String message = queue.poll(1, TimeUnit.MINUTES);
     assertThat(message).isNotNull();
 
     createAction(case_details_dto, ActionType.SOCIALICF);
@@ -131,7 +132,7 @@ public class ActionEndpointIT {
             "action-outbound-exchange",
             "Action.Field.binding");
 
-    String messageToField = queue2.take();
+    String messageToField = queue2.poll(1, TimeUnit.MINUTES);
     assertThat(messageToField).isNotNull();
 
     ActionInstruction actionInstruction = getActionInstructionFromXml(messageToField);
@@ -176,12 +177,12 @@ public class ActionEndpointIT {
     String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
     sender.sendMessageToQueue("Case.LifecycleEvents", xml);
 
-    String message = queue.take();
+    String message = queue.poll(1, TimeUnit.MINUTES);
     assertThat(message).isNotNull();
 
     createAction(case_details_dto, ActionType.SOCIALNOT);
 
-    String printer_message = queue2.take();
+    String printer_message = queue2.poll(1, TimeUnit.MINUTES);
     assertThat(printer_message).isNotNull();
 
     log.debug("printer_message = " + printer_message);
@@ -305,7 +306,6 @@ public class ActionEndpointIT {
    */
   private SimpleMessageListener getMessageListener() {
     Rabbitmq config = this.appConfig.getRabbitmq();
-
     return new SimpleMessageListener(
         config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
   }
