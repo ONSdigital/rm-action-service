@@ -49,7 +49,6 @@ class ActionDistributor {
   private CaseSvcClientService caseSvcClientService;
 
   private ActionProcessingService businessActionProcessingService;
-  private ActionProcessingService socialActionProcessingService;
 
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -62,7 +61,6 @@ class ActionDistributor {
       ActionTypeRepository actionTypeRepo,
       CaseSvcClientService caseSvcClientService,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
-      @Qualifier("social") ActionProcessingService socialActionProcessingService,
       StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.appConfig = appConfig;
     this.redissonClient = redissonClient;
@@ -71,7 +69,6 @@ class ActionDistributor {
     this.actionTypeRepo = actionTypeRepo;
     this.caseSvcClientService = caseSvcClientService;
     this.businessActionProcessingService = businessActionProcessingService;
-    this.socialActionProcessingService = socialActionProcessingService;
     this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }
 
@@ -156,10 +153,6 @@ class ActionDistributor {
         SampleUnitDTO.SampleUnitType.valueOf(actionCase.getSampleUnitType());
 
     switch (caseType) {
-      case H:
-      case HI:
-        return socialActionProcessingService;
-
       case B:
       case BI:
         return businessActionProcessingService;
