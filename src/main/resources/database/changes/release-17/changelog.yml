@@ -1,0 +1,21 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 17-1
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: Drop the reporting functions
+            path: drop_function.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+
+  - changeSet:
+      id: 17-2
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: Drop the reporting table
+            path: drop_table_report.sql
+            relativeToChangelogFile: true
+            splitStatements: true
