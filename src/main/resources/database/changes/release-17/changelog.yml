@@ -1,0 +1,41 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 17-1
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: Drop the reporting function
+            path: drop_function_generate_action_mi.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: 17-2
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: Drop the log message function
+            path: drop_function_log_message.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: 17-3
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: Drop the reporting table
+            path: drop_table_report.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: 17-4
+      author: Waeren Bailey
+      changes:
+        - sqlFile:
+            comment: Drop the reporting type table
+            path: drop_table_report_type.sql
+            relativeToChangelogFile: true
+            splitStatements: false
