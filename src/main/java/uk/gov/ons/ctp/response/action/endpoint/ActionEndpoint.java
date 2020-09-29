@@ -23,9 +23,7 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
-import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionFeedbackRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPutRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionCaseService;
@@ -259,46 +257,6 @@ public final class ActionEndpoint implements CTPEndpoint {
     actionService.rerunAction(actionIds);
 
     return ResponseEntity.noContent().build();
-  }
-
-  /**
-   * Allow feedback otherwise sent via JMS to be sent via endpoint
-   *
-   * @param actionId the action
-   * @param actionFeedbackRequestDTO the feedback
-   * @param bindingResult the bindingResult
-   * @return the modified action
-   * @throws CTPException oops
-   * @throws InvalidRequestException if binding errors
-   */
-  @RequestMapping(
-      value = "/{actionid}/feedback",
-      method = RequestMethod.PUT,
-      consumes = {"application/json"})
-  public ActionDTO feedbackAction(
-      @PathVariable("actionid") final UUID actionId,
-      @RequestBody @Valid final ActionFeedbackRequestDTO actionFeedbackRequestDTO,
-      final BindingResult bindingResult)
-      throws CTPException, InvalidRequestException {
-    log.with("action_id", actionId)
-        .with("action_feedback_request", actionFeedbackRequestDTO)
-        .debug("Feedback for Action");
-    if (bindingResult.hasErrors()) {
-      throw new InvalidRequestException("Binding errors for feedback action: ", bindingResult);
-    }
-
-    final ActionFeedback actionFeedback =
-        mapperFacade.map(actionFeedbackRequestDTO, ActionFeedback.class);
-    actionFeedback.setActionId(actionId.toString());
-    final Action action = actionService.feedBackAction(actionFeedback);
-    if (action == null) {
-      throw new CTPException(CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_NOT_FOUND, actionId);
-    }
-
-    final ActionDTO resultDTO = mapperFacade.map(action, ActionDTO.class);
-    final UUID actionPlanUUID = actionPlanService.findActionPlan(action.getActionPlanFK()).getId();
-    resultDTO.setActionPlanId(actionPlanUUID);
-    return resultDTO;
   }
 
   /**
