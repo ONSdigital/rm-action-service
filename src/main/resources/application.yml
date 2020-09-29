@@ -19,7 +19,7 @@ liquibase:
   user: actionsvc
   password: actionsvc
   default-schema: action
-  url: jdbc:postgresql://localhost:6432/postgres
+  url: jdbc:postgresql://localhost:5432/postgres
   changeLog: classpath:/database/changelog-master.yml
 
 security:
@@ -56,7 +56,7 @@ spring:
     name: ONS ActionService
 
   datasource:
-    url: jdbc:postgresql://localhost:6432/postgres
+    url: jdbc:postgresql://localhost:5432/postgres
     username: actionsvc
     password: actionsvc
     driverClassName: org.postgresql.Driver
