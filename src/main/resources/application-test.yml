@@ -39,7 +39,7 @@ plan-execution:
 
 rabbitmq:
   host: localhost
-  port: 35672
+  port: 5672
 
 case-svc:
   connection-config:

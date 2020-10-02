@@ -96,57 +96,6 @@ public class ActionEndpointIT {
   }
 
   @Test
-  public void testIncompleteCasesAreSentToField() throws Exception {
-    UUID collexId = UUID.randomUUID();
-
-    ActionPlanDTO actionPlan = createActionPlan();
-    createActionRule(actionPlan.getId(), ActionType.BSNE);
-
-    // Create mocks
-    createCollectionExerciseMock(collexId);
-    CaseDetailsDTO case_details_dto =
-        createCaseDetailsMock(UUID.randomUUID(), collexId, actionPlan.getId());
-    createSurveyDetailsMock();
-    createCaseEventMock(case_details_dto.getId());
-
-    SimpleMessageSender sender = getMessageSender();
-    SimpleMessageListener listener = getMessageListener();
-
-    BlockingQueue<String> queue =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.CaseNotificationHandled.binding");
-
-    String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
-    sender.sendMessageToQueue("Case.LifecycleEvents", xml);
-
-    String message = queue.poll(1, TimeUnit.MINUTES);
-    assertThat(message).isNotNull();
-
-    createAction(case_details_dto, ActionType.BSNE);
-
-    BlockingQueue<String> queue2 =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.Field.binding");
-
-    String messageToField = queue2.poll(1, TimeUnit.MINUTES);
-    assertThat(messageToField).isNotNull();
-
-    ActionInstruction actionInstruction = getActionInstructionFromXml(messageToField);
-    ActionAddress address = actionInstruction.getActionRequest().getAddress();
-
-    checkAttributes(address);
-    assertThat(actionInstruction.getActionRequest().getSampleUnitRef())
-        .isEqualTo(
-            sampleAttributes.getAttributes().get("TLA")
-                + sampleAttributes.getAttributes().get("REFERENCE"));
-    assertThat(actionInstruction.getActionRequest().getReturnByDate()).isNotEmpty();
-  }
-
-  @Test
   public void testAddressPopulatedInActionRequest() throws Exception {
     UUID collexId = UUID.randomUUID();
 
