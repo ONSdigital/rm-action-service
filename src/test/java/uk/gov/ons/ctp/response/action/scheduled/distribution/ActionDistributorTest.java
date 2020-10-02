@@ -42,17 +42,12 @@ import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 @RunWith(MockitoJUnitRunner.class)
 public class ActionDistributorTest {
 
-  private static final String SOCIALNOT = "SOCIALNOT";
-  private static final String SOCIALSNE = "SOCIALSNE";
   private static final String BSNOT = "BSNOT";
 
   private List<ActionType> actionTypes;
   private List<Action> actions;
-  private Stream<Action> socialNotificationActions;
-  private Stream<Action> socialRemindersActions;
   private Stream<Action> businessEnrolmentActions;
   private ActionCase bActionCase;
-  private ActionCase hActionCase;
   private ActionCase fActionCase;
   private RLock lock;
 
@@ -78,13 +73,9 @@ public class ActionDistributorTest {
   public void setUp() throws Exception {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     actions = FixtureHelper.loadClassFixtures(Action[].class);
-    socialNotificationActions = actions.subList(0, 2).stream();
-    socialRemindersActions = actions.subList(2, 4).stream();
     businessEnrolmentActions = actions.subList(4, 6).stream();
     bActionCase = new ActionCase();
     bActionCase.setSampleUnitType("B");
-    hActionCase = new ActionCase();
-    hActionCase.setSampleUnitType("H");
     fActionCase = new ActionCase();
     fActionCase.setSampleUnitType("F");
 
@@ -101,20 +92,11 @@ public class ActionDistributorTest {
     when(lock.tryLock(anyInt(), eq(TimeUnit.SECONDS))).thenReturn(true);
     when(actionCaseRepo.findById(any())).thenReturn(bActionCase);
 
-    // 3 action types (SOCIALNOT, SOCIALSNE, BSNOT)
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
 
     for (ActionType actionType : actionTypes) {
-      if (actionType.getName().equals(SOCIALNOT)) {
-        when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
-            .thenReturn(socialNotificationActions);
-      } else if (actionType.getName().equals(SOCIALSNE)) {
-        when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
-            .thenReturn(socialRemindersActions);
-      } else if (actionType.getName().equals(BSNOT)) {
-        when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
-            .thenReturn(businessEnrolmentActions);
-      }
+      when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
+          .thenReturn(businessEnrolmentActions);
     }
   }
 

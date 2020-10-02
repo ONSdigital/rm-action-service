@@ -30,7 +30,6 @@ public abstract class ActionProcessingService {
 
   public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
-  public static final String DATE_FORMAT_IN_SOCIAL_LETTER = "dd/MM";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   public static final String ACTIVE = "ACTIVE";
   public static final String CREATED = "CREATED";

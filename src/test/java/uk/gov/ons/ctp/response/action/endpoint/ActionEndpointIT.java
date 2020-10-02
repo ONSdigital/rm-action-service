@@ -100,7 +100,7 @@ public class ActionEndpointIT {
     UUID collexId = UUID.randomUUID();
 
     ActionPlanDTO actionPlan = createActionPlan();
-    createActionRule(actionPlan.getId(), ActionType.SOCIALICF);
+    createActionRule(actionPlan.getId(), ActionType.BSNE);
 
     // Create mocks
     createCollectionExerciseMock(collexId);
@@ -124,7 +124,7 @@ public class ActionEndpointIT {
     String message = queue.poll(1, TimeUnit.MINUTES);
     assertThat(message).isNotNull();
 
-    createAction(case_details_dto, ActionType.SOCIALICF);
+    createAction(case_details_dto, ActionType.BSNE);
 
     BlockingQueue<String> queue2 =
         listener.listen(
@@ -180,7 +180,7 @@ public class ActionEndpointIT {
     String message = queue.poll(1, TimeUnit.MINUTES);
     assertThat(message).isNotNull();
 
-    createAction(case_details_dto, ActionType.SOCIALNOT);
+    createAction(case_details_dto, ActionType.BSNOT);
 
     String printer_message = queue2.poll(1, TimeUnit.MINUTES);
     assertThat(printer_message).isNotNull();
