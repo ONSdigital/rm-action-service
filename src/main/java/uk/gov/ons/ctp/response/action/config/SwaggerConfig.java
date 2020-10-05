@@ -12,7 +12,6 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-import uk.gov.ons.ctp.response.action.endpoint.ActionEndpoint;
 import uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint;
 import uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint;
 
@@ -20,12 +19,7 @@ import uk.gov.ons.ctp.response.action.endpoint.ActionPlanJobEndpoint;
 @CoverageIgnore
 @Configuration
 @EnableSwagger2
-@ComponentScan(
-    basePackageClasses = {
-      ActionEndpoint.class,
-      ActionPlanEndpoint.class,
-      ActionPlanJobEndpoint.class
-    })
+@ComponentScan(basePackageClasses = {ActionPlanEndpoint.class, ActionPlanJobEndpoint.class})
 public class SwaggerConfig {
 
   @Autowired private AppConfig appConfig;
