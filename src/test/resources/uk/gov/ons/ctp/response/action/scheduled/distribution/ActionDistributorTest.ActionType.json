@@ -1,7 +1,7 @@
 [
   {
     "actionTypePK": 1,
-    "name": "SOCIALNOT",
+    "name": "BSNOT",
     "description": "Enrolment Invitation Letter",
     "handler": "Printer",
     "canCancel": false,
