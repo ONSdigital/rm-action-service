@@ -179,13 +179,6 @@ party-svc:
     # time to read response
     read-timeout-milli-seconds: 5000
  # looking for the ingest file
-
-csv-ingest:
-  directory: /tmp/csv
-  file-pattern: '*.csv'
-  #the poll-milliseconds property is not used at the moment due to a bug in spring context loading in integration tests
-  poll-milliseconds: 10000
-
 # queue related
 redelivery-policy:
   maxRedeliveries: -1
