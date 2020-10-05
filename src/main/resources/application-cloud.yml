@@ -178,7 +178,7 @@ party-svc:
     connect-timeout-milli-seconds: 5000
     # time to read response
     read-timeout-milli-seconds: 5000
- # looking for the ingest file
+
 # queue related
 redelivery-policy:
   maxRedeliveries: -1
