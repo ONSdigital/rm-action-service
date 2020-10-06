@@ -44,3 +44,10 @@ planExecutionDelayMillis: 1000
 dns:
   enabled: false
   wellKnownPort: 8080
+
+crons:
+  action:
+    plans:
+      name: action-plans
+      cron: "0 1 * * *"
+      target: "schedule/action-plans"

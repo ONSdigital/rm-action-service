@@ -1,20 +1,25 @@
-package uk.gov.ons.ctp.response.action.scheduled.plan;
+package uk.gov.ons.ctp.response.action.endpoint;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.List;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 import uk.gov.ons.ctp.response.lib.common.distributed.DistributedLockManager;
 
-@Service
-public class ActionPlanJobExecutor {
-  private static final Logger log = LoggerFactory.getLogger(ActionPlanJobExecutor.class);
+@RestController
+@RequestMapping(value = "/schedule", produces = "application/json")
+public class ScheduleEndpoint {
+  private static final Logger log = LoggerFactory.getLogger(ScheduleEndpoint.class);
 
   private ActionCaseRepository actionCaseRepo;
   private ActionPlanRepository actionPlanRepo;
@@ -23,7 +28,7 @@ public class ActionPlanJobExecutor {
 
   private DistributedLockManager actionPlanExecutionLockManager;
 
-  public ActionPlanJobExecutor(
+  public ScheduleEndpoint(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
       ActionService actionSvc,
@@ -39,30 +44,25 @@ public class ActionPlanJobExecutor {
    * with cases in the action.case table
    */
   @Transactional
-  public void createAndExecuteAllActionPlanJobs() {
+  @RequestMapping(value = "/action-plans", method = RequestMethod.POST)
+  public ResponseEntity<Void> createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(this::createAndExecuteActionPlanJobs);
+    return ResponseEntity.accepted().body(null);
   }
 
-  private void createAndExecuteActionPlanJobs(final ActionPlan actionPlan) {
+  @Async
+  public CompletableFuture<Void> createAndExecuteActionPlanJobs(final ActionPlan actionPlan) {
     // If no cases exist in action.case table for given action plan don't create action plan job
     if (!actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK())) {
-      return;
+      return CompletableFuture.completedFuture(null);
     }
-
-    if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.with("action_plan_id", actionPlan.getId()).info("Could not get manager lock");
-      return;
-    }
-
     try {
-      // This transaction has to be committed before the lock is released, or else duplicate
-      // actions will be created
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {
       log.error("Exception raised whilst creating scheduled actions", e);
     } finally {
-      actionPlanExecutionLockManager.unlock(actionPlan.getName());
+      return CompletableFuture.completedFuture(null);
     }
   }
 }
