@@ -9,7 +9,7 @@
   },
   {
     "actionTypePK": 2,
-    "name": "SOCIALSNE",
+    "name": "BSNOT",
     "description": "Survey Reminder Notification",
     "handler": "Notify",
     "canCancel": true,
