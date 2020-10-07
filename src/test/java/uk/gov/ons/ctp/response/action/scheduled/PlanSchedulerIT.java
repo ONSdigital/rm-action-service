@@ -128,6 +128,17 @@ public class PlanSchedulerIT {
     }
   }
 
+  private void triggerActionPlanEndpoint() throws InterruptedException, UnirestException {
+    HttpResponse<String> response =
+        Unirest.post("http://localhost:" + this.port + "/schedule/actionplans")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .header("Content-Type", "application/json")
+            .asString();
+
+    System.out.println(response.getBody());
+  }
+
   private ActionPlanDTO createActionPlan() throws UnirestException {
     ActionPlanPostRequestDTO actionPlanDto = new ActionPlanPostRequestDTO();
     actionPlanDto.setName("notification2");
@@ -325,6 +336,7 @@ public class PlanSchedulerIT {
     createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
 
     //// When PlanScheduler and ActionDistributor runs
+    triggerActionPlanEndpoint();
 
     //// Then
     final String message = pollForPrinterAction();
@@ -353,6 +365,7 @@ public class PlanSchedulerIT {
     createActionCase(collectionExcerciseId, actionPlan, partyId, caseId, sampleUnitType);
 
     //// When PlanScheduler and ActionDistributor runs
+    triggerActionPlanEndpoint();
 
     //// Then
     String message = pollForPrinterAction();
@@ -385,6 +398,7 @@ public class PlanSchedulerIT {
     mockGetCaseEvent();
 
     //// When PlanScheduler and ActionDistributor runs
+    triggerActionPlanEndpoint();
 
     //// Then
     String message = pollForPrinterAction();

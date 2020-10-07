@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 
 /** Implementation */
@@ -24,9 +25,18 @@ public class ActionPlanService {
 
   private ActionPlanRepository actionPlanRepo;
 
+  private ActionCaseRepository actionCaseRepo;
+
+  private ActionService actionSvc;
+
   @Autowired
-  public ActionPlanService(final ActionPlanRepository actionPlanRepo) {
+  public ActionPlanService(
+      final ActionPlanRepository actionPlanRepo,
+      ActionCaseRepository actionCaseRepo,
+      ActionService actionSvc) {
     this.actionPlanRepo = actionPlanRepo;
+    this.actionCaseRepo = actionCaseRepo;
+    this.actionSvc = actionSvc;
   }
 
   @CoverageIgnore
@@ -117,5 +127,23 @@ public class ActionPlanService {
       }
     }
     return existingActionPlan;
+  }
+
+  @Transactional
+  public void executeAllActionPlans() {
+    List<ActionPlan> actionPlans = actionPlanRepo.findAll();
+    actionPlans.forEach(this::createAndExecuteActionPlanJobs);
+  }
+
+  public void createAndExecuteActionPlanJobs(final ActionPlan actionPlan) {
+    // If no cases exist in action.case table for given action plan don't create action plan job
+    if (!actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK())) {
+      return;
+    }
+    try {
+      actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
+    } catch (Exception e) {
+      log.error("Exception raised whilst creating scheduled actions", e);
+    }
   }
 }
