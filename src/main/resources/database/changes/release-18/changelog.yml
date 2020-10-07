@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+- changeSet:
+    id: 18-0
+    author: Warren Bailey
+    changes:
+      - sqlFile:
+          comment: Delete all social action types
+          path: delete_social_action_types.sql
+          relativeToChangelogFile: true
+          splitStatements: false

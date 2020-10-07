@@ -1,7 +1,7 @@
 [
   {
     "actionTypePK": 1,
-    "name": "SOCIALNOT",
+    "name": "BSNOT",
     "description": "Enrolment Invitation Letter",
     "handler": "Printer",
     "canCancel": false,
@@ -9,7 +9,7 @@
   },
   {
     "actionTypePK": 2,
-    "name": "SOCIALSNE",
+    "name": "BSNOT",
     "description": "Survey Reminder Notification",
     "handler": "Notify",
     "canCancel": true,

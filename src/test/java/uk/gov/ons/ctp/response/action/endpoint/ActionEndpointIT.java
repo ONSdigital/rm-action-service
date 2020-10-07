@@ -19,15 +19,12 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
@@ -41,7 +38,6 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionAddress;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.*;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.NotificationType;
@@ -49,7 +45,6 @@ import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.lib.common.UnirestInitialiser;
 import uk.gov.ons.ctp.response.lib.common.utility.Mapzer;
 import uk.gov.ons.ctp.response.lib.rabbit.Rabbitmq;
-import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageBase;
 import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageListener;
 import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageSender;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleAttributesDTO;
@@ -93,108 +88,6 @@ public class ActionEndpointIT {
 
     sampleUnitId = UUID.randomUUID();
     sampleAttributes = createSampleAttributesMock(sampleUnitId);
-  }
-
-  @Test
-  public void testIncompleteCasesAreSentToField() throws Exception {
-    UUID collexId = UUID.randomUUID();
-
-    ActionPlanDTO actionPlan = createActionPlan();
-    createActionRule(actionPlan.getId(), ActionType.SOCIALICF);
-
-    // Create mocks
-    createCollectionExerciseMock(collexId);
-    CaseDetailsDTO case_details_dto =
-        createCaseDetailsMock(UUID.randomUUID(), collexId, actionPlan.getId());
-    createSurveyDetailsMock();
-    createCaseEventMock(case_details_dto.getId());
-
-    SimpleMessageSender sender = getMessageSender();
-    SimpleMessageListener listener = getMessageListener();
-
-    BlockingQueue<String> queue =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.CaseNotificationHandled.binding");
-
-    String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
-    sender.sendMessageToQueue("Case.LifecycleEvents", xml);
-
-    String message = queue.poll(1, TimeUnit.MINUTES);
-    assertThat(message).isNotNull();
-
-    createAction(case_details_dto, ActionType.SOCIALICF);
-
-    BlockingQueue<String> queue2 =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.Field.binding");
-
-    String messageToField = queue2.poll(1, TimeUnit.MINUTES);
-    assertThat(messageToField).isNotNull();
-
-    ActionInstruction actionInstruction = getActionInstructionFromXml(messageToField);
-    ActionAddress address = actionInstruction.getActionRequest().getAddress();
-
-    checkAttributes(address);
-    assertThat(actionInstruction.getActionRequest().getSampleUnitRef())
-        .isEqualTo(
-            sampleAttributes.getAttributes().get("TLA")
-                + sampleAttributes.getAttributes().get("REFERENCE"));
-    assertThat(actionInstruction.getActionRequest().getReturnByDate()).isNotEmpty();
-  }
-
-  @Test
-  public void testAddressPopulatedInActionRequest() throws Exception {
-    UUID collexId = UUID.randomUUID();
-
-    ActionPlanDTO actionPlan = createActionPlan();
-
-    // Create mocks
-    createCollectionExerciseMock(collexId);
-    CaseDetailsDTO case_details_dto =
-        createCaseDetailsMock(UUID.randomUUID(), collexId, actionPlan.getId());
-    createSurveyDetailsMock();
-    createCaseEventMock(case_details_dto.getId());
-
-    SimpleMessageSender sender = getMessageSender();
-    SimpleMessageListener listener = getMessageListener();
-
-    BlockingQueue<String> queue =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.CaseNotificationHandled.binding");
-
-    BlockingQueue<String> queue2 =
-        listener.listen(
-            SimpleMessageBase.ExchangeType.Direct,
-            "action-outbound-exchange",
-            "Action.Printer.binding");
-
-    String xml = getCaseNotificationXml(sampleUnitId, case_details_dto, collexId);
-    sender.sendMessageToQueue("Case.LifecycleEvents", xml);
-
-    String message = queue.poll(1, TimeUnit.MINUTES);
-    assertThat(message).isNotNull();
-
-    createAction(case_details_dto, ActionType.SOCIALNOT);
-
-    String printer_message = queue2.poll(1, TimeUnit.MINUTES);
-    assertThat(printer_message).isNotNull();
-
-    log.debug("printer_message = " + printer_message);
-    ActionInstruction actionInstruction = getActionInstructionFromXml(printer_message);
-    ActionRequest actionRequest = actionInstruction.getActionRequest();
-    ActionAddress address = actionRequest.getAddress();
-
-    checkAttributes(address);
-    assertThat(actionRequest.getSampleUnitRef())
-        .isEqualTo(
-            sampleAttributes.getAttributes().get("TLA")
-                + sampleAttributes.getAttributes().get("REFERENCE"));
   }
 
   private void checkAttributes(ActionAddress address) {
