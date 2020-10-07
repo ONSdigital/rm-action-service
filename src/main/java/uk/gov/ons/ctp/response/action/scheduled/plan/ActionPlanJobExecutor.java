@@ -38,7 +38,7 @@ public class ActionPlanJobExecutor {
    * with cases in the action.case table
    */
   @Transactional
-  //  @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
+  @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(this::createAndExecuteActionPlanJobs);
