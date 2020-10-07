@@ -176,25 +176,7 @@ public final class ActionEndpointUnitTest {
           + "\"createdBy\": \""
           + ACTION_CREATEDBY
           + "\"}";
-  private static final String ACTION_FEEDBACK_VALID_JSON =
-      "{"
-          + "\"situation\": \""
-          + UPDATED_SITUATION
-          + "\","
-          + "\"outcome\": \""
-          + UPDATED_OUTCOME
-          + "\"}";
-  private static final String ACTION_FEEDBACK_INVALID_JSON =
-      "{"
-          + "\"actionId\": \""
-          + ACTIONID_1
-          + "\","
-          + "\"badsituation\": \""
-          + UPDATED_SITUATION
-          + "\","
-          + "\"outcome\": \""
-          + UPDATED_OUTCOME
-          + "\"}";
+
   @InjectMocks private ActionEndpoint actionEndpoint;
   @Mock private ActionService actionService;
   @Mock private ActionPlanService actionPlanService;

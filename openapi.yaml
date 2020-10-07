@@ -603,43 +603,6 @@ paths:
         '500':
           description: The ID provided wasn't a valid UUID.
       x-codegen-request-body-name: actionPutRequestDTO
-  '/actions/{actionid}/feedback':
-    put:
-      summary: Update an action with feedback.
-      description: Updates an action with the outcome of a situation.
-      tags:
-        - actions
-      operationId: feedbackActionUsingPUT
-      parameters:
-        - name: actionid
-          in: path
-          description: actionid
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: actionFeedbackRequestDTO
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ActionFeedbackRequestDTO'
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionDTO'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: An action wasn't found with the specified ID.
-        '500':
-          description: The ID provided wasn't a valid UUID.
-      x-codegen-request-body-name: actionFeedbackRequestDTO
 components:
   securitySchemes:
     basicAuth:

@@ -28,7 +28,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
@@ -139,32 +138,6 @@ public class ActionService {
       }
     }
     return flushedActions;
-  }
-
-  @Transactional(
-      propagation = Propagation.REQUIRED,
-      readOnly = false,
-      timeout = TRANSACTION_TIMEOUT)
-  public Action feedBackAction(final ActionFeedback actionFeedback) throws CTPException {
-    final String actionId = actionFeedback.getActionId();
-    log.with("action_id", actionId).debug("Entering feedBackAction");
-
-    Action result = null;
-    if (!StringUtils.isEmpty(actionId)) {
-      result = actionRepo.findById(UUID.fromString(actionId));
-      if (result != null) {
-        final ActionDTO.ActionEvent event =
-            ActionDTO.ActionEvent.valueOf(actionFeedback.getOutcome().name());
-        result.setSituation(actionFeedback.getSituation());
-        result.setUpdatedDateTime(nowUTC());
-        final ActionDTO.ActionState nextState =
-            actionSvcStateTransitionManager.transition(result.getState(), event);
-        result.setState(nextState);
-        result = actionRepo.saveAndFlush(result);
-      }
-    }
-
-    return result;
   }
 
   @Transactional(
