@@ -21,7 +21,6 @@ public class AppConfig {
   private SampleSvc sampleSvc;
   private ActionDistribution actionDistribution;
   private PlanExecution planExecution;
-  private CsvIngest csvIngest;
   private DataGrid dataGrid;
   private SwaggerSettings swaggerSettings;
   private ReportSettings reportSettings;

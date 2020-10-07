@@ -9,7 +9,7 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK": 1,
-      "name": "SOCIALNOT",
+      "name": "BSNOT",
       "description": "Enrolment Invitation Letter",
       "handler": "Printer",
       "canCancel": true,
@@ -31,7 +31,7 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK": 1,
-      "name": "SOCIALNOT",
+      "name": "BSNOT",
       "description": "Enrolment Invitation Letter",
       "handler": "Printer",
       "canCancel": true,
@@ -53,7 +53,7 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK": 2,
-      "name": "SOCIALSNE",
+      "name": "BSNOT",
       "description": "Survey Reminder Notification",
       "handler": "Notify",
       "canCancel": true,
@@ -75,7 +75,7 @@
     "manuallyCreated":true,
     "actionType":{
       "actionTypePK": 2,
-      "name": "SOCIALSNE",
+      "name": "BSNOT",
       "description": "Survey Reminder Notification",
       "handler": "Notify",
       "canCancel": true,

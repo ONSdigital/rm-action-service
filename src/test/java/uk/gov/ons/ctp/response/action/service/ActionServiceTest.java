@@ -254,40 +254,6 @@ public class ActionServiceTest {
   }
 
   @Test
-  public void ensureReturnByDateFormattedForSocial() {
-    SimpleDateFormat expectedDateFormat = new SimpleDateFormat("dd/MM");
-    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
-    ActionRequest actionRequest = new ActionRequest();
-
-    ActionRequestContext context =
-        createActionRequestContext(SampleUnitDTO.SampleUnitType.H, "SOCIALNOT");
-
-    decorator.decorateActionRequest(actionRequest, context);
-
-    assertThat(actionRequest.getReturnByDate())
-        .isEqualTo(
-            expectedDateFormat.format(
-                context.getCollectionExercise().getScheduledReturnDateTime()));
-  }
-
-  @Test
-  public void ensureReturnByDateFormattedForSocialICF() {
-    SimpleDateFormat expectedDateFormat = new SimpleDateFormat("dd/MM/YYYY");
-    CollectionExerciseAndSurvey decorator = new CollectionExerciseAndSurvey();
-    ActionRequest actionRequest = new ActionRequest();
-
-    ActionRequestContext context =
-        createActionRequestContext(SampleUnitDTO.SampleUnitType.H, "SOCIALICF");
-
-    decorator.decorateActionRequest(actionRequest, context);
-
-    assertThat(actionRequest.getReturnByDate())
-        .isEqualTo(
-            expectedDateFormat.format(
-                context.getCollectionExercise().getScheduledReturnDateTime()));
-  }
-
-  @Test
   public void ensureReturnByDateFormattedForBusiness() {
     SimpleDateFormat expectedDateFormat =
         new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);

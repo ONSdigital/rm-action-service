@@ -804,11 +804,6 @@ components:
             - BSRL
             - BSNE
             - BSNL
-            - SOCIALNOT
-            - SOCIALREM
-            - SOCIALSNE
-            - SOCIALPRENOT
-            - SOCIALICF
             - BSNUE
             - BSNUL
         description:
@@ -838,11 +833,6 @@ components:
             - BSRL
             - BSNE
             - BSNL
-            - SOCIALNOT
-            - SOCIALREM
-            - SOCIALSNE
-            - SOCIALPRENOT
-            - SOCIALICF
             - BSNUE
             - BSNUL
         name:
