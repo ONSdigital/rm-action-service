@@ -1,0 +1,1 @@
+ALTER TABLE ONLY action DROP CONSTRAINT actiontypeFK_fkey;
