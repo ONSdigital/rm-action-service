@@ -100,7 +100,7 @@ public class ActionDistributorTest {
     }
   }
 
-  /** Happy Path with 1 ActionRequest and 1 ActionCancel for a B case */
+  /** Happy Path with 1 ActionRequest for a B case */
   @Test
   public void testHappyPathBCase() throws Exception {
     // Given setUp
@@ -111,8 +111,6 @@ public class ActionDistributorTest {
 
     // Then
     verify(businessActionProcessingService, times(1)).processActionRequests(any());
-    verify(businessActionProcessingService, times(1)).processActionCancel(any());
-
     verify(lock, times(1)).unlock();
   }
 
@@ -140,8 +138,6 @@ public class ActionDistributorTest {
 
     // Then
     verify(businessActionProcessingService, never()).processActionRequests(any());
-    verify(businessActionProcessingService, never()).processActionCancel(any());
-
     verify(lock, times(1)).unlock();
   }
 }

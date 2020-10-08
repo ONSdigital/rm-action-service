@@ -27,7 +27,6 @@ import org.jvnet.jaxb2_commons.locator.ObjectLocator;
  *       &lt;choice&gt;
  *         &lt;element name="actionRequest" type="{http://ons.gov.uk/ctp/response/action/message/instruction}ActionRequest"/&gt;
  *         &lt;element name="actionUpdate" type="{http://ons.gov.uk/ctp/response/action/message/instruction}ActionUpdate"/&gt;
- *         &lt;element name="actionCancel" type="{http://ons.gov.uk/ctp/response/action/message/instruction}ActionCancel"/&gt;
  *       &lt;/choice&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -37,12 +36,11 @@ import org.jvnet.jaxb2_commons.locator.ObjectLocator;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(
     name = "ActionInstruction",
-    propOrder = {"actionCancel", "actionUpdate", "actionRequest"})
+    propOrder = {"actionUpdate", "actionRequest"})
 @XmlRootElement(name = "actionInstruction")
 public class ActionInstruction implements Serializable, ToString2 {
 
   private static final long serialVersionUID = 8297030705722814170L;
-  protected ActionCancel actionCancel;
   protected ActionUpdate actionUpdate;
   protected ActionRequest actionRequest;
 
@@ -53,30 +51,10 @@ public class ActionInstruction implements Serializable, ToString2 {
 
   /** Fully-initialising value constructor */
   public ActionInstruction(
-      final ActionCancel actionCancel,
       final ActionUpdate actionUpdate,
       final ActionRequest actionRequest) {
-    this.actionCancel = actionCancel;
     this.actionUpdate = actionUpdate;
     this.actionRequest = actionRequest;
-  }
-
-  /**
-   * Gets the value of the actionCancel property.
-   *
-   * @return possible object is {@link ActionCancel }
-   */
-  public ActionCancel getActionCancel() {
-    return actionCancel;
-  }
-
-  /**
-   * Sets the value of the actionCancel property.
-   *
-   * @param value allowed object is {@link ActionCancel }
-   */
-  public void setActionCancel(ActionCancel value) {
-    this.actionCancel = value;
   }
 
   /**
@@ -122,8 +100,6 @@ public class ActionInstruction implements Serializable, ToString2 {
    * @param _other A builder instance to which the state of this object will be copied.
    */
   public <_B> void copyTo(final ActionInstruction.Builder<_B> _other) {
-    _other.actionCancel =
-        ((this.actionCancel == null) ? null : this.actionCancel.newCopyBuilder(_other));
     _other.actionUpdate =
         ((this.actionUpdate == null) ? null : this.actionUpdate.newCopyBuilder(_other));
     _other.actionRequest =
@@ -159,17 +135,6 @@ public class ActionInstruction implements Serializable, ToString2 {
       final ActionInstruction.Builder<_B> _other,
       final PropertyTree _propertyTree,
       final PropertyTreeUse _propertyTreeUse) {
-    final PropertyTree actionCancelPropertyTree =
-        ((_propertyTree == null) ? null : _propertyTree.get("actionCancel"));
-    if (((_propertyTreeUse == PropertyTreeUse.INCLUDE)
-        ? (actionCancelPropertyTree != null)
-        : ((actionCancelPropertyTree == null) || (!actionCancelPropertyTree.isLeaf())))) {
-      _other.actionCancel =
-          ((this.actionCancel == null)
-              ? null
-              : this.actionCancel.newCopyBuilder(
-                  _other, actionCancelPropertyTree, _propertyTreeUse));
-    }
     final PropertyTree actionUpdatePropertyTree =
         ((_propertyTree == null) ? null : _propertyTree.get("actionUpdate"));
     if (((_propertyTreeUse == PropertyTreeUse.INCLUDE)
@@ -236,25 +201,6 @@ public class ActionInstruction implements Serializable, ToString2 {
     }
     final ActionInstruction that = ((ActionInstruction) object);
     {
-      ActionCancel leftActionCancel;
-      leftActionCancel = this.getActionCancel();
-      ActionCancel rightActionCancel;
-      rightActionCancel = that.getActionCancel();
-      if (this.actionCancel != null) {
-        if (that.actionCancel != null) {
-          if (!leftActionCancel.equals(rightActionCancel)) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      } else {
-        if (that.actionCancel != null) {
-          return false;
-        }
-      }
-    }
-    {
       ActionUpdate leftActionUpdate;
       leftActionUpdate = this.getActionUpdate();
       ActionUpdate rightActionUpdate;
@@ -299,14 +245,6 @@ public class ActionInstruction implements Serializable, ToString2 {
     int currentHashCode = 1;
     {
       currentHashCode = (currentHashCode * 31);
-      ActionCancel theActionCancel;
-      theActionCancel = this.getActionCancel();
-      if (this.actionCancel != null) {
-        currentHashCode += theActionCancel.hashCode();
-      }
-    }
-    {
-      currentHashCode = (currentHashCode * 31);
       ActionUpdate theActionUpdate;
       theActionUpdate = this.getActionUpdate();
       if (this.actionUpdate != null) {
@@ -342,12 +280,6 @@ public class ActionInstruction implements Serializable, ToString2 {
   public StringBuilder appendFields(
       ObjectLocator locator, StringBuilder buffer, ToStringStrategy2 strategy) {
     {
-      ActionCancel theActionCancel;
-      theActionCancel = this.getActionCancel();
-      strategy.appendField(
-          locator, this, "actionCancel", buffer, theActionCancel, (this.actionCancel != null));
-    }
-    {
       ActionUpdate theActionUpdate;
       theActionUpdate = this.getActionUpdate();
       strategy.appendField(
@@ -366,7 +298,6 @@ public class ActionInstruction implements Serializable, ToString2 {
 
     protected final _B _parentBuilder;
     protected final ActionInstruction _storedValue;
-    private ActionCancel.Builder<ActionInstruction.Builder<_B>> actionCancel;
     private ActionUpdate.Builder<ActionInstruction.Builder<_B>> actionUpdate;
     private ActionRequest.Builder<ActionInstruction.Builder<_B>> actionRequest;
 
@@ -375,8 +306,6 @@ public class ActionInstruction implements Serializable, ToString2 {
       if (_other != null) {
         if (_copy) {
           _storedValue = null;
-          this.actionCancel =
-              ((_other.actionCancel == null) ? null : _other.actionCancel.newCopyBuilder(this));
           this.actionUpdate =
               ((_other.actionUpdate == null) ? null : _other.actionUpdate.newCopyBuilder(this));
           this.actionRequest =
@@ -399,17 +328,6 @@ public class ActionInstruction implements Serializable, ToString2 {
       if (_other != null) {
         if (_copy) {
           _storedValue = null;
-          final PropertyTree actionCancelPropertyTree =
-              ((_propertyTree == null) ? null : _propertyTree.get("actionCancel"));
-          if (((_propertyTreeUse == PropertyTreeUse.INCLUDE)
-              ? (actionCancelPropertyTree != null)
-              : ((actionCancelPropertyTree == null) || (!actionCancelPropertyTree.isLeaf())))) {
-            this.actionCancel =
-                ((_other.actionCancel == null)
-                    ? null
-                    : _other.actionCancel.newCopyBuilder(
-                        this, actionCancelPropertyTree, _propertyTreeUse));
-          }
           final PropertyTree actionUpdatePropertyTree =
               ((_propertyTree == null) ? null : _propertyTree.get("actionUpdate"));
           if (((_propertyTreeUse == PropertyTreeUse.INCLUDE)
@@ -445,38 +363,9 @@ public class ActionInstruction implements Serializable, ToString2 {
     }
 
     protected <_P extends ActionInstruction> _P init(final _P _product) {
-      _product.actionCancel = ((this.actionCancel == null) ? null : this.actionCancel.build());
       _product.actionUpdate = ((this.actionUpdate == null) ? null : this.actionUpdate.build());
       _product.actionRequest = ((this.actionRequest == null) ? null : this.actionRequest.build());
       return _product;
-    }
-
-    /**
-     * Sets the new value of "actionCancel" (any previous value will be replaced)
-     *
-     * @param actionCancel New value of the "actionCancel" property.
-     */
-    public ActionInstruction.Builder<_B> withActionCancel(final ActionCancel actionCancel) {
-      this.actionCancel =
-          ((actionCancel == null)
-              ? null
-              : new ActionCancel.Builder<ActionInstruction.Builder<_B>>(this, actionCancel, false));
-      return this;
-    }
-
-    /**
-     * Returns a new builder to build the value of the "actionCancel" property (replacing previous
-     * value). Use {@link
-     * uk.gov.ons.ctp.response.action.message.instruction.ActionCancel.Builder#end()} to return to
-     * the current builder.
-     *
-     * @return A new builder to build the value of the "actionCancel" property. Use {@link
-     *     uk.gov.ons.ctp.response.action.message.instruction.ActionCancel.Builder#end()} to return
-     *     to the current builder.
-     */
-    public ActionCancel.Builder<? extends ActionInstruction.Builder<_B>> withActionCancel() {
-      return this.actionCancel =
-          new ActionCancel.Builder<ActionInstruction.Builder<_B>>(this, null, false);
     }
 
     /**
@@ -560,8 +449,6 @@ public class ActionInstruction implements Serializable, ToString2 {
   public static class Selector<TRoot extends com.kscs.util.jaxb.Selector<TRoot, ?>, TParent>
       extends com.kscs.util.jaxb.Selector<TRoot, TParent> {
 
-    private ActionCancel.Selector<TRoot, ActionInstruction.Selector<TRoot, TParent>> actionCancel =
-        null;
     private ActionUpdate.Selector<TRoot, ActionInstruction.Selector<TRoot, TParent>> actionUpdate =
         null;
     private ActionRequest.Selector<TRoot, ActionInstruction.Selector<TRoot, TParent>>
@@ -575,9 +462,6 @@ public class ActionInstruction implements Serializable, ToString2 {
     public Map<String, PropertyTree> buildChildren() {
       final Map<String, PropertyTree> products = new HashMap<String, PropertyTree>();
       products.putAll(super.buildChildren());
-      if (this.actionCancel != null) {
-        products.put("actionCancel", this.actionCancel.init());
-      }
       if (this.actionUpdate != null) {
         products.put("actionUpdate", this.actionUpdate.init());
       }
@@ -585,14 +469,6 @@ public class ActionInstruction implements Serializable, ToString2 {
         products.put("actionRequest", this.actionRequest.init());
       }
       return products;
-    }
-
-    public ActionCancel.Selector<TRoot, ActionInstruction.Selector<TRoot, TParent>> actionCancel() {
-      return ((this.actionCancel == null)
-          ? this.actionCancel =
-              new ActionCancel.Selector<TRoot, ActionInstruction.Selector<TRoot, TParent>>(
-                  this._root, this, "actionCancel")
-          : this.actionCancel);
     }
 
     public ActionUpdate.Selector<TRoot, ActionInstruction.Selector<TRoot, TParent>> actionUpdate() {

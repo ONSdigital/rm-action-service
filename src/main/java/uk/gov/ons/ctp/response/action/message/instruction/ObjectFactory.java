@@ -25,11 +25,6 @@ public class ObjectFactory {
     return new ActionInstruction();
   }
 
-  /** Create an instance of {@link ActionCancel } */
-  public ActionCancel createActionCancel() {
-    return new ActionCancel();
-  }
-
   /** Create an instance of {@link ActionUpdate } */
   public ActionUpdate createActionUpdate() {
     return new ActionUpdate();

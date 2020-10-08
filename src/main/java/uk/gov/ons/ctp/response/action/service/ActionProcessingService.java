@@ -14,7 +14,6 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
@@ -130,41 +129,6 @@ public abstract class ActionProcessingService {
     ActionRequest actionRequest = new ActionRequest();
     Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
     return actionRequest;
-  }
-
-  /** Deal with a single action cancel - the transaction boundary is here */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processActionCancel(final UUID actionId) {
-    Action action = actionRepo.findById(actionId);
-
-    log.with("action_id", action.getId())
-        .with("case_id", action.getCaseId())
-        .with("action_plan_pk", action.getActionPlanFK())
-        .info("processing action cancel");
-
-    transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-
-    actionInstructionPublisher.sendActionInstruction(
-        action.getActionType().getHandler(), prepareActionCancel(action));
-  }
-
-  /**
-   * Take an action and using it, fetch further info from Case service in a number of rest calls, in
-   * order to create the ActionRequest
-   *
-   * @param action It all starts wih the Action
-   * @return The ActionRequest created from the Action and the other info from CaseSvc
-   */
-  private ActionCancel prepareActionCancel(final Action action) {
-    log.with("action_id", action.getId())
-        .with("case_id", action.getCaseId())
-        .with("action_plan_pk", action.getActionPlanFK())
-        .debug("Building ActionCancel to publish to downstream handler");
-    final ActionCancel actionCancel = new ActionCancel();
-    actionCancel.setActionId(action.getId().toString());
-    actionCancel.setResponseRequired(true);
-    actionCancel.setReason(CANCELLATION_REASON);
-    return actionCancel;
   }
 
   /**

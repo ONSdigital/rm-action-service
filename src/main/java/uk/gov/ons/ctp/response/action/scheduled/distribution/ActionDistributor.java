@@ -113,8 +113,6 @@ class ActionDistributor {
 
       if (action.getState().equals(ActionState.SUBMITTED)) {
         ap.processActionRequests(action.getId());
-      } else if (action.getState().equals(ActionState.CANCEL_SUBMITTED)) {
-        ap.processActionCancel(action.getId());
       }
     } catch (Exception ex) {
       // We intentionally catch all exceptions here.

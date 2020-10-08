@@ -29,7 +29,6 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
@@ -281,88 +280,6 @@ public class ActionProcessingServiceTest {
         .sendActionInstruction(
             any(String.class),
             any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
-  @Test(expected = IllegalStateException.class)
-  public void testProcessActionCancelStateTransitionException() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
-    Action action = new Action();
-
-    // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)))
-        .thenThrow(
-            new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
-
-    // When
-    businessActionProcessingService.processActionCancel(newActionId);
-
-    // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  /** Scenario where the action's state transitions OK but issue while persisting action to DB */
-  @Test(expected = RuntimeException.class)
-  public void testProcessActionCancelPersistingException() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
-    Action action = new Action();
-
-    // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
-    when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
-
-    // When
-    businessActionProcessingService.processActionCancel(newActionId);
-
-    // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
-  }
-
-  @Test
-  public void testProcessActionCancelHappyPath() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
-    final Action action = new Action();
-    action.setActionType(
-        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
-    action.setId(newActionId);
-
-    // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
-
-    // When
-    businessActionProcessingService.processActionCancel(newActionId);
-
-    // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-
-    final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
-        ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
-    verify(actionInstructionPublisher, times(1))
-        .sendActionInstruction(eq(PRINTER), actionCaptor.capture());
-    final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel =
-        (ActionCancel) actionCaptor.getValue();
-    assertEquals(newActionId.toString(), publishedActionCancel.getActionId());
-    assertTrue(publishedActionCancel.isResponseRequired());
-    assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
   }
 
   @Test

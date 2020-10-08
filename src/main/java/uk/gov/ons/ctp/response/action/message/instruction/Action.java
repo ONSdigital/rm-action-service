@@ -34,7 +34,7 @@ import org.jvnet.jaxb2_commons.locator.ObjectLocator;
 @XmlType(
     name = "Action",
     propOrder = {"actionId", "responseRequired"})
-@XmlSeeAlso({ActionCancel.class, ActionUpdate.class, ActionRequest.class})
+@XmlSeeAlso({ActionUpdate.class, ActionRequest.class})
 public class Action implements Serializable, ToString2 {
 
   private static final long serialVersionUID = 8297030705722814170L;

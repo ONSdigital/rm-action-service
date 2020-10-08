@@ -82,9 +82,4 @@
       <event>string</event>
     </events>
   </actionUpdate>
-  <actionCancel>
-    <actionId>string</actionId>
-    <responseRequired>true</responseRequired>
-    <reason>string</reason>
-  </actionCancel>
 </ins:actionInstruction>

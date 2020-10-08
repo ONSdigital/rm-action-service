@@ -10,7 +10,6 @@
         <xs:choice>
             <xs:element name="actionRequest" type="ActionRequest"/>
             <xs:element name="actionUpdate" type="ActionUpdate"/>
-            <xs:element name="actionCancel" type="ActionCancel"/>
         </xs:choice>
     </xs:complexType>
 
@@ -114,20 +113,6 @@
             <xs:element name="event" type="xs:string" minOccurs="0"
                         maxOccurs="unbounded"/>
         </xs:sequence>
-    </xs:complexType>
-
-
-    <!-- a complex type for cancel instructions -->
-    <xs:complexType name="ActionCancel">
-        <xs:complexContent>
-            <xs:extension base="Action">
-                <xs:sequence>
-                    <xs:element name="reason" type="xs:string"/>
-                    <xs:element name="caseId" type="xs:string" minOccurs="0" maxOccurs="1"/>
-                    <xs:element name="caseRef" type="xs:string" minOccurs="0" maxOccurs="1"/>
-                </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
     </xs:complexType>
 
     <!-- a complex type for update instructions -->

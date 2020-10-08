@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.messaging.handler.annotation.Header;
 import uk.gov.ons.ctp.response.action.message.instruction.Action;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 
@@ -32,8 +31,6 @@ public class ActionInstructionPublisher {
     final ActionInstruction instruction = new ActionInstruction();
     if (action instanceof ActionRequest) {
       instruction.setActionRequest((ActionRequest) action);
-    } else if (action instanceof ActionCancel) {
-      instruction.setActionCancel((ActionCancel) action);
     }
 
     final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);

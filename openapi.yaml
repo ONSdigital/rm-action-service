@@ -650,26 +650,6 @@ components:
         updatedDateTime:
           type: string
           format: date-time
-    ActionFeedbackRequestDTO:
-      required:
-        - outcome
-        - situation
-      type: object
-      properties:
-        outcome:
-          type: string
-          enum:
-            - REQUEST_FAILED
-            - REQUEST_ACCEPTED
-            - REQUEST_COMPLETED
-            - REQUEST_DECLINED
-            - REQUEST_COMPLETED_DEACTIVATE
-            - REQUEST_COMPLETED_DISABLE
-            - CANCELLATION_FAILED
-            - CANCELLATION_ACCEPTED
-            - CANCELLATION_COMPLETED
-        situation:
-          type: string
     ActionPlanDTO:
       type: object
       properties:
