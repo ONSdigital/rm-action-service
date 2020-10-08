@@ -1,0 +1,13 @@
+databaseChangeLog:
+
+  #  -- this changeset is needed to rollback the previous changeset
+  - changeSet:
+      id: 19-1
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: add the contraint on action type
+            path: add_constraint_on_action_type.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
