@@ -405,6 +405,10 @@ paths:
               - ACTIVE
               - COMPLETED
               - DECLINED
+              - CANCEL_SUBMITTED
+              - CANCEL_PENDING
+              - CANCELLING
+              - CANCELLED
       responses:
         '200':
           description: Actions were successfully retrieved.
@@ -476,6 +480,64 @@ paths:
           description: Forbidden
         '500':
           description: The ID provided wasn't a valid UUID.
+  '/actions/case/{caseid}/cancel':
+    put:
+      summary: Cancels actions for a case.
+      description: Cancels all actions for the given case ID.
+      tags:
+        - actions
+      operationId: cancelActionsUsingPUT
+      parameters:
+        - name: caseid
+          in: path
+          description: caseid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns a list of the cancelled actions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionDTO'
+        '204':
+          description: No actions found to cancel for that case.
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: No case found by that ID.
+  /actions/rerun:
+    put:
+      summary: Reruns an aborted action.
+      description: Reruns any specified actions that have the state ABORTED.
+      tags:
+        - actions
+      operationId: rerunActionUsingPUT
+      parameters:
+        - name: actionId
+          in: query
+          description: actionId
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '204':
+          description: The actions were successfully scheduled to be rerun.
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: One or more of the actions could not be found.
   '/actions/{actionid}':
     get:
       summary: Returns the information on an action by ID.

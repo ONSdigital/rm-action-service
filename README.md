@@ -52,6 +52,10 @@ See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API 
     * Use the 5 decorators in `BusinessActionProcessingService` to decorate the Action Request.
     * Transition the action to `REQUEST_DISTRIBUTED` if a response is required or `REQUEST_COMPLETED` if not.
     * Place the Action Request(s) on the ActionInstruction queue.
+* For each other action, if they're in the state `CANCEL_SUBMITTED`:
+    * Transition the action to `CANCELLATION_DISTRIBUTED`.
+    * Create an Action Request for cancellation.
+    * Place the Action Request on the ActionInstruction queue.
 
 ### Plan Execution (default: 1s delay between invocations)
 * For each action plan:
