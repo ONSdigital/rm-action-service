@@ -1,0 +1,1 @@
+ALTER TABLE ONLY action.action  ADD CONSTRAINT actiontypeFK_fkey  FOREIGN KEY (actiontypeFK) REFERENCES action.actiontype (actiontypePK);
