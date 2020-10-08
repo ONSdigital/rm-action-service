@@ -10,12 +10,14 @@ databaseChangeLog:
             relativeToChangelogFile: true
             splitStatements: false
 
+  #  -- this changeset is needed as preprod already has the above changeset applied and need rolling back
   - changeSet:
       id: 18-2
       author: Warren Bailey
       changes:
         - sqlFile:
-            comment: Delete all social action types
-            path: delete_social_action_types.sql
+            comment: add the contraint on action type
+            path: add_constraint_on_action_type.sql
             relativeToChangelogFile: true
             splitStatements: false
+
