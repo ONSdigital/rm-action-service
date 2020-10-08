@@ -50,9 +50,7 @@ public class ActionInstruction implements Serializable, ToString2 {
   }
 
   /** Fully-initialising value constructor */
-  public ActionInstruction(
-      final ActionUpdate actionUpdate,
-      final ActionRequest actionRequest) {
+  public ActionInstruction(final ActionUpdate actionUpdate, final ActionRequest actionRequest) {
     this.actionUpdate = actionUpdate;
     this.actionRequest = actionRequest;
   }
