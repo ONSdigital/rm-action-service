@@ -101,42 +101,6 @@ public class ActionServiceTest {
   }
 
   @Test
-  public void cancelActionsForACaseAndVerifyActionsAreUpdatedAndFlushedActionsReturned()
-      throws Exception {
-    when(actionRepo.findByCaseId(ACTION_CASEID)).thenReturn(actions);
-    when(actionSvcStateTransitionManager.transition(
-            ActionState.PENDING, ActionEvent.REQUEST_CANCELLED))
-        .thenReturn(ActionState.CANCELLED);
-    when(actionSvcStateTransitionManager.transition(
-            ActionState.SUBMITTED, ActionEvent.REQUEST_CANCELLED))
-        .thenReturn(ActionState.CANCELLED);
-    when(actionSvcStateTransitionManager.transition(
-            ActionState.ACTIVE, ActionEvent.REQUEST_CANCELLED))
-        .thenReturn(ActionState.CANCELLED);
-
-    final List<Action> flushedActions = actionService.cancelActions(ACTION_CASEID);
-
-    for (final Action action : actions) {
-      if (action.getActionType().getCanCancel()) {
-        assertThat(action.getState()).isEqualTo(ActionState.CANCELLED);
-      } else {
-        assertThat(action.getState()).isNotEqualTo(ActionState.CANCELLED);
-      }
-    }
-    final List<Action> originalActions = FixtureHelper.loadClassFixtures(Action[].class);
-
-    verify(actionRepo, times(1)).findByCaseId(ACTION_CASEID);
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(originalActions.get(0).getState(), ActionEvent.REQUEST_CANCELLED);
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(originalActions.get(1).getState(), ActionEvent.REQUEST_CANCELLED);
-    verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
-    verify(actionRepo, times(1)).saveAndFlush(actions.get(1));
-
-    assertThat(flushedActions).contains(actions.get(0), actions.get(1));
-  }
-
-  @Test
   public void checkCreateActionIsSaved() {
     when(actionTypeRepo.findByName(ACTION_TYPENAME)).thenReturn(actionTypes.get(0));
     actionService.createAdHocAction(actions.get(0));

@@ -39,7 +39,7 @@
     },
     "priority":1,
     "situation":"cool",
-    "state":"CANCEL_SUBMITTED",
+    "state":"COMPLETED",
     "createdDateTime":1460719498196,
     "updatedDateTime":1460719498196
   },
@@ -83,7 +83,7 @@
     },
     "priority":1,
     "situation":"cool",
-    "state":"CANCEL_SUBMITTED",
+    "state":"COMPLETED",
     "createdDateTime":1460719498196,
     "updatedDateTime":1460719498196
   },
@@ -127,7 +127,7 @@
     },
     "priority":1,
     "situation":"cool",
-    "state":"CANCEL_SUBMITTED",
+    "state":"COMPLETED",
     "createdDateTime":1460719498196,
     "updatedDateTime":1460719498196
   }

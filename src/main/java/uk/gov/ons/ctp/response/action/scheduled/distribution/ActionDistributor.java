@@ -37,7 +37,7 @@ class ActionDistributor {
   private static final String LOCK_PREFIX = "ActionDistributionLock-";
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
   private static final Set<ActionState> ACTION_STATES_TO_GET =
-      Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
+      Sets.immutableEnumSet(ActionState.SUBMITTED);
 
   private AppConfig appConfig;
   private RedissonClient redissonClient;
