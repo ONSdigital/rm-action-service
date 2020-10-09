@@ -12,10 +12,6 @@ digraph actionstates {
     declined[label="DECLINED", fontname="helvetica", style=rounded]
     completed[label="COMPLETED", fontname="helvetica", style=rounded]
     aborted[label="ABORTED", fontname="helvetica", style=rounded]
-    cancelsubmitted[label="CANCEL_SUBMITTED", fontname="helvetica", style=rounded]
-    cancelpending[label="CANCEL_PENDING", fontname="helvetica", style=rounded]
-    cancelling[label="CANCELLING", fontname="helvetica", style=rounded]
-    cancelled[label="CANCELLED", fontname="helvetica", style=rounded]
 
     start -> submitted
     submitted -> completed[fontname="helvetica", label="REQUEST_COMPLETED"]

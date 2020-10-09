@@ -405,10 +405,6 @@ paths:
               - ACTIVE
               - COMPLETED
               - DECLINED
-              - CANCEL_SUBMITTED
-              - CANCEL_PENDING
-              - CANCELLING
-              - CANCELLED
       responses:
         '200':
           description: Actions were successfully retrieved.
@@ -643,10 +639,6 @@ components:
             - ACTIVE
             - COMPLETED
             - DECLINED
-            - CANCEL_SUBMITTED
-            - CANCEL_PENDING
-            - CANCELLING
-            - CANCELLED
         updatedDateTime:
           type: string
           format: date-time

@@ -20,11 +20,7 @@ public class ActionDTO {
     ABORTED,
     ACTIVE,
     COMPLETED,
-    DECLINED,
-    CANCEL_SUBMITTED,
-    CANCEL_PENDING,
-    CANCELLING,
-    CANCELLED;
+    DECLINED;
   }
 
   /** enum for action event */

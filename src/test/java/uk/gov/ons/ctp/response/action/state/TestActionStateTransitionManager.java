@@ -35,7 +35,6 @@ public class TestActionStateTransitionManager {
 
     final Map<ActionEvent, ActionState> pendingTransitions = new HashMap<>();
     pendingTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
-    pendingTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
     pendingTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.ACTIVE);
     pendingTransitions.put(ActionEvent.REQUEST_DECLINED, ActionState.DECLINED);
     pendingTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
@@ -45,7 +44,6 @@ public class TestActionStateTransitionManager {
 
     final Map<ActionEvent, ActionState> activeTransitions = new HashMap<>();
     activeTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.SUBMITTED);
-    activeTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
     activeTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.COMPLETED);
     activeTransitions.put(ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.COMPLETED);
     activeTransitions.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.COMPLETED);
@@ -54,44 +52,6 @@ public class TestActionStateTransitionManager {
     final Map<ActionEvent, ActionState> completedTransitions = new HashMap<>();
     completedTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.COMPLETED);
     validTransitions.put(ActionState.COMPLETED, completedTransitions);
-
-    final Map<ActionEvent, ActionState> cancelSubmittedTransitions = new HashMap<>();
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(
-        ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(
-        ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_SUBMITTED);
-    cancelSubmittedTransitions.put(
-        ActionEvent.CANCELLATION_DISTRIBUTED, ActionState.CANCEL_PENDING);
-    validTransitions.put(ActionState.CANCEL_SUBMITTED, cancelSubmittedTransitions);
-
-    final Map<ActionEvent, ActionState> cancelPendingTransitions = new HashMap<>();
-    cancelPendingTransitions.put(ActionEvent.REQUEST_FAILED, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.REQUEST_ACCEPTED, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.REQUEST_DECLINED, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.REQUEST_COMPLETED, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(
-        ActionEvent.REQUEST_COMPLETED_DEACTIVATE, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.REQUEST_COMPLETED_DISABLE, ActionState.CANCEL_PENDING);
-    cancelPendingTransitions.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
-    cancelPendingTransitions.put(ActionEvent.CANCELLATION_ACCEPTED, ActionState.CANCELLING);
-    cancelPendingTransitions.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
-    validTransitions.put(ActionState.CANCEL_PENDING, cancelPendingTransitions);
-
-    final Map<ActionEvent, ActionState> cancellingTransitions = new HashMap<>();
-    cancellingTransitions.put(ActionEvent.CANCELLATION_FAILED, ActionState.CANCEL_SUBMITTED);
-    cancellingTransitions.put(ActionEvent.CANCELLATION_COMPLETED, ActionState.CANCELLED);
-    cancellingTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLING);
-    validTransitions.put(ActionState.CANCELLING, cancellingTransitions);
-
-    final Map<ActionEvent, ActionState> cancelledTransitions = new HashMap<>();
-    cancelledTransitions.put(ActionEvent.REQUEST_CANCELLED, ActionState.CANCELLED);
-    validTransitions.put(ActionState.CANCELLED, cancelledTransitions);
 
     final Map<ActionEvent, ActionState> reRunTransitions = new HashMap<>();
     reRunTransitions.put(ActionEvent.REQUEST_RERUN, ActionState.SUBMITTED);
