@@ -33,7 +33,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.message.feedback.ActionFeedback;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
@@ -74,7 +73,6 @@ public class ActionServiceTest {
   private List<Action> actions;
   private List<ActionCase> actionCases;
   private ActionCase actionBCase;
-  private List<ActionFeedback> actionFeedback;
   private List<ActionRule> actionRules;
   private List<ActionType> actionTypes;
   private ActionPlanJob actionPlanJob;
@@ -93,7 +91,6 @@ public class ActionServiceTest {
     actions = FixtureHelper.loadClassFixtures(Action[].class);
     actionCases = FixtureHelper.loadClassFixtures(ActionCase[].class);
     actionBCase = actionCases.get(0);
-    actionFeedback = FixtureHelper.loadClassFixtures(ActionFeedback[].class);
     actionRules = FixtureHelper.loadClassFixtures(ActionRule[].class);
     actionRules.forEach(actionRule -> actionRule.setTriggerDateTime(OffsetDateTime.now()));
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
@@ -137,43 +134,6 @@ public class ActionServiceTest {
     verify(actionRepo, times(1)).saveAndFlush(actions.get(1));
 
     assertThat(flushedActions).contains(actions.get(0), actions.get(1));
-  }
-
-  @Test
-  public void feedbackActionVerifyActionAreUpdatedAndStateHasChanged() throws Exception {
-    when(actionRepo.findById(ACTION_ID_0)).thenReturn(actions.get(0));
-    when(actionSvcStateTransitionManager.transition(
-            ActionState.PENDING, ActionEvent.REQUEST_COMPLETED))
-        .thenReturn(ActionState.COMPLETED);
-    when(actionRepo.saveAndFlush(any())).then(returnsFirstArg());
-
-    actionService.feedBackAction(actionFeedback.get(0));
-
-    final ActionEvent event = ActionEvent.valueOf(actionFeedback.get(0).getOutcome().name());
-    final Action originalAction = FixtureHelper.loadClassFixtures(Action[].class).get(0);
-
-    verify(actionRepo, times(1)).findById(ACTION_ID_0);
-    verify(actionRepo, times(1)).saveAndFlush(actions.get(0));
-    verify(actionSvcStateTransitionManager, times(1)).transition(originalAction.getState(), event);
-  }
-
-  @Test
-  public void whenFeedbackActionNotFoundVerifySaveIsntCalled() throws Exception {
-    actionService.feedBackAction(actionFeedback.get(0));
-
-    verify(actionRepo, times(1)).findById(any());
-    verify(actionRepo, times(0)).saveAndFlush(any());
-    verify(actionSvcStateTransitionManager, times(0)).transition(any(), any());
-  }
-
-  @Test
-  public void whenFeedbackActionWithNullActionIdVerifySaveIsntCalled() throws Exception {
-    final ActionFeedback actionFeedbackWithNullActionId = new ActionFeedback();
-    actionService.feedBackAction(actionFeedbackWithNullActionId);
-
-    verify(actionRepo, times(0)).findById(any());
-    verify(actionRepo, times(0)).saveAndFlush(any());
-    verify(actionSvcStateTransitionManager, times(0)).transition(any(), any());
   }
 
   @Test
