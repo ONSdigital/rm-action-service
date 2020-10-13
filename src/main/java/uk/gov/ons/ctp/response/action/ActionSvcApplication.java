@@ -79,22 +79,6 @@ public class ActionSvcApplication {
   }
 
   /**
-   * Bean used to access Distributed List Manager
-   *
-   * @param redissonClient Redisson Client
-   * @return the Distributed List Manager
-   */
-  @Bean
-  public DistributedListManager<BigInteger> actionDistributionListManager(
-      final RedissonClient redissonClient) {
-    return new DistributedListManagerRedissonImpl<BigInteger>(
-        ActionSvcApplication.ACTION_DISTRIBUTION_LIST,
-        redissonClient,
-        appConfig.getDataGrid().getListTimeToWaitSeconds(),
-        appConfig.getDataGrid().getListTimeToLiveSeconds());
-  }
-
-  /**
    * Bean used to access Distributed Lock Manager
    *
    * @param redissonClient Redisson Client
