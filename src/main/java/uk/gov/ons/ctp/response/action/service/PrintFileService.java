@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
@@ -23,7 +24,9 @@ import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 @Service
 public class PrintFileService {
 
-  @Autowired private Publisher publisher;
+  @Autowired
+  @Qualifier("printfile")
+  private Publisher publisher;
 
   @Autowired private AppConfig appConfig;
 
