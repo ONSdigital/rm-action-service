@@ -44,7 +44,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
-import uk.gov.ons.ctp.response.action.endpoint.ActionDistributorEndpoint;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
@@ -99,8 +98,6 @@ public class PlanSchedulerIT {
   @Autowired private ActionRuleRepository actionRuleRepository;
 
   @MockBean private Publisher publisher;
-
-  public ActionDistributorEndpoint actionDistributorEndpoint;
 
   @Qualifier("customObjectMapper")
   @Autowired
@@ -328,7 +325,12 @@ public class PlanSchedulerIT {
     createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
 
     //// When PlanScheduler and ActionDistributor runs
-    actionDistributorEndpoint.distributeActions();
+    HttpResponse<String> response =
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(response.getStatus(), is(200));
 
     //// Then
     final String message = pollForPrinterAction();
@@ -357,7 +359,12 @@ public class PlanSchedulerIT {
     createActionCase(collectionExcerciseId, actionPlan, partyId, caseId, sampleUnitType);
 
     //// When PlanScheduler and ActionDistributor runs
-    actionDistributorEndpoint.distributeActions();
+    HttpResponse<String> response =
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(response.getStatus(), is(200));
 
     //// Then
     String message = pollForPrinterAction();
@@ -390,7 +397,12 @@ public class PlanSchedulerIT {
     mockGetCaseEvent();
 
     //// When PlanScheduler and ActionDistributor runs
-    actionDistributorEndpoint.distributeActions();
+    HttpResponse<String> response =
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(response.getStatus(), is(200));
 
     //// Then
     String message = pollForPrinterAction();
