@@ -32,11 +32,11 @@ service:
 crons:
   distributionScheduler:
     name: action-distribution-scheduler
-    cron: "0 3 * * *"
+    cron: "* * * * *"
     target: "distribute"
   planJobExecutor:
     name: action-plan-executor
-    cron: "0 3 * * *"
+    cron: "* * * * *"
     target: "actionplans/execute"
 
 resources:

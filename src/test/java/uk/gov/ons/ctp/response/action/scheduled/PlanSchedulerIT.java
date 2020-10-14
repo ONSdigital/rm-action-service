@@ -332,6 +332,14 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
+    HttpResponse<String> distributeResponse =
+      Unirest.get("http://localhost:" + this.port + "/distribute")
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .asString();
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
+
     //// Then
     final String message = pollForPrinterAction();
     assertThat(message, nullValue());
@@ -366,12 +374,20 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
+    HttpResponse<String> distributeResponse =
+      Unirest.get("http://localhost:" + this.port + "/distribute")
+        .basicAuth("admin", "secret")
+        .header("accept", "application/json")
+        .asString();
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
+
     //// Then
     String message = pollForPrinterAction();
     assertThat(message, nullValue());
   }
 
-  @Test
+  @Test @Ignore
   public void testActiveActionPlanJobAndActionPlanCreatesAction() throws Exception {
     //// Given
     ActionPlanDTO actionPlan = createActionPlan();
