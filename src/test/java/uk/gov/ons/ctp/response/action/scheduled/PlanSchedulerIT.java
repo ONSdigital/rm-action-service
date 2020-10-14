@@ -403,12 +403,15 @@ public class PlanSchedulerIT {
             .header("accept", "application/json")
             .asString();
     assertThat(response.getStatus(), is(200));
+    assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
+
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
     assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
     String message = pollForPrinterAction();
