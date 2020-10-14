@@ -18,7 +18,6 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.service.ActionService;
 import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedLockManager;
 
 /** Tests for the ActionPlanJobServiceImpl */
 @RunWith(MockitoJUnitRunner.class)
@@ -27,7 +26,6 @@ public class ActionPlanJobExecutorTest {
   @InjectMocks private ActionPlanJobExecutor actionPlanJobExecutor;
 
   @Mock private ActionService actionService;
-  @Mock private DistributedLockManager actionPlanExecutionLockManager;
 
   @Mock private ActionCaseRepository actionCaseRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
@@ -43,7 +41,6 @@ public class ActionPlanJobExecutorTest {
 
     when(actionPlanRepo.findAll()).thenReturn(actionPlans);
     when(actionCaseRepo.existsByActionPlanFK(any(Integer.class))).thenReturn(true);
-    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(true);
   }
 
   @Test
@@ -56,7 +53,6 @@ public class ActionPlanJobExecutorTest {
 
     // Then
     verify(actionService, times(2)).createScheduledActions(any());
-    verify(actionPlanExecutionLockManager, times(2)).unlock(actionPlans.get(0).getName());
   }
 
   @Test
@@ -70,20 +66,5 @@ public class ActionPlanJobExecutorTest {
 
     // Then
     verify(actionService, never()).createScheduledActions(any());
-    verify(actionPlanExecutionLockManager, never()).unlock(actionPlans.get(0).getName());
-  }
-
-  @Test
-  public void testCreateAndExecuteAllActionPlanJobsFailToGetLock() {
-
-    // Given
-    when(actionPlanExecutionLockManager.lock(any(String.class))).thenReturn(false);
-
-    // When
-    actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
-
-    // Then
-    verify(actionService, never()).createScheduledActions(any());
-    verify(actionPlanExecutionLockManager, never()).unlock(actionPlans.get(0).getName());
   }
 }

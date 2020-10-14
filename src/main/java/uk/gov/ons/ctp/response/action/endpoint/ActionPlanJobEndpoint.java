@@ -105,10 +105,11 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   }
 
   /**
-   * This method creates and executes all action plan jobs
+   * This method creates and executes all action plan jobs.
    *
-   * @return ActionPlanJobDTO This returns the associated action plan job for the specified action
-   *     plan job id.
+   * <p>Note: This can only be run by one instance of action at a time. If multiple instances have
+   * this invoked at the same time, duplicate actions will be created.
+   *
    * @throws CTPException if no action plan job found for the specified action plan job id.
    */
   @RequestMapping(value = "/execute", method = RequestMethod.GET)
@@ -119,9 +120,10 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
       return ResponseEntity.ok().body("Completed creating and executing action plan jobs");
     } catch (Exception e) {
       log.error(
-        "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
+          "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
       throw new CTPException(
-        CTPException.Fault.SYSTEM_ERROR, "Uncaught exception when creating and execution action plan jobs");
+          CTPException.Fault.SYSTEM_ERROR,
+          "Uncaught exception when creating and execution action plan jobs");
     }
   }
 

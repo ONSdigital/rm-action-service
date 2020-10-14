@@ -12,7 +12,7 @@ import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 /** The REST endpoint controller for ActionDistributor. */
 @RestController
 @RequestMapping(value = "/distribute", produces = "application/json")
-public class ActionDistributorEndpoint{
+public class ActionDistributorEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionDistributorEndpoint.class);
 
   private final ActionDistributor actionDistributor;
@@ -22,8 +22,8 @@ public class ActionDistributorEndpoint{
   }
 
   /**
-   * Calling this invokes the distribution of actions to either ras-rm-notify or the ras-rm-print-file to create
-   * either emails or letters.
+   * Calling this invokes the distribution of actions to either ras-rm-notify or the
+   * ras-rm-print-file to create either emails or letters.
    *
    * @throws CTPException on any exception thrown
    */
@@ -35,9 +35,9 @@ public class ActionDistributorEndpoint{
       return ResponseEntity.ok().body("Completed distribution");
     } catch (Exception e) {
       log.error(
-        "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
+          "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
       throw new CTPException(
-        CTPException.Fault.SYSTEM_ERROR, "Uncaught exception when exporting print file");
+          CTPException.Fault.SYSTEM_ERROR, "Uncaught exception when exporting print file");
     }
   }
 }
