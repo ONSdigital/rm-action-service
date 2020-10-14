@@ -397,6 +397,12 @@ public class PlanSchedulerIT {
     mockGetCaseEvent();
 
     //// When PlanScheduler and ActionDistributor runs
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(distributeResponse.getStatus(), is(200));
     HttpResponse<String> response =
         Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
             .basicAuth("admin", "secret")
