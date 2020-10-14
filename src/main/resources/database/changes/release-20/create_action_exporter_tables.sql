@@ -80,3 +80,19 @@ CREATE INDEX actionrequest_contactfk_index ON action.actionrequest USING btree (
 ALTER TABLE action.actionrequest ADD CONSTRAINT actionrequestexportjobid_fkey FOREIGN KEY (exportjobid) REFERENCES action.exportjob(id);
 ALTER TABLE action.actionrequest ADD CONSTRAINT addressfk_fkey FOREIGN KEY (addressfk) REFERENCES action.address(addresspk);
 ALTER TABLE action.actionrequest ADD CONSTRAINT contactfk_fkey FOREIGN KEY (contactfk) REFERENCES action.contact(contactpk) ON DELETE CASCADE;
+
+CREATE SEQUENCE action.actionrequestpkseq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 999999999999
+	START 1
+	CACHE 1
+	NO CYCLE;
+
+CREATE SEQUENCE action.contactpkseq
+	INCREMENT BY 1
+	MINVALUE 1
+	MAXVALUE 999999999999
+	START 1
+	CACHE 1
+	NO CYCLE;
