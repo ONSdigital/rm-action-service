@@ -1,16 +1,16 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ .Values.crons.exportScheduler.name }}
+  name: {{ .Values.crons.distributionScheduler.name }}
 spec:
-  schedule: "{{ .Values.crons.exportScheduler.cron }}"
+  schedule: "{{ .Values.crons.distributionScheduler.cron }}"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-            - name: {{ .Values.crons.exportScheduler.name }}
+            - name: {{ .Values.crons.distributionScheduler.name }}
               image: radial/busyboxplus:curl
               env:
                 - name: SECURITY_USER_NAME

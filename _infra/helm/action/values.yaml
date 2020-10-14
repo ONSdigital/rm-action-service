@@ -34,6 +34,10 @@ crons:
     name: action-distribution-scheduler
     cron: "0 3 * * *"
     target: "distribute"
+  planJobExecutor:
+    name: action-plan-executor
+    cron: "0 3 * * *"
+    target: "actionplans/execute"
 
 resources:
   requests:
