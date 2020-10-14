@@ -1,4 +1,4 @@
-CREATE TABLE actionexporter.address (
+CREATE TABLE action.address (
 	sampleunitref varchar(20) NULL,
 	addresstype varchar(6) NULL,
 	estabtype varchar(6) NULL,
@@ -42,8 +42,6 @@ CREATE TABLE action.exportfile (
 	CONSTRAINT exportfile_pkey PRIMARY KEY (id)
 );
 
-
--- actionexporter.exportfile foreign keys
 
 ALTER TABLE action.exportfile ADD CONSTRAINT exportfile_exportjobid_fkey FOREIGN KEY (exportjobid) REFERENCES action.exportjob(id);
 
