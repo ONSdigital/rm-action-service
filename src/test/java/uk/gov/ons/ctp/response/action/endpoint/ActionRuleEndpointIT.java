@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,7 +47,7 @@ public class ActionRuleEndpointIT {
 
   @Autowired private ActionPlanJobRepository actionPlanJobRepository;
 
-  @MockBean private Publisher publisher;
+  @Autowired private Publisher publisher;
 
   @ClassRule public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 

@@ -6,7 +6,6 @@ import ma.glasnost.orika.MapperFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,9 +25,8 @@ public class ActionExportService {
 
   private static final int TRANSACTION_TIMEOUT = 60;
 
-  @Qualifier("actionExporterBeanMapper")
-  @Autowired
-  private MapperFacade mapperFacade;
+  // @Qualifier("actionExporterBeanMapper")
+  @Autowired private MapperFacade mapperFacade;
 
   @Autowired private ActionRequestRepository actionRequestRepo;
 

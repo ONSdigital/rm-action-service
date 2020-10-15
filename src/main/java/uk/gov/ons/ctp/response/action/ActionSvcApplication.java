@@ -4,6 +4,7 @@ import com.godaddy.logging.LoggingConfigs;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import java.math.BigInteger;
+import java.time.Clock;
 import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
@@ -26,6 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.domain.repository.BaseRepositoryImpl;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
 import uk.gov.ons.ctp.response.lib.common.distributed.DistributedInstanceManager;
@@ -46,7 +48,9 @@ import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManagerFactory;
 @EnableTransactionManagement
 @IntegrationComponentScan
 @ComponentScan(basePackages = {"uk.gov.ons.ctp.response"})
-@EnableJpaRepositories(basePackages = {"uk.gov.ons.ctp.response"})
+@EnableJpaRepositories(
+    basePackages = {"uk.gov.ons.ctp.response"},
+    repositoryBaseClass = BaseRepositoryImpl.class)
 @EntityScan("uk.gov.ons.ctp.response")
 @EnableAsync
 @EnableCaching
@@ -239,6 +243,11 @@ public class ActionSvcApplication {
     final CustomObjectMapper mapper = new CustomObjectMapper();
 
     return mapper;
+  }
+
+  @Bean
+  public Clock clock() {
+    return Clock.systemDefaultZone();
   }
 
   /**

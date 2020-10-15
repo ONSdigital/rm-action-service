@@ -220,3 +220,5 @@ retries:
 gcp:
   project: ras-rm-sandbox
   topic: ras-rm-notify-test
+  printfile:
+    topic: ras-rm-print-file

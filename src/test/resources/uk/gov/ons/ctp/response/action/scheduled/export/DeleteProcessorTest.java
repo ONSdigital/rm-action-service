@@ -27,8 +27,8 @@ public class DeleteProcessorTest {
   @Mock private ExportJobRepository exportJobRepository;
   @Mock private ExportFileRepository exportFileRepository;
 
-  @InjectMocks private DeleteProcessor deleteProcessor;
-
+  //@InjectMocks private DeleteProcessor deleteProcessor;
+  private DeleteProcessor deleteProcessor;
   private static final long DAY_IN_MS = 1000 * 60 * 60 * 24;
 
   @Test
