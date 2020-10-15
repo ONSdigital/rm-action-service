@@ -16,10 +16,14 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,7 +52,20 @@ public class ActionRuleEndpointIT {
 
   @Autowired private ActionPlanJobRepository actionPlanJobRepository;
 
-  @Mock private Publisher publisher;
+  @Configuration
+  public class MockConfiguration {
+    @Bean
+    @Primary
+    public Publisher publisher() {
+      return Mockito.mock(Publisher.class);
+    }
+
+    @Bean
+    @Qualifier("printfile")
+    public Publisher printfilePublisher() {
+      return Mockito.mock(Publisher.class);
+    }
+  }
 
   @ClassRule public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 

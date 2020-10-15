@@ -26,12 +26,15 @@ import java.util.concurrent.TimeUnit;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
 import org.junit.*;
+import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.test.context.ActiveProfiles;
@@ -98,7 +101,20 @@ public class PlanSchedulerIT {
 
   @Autowired private ActionRuleRepository actionRuleRepository;
 
-  @MockBean private Publisher publisher;
+  @Configuration
+  public class MockConfiguration {
+    @Bean
+    @Primary
+    public Publisher publisher() {
+      return Mockito.mock(Publisher.class);
+    }
+
+    @Bean
+    @Qualifier("printfile")
+    public Publisher printfilePublisher() {
+      return Mockito.mock(Publisher.class);
+    }
+  }
 
   @Qualifier("customObjectMapper")
   @Autowired
