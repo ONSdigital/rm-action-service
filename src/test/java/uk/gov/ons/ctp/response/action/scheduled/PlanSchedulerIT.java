@@ -68,6 +68,7 @@ import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageSender;
 import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
 /** Integration tests for creating action requests */
+@Ignore
 @ContextConfiguration
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
