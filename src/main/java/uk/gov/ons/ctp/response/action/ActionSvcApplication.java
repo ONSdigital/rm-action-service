@@ -1,6 +1,8 @@
 package uk.gov.ons.ctp.response.action;
 
 import com.godaddy.logging.LoggingConfigs;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import java.math.BigInteger;
 import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -237,5 +239,15 @@ public class ActionSvcApplication {
     final CustomObjectMapper mapper = new CustomObjectMapper();
 
     return mapper;
+  }
+
+  /**
+   * Bean used to create and configure GCS Client
+   *
+   * @return the Storage Client
+   */
+  @Bean
+  public Storage storage() {
+    return StorageOptions.getDefaultInstance().getService();
   }
 }
