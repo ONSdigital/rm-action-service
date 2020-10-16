@@ -26,15 +26,12 @@ import java.util.concurrent.TimeUnit;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
 import org.junit.*;
-import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.test.context.ActiveProfiles;
@@ -53,6 +50,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionType;
+import uk.gov.ons.ctp.response.action.service.PubSub;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
@@ -101,20 +99,9 @@ public class PlanSchedulerIT {
 
   @Autowired private ActionRuleRepository actionRuleRepository;
 
-  @Configuration
-  public class MockConfiguration {
-    @Bean
-    @Primary
-    public Publisher publisher() {
-      return Mockito.mock(Publisher.class);
-    }
+  @MockBean private PubSub pubSub;
 
-    @Bean
-    @Qualifier("printfile")
-    public Publisher printfilePublisher() {
-      return Mockito.mock(Publisher.class);
-    }
-  }
+  @MockBean Publisher publisher;
 
   @Qualifier("customObjectMapper")
   @Autowired

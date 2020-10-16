@@ -9,6 +9,7 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import javax.transaction.Transactional;
@@ -16,14 +17,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -31,6 +28,7 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.representation.*;
+import uk.gov.ons.ctp.response.action.service.PubSub;
 import uk.gov.ons.ctp.response.lib.common.UnirestInitialiser;
 import uk.gov.ons.ctp.response.lib.common.utility.Mapzer;
 
@@ -52,20 +50,9 @@ public class ActionRuleEndpointIT {
 
   @Autowired private ActionPlanJobRepository actionPlanJobRepository;
 
-  @Configuration
-  public class MockConfiguration {
-    @Bean
-    @Primary
-    public Publisher publisher() {
-      return Mockito.mock(Publisher.class);
-    }
+  @MockBean private PubSub pubSub;
 
-    @Bean
-    @Qualifier("printfile")
-    public Publisher printfilePublisher() {
-      return Mockito.mock(Publisher.class);
-    }
-  }
+  @MockBean Publisher publisher;
 
   @ClassRule public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
@@ -79,7 +66,7 @@ public class ActionRuleEndpointIT {
 
   @Before
   @Transactional
-  public void setup() {
+  public void setup() throws IOException {
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(mapper);
     actionCaseRepository.deleteAll();

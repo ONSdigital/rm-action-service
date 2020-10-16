@@ -27,5 +27,5 @@ public class AppConfig {
   private Rabbitmq rabbitmq;
   private Logging logging;
   private GCS gcs;
-  private PubsubConfig pubsubConfig;
+  private GCP gcp;
 }

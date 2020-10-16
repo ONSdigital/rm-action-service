@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -29,6 +30,7 @@ public class PrintFileServiceTest {
   @Mock UploadObjectGCS uploadObjectGCS;
   @Mock AppConfig appConfig;
   @Mock GCS gcs;
+  @Mock private PubSub pubSub;
 
   @InjectMocks private PrintFileService printFileService;
 
@@ -58,6 +60,7 @@ public class PrintFileServiceTest {
   @Test
   public void testSend() throws Exception {
 
+    when(pubSub.printfilePublisher()).thenReturn(publisher);
     given(publisher.publish(any())).willReturn(apiFuture);
     given(apiFuture.get()).willReturn("test");
     given(uploadObjectGCS.uploadObject(anyString(), anyString(), any())).willReturn(true);

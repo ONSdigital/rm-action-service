@@ -6,13 +6,13 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
@@ -24,9 +24,7 @@ import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 @Service
 public class PrintFileService {
 
-  @Autowired
-  @Qualifier("printfile")
-  private Publisher publisher;
+  @Autowired private PubSub pubSub;
 
   @Autowired private AppConfig appConfig;
 
@@ -56,6 +54,8 @@ public class PrintFileService {
                 .putAttributes("printFilename", printFilename)
                 .build();
 
+        Publisher publisher = pubSub.printfilePublisher();
+
         ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
         String messageId = messageIdFuture.get();
         log.info("print file pubsub successfully sent with messageId:" + messageId);
@@ -63,7 +63,7 @@ public class PrintFileService {
       }
     } catch (JsonProcessingException e) {
       log.error("unable to convert to json", e);
-    } catch (InterruptedException | ExecutionException e) {
+    } catch (InterruptedException | ExecutionException | IOException e) {
       log.error("pub/sub error", e);
     }
     return success;

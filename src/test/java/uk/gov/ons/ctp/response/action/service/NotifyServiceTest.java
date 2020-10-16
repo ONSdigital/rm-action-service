@@ -5,6 +5,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -19,6 +20,8 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 public class NotifyServiceTest {
 
   @InjectMocks private NotifyService notifyService;
+
+  @Mock private PubSub pubSub;
 
   @Mock private Publisher publisher;
 
@@ -47,13 +50,14 @@ public class NotifyServiceTest {
           + "}}";
 
   @Test
-  public void willCallPublisherWithEncodedJSONString() {
+  public void willCallPublisherWithEncodedJSONString() throws IOException {
     ActionRequest request = new ActionRequest();
     ActionContact contact = new ActionContact();
     contact.setForename("Joe");
     request.setActionId("123");
     request.setContact(contact);
 
+    Mockito.when(pubSub.notifyPublisher()).thenReturn(publisher);
     Mockito.when(publisher.publish(Mockito.any(PubsubMessage.class))).thenReturn(ApiFuture);
     notifyService.processNotification(request);
 
