@@ -25,6 +25,9 @@ gcp:
   notifyTopic: ras-rm-notify-test
   printFileTopic: ras-rm-notify-test
 
+gcs:
+  bucket: "ras-rm-print-file"
+
 container:
   port: 8080
 service:

@@ -296,6 +296,8 @@ spec:
             value: "{{ .Values.gcp.notifyTopic }}"
           - name: GCP_PRINTFILETOPIC
             value: "{{ .Values.gcp.printFileTopic }}"
+          - name: GCS_BUCKET
+            value: "{{ .Values.gcs.bucket }}"
           - name: LIQUIBASE_USER
             value: "$(DB_USERNAME)"
           - name: LIQUIBASE_PASSWORD
