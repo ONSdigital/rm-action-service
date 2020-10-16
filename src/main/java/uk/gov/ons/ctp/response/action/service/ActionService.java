@@ -181,9 +181,12 @@ public class ActionService {
 
   private void createActionsForCase(
       ActionCase actionCase, List<ActionRule> actionRules, List<ActionType> types) {
+    log.with("case_pk", actionCase.getCasePK().toString()).info("Creating actions for case");
     if (isActionPlanLive(actionCase)) {
       actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule, types));
     }
+    log.with("case_pk", actionCase.getCasePK().toString())
+        .info("Completed creating actions for case");
   }
 
   private boolean isActionPlanLive(ActionCase actionCase) {
@@ -219,10 +222,6 @@ public class ActionService {
       return;
     }
 
-    log.with("case_id", actionCase.getId().toString())
-        .with("action_rule_id", actionRule.getId().toString())
-        .info("Creating action");
-
     // OK this is a teeny bit slow, but we're going to deprecate this code soon with a sproc
     ActionType actionType =
         types
@@ -230,6 +229,11 @@ public class ActionService {
             .filter(type -> actionRule.getActionTypeFK().equals(type.getActionTypePK()))
             .findAny()
             .orElse(null);
+
+    log.with("case_id", actionCase.getId().toString())
+        .with("action_rule_id", actionRule.getId().toString())
+        .with("action_type", actionType == null ? null : actionType.getName())
+        .info("Creating action");
 
     Action newAction = new Action();
     newAction.setId(UUID.randomUUID());
