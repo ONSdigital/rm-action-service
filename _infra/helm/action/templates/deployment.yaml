@@ -292,8 +292,10 @@ spec:
             value: "{{ .Values.gcp.project }}"
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /var/secrets/google/credentials.json
-          - name: GCP_TOPIC
-            value: "{{ .Values.gcp.topic }}"
+          - name: GCP_NOTIFYTOPIC
+            value: "{{ .Values.gcp.notifyTopic }}"
+          - name: GCP_PRINTFILETOPIC
+            value: "{{ .Values.gcp.printFileTopic }}"
           - name: LIQUIBASE_USER
             value: "$(DB_USERNAME)"
           - name: LIQUIBASE_PASSWORD

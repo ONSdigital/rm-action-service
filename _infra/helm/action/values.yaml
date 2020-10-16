@@ -22,7 +22,8 @@ database:
 
 gcp:
   project: ras-rm-sandbox
-  topic: ras-rm-notify-test
+  notifyTopic: ras-rm-notify-test
+  printFileTopic: ras-rm-notify-test
 
 container:
   port: 8080
