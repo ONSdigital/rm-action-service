@@ -59,11 +59,19 @@ public class ActionPlanJobExecutor {
     try {
       // This transaction has to be committed before the lock is released, or else duplicate
       // actions will be created
+      log.with("name", actionPlan.getName())
+          .with("action_plan_id", actionPlan.getId())
+          .with("actionPlanPk", actionPlan.getActionPlanPK())
+          .info("Creating scheduled actions for plan");
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {
       log.error("Exception raised whilst creating scheduled actions", e);
     } finally {
       actionPlanExecutionLockManager.unlock(actionPlan.getName());
+      log.with("name", actionPlan.getName())
+          .with("action_plan_id", actionPlan.getId())
+          .with("actionPlanPk", actionPlan.getActionPlanPK())
+          .info("Completed creating scheduled actions for plan");
     }
   }
 }

@@ -87,6 +87,7 @@ class ActionDistributor {
     RLock lock = redissonClient.getFairLock(LOCK_PREFIX + actionTypeName);
     try {
       if (lock.tryLock(appConfig.getDataGrid().getLockTimeToLiveSeconds(), TimeUnit.SECONDS)) {
+        log.with("type", actionType.getName()).info("Processing actionType");
         try (Stream<Action> actions =
             actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET)) {
           actions.forEach(this::processAction);
