@@ -59,7 +59,7 @@ public abstract class ActionProcessingService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void processActionRequests(final UUID actionId) {
     Action action = actionRepo.findById(actionId);
-    log.with("actionId", action.getId()).debug("Processing actionRequest");
+    log.with("actionId", action.getId()).info("Processing actionRequest");
 
     final ActionType actionType = action.getActionType();
     if (!valid(actionType)) {

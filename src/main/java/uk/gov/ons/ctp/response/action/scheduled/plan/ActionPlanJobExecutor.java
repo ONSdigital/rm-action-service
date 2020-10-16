@@ -43,11 +43,19 @@ public class ActionPlanJobExecutor {
     if (!actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK())) {
       return;
     }
-    log.with("name", actionPlan.getName()).info("Creating scheduled actions");
+
+    log.with("name", actionPlan.getName())
+        .with("action_plan_id", actionPlan.getId())
+        .with("actionPlanPk", actionPlan.getActionPlanPK())
+        .info("Creating scheduled actions");
     try {
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {
       log.error("Exception raised whilst creating scheduled actions", e);
     }
+    log.with("name", actionPlan.getName())
+        .with("action_plan_id", actionPlan.getId())
+        .with("actionPlanPk", actionPlan.getActionPlanPK())
+        .info("Completed creating scheduled actions for plan");
   }
 }
