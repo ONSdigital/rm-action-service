@@ -115,8 +115,9 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/execute", method = RequestMethod.GET)
   public final ResponseEntity<String> createAndExecuteAllActionPlanJobs() throws CTPException {
     try {
-      log.info("About to begin distribution");
+      log.info("About to begin creating and executing action plan jobs");
       actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
+      log.info("Completed creating and executing action plan jobs");
       return ResponseEntity.ok().body("Completed creating and executing action plan jobs");
     } catch (Exception e) {
       log.error(

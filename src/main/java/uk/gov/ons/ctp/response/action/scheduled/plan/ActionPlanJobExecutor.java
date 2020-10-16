@@ -43,7 +43,7 @@ public class ActionPlanJobExecutor {
     if (!actionCaseRepo.existsByActionPlanFK(actionPlan.getActionPlanPK())) {
       return;
     }
-
+    log.with("name", actionPlan.getName()).info("Creating scheduled actions");
     try {
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {

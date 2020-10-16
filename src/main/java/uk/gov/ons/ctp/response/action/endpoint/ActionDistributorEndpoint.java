@@ -32,6 +32,7 @@ public class ActionDistributorEndpoint {
     try {
       log.info("About to begin distribution");
       actionDistributor.distribute();
+      log.info("Completed distribution");
       return ResponseEntity.ok().body("Completed distribution");
     } catch (Exception e) {
       log.error(
