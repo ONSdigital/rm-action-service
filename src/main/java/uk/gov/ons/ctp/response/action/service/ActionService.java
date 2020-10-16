@@ -181,12 +181,12 @@ public class ActionService {
 
   private void createActionsForCase(
       ActionCase actionCase, List<ActionRule> actionRules, List<ActionType> types) {
-    log.with("case_pk", actionCase.getCasePK().toString()).info("Creating actions for case");
+    log.with("case_pk", actionCase.getCasePK().toString()).trace("Creating actions for case");
     if (isActionPlanLive(actionCase)) {
       actionRules.forEach(rule -> createActionForCaseAndRule(actionCase, rule, types));
     }
     log.with("case_pk", actionCase.getCasePK().toString())
-        .info("Completed creating actions for case");
+        .trace("Completed creating actions for case");
   }
 
   private boolean isActionPlanLive(ActionCase actionCase) {
