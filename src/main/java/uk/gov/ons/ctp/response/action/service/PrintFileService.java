@@ -45,21 +45,25 @@ public class PrintFileService {
       log.info("about to uploaded to bucket " + bucket);
       boolean uploaded = uploadObjectGCS.uploadObject(dataFilename, bucket, data.toByteArray());
 
-      if (uploaded) {
-        ByteString pubsubData = ByteString.copyFromUtf8(dataFilename);
+      Publisher publisher = pubSub.printfilePublisher();
+      try {
+        if (uploaded) {
+          ByteString pubsubData = ByteString.copyFromUtf8(dataFilename);
 
-        PubsubMessage pubsubMessage =
+          PubsubMessage pubsubMessage =
             PubsubMessage.newBuilder()
-                .setData(pubsubData)
-                .putAttributes("printFilename", printFilename)
-                .build();
+              .setData(pubsubData)
+              .putAttributes("printFilename", printFilename)
+              .build();
 
-        Publisher publisher = pubSub.printfilePublisher();
 
-        ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-        String messageId = messageIdFuture.get();
-        log.info("print file pubsub successfully sent with messageId:" + messageId);
-        success = true;
+          ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+          String messageId = messageIdFuture.get();
+          log.info("print file pubsub successfully sent with messageId:" + messageId);
+          success = true;
+        }
+      } finally {
+          publisher.shutdown();
       }
     } catch (JsonProcessingException e) {
       log.error("unable to convert to json", e);
