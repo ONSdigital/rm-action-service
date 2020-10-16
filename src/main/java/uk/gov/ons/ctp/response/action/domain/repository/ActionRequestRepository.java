@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.domain.repository;
 
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +11,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 
 /** JPA repository for ActionRequest entities */
 @Repository
-public interface ActionRequestRepository extends BaseRepository<ActionRequestInstruction, UUID> {
+public interface ActionRequestRepository extends JpaRepository<ActionRequestInstruction, UUID> {
 
   boolean existsByExportJobIdIsNull();
 

@@ -56,6 +56,7 @@ public class ActionExportService {
    *
    * @param actionRequest to be processed
    */
+  @Transactional
   private void processActionRequest(ActionRequest actionRequest) {
     log.debug(
         "action_id: "
@@ -74,14 +75,14 @@ public class ActionExportService {
 
     if (actionRequestDoc.getAddress() != null) {
       actionRequestDoc.getAddress().setAddressPK(UUID.randomUUID());
-      addressRepo.persist(actionRequestDoc.getAddress());
+      addressRepo.save(actionRequestDoc.getAddress());
     }
 
     if (actionRequestRepo.existsByActionId(actionRequestDoc.getActionId())) {
       // ActionRequests should never be sent twice with same actionId but...
       log.warn("action_id: ", actionRequestDoc.getActionId() + ", key ActionId already exists");
     } else {
-      actionRequestRepo.persist(actionRequestDoc);
+      actionRequestRepo.save(actionRequestDoc);
     }
   }
 }
