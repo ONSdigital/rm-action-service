@@ -1,16 +1,18 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ .Values.crons.distributionScheduler.name }}
+  name: {{ .Values.crons.planJobExecutor.name
+
+   }}
 spec:
-  schedule: "{{ .Values.crons.distributionScheduler.cron }}"
+  schedule: "{{ .Values.crons.planJobExecutor.cron }}"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-            - name: {{ .Values.crons.distributionScheduler.name }}
+            - name: {{ .Values.crons.planJobExecutor.name }}
               image: radial/busyboxplus:curl
               env:
                 - name: SECURITY_USER_NAME
@@ -24,7 +26,7 @@ spec:
                       name: security-credentials
                       key: security-password
                 - name: TARGET
-                  value: {{ .Values.crons.distributionScheduler.target }}
+                  value: {{ .Values.crons.planJobExecutor.target }}
               args:
                 - /bin/sh
                 - -c
