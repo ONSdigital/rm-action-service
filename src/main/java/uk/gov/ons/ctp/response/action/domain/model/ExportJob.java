@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "exportjob", schema = "actionexporter")
+@Table(name = "exportjob", schema = "action")
 public class ExportJob {
   @Id private UUID id = UUID.randomUUID();
 }

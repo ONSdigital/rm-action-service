@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "exportfile", schema = "actionexporter")
+@Table(name = "exportfile", schema = "action")
 public class ExportFile {
   @Id private UUID id = UUID.randomUUID();
 
