@@ -1,9 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ .Values.crons.planJobExecutor.name
-
-   }}
+  name: {{ .Values.crons.planJobExecutor.name }}
 spec:
   schedule: "{{ .Values.crons.planJobExecutor.cron }}"
   concurrencyPolicy: Forbid
