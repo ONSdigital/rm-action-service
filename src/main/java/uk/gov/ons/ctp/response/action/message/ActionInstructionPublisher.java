@@ -2,7 +2,9 @@ package uk.gov.ons.ctp.response.action.message;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.messaging.handler.annotation.Header;
 import uk.gov.ons.ctp.response.action.message.instruction.Action;
@@ -10,6 +12,7 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionExportService;
+import uk.gov.ons.ctp.response.action.service.ActionRequestValidator;
 
 /** This class is used to publish ActionInstructions to the downstream handlers. */
 @MessageEndpoint
@@ -19,9 +22,9 @@ public class ActionInstructionPublisher {
   public static final String ACTION = "Action.";
   public static final String BINDING = ".binding";
 
-  //  @Qualifier("actionInstructionRabbitTemplate")
-  //  @Autowired
-  //  private RabbitTemplate rabbitTemplate;
+  @Qualifier("actionInstructionRabbitTemplate")
+  @Autowired
+  private RabbitTemplate rabbitTemplate;
 
   @Autowired private ActionExportService actionExportService;
 
@@ -37,8 +40,11 @@ public class ActionInstructionPublisher {
       instruction.setActionCancel((ActionCancel) action);
     }
 
-    actionExportService.acceptInstruction(instruction);
-    // final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
-    //    rabbitTemplate.convertAndSend(routingKey, instruction);
+    if (ActionRequestValidator.ACTIONEXPORTER.equals(handler)) {
+      actionExportService.acceptInstruction(instruction);
+    } else {
+      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
+      rabbitTemplate.convertAndSend(routingKey, instruction);
+    }
   }
 }

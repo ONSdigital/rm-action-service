@@ -51,11 +51,10 @@ public class PrintFileService {
           ByteString pubsubData = ByteString.copyFromUtf8(dataFilename);
 
           PubsubMessage pubsubMessage =
-            PubsubMessage.newBuilder()
-              .setData(pubsubData)
-              .putAttributes("printFilename", printFilename)
-              .build();
-
+              PubsubMessage.newBuilder()
+                  .setData(pubsubData)
+                  .putAttributes("printFilename", printFilename)
+                  .build();
 
           ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
           String messageId = messageIdFuture.get();
@@ -63,7 +62,7 @@ public class PrintFileService {
           success = true;
         }
       } finally {
-          publisher.shutdown();
+        publisher.shutdown();
       }
     } catch (JsonProcessingException e) {
       log.error("unable to convert to json", e);
