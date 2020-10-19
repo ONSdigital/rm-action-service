@@ -5,10 +5,7 @@ import com.godaddy.logging.LoggerFactory;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +27,7 @@ import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
 /** This is the service class that distributes actions to downstream services */
 @Component
-class ActionDistributor {
+public class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
@@ -40,7 +37,6 @@ class ActionDistributor {
       Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
   private AppConfig appConfig;
-  private RedissonClient redissonClient;
 
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
@@ -55,7 +51,6 @@ class ActionDistributor {
 
   public ActionDistributor(
       AppConfig appConfig,
-      RedissonClient redissonClient,
       ActionRepository actionRepo,
       ActionCaseRepository actionCaseRepo,
       ActionTypeRepository actionTypeRepo,
@@ -63,7 +58,6 @@ class ActionDistributor {
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
       StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.appConfig = appConfig;
-    this.redissonClient = redissonClient;
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
     this.actionTypeRepo = actionTypeRepo;
@@ -83,21 +77,10 @@ class ActionDistributor {
   }
 
   private void processActionType(final ActionType actionType) {
-    String actionTypeName = actionType.getName();
-    RLock lock = redissonClient.getFairLock(LOCK_PREFIX + actionTypeName);
-    try {
-      if (lock.tryLock(appConfig.getDataGrid().getLockTimeToLiveSeconds(), TimeUnit.SECONDS)) {
-        log.with("type", actionType.getName()).info("Processing actionType");
-        try (Stream<Action> actions =
-            actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET)) {
-          actions.forEach(this::processAction);
-        } finally {
-          // Always unlock the distributed lock
-          lock.unlock();
-        }
-      }
-    } catch (InterruptedException ex) {
-      // Ignored - process stopped while waiting for lock
+    log.with("type", actionType.getName()).info("Processing actionType");
+    try (Stream<Action> actions =
+        actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET)) {
+      actions.forEach(this::processAction);
     }
   }
 

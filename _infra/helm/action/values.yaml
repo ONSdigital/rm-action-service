@@ -29,6 +29,16 @@ container:
 service:
   port: 8080
 
+crons:
+  distributionScheduler:
+    name: action-distribution-scheduler
+    cron: "* * * * *"
+    target: "distribute"
+  planJobExecutor:
+    name: action-plan-executor
+    cron: "* * * * *"
+    target: "actionplans/execute"
+
 resources:
   requests:
     memory: "256Mi"

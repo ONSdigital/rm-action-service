@@ -112,8 +112,6 @@ public class ActionDistributorTest {
     // Then
     verify(businessActionProcessingService, times(1)).processActionRequests(any());
     verify(businessActionProcessingService, times(1)).processActionCancel(any());
-
-    verify(lock, times(1)).unlock();
   }
 
   @Test
@@ -124,9 +122,6 @@ public class ActionDistributorTest {
 
     // When
     actionDistributor.distribute();
-
-    // Then
-    verify(lock, times(1)).unlock();
   }
 
   @Test
@@ -141,7 +136,5 @@ public class ActionDistributorTest {
     // Then
     verify(businessActionProcessingService, never()).processActionRequests(any());
     verify(businessActionProcessingService, never()).processActionCancel(any());
-
-    verify(lock, times(1)).unlock();
   }
 }

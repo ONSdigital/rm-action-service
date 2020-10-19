@@ -43,16 +43,16 @@ public class CollectionExerciseClientService {
       value = {RestClientException.class},
       maxAttemptsExpression = "#{${retries.maxAttempts}}",
       backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
-  public CollectionExerciseDTO getCollectionExercise(final UUID collectionExcerciseId) {
+  public CollectionExerciseDTO getCollectionExercise(final UUID collectionExerciseId) {
     final UriComponents uriComponents =
         restUtility.createUriComponents(
             appConfig.getCollectionExerciseSvc().getCollectionByCollectionExerciseGetPath(),
             null,
-            collectionExcerciseId);
+            collectionExerciseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    log.with("collection_exericse_id", collectionExcerciseId)
+    log.with("collection_exercise_id", collectionExerciseId)
         .with("uri", uriComponents.toUri())
         .info("Retrieving collection exercise");
 

@@ -3,14 +3,12 @@ package uk.gov.ons.ctp.response.action.scheduled.plan;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.List;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.service.ActionService;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedLockManager;
 
 @Service
 public class ActionPlanJobExecutor {
@@ -21,17 +19,13 @@ public class ActionPlanJobExecutor {
 
   private ActionService actionSvc;
 
-  private DistributedLockManager actionPlanExecutionLockManager;
-
   public ActionPlanJobExecutor(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
-      ActionService actionSvc,
-      DistributedLockManager actionPlanExecutionLockManager) {
+      ActionService actionSvc) {
     this.actionCaseRepo = actionCaseRepo;
     this.actionPlanRepo = actionPlanRepo;
     this.actionSvc = actionSvc;
-    this.actionPlanExecutionLockManager = actionPlanExecutionLockManager;
   }
 
   /**
@@ -39,7 +33,6 @@ public class ActionPlanJobExecutor {
    * with cases in the action.case table
    */
   @Transactional
-  @Scheduled(fixedDelayString = "#{appConfig.planExecution.delayMilliSeconds}")
   public void createAndExecuteAllActionPlanJobs() {
     List<ActionPlan> actionPlans = actionPlanRepo.findAll();
     actionPlans.forEach(this::createAndExecuteActionPlanJobs);
@@ -51,27 +44,18 @@ public class ActionPlanJobExecutor {
       return;
     }
 
-    if (!actionPlanExecutionLockManager.lock(actionPlan.getName())) {
-      log.with("action_plan_id", actionPlan.getId()).info("Could not get manager lock");
-      return;
-    }
-
+    log.with("name", actionPlan.getName())
+        .with("action_plan_id", actionPlan.getId())
+        .with("actionPlanPk", actionPlan.getActionPlanPK())
+        .info("Creating scheduled actions for plan");
     try {
-      // This transaction has to be committed before the lock is released, or else duplicate
-      // actions will be created
-      log.with("name", actionPlan.getName())
-          .with("action_plan_id", actionPlan.getId())
-          .with("actionPlanPk", actionPlan.getActionPlanPK())
-          .info("Creating scheduled actions for plan");
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {
-      log.error("Exception raised whilst creating scheduled actions", e);
-    } finally {
-      actionPlanExecutionLockManager.unlock(actionPlan.getName());
-      log.with("name", actionPlan.getName())
-          .with("action_plan_id", actionPlan.getId())
-          .with("actionPlanPk", actionPlan.getActionPlanPK())
-          .info("Completed creating scheduled actions for plan");
+      log.error("Exception raised whilst creating scheduled actions for plan", e);
     }
+    log.with("name", actionPlan.getName())
+        .with("action_plan_id", actionPlan.getId())
+        .with("actionPlanPk", actionPlan.getActionPlanPK())
+        .info("Completed creating scheduled actions for plan");
   }
 }
