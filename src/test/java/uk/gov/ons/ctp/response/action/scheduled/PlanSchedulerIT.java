@@ -414,7 +414,7 @@ public class PlanSchedulerIT {
     mockGetCaseEvent();
 
     //// When PlanScheduler and ActionDistributor runs
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 300; i++) {
       HttpResponse<String> distributeResponse =
           Unirest.get("http://localhost:" + this.port + "/distribute")
               .basicAuth("admin", "secret")
@@ -430,7 +430,6 @@ public class PlanSchedulerIT {
               .asString();
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
-      wait(300);
     }
 
     //// Then
