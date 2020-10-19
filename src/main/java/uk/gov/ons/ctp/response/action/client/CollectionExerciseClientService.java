@@ -52,7 +52,7 @@ public class CollectionExerciseClientService {
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
-    log.with("collection_exericse_id", collectionExcerciseId)
+    log.with("collection_exercise_id", collectionExcerciseId)
         .with("uri", uriComponents.toUri())
         .info("Retrieving collection exercise");
 

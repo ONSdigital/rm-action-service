@@ -395,10 +395,10 @@ public class PlanSchedulerIT {
     UUID surveyId = UUID.fromString("2e679bf1-18c9-4945-86f0-126d6c9aae4d");
     UUID partyId = UUID.fromString("905810f0-777f-48a1-ad79-3ef230551da1");
 
-    UUID collectionExcerciseId = UUID.fromString("eea05d8a-f7ae-41de-ad9d-060acd024d38");
+    UUID collectionExerciseId = UUID.fromString("eea05d8a-f7ae-41de-ad9d-060acd024d38");
     OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
     OffsetDateTime endDate = OffsetDateTime.now().plusDays(2);
-    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExcerciseId);
+    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
 
     OffsetDateTime triggerDateTime = OffsetDateTime.now().minusHours(12);
     ActionRuleDTO actionRule = createActionRule(actionPlan, triggerDateTime);
@@ -406,21 +406,13 @@ public class PlanSchedulerIT {
     UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");
     String sampleUnitType = "B";
 
-    createActionCase(collectionExcerciseId, actionPlan, partyId, caseId, sampleUnitType);
-    mockCaseDetailsMock(collectionExcerciseId, actionPlan.getId(), partyId, caseId);
+    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
+    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
     mockSurveyDetails(surveyId);
     mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId);
     mockGetCaseEvent();
 
     //// When PlanScheduler and ActionDistributor runs
-    HttpResponse<String> response =
-        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(response.getStatus(), is(200));
-    assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
-
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
@@ -428,6 +420,14 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(distributeResponse.getStatus(), is(200));
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
+
+    HttpResponse<String> response =
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(response.getStatus(), is(200));
+    assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
 
     //// Then
     String message = pollForPrinterAction();
