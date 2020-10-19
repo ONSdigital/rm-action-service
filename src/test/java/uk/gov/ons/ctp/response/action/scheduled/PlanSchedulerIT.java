@@ -430,6 +430,7 @@ public class PlanSchedulerIT {
               .asString();
       assertThat(response.getStatus(), is(200));
       assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
+      wait(300);
     }
 
     //// Then
