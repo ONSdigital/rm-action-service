@@ -119,7 +119,7 @@ public class ActionPlanJobEndpoint implements CTPEndpoint {
       actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
       log.info("Completed creating and executing action plan jobs");
       return ResponseEntity.ok().body("Completed creating and executing action plan jobs");
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error(
           "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
       throw new CTPException(

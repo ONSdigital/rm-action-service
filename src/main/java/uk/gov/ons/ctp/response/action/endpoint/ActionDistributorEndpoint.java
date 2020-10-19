@@ -34,7 +34,7 @@ public class ActionDistributorEndpoint {
       actionDistributor.distribute();
       log.info("Completed distribution");
       return ResponseEntity.ok().body("Completed distribution");
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error(
           "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
       throw new CTPException(
