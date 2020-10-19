@@ -206,7 +206,7 @@ public class PlanSchedulerIT {
             config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
     BlockingQueue<String> queue =
         listener.listen(ExchangeType.Direct, "action-outbound-exchange", "Action.Printer.binding");
-    int timeout = 100;
+    int timeout = 10;
     log.with("queue_empty", queue.isEmpty()).info("Checking if queue is empty");
     return queue.poll(timeout, TimeUnit.SECONDS);
   }
