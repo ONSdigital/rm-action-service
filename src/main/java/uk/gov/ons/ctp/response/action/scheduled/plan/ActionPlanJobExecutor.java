@@ -47,11 +47,11 @@ public class ActionPlanJobExecutor {
     log.with("name", actionPlan.getName())
         .with("action_plan_id", actionPlan.getId())
         .with("actionPlanPk", actionPlan.getActionPlanPK())
-        .info("Creating scheduled actions");
+        .info("Creating scheduled actions for plan");
     try {
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {
-      log.error("Exception raised whilst creating scheduled actions", e);
+      log.error("Exception raised whilst creating scheduled actions for plan", e);
     }
     log.with("name", actionPlan.getName())
         .with("action_plan_id", actionPlan.getId())

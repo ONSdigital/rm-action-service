@@ -207,7 +207,6 @@ public class PlanSchedulerIT {
     BlockingQueue<String> queue =
         listener.listen(ExchangeType.Direct, "action-outbound-exchange", "Action.Printer.binding");
     int timeout = 10;
-    log.with("queue_empty", queue.isEmpty()).info("Checking if queue is empty");
     return queue.poll(timeout, TimeUnit.SECONDS);
   }
 
@@ -417,33 +416,32 @@ public class PlanSchedulerIT {
     final int threadPort = this.port;
     Thread thread =
         new Thread(
-          () -> {
-            //// When PlanScheduler and ActionDistributor runs
-            try {
-              Thread.sleep(300);
-              for (int i = 0; i < 10; i++) {
-                HttpResponse<String> distributeResponse =
-                    Unirest.get("http://localhost:" + threadPort + "/distribute")
-                        .basicAuth("admin", "secret")
-                        .header("accept", "application/json")
-                        .asString();
-                assertThat(distributeResponse.getStatus(), is(200));
-                assertThat(distributeResponse.getBody(), is("Completed distribution"));
+            () -> {
+              //// When PlanScheduler and ActionDistributor runs
+              try {
+                Thread.sleep(300);
+                for (int i = 0; i < 10; i++) {
+                  HttpResponse<String> distributeResponse =
+                      Unirest.get("http://localhost:" + threadPort + "/distribute")
+                          .basicAuth("admin", "secret")
+                          .header("accept", "application/json")
+                          .asString();
+                  assertThat(distributeResponse.getStatus(), is(200));
+                  assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
-                HttpResponse<String> response =
-                    Unirest.get("http://localhost:" + threadPort + "/actionplans/execute")
-                        .basicAuth("admin", "secret")
-                        .header("accept", "application/json")
-                        .asString();
-                assertThat(response.getStatus(), is(200));
-                assertThat(
-                    response.getBody(),
-                    is("Completed creating and executing action plan jobs"));
+                  HttpResponse<String> response =
+                      Unirest.get("http://localhost:" + threadPort + "/actionplans/execute")
+                          .basicAuth("admin", "secret")
+                          .header("accept", "application/json")
+                          .asString();
+                  assertThat(response.getStatus(), is(200));
+                  assertThat(
+                      response.getBody(), is("Completed creating and executing action plan jobs"));
+                }
+              } catch (Exception e) {
+                log.error("exception in thread", e);
               }
-            } catch (Exception e) {
-              log.error("exception in thread", e);
-            }
-          });
+            });
     thread.start();
 
     //// Then

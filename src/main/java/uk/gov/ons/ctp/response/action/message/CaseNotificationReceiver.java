@@ -49,7 +49,6 @@ public class CaseNotificationReceiver {
         log.with("exchange", ACTION_OUTBOUND_EXCHANGE)
             .with("case_id", caseNotification.getCaseId())
             .with("case_notification", caseNotification)
-            .with("case_notification_string", objectMapper.writeValueAsString(caseNotification))
             .debug("Just wrote rabbit message to rabbit");
       } catch (JsonProcessingException e) {
         log.error("Can't send message", e);
