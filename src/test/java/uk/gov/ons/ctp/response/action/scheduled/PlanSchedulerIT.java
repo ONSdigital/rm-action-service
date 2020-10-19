@@ -431,34 +431,34 @@ public class PlanSchedulerIT {
     assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
 
     HttpResponse<String> distributeResponse1 =
-      Unirest.get("http://localhost:" + this.port + "/distribute")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .asString();
+        Unirest.get("http://localhost:" + this.port + "/distribute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
     assertThat(distributeResponse1.getStatus(), is(200));
     assertThat(distributeResponse1.getBody(), is("Completed distribution"));
 
     HttpResponse<String> response1 =
-      Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .asString();
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
     assertThat(response1.getStatus(), is(200));
     assertThat(response1.getBody(), is("Completed creating and executing action plan jobs"));
 
     HttpResponse<String> distributeResponse2 =
-      Unirest.get("http://localhost:" + this.port + "/distribute")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .asString();
+        Unirest.get("http://localhost:" + this.port + "/distribute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
     assertThat(distributeResponse2.getStatus(), is(200));
     assertThat(distributeResponse2.getBody(), is("Completed distribution"));
 
     HttpResponse<String> response2 =
-      Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
-        .basicAuth("admin", "secret")
-        .header("accept", "application/json")
-        .asString();
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
     assertThat(response2.getStatus(), is(200));
     assertThat(response2.getBody(), is("Completed creating and executing action plan jobs"));
 
