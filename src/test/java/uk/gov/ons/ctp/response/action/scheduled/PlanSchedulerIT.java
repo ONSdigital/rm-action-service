@@ -414,23 +414,37 @@ public class PlanSchedulerIT {
     mockGetCaseEvent();
 
     //// When PlanScheduler and ActionDistributor runs
-    for (int i = 0; i < 300; i++) {
-      HttpResponse<String> distributeResponse =
-          Unirest.get("http://localhost:" + this.port + "/distribute")
-              .basicAuth("admin", "secret")
-              .header("accept", "application/json")
-              .asString();
-      assertThat(distributeResponse.getStatus(), is(200));
-      assertThat(distributeResponse.getBody(), is("Completed distribution"));
+    final int threadPort = this.port;
+    Thread thread =
+        new Thread(
+          () -> {
+            //// When PlanScheduler and ActionDistributor runs
+            try {
+              Thread.sleep(300);
+              for (int i = 0; i < 10; i++) {
+                HttpResponse<String> distributeResponse =
+                    Unirest.get("http://localhost:" + threadPort + "/distribute")
+                        .basicAuth("admin", "secret")
+                        .header("accept", "application/json")
+                        .asString();
+                assertThat(distributeResponse.getStatus(), is(200));
+                assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
-      HttpResponse<String> response =
-          Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
-              .basicAuth("admin", "secret")
-              .header("accept", "application/json")
-              .asString();
-      assertThat(response.getStatus(), is(200));
-      assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
-    }
+                HttpResponse<String> response =
+                    Unirest.get("http://localhost:" + threadPort + "/actionplans/execute")
+                        .basicAuth("admin", "secret")
+                        .header("accept", "application/json")
+                        .asString();
+                assertThat(response.getStatus(), is(200));
+                assertThat(
+                    response.getBody(),
+                    is("Completed creating and executing action plan jobs"));
+              }
+            } catch (Exception e) {
+              log.error("exception in thread", e);
+            }
+          });
+    thread.start();
 
     //// Then
     String message = pollForPrinterAction();
