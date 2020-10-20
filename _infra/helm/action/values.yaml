@@ -42,6 +42,14 @@ crons:
     name: action-plan-executor
     cron: "* * * * *"
     target: "actionplans/execute"
+  recordDeleter:
+    name: old-record-deleter
+    cron: "0 3 * * *"
+    target: "delete-old-data"
+  exportScheduler:
+    name: export-scheduler
+    cron: "*/30 * * * *"
+    target: "export"
 
 resources:
   requests:
@@ -59,12 +67,3 @@ dns:
   enabled: false
   wellKnownPort: 8080
 
-crons:
-  recordDeleter:
-    name: old-record-deleter
-    cron: "0 3 * * *"
-    target: "delete-old-data"
-  exportScheduler:
-    name: export-scheduler
-    cron: "*/30 * * * *"
-    target: "export"
