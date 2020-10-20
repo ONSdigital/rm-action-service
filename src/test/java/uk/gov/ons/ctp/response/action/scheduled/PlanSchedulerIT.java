@@ -69,7 +69,6 @@ import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageListener;
 import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageSender;
 import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
-@Ignore
 /** Integration tests for creating action requests */
 @ContextConfiguration
 @ActiveProfiles("test")
