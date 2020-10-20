@@ -8,7 +8,6 @@ import static uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher.
 import static uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher.BINDING;
 
 import java.util.List;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -23,7 +22,6 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionExportService;
 import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
 
-@Ignore
 /** Tests for ActionInstructionPublisherImpl */
 @RunWith(MockitoJUnitRunner.class)
 public class ActionInstructionPublisherTest {

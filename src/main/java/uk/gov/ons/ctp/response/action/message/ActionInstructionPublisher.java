@@ -12,6 +12,7 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.ActionExportService;
+import uk.gov.ons.ctp.response.action.service.ActionRequestValidator;
 
 /** This class is used to publish ActionInstructions to the downstream handlers. */
 @MessageEndpoint
@@ -39,11 +40,11 @@ public class ActionInstructionPublisher {
       instruction.setActionCancel((ActionCancel) action);
     }
 
-    // if (ActionRequestValidator.ACTIONEXPORTER.equals(handler)) {
-    actionExportService.acceptInstruction(instruction);
-    //    } else {
-    //      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
-    //      rabbitTemplate.convertAndSend(routingKey, instruction);
-    //    }
+    if (ActionRequestValidator.ACTIONEXPORTER.equalsIgnoreCase(handler)) {
+      actionExportService.acceptInstruction(instruction);
+    } else {
+      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
+      rabbitTemplate.convertAndSend(routingKey, instruction);
+    }
   }
 }
