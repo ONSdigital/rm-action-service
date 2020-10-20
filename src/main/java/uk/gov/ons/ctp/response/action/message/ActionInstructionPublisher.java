@@ -40,11 +40,11 @@ public class ActionInstructionPublisher {
       instruction.setActionCancel((ActionCancel) action);
     }
 
-    if (ActionRequestValidator.ACTIONEXPORTER.equals(handler)) {
+    //if (ActionRequestValidator.ACTIONEXPORTER.equals(handler)) {
       actionExportService.acceptInstruction(instruction);
-    } else {
-      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
-      rabbitTemplate.convertAndSend(routingKey, instruction);
-    }
+//    } else {
+//      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
+//      rabbitTemplate.convertAndSend(routingKey, instruction);
+//    }
   }
 }
