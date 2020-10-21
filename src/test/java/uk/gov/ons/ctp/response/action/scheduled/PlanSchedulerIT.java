@@ -228,6 +228,7 @@ public class PlanSchedulerIT {
     caseDetailsDTO.setSampleUnitType("B");
     caseDetailsDTO.setActionPlanId(actionPlanId);
     caseDetailsDTO.setPartyId(partyId);
+    caseDetailsDTO.setSampleUnitId(UUID.randomUUID());
 
     wireMockRule.stubFor(
         get(urlPathMatching(String.format("/cases/%s", caseDetailsDTO.getId())))
