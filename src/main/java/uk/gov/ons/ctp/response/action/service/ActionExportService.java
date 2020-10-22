@@ -22,8 +22,6 @@ import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 public class ActionExportService {
   private static final Logger log = LoggerFactory.getLogger(ActionExportService.class);
 
-  private static final String DATE_FORMAT = "dd/MM/yyyy HH:mm";
-
   private static final int TRANSACTION_TIMEOUT = 60;
 
   @Qualifier("actionExporterBeanMapper")
@@ -56,7 +54,6 @@ public class ActionExportService {
    *
    * @param actionRequest to be processed
    */
-  @Transactional
   private void processActionRequest(ActionRequest actionRequest) {
     log.debug(
         "action_id: "
