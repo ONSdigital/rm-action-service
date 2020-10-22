@@ -45,7 +45,7 @@ public class ActionInstructionPublisher {
       actionExportService.acceptInstruction(instruction);
     }
 
-    // TODO we should be able to remote this soon 
+    // TODO we should be able to remote this soon
     final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
     rabbitTemplate.convertAndSend(routingKey, instruction);
   }
