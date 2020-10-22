@@ -40,7 +40,6 @@ public class ActionInstructionPublisher {
       instruction.setActionCancel((ActionCancel) action);
     }
 
-    log.error("Action instruction " + instruction.toString());
     if (ActionRequestValidator.ACTIONEXPORTER.equalsIgnoreCase(handler)) {
       actionExportService.acceptInstruction(instruction);
     }
