@@ -5,6 +5,8 @@ metadata:
 spec:
   schedule: "{{ .Values.crons.planJobExecutor.cron }}"
   concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
