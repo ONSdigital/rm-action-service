@@ -7,4 +7,5 @@ public class GCP {
   String project;
   String printFileTopic;
   String notifyTopic;
+  Bucket bucket;
 }

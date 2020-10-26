@@ -24,9 +24,10 @@ gcp:
   project: ras-rm-sandbox
   notifyTopic: ras-rm-notify-test
   printFileTopic: ras-rm-notify-test
-
-gcs:
-  bucket: "ras-rm-print-file"
+  topic: print-file-jobs
+  bucket:
+    name: "ras-rm-print-file"
+    prefix: ""
 
 container:
   port: 8080
