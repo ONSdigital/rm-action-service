@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.times;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,17 +17,16 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
-import java.io.StringReader;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
 import org.junit.*;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,8 +40,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
@@ -63,8 +63,6 @@ import uk.gov.ons.ctp.response.lib.party.representation.Attributes;
 import uk.gov.ons.ctp.response.lib.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.lib.rabbit.Rabbitmq;
-import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageBase.ExchangeType;
-import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageListener;
 import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageSender;
 import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
@@ -97,7 +95,7 @@ public class PlanSchedulerIT {
 
   @Autowired private ActionRuleRepository actionRuleRepository;
 
-  @Autowired private ActionRequestRepository actionRequestRepository;
+  @MockBean private ActionRequestRepository actionRequestRepository;
 
   @MockBean private PubSub pubSub;
 
@@ -203,16 +201,10 @@ public class PlanSchedulerIT {
     sender.sendMessageToQueue("Case.LifecycleEvents", xml);
   }
 
-  private String pollForPrinterAction() throws InterruptedException {
-    Rabbitmq config = appConfig.getRabbitmq();
-
-    SimpleMessageListener listener =
-        new SimpleMessageListener(
-            config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
-    BlockingQueue<String> queue =
-        listener.listen(ExchangeType.Direct, "action-outbound-exchange", "Action.Printer.binding");
-    int timeout = 10;
-    return queue.poll(timeout, TimeUnit.SECONDS);
+  private void checkForPrinterAction(int times) throws InterruptedException {
+    Thread.sleep(1000);
+    Mockito.verify(actionRequestRepository, times(times))
+        .save(Matchers.any(ActionRequestInstruction.class));
   }
 
   private void mockCaseDetailsMock(
@@ -371,8 +363,7 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    final String message = pollForPrinterAction();
-    assertThat(message, nullValue());
+    checkForPrinterAction(0);
   }
 
   @Test
@@ -413,8 +404,7 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    String message = pollForPrinterAction();
-    assertThat(message, nullValue());
+    checkForPrinterAction(0);
   }
 
   @Test
@@ -476,21 +466,6 @@ public class PlanSchedulerIT {
     thread.start();
 
     //// Then
-    String message = pollForPrinterAction();
-    assertThat(message, notNullValue());
-
-    StringReader reader = new StringReader(message);
-    JAXBContext xmlToObject = JAXBContext.newInstance(ActionInstruction.class);
-    ActionInstruction actionInstruction =
-        (ActionInstruction) xmlToObject.createUnmarshaller().unmarshal(reader);
-
-    assertThat(caseId.toString(), is(actionInstruction.getActionRequest().getCaseId()));
-    assertThat(
-        actionPlan.getId().toString(), is(actionInstruction.getActionRequest().getActionPlan()));
-    assertThat(
-        actionRule.getActionTypeName().toString(),
-        is(actionInstruction.getActionRequest().getActionType()));
-
-    assertThat(pollForPrinterAction(), nullValue());
+    checkForPrinterAction(1);
   }
 }

@@ -42,10 +42,9 @@ public class ActionInstructionPublisher {
 
     if (ActionRequestValidator.ACTIONEXPORTER.equalsIgnoreCase(handler)) {
       actionExportService.acceptInstruction(instruction);
+    } else {
+      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
+      rabbitTemplate.convertAndSend(routingKey, instruction);
     }
-
-    // TODO we should be able to remote this soon
-    final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
-    rabbitTemplate.convertAndSend(routingKey, instruction);
   }
 }
