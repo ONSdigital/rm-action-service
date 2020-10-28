@@ -1,7 +1,10 @@
 package uk.gov.ons.ctp.response.action;
 
 import com.godaddy.logging.LoggingConfigs;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import java.math.BigInteger;
+import java.time.Clock;
 import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.redisson.Redisson;
@@ -237,5 +240,20 @@ public class ActionSvcApplication {
     final CustomObjectMapper mapper = new CustomObjectMapper();
 
     return mapper;
+  }
+
+  @Bean
+  public Clock clock() {
+    return Clock.systemDefaultZone();
+  }
+
+  /**
+   * Bean used to create and configure GCS Client
+   *
+   * @return the Storage Client
+   */
+  @Bean
+  public Storage storage() {
+    return StorageOptions.getDefaultInstance().getService();
   }
 }

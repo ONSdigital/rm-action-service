@@ -47,7 +47,7 @@ public class ActionPlanJobExecutor {
     log.with("name", actionPlan.getName())
         .with("action_plan_id", actionPlan.getId())
         .with("actionPlanPk", actionPlan.getActionPlanPK())
-        .info("Creating scheduled actions for plan");
+        .trace("Creating scheduled actions for plan");
     try {
       actionSvc.createScheduledActions(actionPlan.getActionPlanPK());
     } catch (Exception e) {
@@ -56,6 +56,6 @@ public class ActionPlanJobExecutor {
     log.with("name", actionPlan.getName())
         .with("action_plan_id", actionPlan.getId())
         .with("actionPlanPk", actionPlan.getActionPlanPK())
-        .info("Completed creating scheduled actions for plan");
+        .trace("Completed creating scheduled actions for plan");
   }
 }

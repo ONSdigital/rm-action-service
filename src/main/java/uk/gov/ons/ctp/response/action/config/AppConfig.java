@@ -26,4 +26,5 @@ public class AppConfig {
   private ReportSettings reportSettings;
   private Rabbitmq rabbitmq;
   private Logging logging;
+  private GCP gcp;
 }

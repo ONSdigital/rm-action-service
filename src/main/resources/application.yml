@@ -219,4 +219,8 @@ retries:
 
 gcp:
   project: ras-rm-sandbox
-  topic: ras-rm-notify-test
+  notifyTopic: ras-rm-notify-test
+  printFileTopic: ras-rm-print-file
+  bucket:
+    name: ras-rm-print-file
+    prefix: ""

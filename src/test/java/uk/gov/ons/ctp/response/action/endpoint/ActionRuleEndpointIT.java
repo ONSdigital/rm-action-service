@@ -9,6 +9,7 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import javax.transaction.Transactional;
@@ -27,6 +28,7 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.representation.*;
+import uk.gov.ons.ctp.response.action.service.PubSub;
 import uk.gov.ons.ctp.response.lib.common.UnirestInitialiser;
 import uk.gov.ons.ctp.response.lib.common.utility.Mapzer;
 
@@ -48,7 +50,9 @@ public class ActionRuleEndpointIT {
 
   @Autowired private ActionPlanJobRepository actionPlanJobRepository;
 
-  @MockBean private Publisher publisher;
+  @MockBean private PubSub pubSub;
+
+  @MockBean Publisher publisher;
 
   @ClassRule public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
@@ -62,7 +66,7 @@ public class ActionRuleEndpointIT {
 
   @Before
   @Transactional
-  public void setup() {
+  public void setup() throws IOException {
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(mapper);
     actionCaseRepository.deleteAll();

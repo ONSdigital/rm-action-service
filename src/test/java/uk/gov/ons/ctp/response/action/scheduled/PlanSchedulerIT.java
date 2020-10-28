@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.times;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,16 +17,16 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
-import java.io.StringReader;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
 import org.junit.*;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -39,17 +40,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanJobRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
+import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
+import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRuleDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionRulePostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionType;
+import uk.gov.ons.ctp.response.action.service.PubSub;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
@@ -60,11 +58,11 @@ import uk.gov.ons.ctp.response.lib.casesvc.representation.CategoryDTO.CategoryNa
 import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.lib.common.UnirestInitialiser;
 import uk.gov.ons.ctp.response.lib.common.utility.Mapzer;
+import uk.gov.ons.ctp.response.lib.party.representation.Association;
 import uk.gov.ons.ctp.response.lib.party.representation.Attributes;
+import uk.gov.ons.ctp.response.lib.party.representation.Enrolment;
 import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.lib.rabbit.Rabbitmq;
-import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageBase.ExchangeType;
-import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageListener;
 import uk.gov.ons.ctp.response.lib.rabbit.SimpleMessageSender;
 import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
@@ -97,7 +95,11 @@ public class PlanSchedulerIT {
 
   @Autowired private ActionRuleRepository actionRuleRepository;
 
-  @MockBean private Publisher publisher;
+  @MockBean private ActionRequestRepository actionRequestRepository;
+
+  @MockBean private PubSub pubSub;
+
+  @MockBean Publisher publisher;
 
   @Qualifier("customObjectMapper")
   @Autowired
@@ -120,7 +122,8 @@ public class PlanSchedulerIT {
       actionRepository,
       actionRuleRepository,
       actionPlanJobRepository,
-      actionPlanRepository
+      actionPlanRepository,
+      actionRequestRepository
     };
     for (JpaRepository<?, ?> repo : repositories) {
       repo.deleteAllInBatch();
@@ -198,16 +201,10 @@ public class PlanSchedulerIT {
     sender.sendMessageToQueue("Case.LifecycleEvents", xml);
   }
 
-  private String pollForPrinterAction() throws InterruptedException {
-    Rabbitmq config = appConfig.getRabbitmq();
-
-    SimpleMessageListener listener =
-        new SimpleMessageListener(
-            config.getHost(), config.getPort(), config.getUsername(), config.getPassword());
-    BlockingQueue<String> queue =
-        listener.listen(ExchangeType.Direct, "action-outbound-exchange", "Action.Printer.binding");
-    int timeout = 10;
-    return queue.poll(timeout, TimeUnit.SECONDS);
+  private void checkForPrinterAction(int times) throws InterruptedException {
+    Thread.sleep(1000);
+    Mockito.verify(actionRequestRepository, times(times))
+        .save(Matchers.any(ActionRequestInstruction.class));
   }
 
   private void mockCaseDetailsMock(
@@ -217,6 +214,7 @@ public class PlanSchedulerIT {
     caseGroupDTO.setCaseGroupStatus(CaseGroupStatus.INPROGRESS);
     caseGroupDTO.setCollectionExerciseId(collectionExerciseId);
     caseGroupDTO.setPartyId(partyId);
+    caseGroupDTO.setSampleUnitRef("49900000000");
 
     CaseDetailsDTO caseDetailsDTO = new CaseDetailsDTO();
     caseDetailsDTO.setId(caseId);
@@ -225,6 +223,7 @@ public class PlanSchedulerIT {
     caseDetailsDTO.setSampleUnitType("B");
     caseDetailsDTO.setActionPlanId(actionPlanId);
     caseDetailsDTO.setPartyId(partyId);
+    caseDetailsDTO.setIac("121212121");
 
     wireMockRule.stubFor(
         get(urlPathMatching(String.format("/cases/%s", caseDetailsDTO.getId())))
@@ -245,6 +244,7 @@ public class PlanSchedulerIT {
     collectionExerciseDTO.setScheduledStartDateTime(Date.from(startDate.toInstant()));
     collectionExerciseDTO.setScheduledEndDateTime(Date.from(endDate.toInstant()));
     collectionExerciseDTO.setSurveyId(surveyId.toString());
+    collectionExerciseDTO.setExerciseRef("test-ref");
 
     wireMockRule.stubFor(
         get(urlPathEqualTo(
@@ -259,13 +259,35 @@ public class PlanSchedulerIT {
       throws JsonProcessingException {
     PartyDTO partyDTO = new PartyDTO();
     partyDTO.setId(partyId.toString());
-    partyDTO.setAssociations(new ArrayList<>());
+    List<Association> associationList = new ArrayList<>();
+    associationList.add(
+        new Association("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5", new ArrayList<Enrolment>(), "BI"));
+
+    partyDTO.setAssociations(associationList);
     partyDTO.setAttributes(new Attributes());
 
     wireMockRule.stubFor(
         get(urlPathEqualTo(
                 String.format(
                     "/party-api/v1/parties/type/%s/id/%s", sampleUnitType, partyId.toString())))
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(objectMapper.writeValueAsString(partyDTO))));
+  }
+
+  private void mockGetRespondentParties(UUID caseId, UUID respondentPartyId)
+      throws JsonProcessingException {
+    // these are BI
+    PartyDTO partyDTO = new PartyDTO();
+    partyDTO.setId(respondentPartyId.toString());
+    partyDTO.setAssociations(new ArrayList<>());
+    partyDTO.setAttributes(new Attributes());
+    partyDTO.setSampleUnitRef("49900000000");
+    partyDTO.setStatus("ENABLED");
+
+    wireMockRule.stubFor(
+        get(urlPathEqualTo(String.format("/party-api/v1/parties/type/BI/id/%s", caseId.toString())))
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/json")
@@ -341,8 +363,7 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    final String message = pollForPrinterAction();
-    assertThat(message, nullValue());
+    checkForPrinterAction(0);
   }
 
   @Test
@@ -383,8 +404,7 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    String message = pollForPrinterAction();
-    assertThat(message, nullValue());
+    checkForPrinterAction(0);
   }
 
   @Test
@@ -394,8 +414,10 @@ public class PlanSchedulerIT {
 
     UUID surveyId = UUID.fromString("2e679bf1-18c9-4945-86f0-126d6c9aae4d");
     UUID partyId = UUID.fromString("905810f0-777f-48a1-ad79-3ef230551da1");
-
+    UUID respondentPartyId = UUID.fromString("0c93d1ec-a2ca-4e1d-bbeb-6f4702d2e97a");
     UUID collectionExerciseId = UUID.fromString("eea05d8a-f7ae-41de-ad9d-060acd024d38");
+    UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");
+
     OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
     OffsetDateTime endDate = OffsetDateTime.now().plusDays(2);
     mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
@@ -403,7 +425,6 @@ public class PlanSchedulerIT {
     OffsetDateTime triggerDateTime = OffsetDateTime.now().minusHours(12);
     ActionRuleDTO actionRule = createActionRule(actionPlan, triggerDateTime);
 
-    UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");
     String sampleUnitType = "B";
 
     createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
@@ -411,6 +432,7 @@ public class PlanSchedulerIT {
     mockSurveyDetails(surveyId);
     mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId);
     mockGetCaseEvent();
+    mockGetRespondentParties(caseId, respondentPartyId);
 
     //// When PlanScheduler and ActionDistributor runs
     final int threadPort = this.port;
@@ -419,7 +441,6 @@ public class PlanSchedulerIT {
             () -> {
               //// When PlanScheduler and ActionDistributor runs
               try {
-                Thread.sleep(300);
                 for (int i = 0; i < 10; i++) {
                   HttpResponse<String> distributeResponse =
                       Unirest.get("http://localhost:" + threadPort + "/distribute")
@@ -445,21 +466,6 @@ public class PlanSchedulerIT {
     thread.start();
 
     //// Then
-    String message = pollForPrinterAction();
-    assertThat(message, notNullValue());
-
-    StringReader reader = new StringReader(message);
-    JAXBContext xmlToObject = JAXBContext.newInstance(ActionInstruction.class);
-    ActionInstruction actionInstruction =
-        (ActionInstruction) xmlToObject.createUnmarshaller().unmarshal(reader);
-
-    assertThat(caseId.toString(), is(actionInstruction.getActionRequest().getCaseId()));
-    assertThat(
-        actionPlan.getId().toString(), is(actionInstruction.getActionRequest().getActionPlan()));
-    assertThat(
-        actionRule.getActionTypeName().toString(),
-        is(actionInstruction.getActionRequest().getActionType()));
-
-    assertThat(pollForPrinterAction(), nullValue());
+    checkForPrinterAction(1);
   }
 }

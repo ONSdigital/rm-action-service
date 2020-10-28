@@ -11,6 +11,8 @@ import uk.gov.ons.ctp.response.action.message.instruction.Action;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionInstruction;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
+import uk.gov.ons.ctp.response.action.service.ActionExportService;
+import uk.gov.ons.ctp.response.action.service.ActionRequestValidator;
 
 /** This class is used to publish ActionInstructions to the downstream handlers. */
 @MessageEndpoint
@@ -24,6 +26,8 @@ public class ActionInstructionPublisher {
   @Autowired
   private RabbitTemplate rabbitTemplate;
 
+  @Autowired private ActionExportService actionExportService;
+
   public void sendActionInstruction(@Header("HANDLER") final String handler, final Action action) {
     log.with("action_id", action.getActionId())
         .with("handler", handler)
@@ -36,7 +40,11 @@ public class ActionInstructionPublisher {
       instruction.setActionCancel((ActionCancel) action);
     }
 
-    final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
-    rabbitTemplate.convertAndSend(routingKey, instruction);
+    if (ActionRequestValidator.ACTIONEXPORTER.equalsIgnoreCase(handler)) {
+      actionExportService.acceptInstruction(instruction);
+    } else {
+      final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
+      rabbitTemplate.convertAndSend(routingKey, instruction);
+    }
   }
 }
