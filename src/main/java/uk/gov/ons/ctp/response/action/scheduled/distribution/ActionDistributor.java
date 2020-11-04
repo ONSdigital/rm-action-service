@@ -34,8 +34,6 @@ public class ActionDistributor {
   private static final Set<ActionState> ACTION_STATES_TO_GET =
       Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
-  private AppConfig appConfig;
-
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
   private ActionTypeRepository actionTypeRepo;
@@ -52,7 +50,6 @@ public class ActionDistributor {
       ActionTypeRepository actionTypeRepo,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
       StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
-    this.appConfig = appConfig;
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
     this.actionTypeRepo = actionTypeRepo;
