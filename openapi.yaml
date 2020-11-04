@@ -17,8 +17,6 @@ tags:
     description: Endpoints for interacting with action rules.
   - name: action-plans
     description: Endpoints for interacting with action plans.
-  - name: action-plan-jobs
-    description: Endpoints for interacting with action plan jobs.
 paths:
   /health:
     get:
@@ -133,35 +131,6 @@ paths:
         '500':
           description: The name, description or createdBy fields are missing or too large.
       x-codegen-request-body-name: request
-  '/actionplans/jobs/{actionplanjobid}':
-    get:
-      summary: Returns the information on an action plan job by ID.
-      description: Returns the details of the action plan job with the given ID.
-      tags:
-        - action-plan-jobs
-      operationId: findActionPlanJobByIdUsingGET
-      parameters:
-        - name: actionplanjobid
-          in: path
-          description: actionplanjobid
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The action plan was successfully retrieved.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionPlanJobDTO'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: An action plan job with the specified ID wasn't found.
-        '500':
-          description: The ID provided wasn't a valid UUID.
   '/actionplans/{actionplanid}':
     get:
       summary: Returns the information on an action plan by ID.
@@ -225,37 +194,6 @@ paths:
         '404':
           description: An action plan with the specified ID wasn't found.
       x-codegen-request-body-name: request
-  '/actionplans/{actionplanid}/jobs':
-    get:
-      summary: Returns all jobs for an action plan.
-      description: Returns the details of all jobs related to the action plan with the given ID.
-      tags:
-        - action-plan-jobs
-      operationId: findAllActionPlanJobsByActionPlanIdUsingGET
-      parameters:
-        - name: actionplanid
-          in: path
-          description: actionplanid
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: The action plan jobs were successfully retrieved.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActionPlanJobDTO'
-        '204':
-          description: No jobs exist for the specified action plan.
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-        '404':
-          description: An action plan with the specified ID wasn't found.
   /actionrules:
     post:
       summary: Creates a new action rule
