@@ -27,16 +27,6 @@ data-grid:
   lock-time-to-live-seconds: 10
   report-lock-time-to-live-seconds: 300
 
-# the thread that sends actions to handlers
-action-distribution:
-  # how long to pause after each distribution exercise
-  delay-milli-seconds: 300
-
- # the thread that executes plans to create the  actions
-plan-execution:
-  # pause after each execution exercise
-  delay-milli-seconds: 300
-
 rabbitmq:
   host: localhost
   port: 35672

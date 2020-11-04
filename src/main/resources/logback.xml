@@ -23,7 +23,7 @@
                     <customFields>{"service":"actionsvc"}</customFields>
                 </globalCustomFields>
                 <message>
-                    <fieldName>event</fieldName>
+                    <fieldName>message</fieldName>
                 </message>
                 <loggerName/>
                 <threadName/>
