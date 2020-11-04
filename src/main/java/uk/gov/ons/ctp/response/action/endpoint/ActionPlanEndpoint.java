@@ -79,25 +79,6 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   }
 
   /**
-   * This method returns the associated action plan for the specified action plan id.
-   *
-   * @param actionPlanId This is the action plan id
-   * @return ActionPlanDTO This returns the associated action plan for the specified action plan id.
-   * @throws CTPException if no action plan found for the specified action plan id.
-   */
-  @RequestMapping(value = "/{actionplanid}", method = RequestMethod.GET)
-  public final ActionPlanDTO findActionPlanByActionPlanId(
-      @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
-    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanByActionPlanId");
-    final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
-    if (actionPlan == null) {
-      throw new CTPException(
-          CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
-    }
-    return mapperFacade.map(actionPlan, ActionPlanDTO.class);
-  }
-
-  /**
    * This method returns the associated action plan after it has been created.
    *
    * @param request The object created by ActionPlanPostRequestDTO from the json found in the
