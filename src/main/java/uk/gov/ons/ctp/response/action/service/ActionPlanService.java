@@ -42,12 +42,6 @@ public class ActionPlanService {
   }
 
   @CoverageIgnore
-  public ActionPlan findActionPlan(final Integer actionPlanKey) {
-    log.with("action_plan_pk", actionPlanKey).debug("Entering findActionPlan with primary key");
-    return this.actionPlanRepo.findOne(actionPlanKey);
-  }
-
-  @CoverageIgnore
   public ActionPlan findActionPlanById(final UUID actionPlanId) {
     log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanById with id");
     return this.actionPlanRepo.findById(actionPlanId);

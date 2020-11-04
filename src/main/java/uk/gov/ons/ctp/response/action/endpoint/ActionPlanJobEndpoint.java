@@ -2,8 +2,6 @@ package uk.gov.ons.ctp.response.action.endpoint;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import ma.glasnost.orika.MapperFacade;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,17 +16,10 @@ import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 public class ActionPlanJobEndpoint implements CTPEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionPlanJobEndpoint.class);
 
-  public static final String ACTION_PLAN_JOB_NOT_FOUND = "ActionPlanJob not found for id %s";
-
   private final ActionPlanJobExecutor actionPlanJobExecutor;
 
-  private final MapperFacade mapperFacade;
-
-  public ActionPlanJobEndpoint(
-      ActionPlanJobExecutor actionPlanJobExecutor,
-      @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
+  public ActionPlanJobEndpoint(ActionPlanJobExecutor actionPlanJobExecutor) {
     this.actionPlanJobExecutor = actionPlanJobExecutor;
-    this.mapperFacade = mapperFacade;
   }
 
   /**
