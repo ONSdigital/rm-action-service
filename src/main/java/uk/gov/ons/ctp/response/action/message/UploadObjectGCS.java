@@ -33,7 +33,7 @@ public class UploadObjectGCS {
     BlobId blobId = BlobId.of(bucket, bucketFilename);
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("application/json").build();
     Boolean isSuccess = false;
-    log.info("file_name: ", bucketFilename + " bucket: " + bucket + ", Uploading to GCS bucket");
+    log.info("file_name: " + bucketFilename + " bucket: " + bucket + ", Uploading to GCS bucket");
     try {
       storage.create(blobInfo, data);
       isSuccess = true;

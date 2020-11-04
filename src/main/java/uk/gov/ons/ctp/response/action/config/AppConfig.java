@@ -19,8 +19,6 @@ public class AppConfig {
   private PartySvc partySvc;
   private SurveySvc surveySvc;
   private SampleSvc sampleSvc;
-  private ActionDistribution actionDistribution;
-  private PlanExecution planExecution;
   private DataGrid dataGrid;
   private SwaggerSettings swaggerSettings;
   private ReportSettings reportSettings;
