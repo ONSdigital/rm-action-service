@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 import static uk.gov.ons.ctp.response.lib.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.response.lib.common.MvcHelper.postJson;
 import static uk.gov.ons.ctp.response.lib.common.MvcHelper.putJson;
