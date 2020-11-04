@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
@@ -31,7 +30,6 @@ public class ActionDistributor {
 
   private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
 
-  private static final String LOCK_PREFIX = "ActionDistributionLock-";
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
   private static final Set<ActionState> ACTION_STATES_TO_GET =
       Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
@@ -41,8 +39,6 @@ public class ActionDistributor {
   private ActionRepository actionRepo;
   private ActionCaseRepository actionCaseRepo;
   private ActionTypeRepository actionTypeRepo;
-
-  private CaseSvcClientService caseSvcClientService;
 
   private ActionProcessingService businessActionProcessingService;
 
@@ -54,14 +50,12 @@ public class ActionDistributor {
       ActionRepository actionRepo,
       ActionCaseRepository actionCaseRepo,
       ActionTypeRepository actionTypeRepo,
-      CaseSvcClientService caseSvcClientService,
       @Qualifier("business") ActionProcessingService businessActionProcessingService,
       StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager) {
     this.appConfig = appConfig;
     this.actionRepo = actionRepo;
     this.actionCaseRepo = actionCaseRepo;
     this.actionTypeRepo = actionTypeRepo;
-    this.caseSvcClientService = caseSvcClientService;
     this.businessActionProcessingService = businessActionProcessingService;
     this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }

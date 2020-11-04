@@ -18,7 +18,6 @@ public class AppConfig {
   private CollectionExerciseSvc collectionExerciseSvc;
   private PartySvc partySvc;
   private SurveySvc surveySvc;
-  private SampleSvc sampleSvc;
   private DataGrid dataGrid;
   private SwaggerSettings swaggerSettings;
   private ReportSettings reportSettings;

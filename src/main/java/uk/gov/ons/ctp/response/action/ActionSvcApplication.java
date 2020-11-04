@@ -197,17 +197,6 @@ public class ActionSvcApplication {
   }
 
   /**
-   * Bean used to access survey service through REST calls
-   *
-   * @return the service client
-   */
-  @Bean
-  @Qualifier("sampleSvcClient")
-  public RestUtility sampleClient() {
-    return new RestUtility(appConfig.getSampleSvc().getConnectionConfig());
-  }
-
-  /**
    * Bean to allow application to make controlled state transitions of Actions
    *
    * @return the state transition manager specifically for Actions
