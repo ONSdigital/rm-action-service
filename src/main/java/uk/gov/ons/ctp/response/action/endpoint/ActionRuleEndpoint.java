@@ -27,14 +27,13 @@ import uk.gov.ons.ctp.response.action.representation.ActionRulePutRequestDTO;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.action.service.ActionRuleService;
 import uk.gov.ons.ctp.response.action.service.ActionTypeService;
-import uk.gov.ons.ctp.response.lib.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 import uk.gov.ons.ctp.response.lib.common.error.InvalidRequestException;
 
 /** The REST endpoint controller for Action Rules. */
 @RestController
 @RequestMapping(value = "/actionrules", produces = "application/json")
-public class ActionRuleEndpoint implements CTPEndpoint {
+public class ActionRuleEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionRuleEndpoint.class);
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan with id %s not found";

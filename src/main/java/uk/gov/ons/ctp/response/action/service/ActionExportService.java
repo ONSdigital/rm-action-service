@@ -32,10 +32,7 @@ public class ActionExportService {
 
   @Autowired private AddressRepository addressRepo;
 
-  @Transactional(
-      propagation = Propagation.REQUIRED,
-      readOnly = false,
-      timeout = TRANSACTION_TIMEOUT)
+  @Transactional(propagation = Propagation.REQUIRED, timeout = TRANSACTION_TIMEOUT)
   public void acceptInstruction(ActionInstruction instruction) {
     if (instruction.getActionRequest() != null) {
       processActionRequest(instruction.getActionRequest());
@@ -77,7 +74,7 @@ public class ActionExportService {
 
     if (actionRequestRepo.existsByActionId(actionRequestDoc.getActionId())) {
       // ActionRequests should never be sent twice with same actionId but...
-      log.warn("action_id: ", actionRequestDoc.getActionId() + ", key ActionId already exists");
+      log.warn("action_id: " + actionRequestDoc.getActionId() + ", key ActionId already exists");
     } else {
       actionRequestRepo.save(actionRequestDoc);
     }
