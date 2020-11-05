@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.response.action;
 import com.godaddy.logging.LoggingConfigs;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import java.math.BigInteger;
 import java.time.Clock;
 import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
@@ -29,12 +28,6 @@ import org.springframework.web.client.RestTemplate;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedInstanceManager;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedInstanceManagerRedissonImpl;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedLatchManager;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedLatchManagerRedissonImpl;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedListManager;
-import uk.gov.ons.ctp.response.lib.common.distributed.DistributedListManagerRedissonImpl;
 import uk.gov.ons.ctp.response.lib.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.response.lib.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
@@ -77,49 +70,6 @@ public class ActionSvcApplication {
     if (appConfig.getLogging().isUseJson()) {
       LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
     }
-  }
-
-  /**
-   * Bean used to access Distributed List Manager
-   *
-   * @param redissonClient Redisson Client
-   * @return the Distributed List Manager
-   */
-  @Bean
-  public DistributedListManager<BigInteger> actionDistributionListManager(
-      final RedissonClient redissonClient) {
-    return new DistributedListManagerRedissonImpl<BigInteger>(
-        ActionSvcApplication.ACTION_DISTRIBUTION_LIST,
-        redissonClient,
-        appConfig.getDataGrid().getListTimeToWaitSeconds(),
-        appConfig.getDataGrid().getListTimeToLiveSeconds());
-  }
-
-  /**
-   * Bean used to access Distributed Lock Manager
-   *
-   * @param redissonClient Redisson Client
-   * @return the Distributed Lock Manager
-   */
-  @Bean
-  public DistributedInstanceManager reportDistributedInstanceManager(
-      final RedissonClient redissonClient) {
-    return new DistributedInstanceManagerRedissonImpl(REPORT_EXECUTION_LOCK, redissonClient);
-  }
-
-  /**
-   * Bean used to access Distributed Latch Manager
-   *
-   * @param redissonClient Redisson Client
-   * @return the Distributed Lock Manager
-   */
-  @Bean
-  public DistributedLatchManager reportDistributedLatchManager(
-      final RedissonClient redissonClient) {
-    return new DistributedLatchManagerRedissonImpl(
-        REPORT_EXECUTION_LOCK,
-        redissonClient,
-        appConfig.getDataGrid().getReportLockTimeToLiveSeconds());
   }
 
   /**
