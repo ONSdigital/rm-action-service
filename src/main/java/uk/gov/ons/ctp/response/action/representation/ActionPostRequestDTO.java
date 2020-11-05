@@ -1,6 +1,5 @@
 package uk.gov.ons.ctp.response.action.representation;
 
-import io.swagger.annotations.ApiModelProperty;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -14,17 +13,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class ActionPostRequestDTO {
 
-  @NotNull
-  @ApiModelProperty(required = true)
-  private UUID caseId;
+  @NotNull private UUID caseId;
 
-  @NotNull
-  @ApiModelProperty(required = true)
-  private String actionTypeName;
+  @NotNull private String actionTypeName;
 
-  @NotNull
-  @ApiModelProperty(required = true)
-  private String createdBy;
+  @NotNull private String createdBy;
 
   private Integer priority;
 }

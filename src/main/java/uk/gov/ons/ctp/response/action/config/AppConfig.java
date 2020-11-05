@@ -19,7 +19,6 @@ public class AppConfig {
   private PartySvc partySvc;
   private SurveySvc surveySvc;
   private DataGrid dataGrid;
-  private SwaggerSettings swaggerSettings;
   private ReportSettings reportSettings;
   private Rabbitmq rabbitmq;
   private Logging logging;
