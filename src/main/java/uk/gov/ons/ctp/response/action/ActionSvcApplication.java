@@ -48,10 +48,6 @@ import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManagerFactory;
 @ImportResource("springintegration/main.xml")
 public class ActionSvcApplication {
 
-  public static final String ACTION_DISTRIBUTION_LIST = "actionsvc.action.distribution";
-  public static final String ACTION_EXECUTION_LOCK = "actionsvc.action.execution";
-  public static final String REPORT_EXECUTION_LOCK = "actionsvc.report.execution";
-
   @Autowired private AppConfig appConfig;
 
   @Autowired private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
