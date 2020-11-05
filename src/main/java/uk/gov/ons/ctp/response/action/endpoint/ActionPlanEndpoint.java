@@ -24,6 +24,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
+import uk.gov.ons.ctp.response.action.scheduled.plan.ActionPlanJobExecutor;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
 import uk.gov.ons.ctp.response.lib.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
@@ -38,14 +39,17 @@ public class ActionPlanEndpoint implements CTPEndpoint {
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";
 
   private ActionPlanService actionPlanService;
+  private final ActionPlanJobExecutor actionPlanJobExecutor;
 
   private MapperFacade mapperFacade;
 
   @Autowired
   public ActionPlanEndpoint(
       final ActionPlanService actionPlanService,
+      ActionPlanJobExecutor actionPlanJobExecutor,
       final @Qualifier("actionBeanMapper") MapperFacade mapperFacade) {
     this.actionPlanService = actionPlanService;
+    this.actionPlanJobExecutor = actionPlanJobExecutor;
     this.mapperFacade = mapperFacade;
   }
 
@@ -72,25 +76,6 @@ public class ActionPlanEndpoint implements CTPEndpoint {
     return CollectionUtils.isEmpty(actionPlanDTOs)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.ok(actionPlanDTOs);
-  }
-
-  /**
-   * This method returns the associated action plan for the specified action plan id.
-   *
-   * @param actionPlanId This is the action plan id
-   * @return ActionPlanDTO This returns the associated action plan for the specified action plan id.
-   * @throws CTPException if no action plan found for the specified action plan id.
-   */
-  @RequestMapping(value = "/{actionplanid}", method = RequestMethod.GET)
-  public final ActionPlanDTO findActionPlanByActionPlanId(
-      @PathVariable("actionplanid") final UUID actionPlanId) throws CTPException {
-    log.with("action_plan_id", actionPlanId).debug("Entering findActionPlanByActionPlanId");
-    final ActionPlan actionPlan = actionPlanService.findActionPlanById(actionPlanId);
-    if (actionPlan == null) {
-      throw new CTPException(
-          CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
-    }
-    return mapperFacade.map(actionPlan, ActionPlanDTO.class);
   }
 
   /**
@@ -169,5 +154,29 @@ public class ActionPlanEndpoint implements CTPEndpoint {
           CTPException.Fault.RESOURCE_NOT_FOUND, ACTION_PLAN_NOT_FOUND, actionPlanId);
     }
     return mapperFacade.map(updatedActionPlan, ActionPlanDTO.class);
+  }
+
+  /**
+   * This method creates and executes all action plan jobs.
+   *
+   * <p>Note: This can only be run by one instance of action at a time. If multiple instances have
+   * this invoked at the same time, duplicate actions will be created.
+   *
+   * @throws CTPException if no action plan job found for the specified action plan job id.
+   */
+  @RequestMapping(value = "/execute", method = RequestMethod.GET)
+  public final ResponseEntity<String> createAndExecuteAllActionPlanJobs() throws CTPException {
+    try {
+      log.info("About to begin creating and executing action plan jobs");
+      actionPlanJobExecutor.createAndExecuteAllActionPlanJobs();
+      log.info("Completed creating and executing action plan jobs");
+      return ResponseEntity.ok().body("Completed creating and executing action plan jobs");
+    } catch (RuntimeException e) {
+      log.error(
+          "Uncaught exception - transaction rolled back. Will re-run when scheduled by cron", e);
+      throw new CTPException(
+          CTPException.Fault.SYSTEM_ERROR,
+          "Uncaught exception when creating and execution action plan jobs");
+    }
   }
 }

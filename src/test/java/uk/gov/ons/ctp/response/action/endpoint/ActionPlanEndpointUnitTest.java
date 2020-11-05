@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.handler;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.ons.ctp.response.action.endpoint.ActionPlanEndpoint.ACTION_PLAN_NOT_FOUND;
 import static uk.gov.ons.ctp.response.lib.common.MvcHelper.getJson;
 import static uk.gov.ons.ctp.response.lib.common.MvcHelper.postJson;
 import static uk.gov.ons.ctp.response.lib.common.MvcHelper.putJson;
@@ -246,77 +245,6 @@ public class ActionPlanEndpointUnitTest {
                     new DateMatcher(ACTION_PLAN_1_LAST_RUN_DATE_TIME),
                     new DateMatcher(ACTION_PLAN_2_LAST_RUN_DATE_TIME),
                     IsNull.nullValue())));
-  }
-
-  /**
-   * A Test to retrieve an ActionPlan BUT not found
-   *
-   * @throws Exception exception thrown when getJson does
-   */
-  @Test
-  public void findActionPlanNotFound() throws Exception {
-    final ResultActions actions =
-        mockMvc.perform(getJson(String.format("/actionplans/%s", NON_EXISTING_ACTION_PLAN_ID)));
-
-    actions
-        .andExpect(status().isNotFound())
-        .andExpect(handler().handlerType(ActionPlanEndpoint.class))
-        .andExpect(handler().methodName("findActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.RESOURCE_NOT_FOUND.name())))
-        .andExpect(
-            jsonPath(
-                "$.error.message",
-                is(String.format(ACTION_PLAN_NOT_FOUND, NON_EXISTING_ACTION_PLAN_ID))))
-        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }
-
-  /**
-   * A Test to retrieve an ActionPlan BUT exception thrown
-   *
-   * @throws Exception exception thrown when getJson does
-   */
-  @Test
-  public void findActionPlanUnCheckedException() throws Exception {
-    when(actionPlanService.findActionPlanById(NON_EXISTING_ACTION_PLAN_ID))
-        .thenThrow(new IllegalArgumentException(OUR_EXCEPTION_MESSAGE));
-
-    final ResultActions actions =
-        mockMvc.perform(getJson(String.format("/actionplans/%s", NON_EXISTING_ACTION_PLAN_ID)));
-
-    actions
-        .andExpect(status().is5xxServerError())
-        .andExpect(handler().handlerType(ActionPlanEndpoint.class))
-        .andExpect(handler().methodName("findActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.error.code", is(CTPException.Fault.SYSTEM_ERROR.name())))
-        .andExpect(jsonPath("$.error.message", is(OUR_EXCEPTION_MESSAGE)))
-        .andExpect(jsonPath("$.error.timestamp", isA(String.class)));
-  }
-
-  /**
-   * A Test to retrieve an ActionPlan
-   *
-   * @throws Exception exception thrown when getJson does
-   */
-  @Test
-  public void findActionPlanFound() throws Exception {
-    when(actionPlanService.findActionPlanById(ACTION_PLAN_1_ID)).thenReturn(actionPlans.get(0));
-
-    final ResultActions actions =
-        mockMvc.perform(getJson(String.format("/actionplans/%s", ACTION_PLAN_1_ID)));
-
-    actions
-        .andExpect(status().isOk())
-        .andExpect(handler().handlerType(ActionPlanEndpoint.class))
-        .andExpect(handler().methodName("findActionPlanByActionPlanId"))
-        .andExpect(jsonPath("$.*", hasSize(6)))
-        .andExpect(jsonPath("$.id", is(ACTION_PLAN_1_ID.toString())))
-        .andExpect(jsonPath("$.name", is(ACTION_PLAN_1_NAME)))
-        .andExpect(jsonPath("$.description", is(ACTION_PLAN_1_DESC)))
-        .andExpect(jsonPath("$.createdBy", is(CREATED_BY_SYSTEM)))
-        .andExpect(
-            jsonPath("$.lastRunDateTime", is(new DateMatcher(ACTION_PLAN_1_LAST_RUN_DATE_TIME))));
-
-    System.out.println(actions.andReturn().getResponse().getContentAsString());
   }
 
   /**
