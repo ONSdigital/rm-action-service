@@ -46,8 +46,8 @@ public class NotifyService {
         ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
         String messageId = messageIdFuture.get();
         log.with("messageId", messageId)
-          .with("actionId", actionRequest.getActionId())
-          .debug("Notify pubsub sent sucessfully");
+            .with("actionId", actionRequest.getActionId())
+            .debug("Notify pubsub sent sucessfully");
 
         // this will mimic current implementation of action -> rabbit.
         // The curent processessing service does not attempt to recover from error.
@@ -55,7 +55,7 @@ public class NotifyService {
         // going down the action rabbithole. So do as the current implementation
         // does and simply propagate a  RuntimeException up the stack.
       } finally {
-          publisher.shutdown();
+        publisher.shutdown();
       }
     } catch (JsonProcessingException e) {
       log.error("Error converting an actionRequest to JSON", e);
