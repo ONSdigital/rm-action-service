@@ -20,6 +20,7 @@ public class ActionInstructionPublisher {
 
   public static final String ACTION = "Action.";
   public static final String BINDING = ".binding";
+  public static final String ACTIONEXPORTER = "PRINTER";
 
   @Qualifier("actionInstructionRabbitTemplate")
   @Autowired
@@ -39,7 +40,7 @@ public class ActionInstructionPublisher {
       instruction.setActionCancel((ActionCancel) action);
     }
 
-    if ("PRINTER".equalsIgnoreCase(handler)) {
+    if (ACTIONEXPORTER.equalsIgnoreCase(handler)) {
       actionExportService.acceptInstruction(instruction);
     } else {
       final String routingKey = String.format("%s%s%s", ACTION, handler, BINDING);
