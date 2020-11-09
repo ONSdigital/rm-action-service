@@ -41,18 +41,22 @@ public class NotifyService {
       PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
 
       Publisher publisher = pubSub.notifyPublisher();
+      try {
 
-      ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-      String messageId = messageIdFuture.get();
-      log.with("messageId", messageId)
+        ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+        String messageId = messageIdFuture.get();
+        log.with("messageId", messageId)
           .with("actionId", actionRequest.getActionId())
           .debug("Notify pubsub sent sucessfully");
 
-      // this will mimic current implementation of action -> rabbit.
-      // The curent processessing service does not attempt to recover from error.
-      // theres not much we can do with these checked exceptions without
-      // going down the action rabbithole. So do as the current implementation
-      // does and simply propagate a  RuntimeException up the stack.
+        // this will mimic current implementation of action -> rabbit.
+        // The curent processessing service does not attempt to recover from error.
+        // theres not much we can do with these checked exceptions without
+        // going down the action rabbithole. So do as the current implementation
+        // does and simply propagate a  RuntimeException up the stack.
+      } finally {
+          publisher.shutdown();
+      }
     } catch (JsonProcessingException e) {
       log.error("Error converting an actionRequest to JSON", e);
       throw new RuntimeException(e);
