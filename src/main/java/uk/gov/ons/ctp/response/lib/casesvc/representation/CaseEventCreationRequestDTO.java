@@ -1,6 +1,5 @@
 package uk.gov.ons.ctp.response.lib.casesvc.representation;
 
-import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -21,16 +20,12 @@ public class CaseEventCreationRequestDTO {
 
   @NotNull
   @Size(min = DESC_MIN, max = DESC_MAX)
-  @ApiModelProperty(required = true)
   private String description;
 
-  @NotNull
-  @ApiModelProperty(required = true)
-  private CategoryDTO.CategoryName category;
+  @NotNull private CategoryDTO.CategoryName category;
 
   @NotNull
   @Size(min = CREATED_BY_MIN, max = CREATED_BY_MAX)
-  @ApiModelProperty(required = true)
   private String createdBy;
 
   private String subCategory;

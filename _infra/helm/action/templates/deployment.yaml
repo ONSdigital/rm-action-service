@@ -168,8 +168,6 @@ spec:
             value: "false"
           - name: REPORT_SETTINGS_CRON_EXPRESSION
             value: "{{ .Values.report.cron }}"
-          - name: PLAN_EXECUTION_DELAY_MILLI_SECONDS
-            value: "{{ .Values.planExecutionDelayMillis }}"
           - name: SPRING_JPA_DATABASE_PLATFORM
             {{- if .Values.database.sqlProxyEnabled }}
             value: "org.hibernate.dialect.PostgreSQL94Dialect"

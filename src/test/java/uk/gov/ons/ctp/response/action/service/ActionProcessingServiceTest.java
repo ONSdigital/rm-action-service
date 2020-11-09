@@ -67,7 +67,6 @@ public class ActionProcessingServiceTest {
       actionSvcStateTransitionManager;
 
   @Mock private ActionInstructionPublisher actionInstructionPublisher;
-  @Mock private ActionRequestValidator validator;
   @Mock private ActionRequestContextFactory decoratorContextFactory;
 
   @Mock private ActionRepository actionRepo;
@@ -109,7 +108,6 @@ public class ActionProcessingServiceTest {
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenReturn(ActionDTO.ActionState.PENDING);
-    when(validator.validate(any(ActionType.class), any(ActionRequest.class))).thenReturn(true);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
     when(actionRepo.findById(eq(ACTION_ID))).thenReturn(contextAction);

@@ -11,7 +11,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,49 +73,7 @@ public class ActionService {
     this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
   }
 
-  @CoverageIgnore
-  public List<Action> findAllActionsOrderedByCreatedDateTimeDescending() {
-    log.debug("Entering findAllActions");
-    return actionRepo.findAllByOrderByCreatedDateTimeDesc();
-  }
-
-  @CoverageIgnore
-  public List<Action> findActionsByTypeAndStateOrderedByCreatedDateTimeDescending(
-      final String actionTypeName, final ActionDTO.ActionState state) {
-    log.with("action_type_name", actionTypeName)
-        .with("state", state)
-        .debug("Entering findActionsByTypeAndState");
-    return actionRepo.findByActionTypeNameAndStateOrderByCreatedDateTimeDesc(actionTypeName, state);
-  }
-
-  @CoverageIgnore
-  public List<Action> findActionsByType(final String actionTypeName) {
-    log.with("action_type_name", actionTypeName).debug("Entering findActionsByType");
-    return actionRepo.findByActionTypeNameOrderByCreatedDateTimeDesc(actionTypeName);
-  }
-
-  @CoverageIgnore
-  public List<Action> findActionsByState(final ActionDTO.ActionState state) {
-    log.with("state", state).debug("Entering findActionsByState");
-    return actionRepo.findByStateOrderByCreatedDateTimeDesc(state);
-  }
-
-  @CoverageIgnore
-  public Action findActionById(final UUID actionId) {
-    log.with("action_id", actionId).debug("Entering findActionById");
-    return actionRepo.findById(actionId);
-  }
-
-  @CoverageIgnore
-  public List<Action> findActionsByCaseId(final UUID caseId) {
-    log.with("case_id", caseId).debug("Entering findActionsByCaseId");
-    return actionRepo.findByCaseIdOrderByCreatedDateTimeDesc(caseId);
-  }
-
-  @Transactional(
-      propagation = Propagation.REQUIRED,
-      readOnly = false,
-      timeout = TRANSACTION_TIMEOUT)
+  @Transactional(propagation = Propagation.REQUIRED, timeout = TRANSACTION_TIMEOUT)
   public List<Action> cancelActions(final UUID caseId) throws CTPException {
     log.with("case_id", caseId).debug("Entering cancelAction");
 
@@ -139,10 +96,7 @@ public class ActionService {
     return flushedActions;
   }
 
-  @Transactional(
-      propagation = Propagation.REQUIRED,
-      readOnly = false,
-      timeout = TRANSACTION_TIMEOUT)
+  @Transactional(propagation = Propagation.REQUIRED, timeout = TRANSACTION_TIMEOUT)
   public Action createAdHocAction(final Action action) {
     // guard against the caller providing an id - we would perform an update otherwise
     action.setActionPK(null);

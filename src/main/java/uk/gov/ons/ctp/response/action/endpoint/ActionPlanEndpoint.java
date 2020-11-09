@@ -26,14 +26,13 @@ import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPutRequestDTO;
 import uk.gov.ons.ctp.response.action.scheduled.plan.ActionPlanJobExecutor;
 import uk.gov.ons.ctp.response.action.service.ActionPlanService;
-import uk.gov.ons.ctp.response.lib.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 import uk.gov.ons.ctp.response.lib.common.error.InvalidRequestException;
 
 /** The REST endpoint controller for ActionPlans. */
 @RestController
 @RequestMapping(value = "/actionplans", produces = "application/json")
-public class ActionPlanEndpoint implements CTPEndpoint {
+public class ActionPlanEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionPlanEndpoint.class);
 
   public static final String ACTION_PLAN_NOT_FOUND = "ActionPlan not found for id %s";

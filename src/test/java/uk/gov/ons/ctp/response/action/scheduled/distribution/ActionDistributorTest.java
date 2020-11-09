@@ -23,7 +23,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import uk.gov.ons.ctp.response.action.config.ActionDistribution;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.DataGrid;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -84,8 +83,6 @@ public class ActionDistributorTest {
     dataGrid.setLockTimeToLiveSeconds(30);
     dataGrid.setLockTimeToWaitSeconds(600);
     when(appConfig.getDataGrid()).thenReturn(dataGrid);
-    ActionDistribution actionDistribution = new ActionDistribution();
-    when(appConfig.getActionDistribution()).thenReturn(actionDistribution);
 
     lock = mock(RLock.class);
     when(redissonClient.getFairLock(any())).thenReturn(lock);

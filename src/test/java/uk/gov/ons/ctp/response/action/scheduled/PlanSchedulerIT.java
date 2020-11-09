@@ -441,7 +441,7 @@ public class PlanSchedulerIT {
             () -> {
               //// When PlanScheduler and ActionDistributor runs
               try {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 20; i++) {
                   HttpResponse<String> distributeResponse =
                       Unirest.get("http://localhost:" + threadPort + "/distribute")
                           .basicAuth("admin", "secret")

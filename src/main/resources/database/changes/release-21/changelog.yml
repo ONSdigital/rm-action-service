@@ -1,0 +1,13 @@
+databaseChangeLog:
+
+  #  -- this changeset is needed to rollback the previous changeset
+  - changeSet:
+      id: 21-1
+      author: Adam Mann
+      changes:
+        - sqlFile:
+            comment: Drop the outcomecategory table
+            path: drop_outcomecategory.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+

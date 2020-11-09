@@ -490,13 +490,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        description: actionPutRequestDTO
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ActionPutRequestDTO'
-        required: false
       responses:
         '200':
           description: The action was successfully updated.
@@ -512,7 +505,6 @@ paths:
           description: An action wasn't found with the specified ID.
         '500':
           description: The ID provided wasn't a valid UUID.
-      x-codegen-request-body-name: actionPutRequestDTO
 components:
   securitySchemes:
     basicAuth:
@@ -636,14 +628,6 @@ components:
         priority:
           type: integer
           format: int32
-    ActionPutRequestDTO:
-      type: object
-      properties:
-        priority:
-          type: integer
-          format: int32
-        situation:
-          type: string
     ActionRuleDTO:
       type: object
       properties:

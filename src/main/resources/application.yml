@@ -88,18 +88,6 @@ data-grid:
 
   report-lock-time-to-live-seconds: 300
 
-# the thread that sends actions to handlers
-action-distribution:
-  # when we fail to send to rabbit how long should we pause for before retry
-  retry-sleep-seconds: 30
-  # how long to pause after each distribution exercise
-  delay-milli-seconds: 1000
-
- # the thread that executes plans to create the  actions
-plan-execution:
-  # pause after each execution exercise
-  delay-milli-seconds: 1000
-
  # calling the case svc endpoints
 case-svc:
   case-group-path: /casegroups/{caseGroupId}
@@ -166,20 +154,6 @@ survey-svc:
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
- # calling the sample svc endpoints
-sample-svc:
-  sample-attributes-by-id: /samples/{sampleUnitId}/attributes
-  connection-config:
-    scheme: http
-    host: localhost
-    port: 8125
-    username: admin
-    password: secret
-    retry-attempts: 5
-    retry-pause-milli-seconds: 5000
-    connect-timeout-milli-seconds: 5000
-    read-timeout-milli-seconds: 5000
-
  # queue related
 redelivery-policy:
   maxRedeliveries: -1
@@ -205,13 +179,6 @@ messaging:
 
 report-settings:
   cron-expression: "0 * * * * *"
-
-swagger-settings:
-  swagger-ui-active: true
-  group-name: actionservice-api
-  title: Action Service API
-  description: API for ${project.artifactId}
-  version: ${project.version}
 
 retries:
   maxAttempts: 3
