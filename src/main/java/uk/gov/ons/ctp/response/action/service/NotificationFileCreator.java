@@ -6,10 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
-import uk.gov.ons.ctp.response.action.domain.model.ExportFile;
-import uk.gov.ons.ctp.response.action.domain.model.ExportJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ExportFileRepository;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 
 @Service
 public class NotificationFileCreator {
@@ -32,11 +30,8 @@ public class NotificationFileCreator {
     this.printFileService = printFileService;
   }
 
-  public void uploadData(
-      String filenamePrefix,
-      List<ActionRequestInstruction> actionRequestInstructions,
-      ExportJob exportJob) {
-    if (actionRequestInstructions.isEmpty()) {
+  public void uploadData(String filenamePrefix, List<ActionRequest> actionRequests) {
+    if (actionRequests.isEmpty()) {
       log.info("no action request instructions to export");
       return;
     }
@@ -57,13 +52,8 @@ public class NotificationFileCreator {
 
     // temporarily hook in here as at this point we know the name of the file
     // and all the action request instructions
-    boolean success = printFileService.send(filename, actionRequestInstructions);
+    boolean success = printFileService.send(filename, actionRequests);
+    // TODO what happens if this fails
 
-    if (success) {
-      ExportFile exportFile = new ExportFile();
-      exportFile.setExportJobId(exportJob.getId());
-      exportFile.setFilename(filename);
-      exportFileRepository.saveAndFlush(exportFile);
-    }
   }
 }

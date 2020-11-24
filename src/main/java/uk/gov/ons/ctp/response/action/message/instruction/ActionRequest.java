@@ -94,8 +94,6 @@ public class ActionRequest extends Action implements Serializable, ToString2 {
   protected String caseGroupStatus;
   protected String caseId;
 
-  private boolean isPubsub = false;
-
   @XmlSchemaType(name = "string")
   protected Priority priority;
 
@@ -166,14 +164,6 @@ public class ActionRequest extends Action implements Serializable, ToString2 {
     this.surveyRef = surveyRef;
     this.returnByDate = returnByDate;
     this.sampleUnitRef = sampleUnitRef;
-  }
-
-  public boolean isPubsub() {
-    return isPubsub;
-  }
-
-  public void setIsPubsub(boolean isPubsub) {
-    this.isPubsub = isPubsub;
   }
   /**
    * Gets the value of the actionPlan property.

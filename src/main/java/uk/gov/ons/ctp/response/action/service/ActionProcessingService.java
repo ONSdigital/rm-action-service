@@ -55,40 +55,9 @@ public abstract class ActionProcessingService {
     this.decorators = decorators;
   }
 
-  /** Distributes requests for a single action */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processActionRequests(final UUID actionId) {
-    Action action = actionRepo.findById(actionId);
-    log.with("actionId", action.getId()).info("Processing actionRequest");
 
-    final ActionType actionType = action.getActionType();
-    if (!valid(actionType)) {
-      log.with("action", action).error("ActionType is not defined for action");
-      throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
-    }
 
-    List<ActionRequest> actionRequests = prepareActionRequests(action);
-
-    ActionDTO.ActionEvent event =
-        actionType.getResponseRequired()
-            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
-            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-    transitionAction(action, event);
-
-    actionRequests.forEach(
-        actionRequest -> {
-          if (actionRequest.isPubsub()) {
-            log.with("actionId", actionId.toString())
-                .info("Pubsub message will be forwarded to notify cloudfunction");
-            notifyService.processNotification(actionRequest);
-          } else {
-            actionInstructionPublisher.sendActionInstruction(
-                actionType.getHandler(), actionRequest);
-          }
-        });
-  }
-
-  private List<ActionRequest> prepareActionRequests(Action action) {
+  public List<ActionRequest> prepareActionRequests(Action action) {
     final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
     final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
 
@@ -105,10 +74,9 @@ public abstract class ActionProcessingService {
                     .info("Creating Action request for pubsub notify");
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
-                actionRequest.setIsPubsub(true);
+                // actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
-                log.with("isPubsub", actionRequest.isPubsub())
-                    .with("actionId", action.getId())
+                log.with("actionId", action.getId())
                     .info("Pubsub notify action added to the list");
               });
     } else {

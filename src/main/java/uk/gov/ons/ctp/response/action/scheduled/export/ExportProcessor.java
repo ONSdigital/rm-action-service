@@ -6,16 +6,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
-import uk.gov.ons.ctp.response.action.domain.model.ExportJob;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRequestRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ExportJobRepository;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.service.FilenamePrefix;
 import uk.gov.ons.ctp.response.action.service.NotificationFileCreator;
 
@@ -42,17 +40,17 @@ public class ExportProcessor {
   }
 
   private class ExportData {
-    private List<ActionRequestInstruction> ariList;
+    private List<ActionRequest> ariList;
 
-    public ExportData(ActionRequestInstruction ari) {
-      this.ariList = new ArrayList<ActionRequestInstruction>(Arrays.asList(ari));
+    public ExportData(ActionRequest ari) {
+      this.ariList = new ArrayList<ActionRequest>(Arrays.asList(ari));
     }
 
-    public List<ActionRequestInstruction> getActionRequestInstructionList() {
+    public List<ActionRequest> getActionRequests() {
       return ariList;
     }
 
-    public void addActionRequestInstruction(ActionRequestInstruction ari) {
+    public void addActionRequest(ActionRequest ari) {
       if (ariList != null) {
         this.ariList.add(ari);
       } else {
@@ -64,29 +62,19 @@ public class ExportProcessor {
   @Transactional
   public void processExport() {
     log.info("export process started");
-    if (!actionRequestRepository.existsByExportJobIdIsNull()) {
-      log.info("nothing to export");
-      return;
-    }
-
-    ExportJob exportJob = new ExportJob();
-    exportJob = exportJobRepository.saveAndFlush(exportJob);
-
-    actionRequestRepository.updateActionsWithExportJob(exportJob.getId());
-
-    Map<String, ExportData> filenamePrefixToDataMap = prepareData(exportJob);
-
-    createAndSendFiles(filenamePrefixToDataMap, exportJob);
-    log.info("export process finished");
+    throw new UnsupportedOperationException();
   }
 
-  private Map<String, ExportData> prepareData(ExportJob exportJob) {
-    Stream<ActionRequestInstruction> actionRequestInstructions =
-        actionRequestRepository.findByExportJobId(exportJob.getId());
+  public void export(List<ActionRequest> actionRequests) {
+    Map<String, ExportData> filenamePrefixToDataMap = prepareData(actionRequests);
 
+    createAndSendFiles(filenamePrefixToDataMap);
+  }
+
+  private Map<String, ExportData> prepareData(List<ActionRequest> actionRequests) {
     Map<String, ExportData> filenamePrefixToDataMap = new HashMap<>();
 
-    actionRequestInstructions.forEach(
+    actionRequests.forEach(
         ari -> {
           String filenamePrefix =
               FilenamePrefix.getPrefix(ari.getActionType())
@@ -96,7 +84,7 @@ public class ExportProcessor {
                   + getExerciseRefWithoutSurveyRef(ari.getExerciseRef());
 
           if (filenamePrefixToDataMap.containsKey(filenamePrefix)) {
-            filenamePrefixToDataMap.get(filenamePrefix).addActionRequestInstruction(ari);
+            filenamePrefixToDataMap.get(filenamePrefix).addActionRequest(ari);
           } else {
             filenamePrefixToDataMap.put(filenamePrefix, new ExportData(ari));
           }
@@ -105,14 +93,12 @@ public class ExportProcessor {
     return filenamePrefixToDataMap;
   }
 
-  private void createAndSendFiles(
-      Map<String, ExportData> filenamePrefixToDataMap, ExportJob exportJob) {
+  private void createAndSendFiles(Map<String, ExportData> filenamePrefixToDataMap) {
 
     filenamePrefixToDataMap.forEach(
         (filenamePrefix, data) -> {
-          List<ActionRequestInstruction> actionRequestInstructions =
-              data.getActionRequestInstructionList();
-          notificationFileCreator.uploadData(filenamePrefix, actionRequestInstructions, exportJob);
+          List<ActionRequest> actionRequests = data.getActionRequests();
+          notificationFileCreator.uploadData(filenamePrefix, actionRequests);
         });
   }
 
