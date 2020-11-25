@@ -11,12 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.action.scheduled.export.ExportProcessor;
 import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
@@ -39,9 +42,13 @@ public abstract class ActionProcessingService {
 
   @Autowired private ActionRepository actionRepo;
 
+  @Autowired private ActionCaseRepository actionCaseRepo;
+
   @Autowired private ActionInstructionPublisher actionInstructionPublisher;
 
   @Autowired private NotifyService notifyService;
+
+  @Autowired private ExportProcessor exportProcessor;
 
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
@@ -55,6 +62,82 @@ public abstract class ActionProcessingService {
     this.decorators = decorators;
   }
 
+  public void processLetters(ActionType actionType, List<Action> allActions) {
+    // action requests are decorated actions
+    List<ActionRequest> printerActions = new ArrayList<>();
+    for (Action action : allActions) {
+      if (checkCaseExists(action)) {
+        transitionAction(action, actionType);
+        List<ActionRequest> actionRequests = prepareActionRequests(action);
+        printerActions.addAll(actionRequests);
+      }
+    }
+    // TODO remove this export processor to print file processor
+    exportProcessor.export(printerActions);
+  }
+
+  public void processEmails(ActionType actionType, List<Action> allActions) {
+    for (Action action : allActions) {
+      if (checkCaseExists(action)) {
+        transitionAction(action, actionType);
+        // send to pub sub
+        List<ActionRequest> actionRequests = prepareActionRequests(action);
+        for (ActionRequest actionRequest : actionRequests) {
+          notifyService.processNotification(actionRequest);
+        }
+      }
+    }
+  }
+
+  private boolean checkCaseExists(final Action action) {
+    ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
+
+    if (actionCase == null) {
+      log.with("action", action).info("Case no longer exists for action");
+      ActionDTO.ActionState newActionState;
+      try {
+        newActionState =
+          actionSvcStateTransitionManager.transition(
+            action.getState(), ActionDTO.ActionEvent.REQUEST_CANCELLED);
+      } catch (CTPException ex) {
+        throw new IllegalStateException(ex);
+      }
+
+      action.setState(newActionState);
+      actionRepo.saveAndFlush(action);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Change the action status in db to indicate we have sent this action downstream, and clear
+   * previous situation (in the scenario where the action has prev. failed)
+   *
+   * @param action the action to change and persist
+   * @param actionType the action type
+   * @throws CTPException if action state transition error
+   */
+  private void transitionAction(final Action action, final ActionType actionType) {
+
+    ActionDTO.ActionEvent event =
+      actionType.getResponseRequired()
+        ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
+        : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+
+    ActionDTO.ActionState nextState = null;
+
+    try {
+      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    } catch (CTPException ctpExeption) {
+      throw new IllegalStateException(ctpExeption);
+    }
+
+    action.setState(nextState);
+    action.setSituation(null);
+    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
+    actionRepo.saveAndFlush(action);
+  }
 
 
   public List<ActionRequest> prepareActionRequests(Action action) {
@@ -63,7 +146,7 @@ public abstract class ActionProcessingService {
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
-    log.with("actionId", action.getId()).info("Setting action rquest array for processing");
+    log.with("actionId", action.getId()).info("Setting action request array for processing");
     ArrayList<ActionRequest> actionRequests = new ArrayList<>();
     if (isBusinessNotification(context)) {
       context
@@ -76,8 +159,7 @@ public abstract class ActionProcessingService {
                 ActionRequest actionRequest = prepareActionRequest(context);
                 // actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
-                log.with("actionId", action.getId())
-                    .info("Pubsub notify action added to the list");
+                log.with("actionId", action.getId()).info("Pubsub notify action added to the list");
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
@@ -100,71 +182,4 @@ public abstract class ActionProcessingService {
     return actionRequest;
   }
 
-  /** Deal with a single action cancel - the transaction boundary is here */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processActionCancel(final UUID actionId) {
-    Action action = actionRepo.findById(actionId);
-
-    log.with("action_id", action.getId())
-        .with("case_id", action.getCaseId())
-        .with("action_plan_pk", action.getActionPlanFK())
-        .info("processing action cancel");
-
-    transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-
-    actionInstructionPublisher.sendActionInstruction(
-        action.getActionType().getHandler(), prepareActionCancel(action));
-  }
-
-  /**
-   * Take an action and using it, fetch further info from Case service in a number of rest calls, in
-   * order to create the ActionRequest
-   *
-   * @param action It all starts wih the Action
-   * @return The ActionRequest created from the Action and the other info from CaseSvc
-   */
-  private ActionCancel prepareActionCancel(final Action action) {
-    log.with("action_id", action.getId())
-        .with("case_id", action.getCaseId())
-        .with("action_plan_pk", action.getActionPlanFK())
-        .debug("Building ActionCancel to publish to downstream handler");
-    final ActionCancel actionCancel = new ActionCancel();
-    actionCancel.setActionId(action.getId().toString());
-    actionCancel.setResponseRequired(true);
-    actionCancel.setReason(CANCELLATION_REASON);
-    return actionCancel;
-  }
-
-  /**
-   * Change the action status in db to indicate we have sent this action downstream, and clear
-   * previous situation (in the scenario where the action has prev. failed)
-   *
-   * @param action the action to change and persist
-   * @param event the event to transition the action with
-   * @throws CTPException if action state transition error
-   */
-  private void transitionAction(final Action action, final ActionDTO.ActionEvent event) {
-    ActionDTO.ActionState nextState = null;
-
-    try {
-      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
-    } catch (CTPException ctpExeption) {
-      throw new IllegalStateException(ctpExeption);
-    }
-
-    action.setState(nextState);
-    action.setSituation(null);
-    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
-  }
-
-  /**
-   * To validate an ActionType
-   *
-   * @param actionType the ActionType to validate
-   * @return true if valid
-   */
-  private boolean valid(final ActionType actionType) {
-    return (actionType != null) && (actionType.getResponseRequired() != null);
-  }
 }

@@ -45,34 +45,17 @@ public class ActionDistributor {
       Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
   private ActionRepository actionRepo;
-  private ActionCaseRepository actionCaseRepo;
   private ActionTypeRepository actionTypeRepo;
 
   private ActionProcessingService businessActionProcessingService;
 
-  private ExportProcessor exportProcessor;
 
-  private NotifyService notifyService;
-
-  private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
-      actionSvcStateTransitionManager;
-
-  public ActionDistributor(
-      AppConfig appConfig,
-      ActionRepository actionRepo,
-      ActionCaseRepository actionCaseRepo,
-      ActionTypeRepository actionTypeRepo,
-      @Qualifier("business") ActionProcessingService businessActionProcessingService,
-      StateTransitionManager<ActionState, ActionDTO.ActionEvent> actionSvcStateTransitionManager,
-      ExportProcessor exportProcessor,
-      NotifyService notifyService) {
+  public ActionDistributor(ActionRepository actionRepo,
+                           ActionTypeRepository actionTypeRepo,
+                           @Qualifier("business") ActionProcessingService businessActionProcessingService) {
     this.actionRepo = actionRepo;
-    this.actionCaseRepo = actionCaseRepo;
     this.actionTypeRepo = actionTypeRepo;
     this.businessActionProcessingService = businessActionProcessingService;
-    this.actionSvcStateTransitionManager = actionSvcStateTransitionManager;
-    this.exportProcessor = exportProcessor;
-    this.notifyService = notifyService;
   }
 
   /**
@@ -91,82 +74,11 @@ public class ActionDistributor {
     List<Action> allActions = stream.collect(Collectors.toList());
 
     if (actionType.getHandler().equals(NOTIFY)) {
-      for (Action action : allActions) {
-        if (checkCaseExists(action)) {
-          transitionAction(action, actionType);
-          // send to pub sub
-          List<ActionRequest> actionRequests =
-            businessActionProcessingService.prepareActionRequests(action);
-          for (ActionRequest actionRequest : actionRequests) {
-            notifyService.processNotification(actionRequest);
-          }
-        }
-      }
+      businessActionProcessingService.processEmails(actionType, allActions);
     } else if (actionType.getHandler().equals(PRINTER)) {
-      // action requests are decorated actions
-      List<ActionRequest> printerActions = new ArrayList<>();
-      for (Action action : allActions) {
-        if (checkCaseExists(action)) {
-          transitionAction(action, actionType);
-          List<ActionRequest> actionRequests =
-              businessActionProcessingService.prepareActionRequests(action);
-          printerActions.addAll(actionRequests);
-        }
-      }
-      //TODO remove this export processor to print file processor
-      exportProcessor.export(printerActions);
+      businessActionProcessingService.processLetters(actionType, allActions);
     } else {
       log.with("handler", actionType.getHandler()).warn("unsupported action type handler");
     }
-  }
-
-  private boolean checkCaseExists(final Action action) {
-    ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
-
-    if (actionCase == null) {
-      log.with("action", action).info("Case no longer exists for action");
-      ActionState newActionState;
-      try {
-        newActionState =
-            actionSvcStateTransitionManager.transition(
-                action.getState(), ActionEvent.REQUEST_CANCELLED);
-      } catch (CTPException ex) {
-        throw new IllegalStateException(ex);
-      }
-
-      action.setState(newActionState);
-      actionRepo.saveAndFlush(action);
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Change the action status in db to indicate we have sent this action downstream, and clear
-   * previous situation (in the scenario where the action has prev. failed)
-   *
-   * @param action the action to change and persist
-   * @param actionType the action type
-   * @throws CTPException if action state transition error
-   */
-  private void transitionAction(final Action action, final ActionType actionType) {
-
-    ActionDTO.ActionEvent event =
-        actionType.getResponseRequired()
-            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
-            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-
-    ActionDTO.ActionState nextState = null;
-
-    try {
-      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
-    } catch (CTPException ctpExeption) {
-      throw new IllegalStateException(ctpExeption);
-    }
-
-    action.setState(nextState);
-    action.setSituation(null);
-    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
   }
 }
