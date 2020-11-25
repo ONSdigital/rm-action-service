@@ -18,7 +18,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.Bucket;
 import uk.gov.ons.ctp.response.action.config.GCP;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
 import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 

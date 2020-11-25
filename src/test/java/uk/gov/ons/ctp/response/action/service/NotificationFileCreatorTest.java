@@ -17,11 +17,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
-import uk.gov.ons.ctp.response.action.domain.model.ExportFile;
-import uk.gov.ons.ctp.response.action.domain.model.ExportFile.SendStatus;
-import uk.gov.ons.ctp.response.action.domain.model.ExportJob;
-import uk.gov.ons.ctp.response.action.domain.repository.ExportFileRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NotificationFileCreatorTest {

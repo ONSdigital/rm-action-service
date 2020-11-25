@@ -6,21 +6,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
-import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.scheduled.export.ExportProcessor;
-import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
+import uk.gov.ons.ctp.response.action.service.decorator.*;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
@@ -28,10 +24,10 @@ import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
-public abstract class ActionProcessingService {
+@Service
+public class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
 
-  public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   public static final String ACTIVE = "ACTIVE";
@@ -44,23 +40,25 @@ public abstract class ActionProcessingService {
 
   @Autowired private ActionCaseRepository actionCaseRepo;
 
-  @Autowired private ActionInstructionPublisher actionInstructionPublisher;
-
   @Autowired private NotifyService notifyService;
 
-  @Autowired private ExportProcessor exportProcessor;
+  @Autowired private NotificationFileCreator exportProcessor;
 
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
 
-  private ActionRequestDecorator[] decorators;
+  @Autowired
+  @Qualifier("business")
+  private ActionRequestContextFactory decoratorContextFactory;
 
-  public abstract ActionRequestContextFactory getActionRequestDecoratorContextFactory();
-
-  public ActionProcessingService(ActionRequestDecorator[] decorators) {
-    this.decorators = decorators;
-  }
+  private static final ActionRequestDecorator[] DECORATORS = {
+    new ActionAndActionPlan(),
+    new CaseAndCaseEvent(),
+    new CollectionExerciseAndSurvey(),
+    new PartyAndContact(),
+    new SampleUnitRef()
+  };
 
   public void processLetters(ActionType actionType, List<Action> allActions) {
     // action requests are decorated actions
@@ -97,8 +95,8 @@ public abstract class ActionProcessingService {
       ActionDTO.ActionState newActionState;
       try {
         newActionState =
-          actionSvcStateTransitionManager.transition(
-            action.getState(), ActionDTO.ActionEvent.REQUEST_CANCELLED);
+            actionSvcStateTransitionManager.transition(
+                action.getState(), ActionDTO.ActionEvent.REQUEST_CANCELLED);
       } catch (CTPException ex) {
         throw new IllegalStateException(ex);
       }
@@ -121,9 +119,9 @@ public abstract class ActionProcessingService {
   private void transitionAction(final Action action, final ActionType actionType) {
 
     ActionDTO.ActionEvent event =
-      actionType.getResponseRequired()
-        ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
-        : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+        actionType.getResponseRequired()
+            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
+            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
 
     ActionDTO.ActionState nextState = null;
 
@@ -139,10 +137,9 @@ public abstract class ActionProcessingService {
     actionRepo.saveAndFlush(action);
   }
 
-
   public List<ActionRequest> prepareActionRequests(Action action) {
-    final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
-    final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
+    final ActionRequestContext context =
+        decoratorContextFactory.getActionRequestDecoratorContext(action);
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
@@ -178,8 +175,7 @@ public abstract class ActionProcessingService {
 
   private ActionRequest prepareActionRequest(ActionRequestContext context) {
     ActionRequest actionRequest = new ActionRequest();
-    Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
+    Arrays.stream(this.DECORATORS).forEach(d -> d.decorateActionRequest(actionRequest, context));
     return actionRequest;
   }
-
 }

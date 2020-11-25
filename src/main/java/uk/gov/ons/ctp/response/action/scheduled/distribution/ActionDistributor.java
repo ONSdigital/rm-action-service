@@ -3,33 +3,19 @@ package uk.gov.ons.ctp.response.action.scheduled.distribution;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
-import uk.gov.ons.ctp.response.action.scheduled.export.ExportProcessor;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
-import uk.gov.ons.ctp.response.action.service.NotifyService;
-import uk.gov.ons.ctp.response.lib.common.error.CTPException;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil;
 
 /** This is the service class that distributes actions to downstream services */
 @Component
@@ -49,10 +35,10 @@ public class ActionDistributor {
 
   private ActionProcessingService businessActionProcessingService;
 
-
-  public ActionDistributor(ActionRepository actionRepo,
-                           ActionTypeRepository actionTypeRepo,
-                           @Qualifier("business") ActionProcessingService businessActionProcessingService) {
+  public ActionDistributor(
+      ActionRepository actionRepo,
+      ActionTypeRepository actionTypeRepo,
+      @Qualifier("business") ActionProcessingService businessActionProcessingService) {
     this.actionRepo = actionRepo;
     this.actionTypeRepo = actionTypeRepo;
     this.businessActionProcessingService = businessActionProcessingService;

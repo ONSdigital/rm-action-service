@@ -10,9 +10,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionRequestRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ExportJobRepository;
 import uk.gov.ons.ctp.response.action.service.NotificationFileCreator;
 
 
@@ -22,7 +19,7 @@ public class ExportProcessorTest {
   @Mock private NotificationFileCreator notificationFileCreator;
   @Mock private ExportJobRepository exportJobRepository;
 
-  @InjectMocks private ExportProcessor exportProcessor;
+  @InjectMocks private PrintFileProcessor exportProcessor;
 
   @Test
   public void testHappyPath() {
