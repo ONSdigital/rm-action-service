@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.Before;
@@ -59,18 +60,18 @@ public class ActionProcessingServiceTest {
 
   @Spy private AppConfig appConfig = new AppConfig();
 
-  @InjectMocks private BusinessActionProcessingService businessActionProcessingService;
+  @InjectMocks private ActionProcessingService businessActionProcessingService;
 
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
 
-  @Mock private ActionInstructionPublisher actionInstructionPublisher;
   @Mock private ActionRequestContextFactory decoratorContextFactory;
 
   @Mock private ActionRepository actionRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
   @Mock private NotifyService notifyServiceMock;
+  @Mock private NotificationFileCreator notificationFileCreator;
 
   private CaseDetailsDTO hCase;
   private CaseDetailsDTO bCase;
@@ -81,6 +82,8 @@ public class ActionProcessingServiceTest {
 
   private ActionRequestContext context;
   private Action contextAction;
+  private ActionType contextActionType;
+  private List<Action> contextActions;
 
   /** Initialises Mockito and loads Class Fixtures */
   @Before
@@ -101,6 +104,9 @@ public class ActionProcessingServiceTest {
 
     // Set up context
     context = createContext();
+    contextActions = new ArrayList<>();
+    contextActions.add(context.getAction());
+    contextActionType = context.getAction().getActionType();
 
     MockitoAnnotations.initMocks(this);
 
@@ -148,23 +154,20 @@ public class ActionProcessingServiceTest {
     // Given setUp()
 
     // When
-    businessActionProcessingService.processActionRequests(ACTION_ID);
+    businessActionProcessingService.processActions(contextActionType, contextActions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, times(1))
-        .sendActionInstruction(
-            eq(PRINTER), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, times(1)).export(any());
   }
 
   /** Happy path for processing an B case respondent action */
   @Test
   public void testProcessActionRequestBCaseRespondentsNotification() throws CTPException {
     Action notifyAction = createContextAction(NOTIFY);
-    when(actionRepo.findById(eq(ACTION_ID))).thenReturn(notifyAction);
 
     // Given
     context.setAction(notifyAction);
@@ -173,7 +176,7 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequests(ACTION_ID);
+    businessActionProcessingService.processActions(contextActionType, contextActions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -181,9 +184,7 @@ public class ActionProcessingServiceTest {
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
     verify(notifyServiceMock, times(3)).processNotification(any(ActionRequest.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            eq(NOTIFY), any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   @Test(expected = IllegalStateException.class)
@@ -191,144 +192,128 @@ public class ActionProcessingServiceTest {
     UUID newActionId = UUID.randomUUID();
 
     // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(new Action());
+    Action action = new Action();
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // When
-    businessActionProcessingService.processActionRequests(newActionId);
+    businessActionProcessingService.processActions(null, actions);
 
     // Then
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
     Action action = new Action();
     action.setActionType(ActionType.builder().build());
 
-    // Given/When
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // Given
-    businessActionProcessingService.processActionRequests(newActionId);
+    businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, never())
         .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   /** An exception is thrown when transitioning the state of the Action */
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
     Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
     // When
-    businessActionProcessingService.processActionRequests(newActionId);
+    businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   /** An exception is thrown when saving the Action after its state was transitioned */
   @Test(expected = RuntimeException.class)
   public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
     Action action = new Action();
     action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // Given
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
     // When
-    businessActionProcessingService.processActionRequests(newActionId);
+    businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
   @Test(expected = IllegalStateException.class)
   public void testProcessActionCancelStateTransitionException() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
     Action action = new Action();
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionSvcStateTransitionManager.transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
 
     // When
-    businessActionProcessingService.processActionCancel(newActionId);
+    businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   /** Scenario where the action's state transitions OK but issue while persisting action to DB */
   @Test(expected = RuntimeException.class)
   public void testProcessActionCancelPersistingException() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
     Action action = new Action();
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
 
     // When
-    businessActionProcessingService.processActionCancel(newActionId);
+    businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(actionInstructionPublisher, never())
-        .sendActionInstruction(
-            any(String.class),
-            any(uk.gov.ons.ctp.response.action.message.instruction.Action.class));
+    verify(notificationFileCreator, never()).export(any());
   }
 
   @Test
@@ -338,12 +323,14 @@ public class ActionProcessingServiceTest {
     action.setActionType(
         ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
     action.setId(newActionId);
+    List<Action> actions = new ArrayList<>();
+    actions.add(action);
 
     // Given
     when(actionRepo.findById(eq(newActionId))).thenReturn(action);
 
     // When
-    businessActionProcessingService.processActionCancel(newActionId);
+    businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -353,8 +340,7 @@ public class ActionProcessingServiceTest {
 
     final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
         ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
-    verify(actionInstructionPublisher, times(1))
-        .sendActionInstruction(eq(PRINTER), actionCaptor.capture());
+    verify(notificationFileCreator, never()).export(any());
     final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel =
         (ActionCancel) actionCaptor.getValue();
     assertEquals(newActionId.toString(), publishedActionCancel.getActionId());
@@ -369,11 +355,11 @@ public class ActionProcessingServiceTest {
         .thenReturn(context);
 
     // When
-    businessActionProcessingService.processActionRequests(ACTION_ID);
+    businessActionProcessingService.processActions(contextActionType, contextActions);
 
     // Then
     ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);
-    verify(actionInstructionPublisher).sendActionInstruction(eq(PRINTER), captor.capture());
+    assertEquals(context.getCaseDetails().getCaseRef(), captor.getValue().getCaseRef());
     assertEquals(context.getCaseDetails().getCaseRef(), captor.getValue().getCaseRef());
   }
 }

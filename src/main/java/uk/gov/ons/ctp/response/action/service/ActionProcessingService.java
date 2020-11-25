@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
@@ -34,6 +33,7 @@ public class ActionProcessingService {
   public static final String CREATED = "CREATED";
   public static final String ENABLED = "ENABLED";
   public static final String NOTIFY = "Notify";
+  public static final String PRINTER = "Printer";
   public static final String PENDING = "PENDING";
 
   @Autowired private ActionRepository actionRepo;
@@ -42,15 +42,13 @@ public class ActionProcessingService {
 
   @Autowired private NotifyService notifyService;
 
-  @Autowired private NotificationFileCreator exportProcessor;
+  @Autowired private NotificationFileCreator notificationFileCreator;
 
   @Autowired
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
 
-  @Autowired
-  @Qualifier("business")
-  private ActionRequestContextFactory decoratorContextFactory;
+  @Autowired private ActionRequestContextFactory decoratorContextFactory;
 
   private static final ActionRequestDecorator[] DECORATORS = {
     new ActionAndActionPlan(),
@@ -60,23 +58,32 @@ public class ActionProcessingService {
     new SampleUnitRef()
   };
 
+  public void processActions(ActionType actionType, List<Action> allActions) {
+    if (actionType.getHandler().equals(NOTIFY)) {
+      processEmails(actionType, allActions);
+    } else if (actionType.getHandler().equals(PRINTER)) {
+      processLetters(actionType, allActions);
+    } else {
+      log.with("handler", actionType.getHandler()).warn("unsupported action type handler");
+    }
+  }
+
   public void processLetters(ActionType actionType, List<Action> allActions) {
     // action requests are decorated actions
     List<ActionRequest> printerActions = new ArrayList<>();
     for (Action action : allActions) {
-      if (checkCaseExists(action)) {
+      if (checkCaseExists(action) && !cancelled(action)) {
         transitionAction(action, actionType);
         List<ActionRequest> actionRequests = prepareActionRequests(action);
         printerActions.addAll(actionRequests);
       }
     }
-    // TODO remove this export processor to print file processor
-    exportProcessor.export(printerActions);
+    notificationFileCreator.export(printerActions);
   }
 
   public void processEmails(ActionType actionType, List<Action> allActions) {
     for (Action action : allActions) {
-      if (checkCaseExists(action)) {
+      if (checkCaseExists(action) && !cancelled(action)) {
         transitionAction(action, actionType);
         // send to pub sub
         List<ActionRequest> actionRequests = prepareActionRequests(action);
@@ -85,6 +92,10 @@ public class ActionProcessingService {
         }
       }
     }
+  }
+
+  private boolean cancelled(final Action action) {
+    return action.getState() == ActionDTO.ActionState.CANCELLED;
   }
 
   private boolean checkCaseExists(final Action action) {

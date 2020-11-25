@@ -88,7 +88,7 @@ public class NotificationFileCreator {
     return StringUtils.defaultIfEmpty(exerciseRefWithoutSurveyRef, exerciseRef);
   }
 
-  private void uploadData(String filenamePrefix, List<ActionRequest> actionRequests) {
+  public void uploadData(String filenamePrefix, List<ActionRequest> actionRequests) {
     if (actionRequests.isEmpty()) {
       log.info("no action request instructions to export");
       return;

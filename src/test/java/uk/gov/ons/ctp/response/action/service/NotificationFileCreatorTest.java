@@ -2,7 +2,6 @@ package uk.gov.ons.ctp.response.action.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import java.text.SimpleDateFormat;
@@ -13,10 +12,10 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NotificationFileCreatorTest {
@@ -25,23 +24,20 @@ public class NotificationFileCreatorTest {
       new SimpleDateFormat("ddMMyyyy_HHmm");
 
   @Mock private Clock clock;
-  @Mock private ExportFileRepository exportFileRepository;
   @Mock private PrintFileService printFileService;
   @InjectMocks private NotificationFileCreator notificationFileCreator;
 
   @Test
   public void shouldCreateTheCorrectFilename() {
     String actionType = "ACTIONTYPE";
-    ActionRequestInstruction ari = new ActionRequestInstruction();
-    ari.setActionId(UUID.randomUUID());
+    ActionRequest ari = new ActionRequest();
+    ari.setActionId(UUID.randomUUID().toString());
     ari.setActionType(actionType);
     ari.setSurveyRef("SURVEYREF");
     ari.setExerciseRef("EXERCISEREF");
     ari.setResponseRequired(true);
 
-    List<ActionRequestInstruction> actionRequestInstructions = Collections.singletonList(ari);
-
-    ExportJob exportJob = new ExportJob(UUID.randomUUID());
+    List<ActionRequest> actionRequestInstructions = Collections.singletonList(ari);
 
     Date now = new Date();
 
@@ -51,46 +47,37 @@ public class NotificationFileCreatorTest {
     given(printFileService.send(expectedFilename, actionRequestInstructions)).willReturn(true);
 
     // When
-    notificationFileCreator.uploadData("BSNOT", actionRequestInstructions, exportJob);
+    notificationFileCreator.uploadData("BSNOT", actionRequestInstructions);
 
     // Then
-    ArgumentCaptor<ExportFile> exportFileArgumentCaptor = ArgumentCaptor.forClass(ExportFile.class);
-    verify(exportFileRepository).saveAndFlush(exportFileArgumentCaptor.capture());
-    assertThat(exportFileArgumentCaptor.getValue().getFilename()).isEqualTo(expectedFilename);
-    assertThat(exportFileArgumentCaptor.getValue().getExportJobId()).isEqualTo(exportJob.getId());
-    assertThat(exportFileArgumentCaptor.getValue().getStatus()).isEqualTo(SendStatus.QUEUED);
-
     verify(printFileService).send(expectedFilename, actionRequestInstructions);
   }
 
   @Test
   public void shouldThrowExceptionForDuplicateFilename() {
     String actionType = "ACTIONTYPE";
-    ActionRequestInstruction ari = new ActionRequestInstruction();
-    ari.setActionId(UUID.randomUUID());
+    ActionRequest ari = new ActionRequest();
+    ari.setActionId(UUID.randomUUID().toString());
     ari.setActionType(actionType);
     ari.setSurveyRef("SURVEYREF");
     ari.setExerciseRef("EXERCISEREF");
     ari.setResponseRequired(true);
 
-    List<ActionRequestInstruction> actionRequestInstructions = Collections.singletonList(ari);
-    ExportJob exportJob = new ExportJob(UUID.randomUUID());
+    List<ActionRequest> actionRequestInstructions = Collections.singletonList(ari);
     Date now = new Date();
     boolean expectedExceptionThrown = false;
 
     // Given
     given(clock.millis()).willReturn(now.getTime());
-    given(exportFileRepository.existsByFilename(any())).willReturn(true);
 
     // When
     try {
-      notificationFileCreator.uploadData("BSNOT", actionRequestInstructions, exportJob);
+      notificationFileCreator.uploadData("BSNOT", actionRequestInstructions);
     } catch (RuntimeException ex) {
       expectedExceptionThrown = true;
     }
 
     // Then
     assertThat(expectedExceptionThrown).isTrue();
-    verify(exportFileRepository, never()).saveAndFlush(any());
   }
 }

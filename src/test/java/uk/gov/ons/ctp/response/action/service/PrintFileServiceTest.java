@@ -19,6 +19,7 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.Bucket;
 import uk.gov.ons.ctp.response.action.config.GCP;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 
 /** */
@@ -37,8 +38,7 @@ public class PrintFileServiceTest {
 
   @Test
   public void testConvertToPrintFile() {
-    List<ActionRequestInstruction> actionRequestInstructions =
-        ObjectBuilder.buildListOfActionRequests();
+    List<ActionRequest> actionRequestInstructions = ObjectBuilder.buildListOfActionRequests();
 
     List<PrintFileEntry> printFileEntries =
         printFileService.convertToPrintFile(actionRequestInstructions);
@@ -69,8 +69,7 @@ public class PrintFileServiceTest {
     given(gcp.getBucket()).willReturn(bucket);
     given(bucket.getName()).willReturn("test-bucket");
 
-    List<ActionRequestInstruction> actionRequestInstructions =
-        ObjectBuilder.buildListOfActionRequests();
+    List<ActionRequest> actionRequestInstructions = ObjectBuilder.buildListOfActionRequests();
 
     printFileService.send("test.csv", actionRequestInstructions);
 

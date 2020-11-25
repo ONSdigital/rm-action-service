@@ -18,7 +18,6 @@ public class AppConfig {
   private CollectionExerciseSvc collectionExerciseSvc;
   private PartySvc partySvc;
   private SurveySvc surveySvc;
-  private ReportSettings reportSettings;
   private Rabbitmq rabbitmq;
   private Logging logging;
   private GCP gcp;
