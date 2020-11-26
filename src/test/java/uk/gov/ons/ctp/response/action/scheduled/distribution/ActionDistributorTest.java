@@ -17,11 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
@@ -41,9 +39,6 @@ public class ActionDistributorTest {
   private List<ActionType> actionTypes;
   private List<Action> actions;
   private Stream<Action> businessEnrolmentActions;
-  private ActionCase bActionCase;
-  private ActionCase fActionCase;
-  private RLock lock;
 
   @Mock private AppConfig appConfig;
 

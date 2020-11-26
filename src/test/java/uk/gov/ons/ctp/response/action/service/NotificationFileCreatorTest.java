@@ -1,6 +1,5 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -51,33 +50,5 @@ public class NotificationFileCreatorTest {
 
     // Then
     verify(printFileService).send(expectedFilename, actionRequestInstructions);
-  }
-
-  @Test
-  public void shouldThrowExceptionForDuplicateFilename() {
-    String actionType = "ACTIONTYPE";
-    ActionRequest ari = new ActionRequest();
-    ari.setActionId(UUID.randomUUID().toString());
-    ari.setActionType(actionType);
-    ari.setSurveyRef("SURVEYREF");
-    ari.setExerciseRef("EXERCISEREF");
-    ari.setResponseRequired(true);
-
-    List<ActionRequest> actionRequestInstructions = Collections.singletonList(ari);
-    Date now = new Date();
-    boolean expectedExceptionThrown = false;
-
-    // Given
-    given(clock.millis()).willReturn(now.getTime());
-
-    // When
-    try {
-      notificationFileCreator.uploadData("BSNOT", actionRequestInstructions);
-    } catch (RuntimeException ex) {
-      expectedExceptionThrown = true;
-    }
-
-    // Then
-    assertThat(expectedExceptionThrown).isTrue();
   }
 }

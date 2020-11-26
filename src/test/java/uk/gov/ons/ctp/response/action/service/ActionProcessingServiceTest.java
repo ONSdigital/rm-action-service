@@ -1,14 +1,12 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.ons.ctp.response.action.service.ActionProcessingService.CANCELLATION_REASON;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +14,6 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -25,11 +22,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
@@ -60,8 +58,6 @@ public class ActionProcessingServiceTest {
 
   @Spy private AppConfig appConfig = new AppConfig();
 
-  @InjectMocks private ActionProcessingService businessActionProcessingService;
-
   @Mock
   private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -72,6 +68,9 @@ public class ActionProcessingServiceTest {
   @Mock private ActionPlanRepository actionPlanRepo;
   @Mock private NotifyService notifyServiceMock;
   @Mock private NotificationFileCreator notificationFileCreator;
+  @Mock private ActionCaseRepository actionCaseRepo;
+
+  @InjectMocks private ActionProcessingService businessActionProcessingService;
 
   private CaseDetailsDTO hCase;
   private CaseDetailsDTO bCase;
@@ -84,6 +83,8 @@ public class ActionProcessingServiceTest {
   private Action contextAction;
   private ActionType contextActionType;
   private List<Action> contextActions;
+
+  private ActionCase actionCase;
 
   /** Initialises Mockito and loads Class Fixtures */
   @Before
@@ -101,6 +102,9 @@ public class ActionProcessingServiceTest {
     bCase = caseDetails.get(1);
     collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
     surveys = FixtureHelper.loadClassFixtures(SurveyDTO[].class);
+
+    actionCase = new ActionCase();
+    actionCase.setSampleUnitType("B");
 
     // Set up context
     context = createContext();
@@ -152,6 +156,7 @@ public class ActionProcessingServiceTest {
   public void testProcessActionRequestBCaseBusiness() throws CTPException {
 
     // Given setUp()
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(contextActionType, contextActions);
@@ -168,15 +173,20 @@ public class ActionProcessingServiceTest {
   @Test
   public void testProcessActionRequestBCaseRespondentsNotification() throws CTPException {
     Action notifyAction = createContextAction(NOTIFY);
+    List<Action> actions = new ArrayList<>();
+    actions.add(notifyAction);
 
     // Given
-    context.setAction(notifyAction);
-    context.setChildParties(respondentParties);
+    ActionRequestContext requestContext = createContext();
+    requestContext.setAction(notifyAction);
+
+    requestContext.setChildParties(respondentParties);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
-        .thenReturn(context);
+        .thenReturn(requestContext);
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(contextActionType, contextActions);
+    businessActionProcessingService.processActions(notifyAction.getActionType(), actions);
 
     // Then
     verify(actionSvcStateTransitionManager, times(1))
@@ -195,6 +205,7 @@ public class ActionProcessingServiceTest {
     Action action = new Action();
     List<Action> actions = new ArrayList<>();
     actions.add(action);
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(null, actions);
@@ -206,13 +217,14 @@ public class ActionProcessingServiceTest {
     verify(notificationFileCreator, never()).export(any());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testProcessActionRequestActionTypeWithNoResponseRequired() throws CTPException {
     Action action = new Action();
     action.setActionType(ActionType.builder().build());
 
     List<Action> actions = new ArrayList<>();
     actions.add(action);
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // Given
     businessActionProcessingService.processActions(action.getActionType(), actions);
@@ -228,7 +240,8 @@ public class ActionProcessingServiceTest {
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
     Action action = new Action();
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    action.setActionType(
+        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
     List<Action> actions = new ArrayList<>();
     actions.add(action);
 
@@ -237,6 +250,7 @@ public class ActionProcessingServiceTest {
             any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
@@ -253,12 +267,14 @@ public class ActionProcessingServiceTest {
   @Test(expected = RuntimeException.class)
   public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
     Action action = new Action();
-    action.setActionType(ActionType.builder().responseRequired(Boolean.TRUE).build());
+    action.setActionType(
+        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
     List<Action> actions = new ArrayList<>();
     actions.add(action);
 
     // Given
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
@@ -274,7 +290,13 @@ public class ActionProcessingServiceTest {
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
   @Test(expected = IllegalStateException.class)
   public void testProcessActionCancelStateTransitionException() throws CTPException {
-    Action action = new Action();
+
+    UUID newActionId = UUID.randomUUID();
+    final Action action = new Action();
+    action.setActionType(
+        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
+    action.setState(ActionDTO.ActionState.CANCEL_SUBMITTED);
+    action.setId(newActionId);
     List<Action> actions = new ArrayList<>();
     actions.add(action);
 
@@ -283,6 +305,7 @@ public class ActionProcessingServiceTest {
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)))
         .thenThrow(
             new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
@@ -304,6 +327,7 @@ public class ActionProcessingServiceTest {
 
     // Given
     when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
@@ -322,12 +346,14 @@ public class ActionProcessingServiceTest {
     final Action action = new Action();
     action.setActionType(
         ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
+    action.setState(ActionDTO.ActionState.CANCEL_SUBMITTED);
     action.setId(newActionId);
     List<Action> actions = new ArrayList<>();
     actions.add(action);
 
     // Given
     when(actionRepo.findById(eq(newActionId))).thenReturn(action);
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
@@ -337,15 +363,6 @@ public class ActionProcessingServiceTest {
         .transition(
             any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
     verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-
-    final ArgumentCaptor<uk.gov.ons.ctp.response.action.message.instruction.Action> actionCaptor =
-        ArgumentCaptor.forClass(uk.gov.ons.ctp.response.action.message.instruction.Action.class);
-    verify(notificationFileCreator, never()).export(any());
-    final uk.gov.ons.ctp.response.action.message.instruction.ActionCancel publishedActionCancel =
-        (ActionCancel) actionCaptor.getValue();
-    assertEquals(newActionId.toString(), publishedActionCancel.getActionId());
-    assertTrue(publishedActionCancel.isResponseRequired());
-    assertEquals(CANCELLATION_REASON, publishedActionCancel.getReason());
   }
 
   @Test
@@ -353,13 +370,13 @@ public class ActionProcessingServiceTest {
     // Given
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
+    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(contextActionType, contextActions);
+    List<ActionRequest> requests =
+        businessActionProcessingService.prepareActionRequests(contextAction);
 
     // Then
-    ArgumentCaptor<ActionRequest> captor = ArgumentCaptor.forClass(ActionRequest.class);
-    assertEquals(context.getCaseDetails().getCaseRef(), captor.getValue().getCaseRef());
-    assertEquals(context.getCaseDetails().getCaseRef(), captor.getValue().getCaseRef());
+    assertEquals(context.getCaseDetails().getCaseRef(), requests.get(0).getCaseRef());
   }
 }

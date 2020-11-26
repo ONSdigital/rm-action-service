@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
@@ -27,6 +29,7 @@ import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 public class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
 
+  public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   public static final String ACTIVE = "ACTIVE";
@@ -59,12 +62,18 @@ public class ActionProcessingService {
   };
 
   public void processActions(ActionType actionType, List<Action> allActions) {
-    if (actionType.getHandler().equals(NOTIFY)) {
+    if (actionType == null) {
+      throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
+    }
+    String handler = actionType.getHandler();
+    if (handler == null) {
+      log.with("handler", actionType.getHandler()).error("no action type handler provided");
+    } else if (handler.equals(NOTIFY)) {
       processEmails(actionType, allActions);
     } else if (actionType.getHandler().equals(PRINTER)) {
       processLetters(actionType, allActions);
     } else {
-      log.with("handler", actionType.getHandler()).warn("unsupported action type handler");
+      log.with("handler", actionType.getHandler()).error("unsupported action type handler");
     }
   }
 
@@ -72,7 +81,7 @@ public class ActionProcessingService {
     // action requests are decorated actions
     List<ActionRequest> printerActions = new ArrayList<>();
     for (Action action : allActions) {
-      if (checkCaseExists(action) && !cancelled(action)) {
+      if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
         transitionAction(action, actionType);
         List<ActionRequest> actionRequests = prepareActionRequests(action);
         printerActions.addAll(actionRequests);
@@ -81,9 +90,19 @@ public class ActionProcessingService {
     notificationFileCreator.export(printerActions);
   }
 
+  private boolean validate(final Action action) {
+    final ActionType actionType = action.getActionType();
+    if (!valid(actionType)) {
+      log.with("action", action).error("ActionType is not defined for action");
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   public void processEmails(ActionType actionType, List<Action> allActions) {
     for (Action action : allActions) {
-      if (checkCaseExists(action) && !cancelled(action)) {
+      if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
         transitionAction(action, actionType);
         // send to pub sub
         List<ActionRequest> actionRequests = prepareActionRequests(action);
@@ -95,7 +114,12 @@ public class ActionProcessingService {
   }
 
   private boolean cancelled(final Action action) {
-    return action.getState() == ActionDTO.ActionState.CANCELLED;
+    if (action.getState() == ActionDTO.ActionState.CANCEL_SUBMITTED) {
+      processActionCancel(action);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private boolean checkCaseExists(final Action action) {
@@ -117,35 +141,6 @@ public class ActionProcessingService {
       return false;
     }
     return true;
-  }
-
-  /**
-   * Change the action status in db to indicate we have sent this action downstream, and clear
-   * previous situation (in the scenario where the action has prev. failed)
-   *
-   * @param action the action to change and persist
-   * @param actionType the action type
-   * @throws CTPException if action state transition error
-   */
-  private void transitionAction(final Action action, final ActionType actionType) {
-
-    ActionDTO.ActionEvent event =
-        actionType.getResponseRequired()
-            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
-            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-
-    ActionDTO.ActionState nextState = null;
-
-    try {
-      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
-    } catch (CTPException ctpExeption) {
-      throw new IllegalStateException(ctpExeption);
-    }
-
-    action.setState(nextState);
-    action.setSituation(null);
-    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
   }
 
   public List<ActionRequest> prepareActionRequests(Action action) {
@@ -188,5 +183,72 @@ public class ActionProcessingService {
     ActionRequest actionRequest = new ActionRequest();
     Arrays.stream(this.DECORATORS).forEach(d -> d.decorateActionRequest(actionRequest, context));
     return actionRequest;
+  }
+
+  /** Deal with a single action cancel - the transaction boundary is here */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void processActionCancel(final Action action) {
+
+    log.with("action_id", action.getId())
+        .with("case_id", action.getCaseId())
+        .with("action_plan_pk", action.getActionPlanFK())
+        .info("processing action cancel");
+
+    transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
+  }
+
+  /**
+   * Change the action status in db to indicate we have sent this action downstream, and clear
+   * previous situation (in the scenario where the action has prev. failed)
+   *
+   * @param action the action to change and persist
+   * @param actionType the action type
+   * @throws CTPException if action state transition error
+   */
+  private void transitionAction(final Action action, final ActionType actionType) {
+
+    Boolean responseRequired = actionType.getResponseRequired();
+    if (responseRequired == null) {
+      responseRequired = Boolean.FALSE;
+    }
+    ActionDTO.ActionEvent event =
+        responseRequired
+            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
+            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+
+    transitionAction(action, event);
+  }
+
+  /**
+   * Change the action status in db to indicate we have sent this action downstream, and clear
+   * previous situation (in the scenario where the action has prev. failed)
+   *
+   * @param action the action to change and persist
+   * @param event the event to transition the action with
+   * @throws CTPException if action state transition error
+   */
+  private void transitionAction(final Action action, final ActionDTO.ActionEvent event) {
+    ActionDTO.ActionState nextState;
+
+    try {
+      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    } catch (CTPException ctpExeption) {
+      throw new IllegalStateException(ctpExeption);
+    }
+
+    action.setState(nextState);
+    action.setSituation(null);
+    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
+    actionRepo.saveAndFlush(action);
+  }
+
+  /**
+   * To validate an ActionType
+   *
+   * @param actionType the ActionType to validate
+   * @return true if valid
+   */
+  private boolean valid(final ActionType actionType) {
+    return (actionType != null) && (actionType.getResponseRequired() != null);
   }
 }

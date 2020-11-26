@@ -64,7 +64,6 @@ import org.jvnet.jaxb2_commons.locator.ObjectLocator;
       "enrolmentStatus",
       "caseGroupStatus",
       "caseId",
-      "isPubsub",
       "priority",
       "caseRef",
       "iac",
