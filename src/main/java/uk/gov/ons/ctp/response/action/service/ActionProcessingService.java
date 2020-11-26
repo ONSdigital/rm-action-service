@@ -73,7 +73,7 @@ public class ActionProcessingService {
     } else if (actionType.getHandler().equals(PRINTER)) {
       processLetters(actionType, allActions);
     } else {
-      log.with("handler", actionType.getHandler()).error("unsupported action type handler");
+      log.with("handler", actionType.getHandler()).with("actions", allActions.size()).error("unsupported action type handler");
     }
   }
 
@@ -160,7 +160,6 @@ public class ActionProcessingService {
                     .info("Creating Action request for pubsub notify");
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
-                // actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
                 log.with("actionId", action.getId()).info("Pubsub notify action added to the list");
               });
