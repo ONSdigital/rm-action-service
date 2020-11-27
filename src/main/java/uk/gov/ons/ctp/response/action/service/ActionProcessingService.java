@@ -73,7 +73,9 @@ public class ActionProcessingService {
     } else if (actionType.getHandler().equals(PRINTER)) {
       processLetters(actionType, allActions);
     } else {
-      log.with("handler", actionType.getHandler()).with("actions", allActions.size()).error("unsupported action type handler");
+      log.with("handler", actionType.getHandler())
+          .with("actions", allActions.size())
+          .error("unsupported action type handler");
     }
   }
 

@@ -107,7 +107,6 @@ public class PlanSchedulerIT {
   @Transactional
   public void setup() {
     admin.purgeQueue("Case.LifecycleEvents", false);
-    admin.purgeQueue("Action.Printer", false);
     wireMockRule.resetAll();
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(objectMapper);

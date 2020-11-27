@@ -36,11 +36,11 @@ service:
 crons:
   distributionScheduler:
     name: action-distribution-scheduler
-    cron: "* * * * *"
+    cron: "*/5 * * * *"
     target: "distribute"
   planJobExecutor:
     name: action-plan-executor
-    cron: "* * * * *"
+    cron: "*/15 * * * *"
     target: "actionplans/execute"
 
 resources:
@@ -49,11 +49,6 @@ resources:
 
 managedRabbitMQ:
   enabled: false
-
-report:
-  cron: "0 * * * * *"
-
-planExecutionDelayMillis: 1000
 
 dns:
   enabled: false
