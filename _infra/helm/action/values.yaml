@@ -53,7 +53,8 @@ crons:
 
 resources:
   requests:
-    memory: "500Mi"
+    memory: "750Mi"
+    cpu: "500m"
   limits:
     cpu: "750m"
     memory: "1000Mi"
