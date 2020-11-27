@@ -1,11 +1,5 @@
 env: minikube
 
-autoscaling: false
-replicas: 1
-rollingUpdate:
-  maxSurge: 1
-  maxUnavailable: 1
-
 image:
   devRepo: eu.gcr.io/ons-rasrmbs-management
   name: eu.gcr.io/ons-rasrmbs-management
@@ -54,11 +48,21 @@ crons:
 
 resources:
   requests:
-    memory: "256Mi"
+    memory: "250Mi"
     cpu: "100m"
   limits:
     cpu: "750m"
     memory: "1000Mi"
+
+autoscaling: false
+scaleAt:
+  # These are expressed as a percentage of resources.requests, not resources.limits
+  memoryPercentage: 200
+  cpuPercentage: 500
+replicas: 1
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 1
 
 managedRabbitMQ:
   enabled: false
