@@ -54,7 +54,8 @@ public class ActionDistributor {
     log.with("type", actionType.getName()).trace("Processing actionType");
     Stream<Action> stream = actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
     List<Action> allActions = stream.collect(Collectors.toList());
-
-    businessActionProcessingService.processActions(actionType, allActions);
+    if (!allActions.isEmpty()) {
+      businessActionProcessingService.processActions(actionType, allActions);
+    }
   }
 }

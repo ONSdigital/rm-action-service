@@ -5,6 +5,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -193,6 +196,11 @@ public class PlanSchedulerIT {
     sender.sendMessageToQueue("Case.LifecycleEvents", xml);
   }
 
+  private void checkForPrinterAction(int times) throws InterruptedException {
+    Thread.sleep(1000);
+    verify(publisher, times(times)).publish(any());
+  }
+
   private void mockCaseDetailsMock(
       UUID collectionExerciseId, UUID actionPlanId, UUID partyId, UUID caseId) throws IOException {
 
@@ -348,9 +356,8 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getStatus(), is(200));
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
-    // Then
-    // checkForPrinterAction(0);
-    // TODO replace this
+    //// Then
+    checkForPrinterAction(0);
   }
 
   @Test
@@ -373,14 +380,20 @@ public class PlanSchedulerIT {
     String sampleUnitType = "B";
 
     createActionCase(collectionExcerciseId, actionPlan, partyId, caseId, sampleUnitType);
+    // let the cases arrive on the queue
+    Thread.sleep(1000);
 
-    //// When PlanScheduler and ActionDistributor runs
+    //// When the action plan is execture
     HttpResponse<String> response =
         Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
     assertThat(response.getStatus(), is(200));
+
+    // wait for the actions to be created
+    Thread.sleep(1000);
+    // and then distribute the actions
 
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
@@ -391,8 +404,7 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    // checkForPrinterAction(0);
-    // TODO replace the check for print action
+    checkForPrinterAction(0);
   }
 
   @Test
@@ -423,38 +435,23 @@ public class PlanSchedulerIT {
     mockGetRespondentParties(caseId, respondentPartyId);
 
     //// When PlanScheduler and ActionDistributor runs
-    final int threadPort = this.port;
-    Thread thread =
-        new Thread(
-            () -> {
-              //// When PlanScheduler and ActionDistributor runs
-              try {
-                for (int i = 0; i < 20; i++) {
-                  HttpResponse<String> distributeResponse =
-                      Unirest.get("http://localhost:" + threadPort + "/distribute")
-                          .basicAuth("admin", "secret")
-                          .header("accept", "application/json")
-                          .asString();
-                  assertThat(distributeResponse.getStatus(), is(200));
-                  assertThat(distributeResponse.getBody(), is("Completed distribution"));
+    HttpResponse<String> response =
+        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(response.getStatus(), is(200));
+    assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
 
-                  HttpResponse<String> response =
-                      Unirest.get("http://localhost:" + threadPort + "/actionplans/execute")
-                          .basicAuth("admin", "secret")
-                          .header("accept", "application/json")
-                          .asString();
-                  assertThat(response.getStatus(), is(200));
-                  assertThat(
-                      response.getBody(), is("Completed creating and executing action plan jobs"));
-                }
-              } catch (Exception e) {
-                log.error("exception in thread", e);
-              }
-            });
-    thread.start();
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
+            .basicAuth("admin", "secret")
+            .header("accept", "application/json")
+            .asString();
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
-    // Then
-    // checkForPrinterAction(1);
-    // TODO
+    //// Then
+    checkForPrinterAction(1);
   }
 }
