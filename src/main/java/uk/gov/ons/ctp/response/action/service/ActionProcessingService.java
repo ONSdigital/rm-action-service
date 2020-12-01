@@ -14,15 +14,12 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.*;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
 @Service
@@ -39,17 +36,13 @@ public class ActionProcessingService {
   public static final String PRINTER = "Printer";
   public static final String PENDING = "PENDING";
 
-  @Autowired private ActionRepository actionRepo;
-
   @Autowired private ActionCaseRepository actionCaseRepo;
 
   @Autowired private NotifyService notifyService;
 
   @Autowired private NotificationFileCreator notificationFileCreator;
 
-  @Autowired
-  private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
-      actionSvcStateTransitionManager;
+  @Autowired private ActionStateService actionStateService;
 
   @Autowired private ActionRequestContextFactory decoratorContextFactory;
 
@@ -85,13 +78,12 @@ public class ActionProcessingService {
     List<ActionRequest> printerActions = new ArrayList<>();
     for (Action action : allActions) {
       if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
-        transitionAction(action, actionType);
         List<ActionRequest> actionRequests = prepareActionRequests(action);
         printerActions.addAll(actionRequests);
       }
     }
     log.with("entries", printerActions.size()).debug("about to create print files");
-    notificationFileCreator.export(printerActions);
+    notificationFileCreator.export(getActionEvent(actionType), printerActions);
   }
 
   private boolean validate(final Action action) {
@@ -108,11 +100,17 @@ public class ActionProcessingService {
     log.with("actions", allActions.size()).debug("processing emails");
     for (Action action : allActions) {
       if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
-        transitionAction(action, actionType);
         // send to pub sub
         List<ActionRequest> actionRequests = prepareActionRequests(action);
-        for (ActionRequest actionRequest : actionRequests) {
-          notifyService.processNotification(actionRequest);
+        try {
+          for (ActionRequest actionRequest : actionRequests) {
+            notifyService.processNotification(actionRequest);
+          }
+          // if successful transition action
+          transitionAction(action, actionType);
+        } catch (RuntimeException e) {
+          log.with("action id", action.getId()).error("Error sending email", e);
+          // action is not transitions
         }
       }
     }
@@ -129,20 +127,13 @@ public class ActionProcessingService {
 
   private boolean checkCaseExists(final Action action) {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
-
     if (actionCase == null) {
       log.with("action", action).info("Case no longer exists for action");
-      ActionDTO.ActionState newActionState;
       try {
-        newActionState =
-            actionSvcStateTransitionManager.transition(
-                action.getState(), ActionDTO.ActionEvent.REQUEST_CANCELLED);
-      } catch (CTPException ex) {
-        throw new IllegalStateException(ex);
+        actionStateService.transitionAction(action, ActionDTO.ActionEvent.REQUEST_CANCELLED);
+      } catch (CTPException ctpExeption) {
+        throw new IllegalStateException(ctpExeption);
       }
-
-      action.setState(newActionState);
-      actionRepo.saveAndFlush(action);
       return false;
     }
     return true;
@@ -198,7 +189,11 @@ public class ActionProcessingService {
         .with("action_plan_pk", action.getActionPlanFK())
         .info("processing action cancel");
 
-    transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
+    try {
+      actionStateService.transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
+    } catch (CTPException ctpExeption) {
+      throw new IllegalStateException(ctpExeption);
+    }
   }
 
   /**
@@ -211,6 +206,16 @@ public class ActionProcessingService {
    */
   private void transitionAction(final Action action, final ActionType actionType) {
 
+    ActionDTO.ActionEvent event = getActionEvent(actionType);
+
+    try {
+      actionStateService.transitionAction(action, event);
+    } catch (CTPException ctpExeption) {
+      throw new IllegalStateException(ctpExeption);
+    }
+  }
+
+  private ActionDTO.ActionEvent getActionEvent(ActionType actionType) {
     Boolean responseRequired = actionType.getResponseRequired();
     if (responseRequired == null) {
       responseRequired = Boolean.FALSE;
@@ -219,31 +224,7 @@ public class ActionProcessingService {
         responseRequired
             ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
             : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-
-    transitionAction(action, event);
-  }
-
-  /**
-   * Change the action status in db to indicate we have sent this action downstream, and clear
-   * previous situation (in the scenario where the action has prev. failed)
-   *
-   * @param action the action to change and persist
-   * @param event the event to transition the action with
-   * @throws CTPException if action state transition error
-   */
-  private void transitionAction(final Action action, final ActionDTO.ActionEvent event) {
-    ActionDTO.ActionState nextState;
-
-    try {
-      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
-    } catch (CTPException ctpExeption) {
-      throw new IllegalStateException(ctpExeption);
-    }
-
-    action.setState(nextState);
-    action.setSituation(null);
-    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
+    return event;
   }
 
   /**

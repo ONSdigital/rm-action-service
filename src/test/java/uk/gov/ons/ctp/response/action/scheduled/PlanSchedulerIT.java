@@ -99,11 +99,11 @@ public class PlanSchedulerIT {
 
   @MockBean private PubSub pubSub;
 
-  @MockBean Publisher publisher;
+  @MockBean private Publisher publisher;
 
-  @MockBean Storage storage;
+  @MockBean private Storage storage;
 
-  @Mock ApiFuture<String> apiFuture;
+  @Mock private ApiFuture<String> apiFuture;
 
   @Qualifier("customObjectMapper")
   @Autowired

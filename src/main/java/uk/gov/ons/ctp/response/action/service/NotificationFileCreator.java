@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
 @Service
 public class NotificationFileCreator {
@@ -18,6 +20,8 @@ public class NotificationFileCreator {
       new SimpleDateFormat("ddMMyyyy_HHmm");
 
   private final Clock clock;
+
+  private ActionStateService actionStateService;
 
   private PrintFileService printFileService;
 
@@ -41,15 +45,17 @@ public class NotificationFileCreator {
     }
   }
 
-  public NotificationFileCreator(Clock clock, PrintFileService printFileService) {
+  public NotificationFileCreator(
+      Clock clock, PrintFileService printFileService, ActionStateService actionStateService) {
     this.clock = clock;
     this.printFileService = printFileService;
+    this.actionStateService = actionStateService;
   }
 
-  public void export(List<ActionRequest> actionRequests) {
+  public void export(ActionDTO.ActionEvent actionEvent, List<ActionRequest> actionRequests) {
     Map<String, ExportData> filenamePrefixToDataMap = prepareData(actionRequests);
 
-    createAndSendFiles(filenamePrefixToDataMap);
+    createAndSendFiles(actionEvent, filenamePrefixToDataMap);
   }
 
   private Map<String, ExportData> prepareData(List<ActionRequest> actionRequests) {
@@ -74,12 +80,13 @@ public class NotificationFileCreator {
     return filenamePrefixToDataMap;
   }
 
-  private void createAndSendFiles(Map<String, ExportData> filenamePrefixToDataMap) {
+  private void createAndSendFiles(
+      final ActionDTO.ActionEvent actionEvent, Map<String, ExportData> filenamePrefixToDataMap) {
 
     filenamePrefixToDataMap.forEach(
         (filenamePrefix, data) -> {
           List<ActionRequest> actionRequests = data.getActionRequests();
-          uploadData(filenamePrefix, actionRequests);
+          uploadData(actionEvent, filenamePrefix, actionRequests);
         });
   }
 
@@ -88,7 +95,10 @@ public class NotificationFileCreator {
     return StringUtils.defaultIfEmpty(exerciseRefWithoutSurveyRef, exerciseRef);
   }
 
-  public void uploadData(String filenamePrefix, List<ActionRequest> actionRequests) {
+  public void uploadData(
+      ActionDTO.ActionEvent actionEvent,
+      String filenamePrefix,
+      List<ActionRequest> actionRequests) {
     if (actionRequests.isEmpty()) {
       log.info("no action request instructions to export");
       return;
@@ -99,10 +109,19 @@ public class NotificationFileCreator {
 
     log.info("filename: " + filename + ", uploading file");
 
-    // temporarily hook in here as at this point we know the name of the file
-    // and all the action request instructions
     boolean success = printFileService.send(filename, actionRequests);
-    // TODO what happens if this fails
-
+    if (success) {
+      log.info("print file request successful, transitions actions");
+      for (ActionRequest actionRequest : actionRequests) {
+        String actionId = actionRequest.getActionId();
+        try {
+          actionStateService.transitionAction(UUID.fromString(actionId), actionEvent);
+        } catch (CTPException ctpExeption) {
+          throw new IllegalStateException(ctpExeption);
+        }
+      }
+    } else {
+      log.warn("print file request not successful, not transitions actions");
+    }
   }
 }

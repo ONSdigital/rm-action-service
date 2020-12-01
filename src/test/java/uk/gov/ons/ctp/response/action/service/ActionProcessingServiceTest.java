@@ -2,11 +2,7 @@ package uk.gov.ons.ctp.response.action.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +10,7 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.CaseSvc;
@@ -26,8 +19,6 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
@@ -36,7 +27,6 @@ import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO.SampleUnitType;
 import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
@@ -49,8 +39,7 @@ public class ActionProcessingServiceTest {
 
   private static final String PRINTER = "Printer";
   private static final String ACTION_PLAN_NAME = "action plan 1";
-  private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action Statetransitionfailed.";
-  private static final String DB_ERROR_MSG = "DB is KO.";
+  private static final String ACTION_STATE_TRANSITION_ERROR_MSG = "Action Statetransition failed.";
   private static final String NOTIFY = "Notify";
 
   private static final UUID ACTION_ID = UUID.fromString("7fac359e-645b-487e-bb02-70536eae51d1");
@@ -58,14 +47,10 @@ public class ActionProcessingServiceTest {
 
   @Spy private AppConfig appConfig = new AppConfig();
 
-  @Mock
-  private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
-      actionSvcStateTransitionManager;
+  @Mock private ActionStateService actionStateService;
 
   @Mock private ActionRequestContextFactory decoratorContextFactory;
 
-  @Mock private ActionRepository actionRepo;
-  @Mock private ActionPlanRepository actionPlanRepo;
   @Mock private NotifyService notifyServiceMock;
   @Mock private NotificationFileCreator notificationFileCreator;
   @Mock private ActionCaseRepository actionCaseRepo;
@@ -114,12 +99,8 @@ public class ActionProcessingServiceTest {
 
     MockitoAnnotations.initMocks(this);
 
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
-        .thenReturn(ActionDTO.ActionState.PENDING);
     when(this.decoratorContextFactory.getActionRequestDecoratorContext(any(Action.class)))
         .thenReturn(context);
-    when(actionRepo.findById(eq(ACTION_ID))).thenReturn(contextAction);
   }
 
   private ActionRequestContext createContext() {
@@ -162,11 +143,7 @@ public class ActionProcessingServiceTest {
     businessActionProcessingService.processActions(contextActionType, contextActions);
 
     // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, times(1)).export(any());
+    verify(notificationFileCreator, times(1)).export(any(), any());
   }
 
   /** Happy path for processing an B case respondent action */
@@ -189,17 +166,14 @@ public class ActionProcessingServiceTest {
     businessActionProcessingService.processActions(notifyAction.getActionType(), actions);
 
     // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(actionStateService, times(1))
+        .transitionAction(any(Action.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
     verify(notifyServiceMock, times(3)).processNotification(any(ActionRequest.class));
-    verify(notificationFileCreator, never()).export(any());
+    verify(notificationFileCreator, never()).export(any(), any());
   }
 
   @Test(expected = IllegalStateException.class)
   public void testProcessActionRequestNoActionType() throws CTPException {
-    UUID newActionId = UUID.randomUUID();
 
     // Given
     Action action = new Action();
@@ -211,10 +185,9 @@ public class ActionProcessingServiceTest {
     businessActionProcessingService.processActions(null, actions);
 
     // Then
-    verify(actionSvcStateTransitionManager, never())
-        .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
-    verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, never()).export(any());
+    verify(actionStateService, never())
+        .transitionAction(any(Action.class), any(ActionDTO.ActionEvent.class));
+    verify(notificationFileCreator, never()).export(any(), any());
   }
 
   @Test
@@ -230,61 +203,9 @@ public class ActionProcessingServiceTest {
     businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
-    verify(actionSvcStateTransitionManager, never())
-        .transition(any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class));
-    verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, never()).export(any());
-  }
-
-  /** An exception is thrown when transitioning the state of the Action */
-  @Test(expected = IllegalStateException.class)
-  public void testProcessActionRequestActionStateTransitionThrowsException() throws CTPException {
-    Action action = new Action();
-    action.setActionType(
-        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
-    List<Action> actions = new ArrayList<>();
-    actions.add(action);
-
-    // Given
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), any(ActionDTO.ActionEvent.class)))
-        .thenThrow(
-            new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
-    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
-
-    // When
-    businessActionProcessingService.processActions(action.getActionType(), actions);
-
-    // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, never()).export(any());
-  }
-
-  /** An exception is thrown when saving the Action after its state was transitioned */
-  @Test(expected = RuntimeException.class)
-  public void testProcessActionRequestActionPersistingActionThrowsException() throws CTPException {
-    Action action = new Action();
-    action.setActionType(
-        ActionType.builder().responseRequired(Boolean.TRUE).handler(PRINTER).build());
-    List<Action> actions = new ArrayList<>();
-    actions.add(action);
-
-    // Given
-    when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
-    when(actionCaseRepo.findById(any())).thenReturn(actionCase);
-
-    // When
-    businessActionProcessingService.processActions(action.getActionType(), actions);
-
-    // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.REQUEST_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, never()).export(any());
+    verify(actionStateService, never())
+        .transitionAction(any(Action.class), any(ActionDTO.ActionEvent.class));
+    verify(notificationFileCreator, never()).export(any(), any());
   }
 
   /** Scenario where actionSvcStateTransitionManager throws an exception on transition */
@@ -301,21 +222,19 @@ public class ActionProcessingServiceTest {
     actions.add(action);
 
     // Given
-    when(actionSvcStateTransitionManager.transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED)))
-        .thenThrow(
-            new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG));
+    doThrow(new CTPException(CTPException.Fault.SYSTEM_ERROR, ACTION_STATE_TRANSITION_ERROR_MSG))
+        .when(actionStateService)
+        .transitionAction(any(Action.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, never()).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, never()).export(any());
+    verify(actionStateService, times(1))
+        .transitionAction(any(Action.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+    verify(notificationFileCreator, never()).export(any(), any());
   }
 
   /** Scenario where the action's state transitions OK but issue while persisting action to DB */
@@ -326,18 +245,15 @@ public class ActionProcessingServiceTest {
     actions.add(action);
 
     // Given
-    when(actionRepo.saveAndFlush(any(Action.class))).thenThrow(new RuntimeException(DB_ERROR_MSG));
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
-    verify(notificationFileCreator, never()).export(any());
+    verify(actionStateService, times(1))
+        .transitionAction(any(Action.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
+    verify(notificationFileCreator, never()).export(any(), any());
   }
 
   @Test
@@ -352,17 +268,14 @@ public class ActionProcessingServiceTest {
     actions.add(action);
 
     // Given
-    when(actionRepo.findById(eq(newActionId))).thenReturn(action);
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
     businessActionProcessingService.processActions(action.getActionType(), actions);
 
     // Then
-    verify(actionSvcStateTransitionManager, times(1))
-        .transition(
-            any(ActionDTO.ActionState.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
-    verify(actionRepo, times(1)).saveAndFlush(any(Action.class));
+    verify(actionStateService, times(1))
+        .transitionAction(any(Action.class), eq(ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED));
   }
 
   @Test
