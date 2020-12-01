@@ -315,6 +315,7 @@ public class PlanSchedulerIT {
     SurveyDTO surveyDetailsDTO = new SurveyDTO();
     surveyDetailsDTO.setId(surveyId.toString());
     surveyDetailsDTO.setId("095a824e-a57d-44a0-bfeb-ae8d2bf62221");
+    surveyDetailsDTO.setSurveyRef("test-survey");
 
     wireMockRule.stubFor(
         get(urlPathMatching("/surveys/(.*)"))
