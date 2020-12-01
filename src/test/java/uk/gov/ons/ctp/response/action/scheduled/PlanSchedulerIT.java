@@ -377,10 +377,6 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
-    // wait for the actions to be created
-    Thread.sleep(1000);
-    // and then distribute the actions
-
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
@@ -390,7 +386,6 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    Thread.sleep(1000);
     checkForPrinterAction(0);
   }
 
@@ -428,10 +423,6 @@ public class PlanSchedulerIT {
             .header("accept", "application/json")
             .asString();
     assertThat(response.getStatus(), is(200));
-
-    // wait for the actions to be created
-    Thread.sleep(1000);
-    // and then distribute the actions
 
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
@@ -485,10 +476,6 @@ public class PlanSchedulerIT {
     assertThat(response.getStatus(), is(200));
     assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
 
-    // wait for the actions to be created
-    Thread.sleep(1000);
-    // and then distribute the actions
-
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
@@ -498,7 +485,6 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
-    Thread.sleep(1000);
     checkForPrinterAction(1);
   }
 }
