@@ -81,6 +81,7 @@ public class ActionProcessingService {
 
   public void processLetters(ActionType actionType, List<Action> allActions) {
     // action requests are decorated actions
+    log.with("actions", allActions.size()).debug("processing letters");
     List<ActionRequest> printerActions = new ArrayList<>();
     for (Action action : allActions) {
       if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
@@ -89,6 +90,7 @@ public class ActionProcessingService {
         printerActions.addAll(actionRequests);
       }
     }
+    log.with("entries", printerActions.size()).debug("about to create print files");
     notificationFileCreator.export(printerActions);
   }
 
@@ -103,6 +105,7 @@ public class ActionProcessingService {
   }
 
   public void processEmails(ActionType actionType, List<Action> allActions) {
+    log.with("actions", allActions.size()).debug("processing emails");
     for (Action action : allActions) {
       if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
         transitionAction(action, actionType);
