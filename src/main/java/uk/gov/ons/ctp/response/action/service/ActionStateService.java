@@ -1,6 +1,9 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import java.util.UUID;
+
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -12,6 +15,8 @@ import uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil;
 
 @Service
 public class ActionStateService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ActionStateService.class);
 
   @Autowired private ActionRepository actionRepo;
 
@@ -29,9 +34,8 @@ public class ActionStateService {
    */
   public void transitionAction(final Action action, final ActionDTO.ActionEvent event)
       throws CTPException {
-    ActionDTO.ActionState nextState;
-
-    nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    LOG.with("action id", action.getId()).with("state", nextState).debug("transition state");
     action.setState(nextState);
     action.setSituation(null);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());
