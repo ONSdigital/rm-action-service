@@ -1,9 +1,8 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import java.util.UUID;
-
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
@@ -34,7 +33,8 @@ public class ActionStateService {
    */
   public void transitionAction(final Action action, final ActionDTO.ActionEvent event)
       throws CTPException {
-    ActionDTO.ActionState nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
+    ActionDTO.ActionState nextState =
+        actionSvcStateTransitionManager.transition(action.getState(), event);
     LOG.with("action id", action.getId()).with("state", nextState).debug("transition state");
     action.setState(nextState);
     action.setSituation(null);
