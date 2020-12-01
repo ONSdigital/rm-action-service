@@ -103,8 +103,7 @@ public class PlanSchedulerIT {
 
   @MockBean Storage storage;
 
-  @Mock
-  ApiFuture<String> apiFuture;
+  @Mock ApiFuture<String> apiFuture;
 
   @Qualifier("customObjectMapper")
   @Autowired
@@ -117,6 +116,7 @@ public class PlanSchedulerIT {
   @Before
   @Transactional
   public void setup() throws Exception {
+    admin.purgeQueue("Case.LifecycleEvents", true);
     wireMockRule.resetAll();
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(objectMapper);
@@ -272,13 +272,12 @@ public class PlanSchedulerIT {
                     .withBody(objectMapper.writeValueAsString(collectionExerciseDTO))));
   }
 
-  private void mockGetPartyWithAssociationsFilteredBySurvey(String sampleUnitType, UUID partyId, UUID caseId)
-      throws JsonProcessingException {
+  private void mockGetPartyWithAssociationsFilteredBySurvey(
+      String sampleUnitType, UUID partyId, UUID caseId) throws JsonProcessingException {
     PartyDTO partyDTO = new PartyDTO();
     partyDTO.setId(partyId.toString());
     List<Association> associationList = new ArrayList<>();
-    associationList.add(
-        new Association(caseId.toString(), new ArrayList<Enrolment>(), "BI"));
+    associationList.add(new Association(caseId.toString(), new ArrayList<Enrolment>(), "BI"));
 
     partyDTO.setAssociations(associationList);
     partyDTO.setAttributes(new Attributes());
@@ -342,7 +341,7 @@ public class PlanSchedulerIT {
                     .withBody(objectMapper.writeValueAsString(caseEventDTO))));
   }
 
-  @Ignore
+  @Test
   public void testNoActionsCreatedWhenActionPlanHasNotStarted() throws Exception {
     //// Given
     ActionPlanDTO actionPlan = createActionPlan();
@@ -361,8 +360,12 @@ public class PlanSchedulerIT {
     UUID caseId = UUID.fromString("7d84ffcd-4a5d-4427-a712-581437ebd6c2");
     String sampleUnitType = "B";
 
-    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
     createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
+    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
+    mockSurveyDetails(surveyId);
+    mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId, caseId);
+    mockGetCaseEvent();
+
     // let the cases arrive on the queue
     Thread.sleep(1000);
 
@@ -374,6 +377,10 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
+    // wait for the actions to be created
+    Thread.sleep(1000);
+    // and then distribute the actions
+
     HttpResponse<String> distributeResponse =
         Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
@@ -383,29 +390,34 @@ public class PlanSchedulerIT {
     assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
+    Thread.sleep(1000);
     checkForPrinterAction(0);
   }
 
-  @Ignore
+  @Test
   public void testNoActionsCreatedWhenActionPlanHasEnded() throws Exception {
     //// Given
-    final ActionPlanDTO actionPlan = createActionPlan();
+    ActionPlanDTO actionPlan = createActionPlan();
+    UUID surveyId = UUID.randomUUID();
+    UUID partyId = UUID.randomUUID();
+    UUID caseId = UUID.randomUUID();
 
-    final UUID partyId = UUID.fromString("cca5e7fc-9062-476d-94c5-5c46efd1ef54");
-    final UUID surveyId = UUID.fromString("e0af7bd1-5ddf-4861-93a9-27d3eec31799");
-
-    UUID collectionExcerciseId = UUID.fromString("7245ce02-139f-44d1-9d4e-f03ebdfcf0b1");
+    UUID collectionExerciseId = UUID.fromString("7245ce02-139f-44d1-9d4e-f03ebdfcf0b1");
     OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
     OffsetDateTime endDate = OffsetDateTime.now().minusDays(1);
-    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExcerciseId);
+    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
 
     OffsetDateTime triggerDateTime = OffsetDateTime.now().minusDays(2);
     createActionRule(actionPlan, triggerDateTime);
 
-    UUID caseId = UUID.fromString("61bcd60e-d91f-49db-a572-a2033b044baa");
     String sampleUnitType = "B";
 
-    createActionCase(collectionExcerciseId, actionPlan, partyId, caseId, sampleUnitType);
+    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
+    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
+    mockSurveyDetails(surveyId);
+    mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId, caseId);
+    mockGetCaseEvent();
+
     // let the cases arrive on the queue
     Thread.sleep(1000);
 
@@ -438,12 +450,6 @@ public class PlanSchedulerIT {
   public void testActiveActionPlanJobAndActionPlanCreatesAction() throws Exception {
     //// Given
     ActionPlanDTO actionPlan = createActionPlan();
-    //
-//    UUID surveyId = UUID.fromString("2e679bf1-18c9-4945-86f0-126d6c9aae4d");
-//    UUID partyId = UUID.fromString("905810f0-777f-48a1-ad79-3ef230551da1");
-//    UUID respondentPartyId = UUID.fromString("0c93d1ec-a2ca-4e1d-bbeb-6f4702d2e97a");
-//    UUID collectionExerciseId = UUID.fromString("eea05d8a-f7ae-41de-ad9d-060acd024d38");
-//    UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");
 
     UUID surveyId = UUID.randomUUID();
     UUID partyId = UUID.randomUUID();

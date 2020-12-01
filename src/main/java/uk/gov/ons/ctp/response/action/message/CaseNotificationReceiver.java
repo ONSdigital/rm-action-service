@@ -1,6 +1,5 @@
 package uk.gov.ons.ctp.response.action.message;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
@@ -38,6 +37,5 @@ public class CaseNotificationReceiver {
     log.with("case_id", caseNotification.getCaseId())
         .info("Receiving case notification for case id");
     caseNotificationService.acceptNotification(caseNotification);
-
   }
 }
