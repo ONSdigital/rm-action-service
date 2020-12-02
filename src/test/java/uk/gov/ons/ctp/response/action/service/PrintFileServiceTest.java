@@ -38,10 +38,10 @@ public class PrintFileServiceTest {
 
   @Test
   public void testConvertToPrintFile() {
-    List<ActionRequest> actionRequestInstructions = ObjectBuilder.buildListOfActionRequests();
+    List<ActionRequest> actionRequests = ObjectBuilder.buildListOfActionRequests();
 
     List<PrintFileEntry> printFileEntries =
-        printFileService.convertToPrintFile(actionRequestInstructions);
+        printFileService.convertToPrintFile(actionRequests);
 
     assertFalse(printFileEntries.isEmpty());
 
@@ -69,9 +69,9 @@ public class PrintFileServiceTest {
     given(gcp.getBucket()).willReturn(bucket);
     given(bucket.getName()).willReturn("test-bucket");
 
-    List<ActionRequest> actionRequestInstructions = ObjectBuilder.buildListOfActionRequests();
+    List<ActionRequest> actionRequests = ObjectBuilder.buildListOfActionRequests();
 
-    printFileService.send("test.csv", actionRequestInstructions);
+    printFileService.send("test.csv", actionRequests);
 
     verify(publisher).publish(any());
     verify(apiFuture).get();

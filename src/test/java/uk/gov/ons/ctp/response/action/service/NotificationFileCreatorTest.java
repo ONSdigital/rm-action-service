@@ -37,21 +37,21 @@ public class NotificationFileCreatorTest {
     ari.setExerciseRef("EXERCISEREF");
     ari.setResponseRequired(true);
 
-    List<ActionRequest> actionRequestInstructions = Collections.singletonList(ari);
+    List<ActionRequest> actionRequests = Collections.singletonList(ari);
 
     Date now = new Date();
 
     // Given
     String expectedFilename = String.format("BSNOT_%s.csv", FILENAME_DATE_FORMAT.format(now));
     given(clock.millis()).willReturn(now.getTime());
-    given(printFileService.send(expectedFilename, actionRequestInstructions)).willReturn(true);
+    given(printFileService.send(expectedFilename, actionRequests)).willReturn(true);
 
     // When
     notificationFileCreator.uploadData(
-        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED, "BSNOT", actionRequestInstructions);
+        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED, "BSNOT", actionRequests);
 
     // Then
-    verify(printFileService).send(expectedFilename, actionRequestInstructions);
+    verify(printFileService).send(expectedFilename, actionRequests);
     verify(actionStateService, times(1))
         .transitionAction(actionUUID, ActionDTO.ActionEvent.REQUEST_DISTRIBUTED);
   }
@@ -69,20 +69,20 @@ public class NotificationFileCreatorTest {
     ari.setExerciseRef("EXERCISEREF");
     ari.setResponseRequired(true);
 
-    List<ActionRequest> actionRequestInstructions = Collections.singletonList(ari);
+    List<ActionRequest> actionRequests = Collections.singletonList(ari);
 
     Date now = new Date();
 
     // Given
     String expectedFilename = String.format("BSNOT_%s.csv", FILENAME_DATE_FORMAT.format(now));
     given(clock.millis()).willReturn(now.getTime());
-    given(printFileService.send(expectedFilename, actionRequestInstructions)).willReturn(true);
+    given(printFileService.send(expectedFilename, actionRequests)).willReturn(true);
     doThrow(new CTPException(CTPException.Fault.SYSTEM_ERROR, "action state transition failed"))
         .when(actionStateService)
         .transitionAction(actionUUID, ActionDTO.ActionEvent.REQUEST_DISTRIBUTED);
 
     // When
     notificationFileCreator.uploadData(
-        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED, "BSNOT", actionRequestInstructions);
+        ActionDTO.ActionEvent.REQUEST_DISTRIBUTED, "BSNOT", actionRequests);
   }
 }
