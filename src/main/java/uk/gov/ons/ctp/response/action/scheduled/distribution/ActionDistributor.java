@@ -41,8 +41,9 @@ public class ActionDistributor {
   }
 
   /**
-   * Once an action plan has executed it will have created all the require actions for that event. This job
-   * will then process the actions and either send emails or produce a print file for the letters.
+   * Once an action plan has executed it will have created all the require actions for that event.
+   * This job will then process the actions and either send emails or produce a print file for the
+   * letters.
    */
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void distribute() {

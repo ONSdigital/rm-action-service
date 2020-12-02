@@ -40,8 +40,7 @@ public class PrintFileServiceTest {
   public void testConvertToPrintFile() {
     List<ActionRequest> actionRequests = ObjectBuilder.buildListOfActionRequests();
 
-    List<PrintFileEntry> printFileEntries =
-        printFileService.convertToPrintFile(actionRequests);
+    List<PrintFileEntry> printFileEntries = printFileService.convertToPrintFile(actionRequests);
 
     assertFalse(printFileEntries.isEmpty());
 

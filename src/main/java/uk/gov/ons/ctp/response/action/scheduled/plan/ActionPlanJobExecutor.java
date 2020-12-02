@@ -29,10 +29,9 @@ public class ActionPlanJobExecutor {
   }
 
   /**
-   *
-   * This method creates and executes all action plan jobs. It looks at the action plan table and cycles through
-   * all of them and then if any need to be executed then it creates actions for them in a submitted state.
-   *
+   * This method creates and executes all action plan jobs. It looks at the action plan table and
+   * cycles through all of them and then if any need to be executed then it creates actions for them
+   * in a submitted state.
    */
   @Transactional
   public void createAndExecuteAllActionPlanJobs() {
