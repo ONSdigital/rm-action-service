@@ -29,20 +29,20 @@ public class ActionDistributor {
   private ActionRepository actionRepo;
   private ActionTypeRepository actionTypeRepo;
 
-  private ActionProcessingService businessActionProcessingService;
+  private ActionProcessingService actionProcessingService;
 
   public ActionDistributor(
       ActionRepository actionRepo,
       ActionTypeRepository actionTypeRepo,
-      ActionProcessingService businessActionProcessingService) {
+      ActionProcessingService actionProcessingService) {
     this.actionRepo = actionRepo;
     this.actionTypeRepo = actionTypeRepo;
-    this.businessActionProcessingService = businessActionProcessingService;
+    this.actionProcessingService = actionProcessingService;
   }
 
   /**
-   * Called on schedule to check for submitted actions then creates and distributes requests to
-   * action exporter or notify gateway
+   * Once an action plan has executed it will have created all the require actions for that event. This job
+   * will then process the actions and either send emails or produce a print file for the letters.
    */
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void distribute() {
@@ -55,7 +55,7 @@ public class ActionDistributor {
     Stream<Action> stream = actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
     List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      businessActionProcessingService.processActions(actionType, allActions);
+      actionProcessingService.processActions(actionType, allActions);
     }
   }
 }

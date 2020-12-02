@@ -60,13 +60,16 @@ public class ActionProcessingService {
     }
     String handler = actionType.getHandler();
     if (handler == null) {
-      log.with("handler", actionType.getHandler()).error("no action type handler provided");
+      log.with("name", actionType.getName())
+          .with("handler", actionType.getHandler())
+          .error("no action type handler provided");
     } else if (handler.equals(NOTIFY)) {
       processEmails(actionType, allActions);
     } else if (actionType.getHandler().equals(PRINTER)) {
       processLetters(actionType, allActions);
     } else {
       log.with("handler", actionType.getHandler())
+          .with("name", actionType.getName())
           .with("actions", allActions.size())
           .error("unsupported action type handler");
     }
@@ -74,32 +77,34 @@ public class ActionProcessingService {
 
   public void processLetters(ActionType actionType, List<Action> allActions) {
     // action requests are decorated actions
-    log.with("actions", allActions.size()).debug("processing letters");
+    log.with("name", actionType.getName())
+        .with("actions", allActions.size())
+        .debug("processing letters");
     List<ActionRequest> printerActions = new ArrayList<>();
     for (Action action : allActions) {
-      if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
+      if (isCancelled(action)) {
+        processActionCancel(action);
+      } else if (!checkCaseExists(action)) {
+        cancelAction(action);
+      } else if (valid(action)) {
         List<ActionRequest> actionRequests = prepareActionRequests(action);
         printerActions.addAll(actionRequests);
+      } else {
+        log.with("id", action.getId()).warn("skipping action");
       }
     }
     log.with("entries", printerActions.size()).debug("about to create print files");
     notificationFileCreator.export(getActionEvent(actionType), printerActions);
   }
 
-  private boolean validate(final Action action) {
-    final ActionType actionType = action.getActionType();
-    if (!valid(actionType)) {
-      log.with("action", action).error("ActionType is not defined for action");
-      return false;
-    } else {
-      return true;
-    }
-  }
-
   public void processEmails(ActionType actionType, List<Action> allActions) {
     log.with("actions", allActions.size()).debug("processing emails");
     for (Action action : allActions) {
-      if (checkCaseExists(action) && validate(action) && !cancelled(action)) {
+      if (isCancelled(action)) {
+        processActionCancel(action);
+      } else if (!checkCaseExists(action)) {
+        cancelAction(action);
+      } else if (valid(action)) {
         // send to pub sub
         List<ActionRequest> actionRequests = prepareActionRequests(action);
         try {
@@ -109,37 +114,37 @@ public class ActionProcessingService {
           // if successful transition action
           transitionAction(action, actionType);
         } catch (RuntimeException e) {
+          // action will not be transition now and therefore will be picked up in the next run
+          // so we don't need to do anything with the exception apart from log it.
           log.with("action id", action.getId()).error("Error sending email", e);
-          // action is not transitions
         }
+      } else {
+        log.with("id", action.getId()).warn("skipping action");
       }
     }
   }
 
-  private boolean cancelled(final Action action) {
-    if (action.getState() == ActionDTO.ActionState.CANCEL_SUBMITTED) {
-      processActionCancel(action);
-      return true;
-    } else {
-      return false;
-    }
+  private boolean isCancelled(final Action action) {
+    return action.getState() == ActionDTO.ActionState.CANCEL_SUBMITTED;
   }
 
   private boolean checkCaseExists(final Action action) {
     ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
     if (actionCase == null) {
-      log.with("action", action).info("Case no longer exists for action");
-      try {
-        actionStateService.transitionAction(action, ActionDTO.ActionEvent.REQUEST_CANCELLED);
-      } catch (CTPException ctpExeption) {
-        throw new IllegalStateException(ctpExeption);
-      }
-      return false;
+      log.with("action", action).debug("Case no longer exists for action");
     }
-    return true;
+    return actionCase != null;
   }
 
-  public List<ActionRequest> prepareActionRequests(Action action) {
+  /**
+   * This method will take an action and collect all the additional information relating to that
+   * action from other services, such as party, collection exercise. It uses a decorator pattern to
+   * do this.
+   *
+   * @param action the action to add information too
+   * @return the action request which holds all the additional information.
+   */
+  protected List<ActionRequest> prepareActionRequests(Action action) {
     final ActionRequestContext context =
         decoratorContextFactory.getActionRequestDecoratorContext(action);
 
@@ -196,6 +201,18 @@ public class ActionProcessingService {
     }
   }
 
+  private void cancelAction(final Action action) {
+    log.with("action_id", action.getId())
+        .with("case_id", action.getCaseId())
+        .with("action_plan_pk", action.getActionPlanFK())
+        .info("cancelling action");
+    try {
+      actionStateService.transitionAction(action, ActionDTO.ActionEvent.REQUEST_CANCELLED);
+    } catch (CTPException ctpExeption) {
+      throw new IllegalStateException(ctpExeption);
+    }
+  }
+
   /**
    * Change the action status in db to indicate we have sent this action downstream, and clear
    * previous situation (in the scenario where the action has prev. failed)
@@ -230,10 +247,15 @@ public class ActionProcessingService {
   /**
    * To validate an ActionType
    *
-   * @param actionType the ActionType to validate
+   * @param action the action to validate
    * @return true if valid
    */
-  private boolean valid(final ActionType actionType) {
-    return (actionType != null) && (actionType.getResponseRequired() != null);
+  private boolean valid(final Action action) {
+    final ActionType actionType = action.getActionType();
+    boolean valid = actionType != null && actionType.getResponseRequired() != null;
+    if (!valid) {
+      log.with("action_type", actionType).error("ActionType is not valid for action");
+    }
+    return valid;
   }
 }

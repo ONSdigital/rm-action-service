@@ -26,21 +26,21 @@ public class NotificationFileCreator {
   private PrintFileService printFileService;
 
   private class ExportData {
-    private List<ActionRequest> ariList;
+    private List<ActionRequest> actionRequests;
 
-    public ExportData(ActionRequest ari) {
-      this.ariList = new ArrayList<>(Arrays.asList(ari));
+    public ExportData(ActionRequest actionRequest) {
+      this.actionRequests = new ArrayList<>(Arrays.asList(actionRequest));
     }
 
     public List<ActionRequest> getActionRequests() {
-      return ariList;
+      return actionRequests;
     }
 
-    public void addActionRequest(ActionRequest ari) {
-      if (ariList != null) {
-        this.ariList.add(ari);
+    public void addActionRequest(ActionRequest actionRequest) {
+      if (actionRequests != null) {
+        this.actionRequests.add(actionRequest);
       } else {
-        this.ariList = Arrays.asList(ari);
+        this.actionRequests = Arrays.asList(actionRequest);
       }
     }
   }
@@ -111,7 +111,7 @@ public class NotificationFileCreator {
 
     boolean success = printFileService.send(filename, actionRequests);
     if (success) {
-      log.info("print file request successful, transitions actions");
+      log.info("print file request successful, transitioning actions");
       for (ActionRequest actionRequest : actionRequests) {
         String actionId = actionRequest.getActionId();
         try {
@@ -121,7 +121,7 @@ public class NotificationFileCreator {
         }
       }
     } else {
-      log.warn("print file request not successful, not transitions actions");
+      log.warn("print file request not successful, not transitioning actions");
     }
   }
 }
