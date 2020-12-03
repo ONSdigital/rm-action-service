@@ -2,14 +2,14 @@ package uk.gov.ons.ctp.response.action.service;
 
 import java.text.SimpleDateFormat;
 import java.time.Clock;
-import java.util.List;
+import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
-import uk.gov.ons.ctp.response.action.domain.model.ExportFile;
-import uk.gov.ons.ctp.response.action.domain.model.ExportJob;
-import uk.gov.ons.ctp.response.action.domain.repository.ExportFileRepository;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
+import uk.gov.ons.ctp.response.action.representation.ActionDTO;
+import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
 @Service
 public class NotificationFileCreator {
@@ -19,24 +19,87 @@ public class NotificationFileCreator {
   private static final SimpleDateFormat FILENAME_DATE_FORMAT =
       new SimpleDateFormat("ddMMyyyy_HHmm");
 
-  private final ExportFileRepository exportFileRepository;
-
   private final Clock clock;
+
+  private ActionStateService actionStateService;
 
   private PrintFileService printFileService;
 
+  private class ExportData {
+    private List<ActionRequest> actionRequests;
+
+    public ExportData(ActionRequest actionRequest) {
+      this.actionRequests = new ArrayList<>(Arrays.asList(actionRequest));
+    }
+
+    public List<ActionRequest> getActionRequests() {
+      return actionRequests;
+    }
+
+    public void addActionRequest(ActionRequest actionRequest) {
+      if (actionRequests != null) {
+        this.actionRequests.add(actionRequest);
+      } else {
+        this.actionRequests = Arrays.asList(actionRequest);
+      }
+    }
+  }
+
   public NotificationFileCreator(
-      ExportFileRepository exportFileRepository, Clock clock, PrintFileService printFileService) {
-    this.exportFileRepository = exportFileRepository;
+      Clock clock, PrintFileService printFileService, ActionStateService actionStateService) {
     this.clock = clock;
     this.printFileService = printFileService;
+    this.actionStateService = actionStateService;
+  }
+
+  public void export(ActionDTO.ActionEvent actionEvent, List<ActionRequest> actionRequests) {
+    Map<String, ExportData> filenamePrefixToDataMap = prepareData(actionRequests);
+
+    createAndSendFiles(actionEvent, filenamePrefixToDataMap);
+  }
+
+  private Map<String, ExportData> prepareData(List<ActionRequest> actionRequests) {
+    Map<String, ExportData> filenamePrefixToDataMap = new HashMap<>();
+
+    actionRequests.forEach(
+        ari -> {
+          String filenamePrefix =
+              FilenamePrefix.getPrefix(ari.getActionType())
+                  + "_"
+                  + ari.getSurveyRef()
+                  + "_"
+                  + getExerciseRefWithoutSurveyRef(ari.getExerciseRef());
+
+          if (filenamePrefixToDataMap.containsKey(filenamePrefix)) {
+            filenamePrefixToDataMap.get(filenamePrefix).addActionRequest(ari);
+          } else {
+            filenamePrefixToDataMap.put(filenamePrefix, new ExportData(ari));
+          }
+        });
+
+    return filenamePrefixToDataMap;
+  }
+
+  private void createAndSendFiles(
+      final ActionDTO.ActionEvent actionEvent, Map<String, ExportData> filenamePrefixToDataMap) {
+
+    filenamePrefixToDataMap.forEach(
+        (filenamePrefix, data) -> {
+          List<ActionRequest> actionRequests = data.getActionRequests();
+          uploadData(actionEvent, filenamePrefix, actionRequests);
+        });
+  }
+
+  private String getExerciseRefWithoutSurveyRef(String exerciseRef) {
+    String exerciseRefWithoutSurveyRef = StringUtils.substringAfter(exerciseRef, "_");
+    return StringUtils.defaultIfEmpty(exerciseRefWithoutSurveyRef, exerciseRef);
   }
 
   public void uploadData(
+      ActionDTO.ActionEvent actionEvent,
       String filenamePrefix,
-      List<ActionRequestInstruction> actionRequestInstructions,
-      ExportJob exportJob) {
-    if (actionRequestInstructions.isEmpty()) {
+      List<ActionRequest> actionRequests) {
+    if (actionRequests.isEmpty()) {
       log.info("no action request instructions to export");
       return;
     }
@@ -44,26 +107,21 @@ public class NotificationFileCreator {
     final String now = FILENAME_DATE_FORMAT.format(clock.millis());
     String filename = String.format("%s_%s.csv", filenamePrefix, now);
 
-    if (exportFileRepository.existsByFilename(filename)) {
-      log.warn(
-          "filename: "
-              + filename
-              + ", duplicate filename. The cron job is probably running too frequently. The "
-              + "Action Exporter service is designed to only run every minute, maximum");
-      throw new RuntimeException();
-    }
-
     log.info("filename: " + filename + ", uploading file");
 
-    // temporarily hook in here as at this point we know the name of the file
-    // and all the action request instructions
-    boolean success = printFileService.send(filename, actionRequestInstructions);
-
+    boolean success = printFileService.send(filename, actionRequests);
     if (success) {
-      ExportFile exportFile = new ExportFile();
-      exportFile.setExportJobId(exportJob.getId());
-      exportFile.setFilename(filename);
-      exportFileRepository.saveAndFlush(exportFile);
+      log.info("print file request successful, transitioning actions");
+      for (ActionRequest actionRequest : actionRequests) {
+        String actionId = actionRequest.getActionId();
+        try {
+          actionStateService.transitionAction(UUID.fromString(actionId), actionEvent);
+        } catch (CTPException ctpExeption) {
+          throw new IllegalStateException(ctpExeption);
+        }
+      }
+    } else {
+      log.warn("print file request not successful, not transitioning actions");
     }
   }
 }

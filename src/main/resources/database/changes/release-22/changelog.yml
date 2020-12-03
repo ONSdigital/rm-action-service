@@ -10,3 +10,4 @@ databaseChangeLog:
             relativeToChangelogFile: true
             splitStatements: false
 
+

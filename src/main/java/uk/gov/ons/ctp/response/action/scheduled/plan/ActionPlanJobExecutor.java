@@ -29,8 +29,9 @@ public class ActionPlanJobExecutor {
   }
 
   /**
-   * On a schedule create a new ActionPlanJob and create associated actions for all action plans
-   * with cases in the action.case table
+   * This method creates and executes all action plan jobs. It looks at the action plan table and
+   * cycles through all of them and then if any need to be executed then it creates actions for them
+   * in a submitted state.
    */
   @Transactional
   public void createAndExecuteAllActionPlanJobs() {

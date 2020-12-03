@@ -47,7 +47,7 @@ public class NotifyService {
         String messageId = messageIdFuture.get();
         log.with("messageId", messageId)
             .with("actionId", actionRequest.getActionId())
-            .debug("Notify pubsub sent sucessfully");
+            .debug("Notify pubsub sent successfully");
 
         // this will mimic current implementation of action -> rabbit.
         // The curent processessing service does not attempt to recover from error.
