@@ -18,8 +18,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.config.Bucket;
 import uk.gov.ons.ctp.response.action.config.GCP;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 
 /** */
@@ -38,11 +38,9 @@ public class PrintFileServiceTest {
 
   @Test
   public void testConvertToPrintFile() {
-    List<ActionRequestInstruction> actionRequestInstructions =
-        ObjectBuilder.buildListOfActionRequests();
+    List<ActionRequest> actionRequests = ObjectBuilder.buildListOfActionRequests();
 
-    List<PrintFileEntry> printFileEntries =
-        printFileService.convertToPrintFile(actionRequestInstructions);
+    List<PrintFileEntry> printFileEntries = printFileService.convertToPrintFile(actionRequests);
 
     assertFalse(printFileEntries.isEmpty());
 
@@ -70,10 +68,9 @@ public class PrintFileServiceTest {
     given(gcp.getBucket()).willReturn(bucket);
     given(bucket.getName()).willReturn("test-bucket");
 
-    List<ActionRequestInstruction> actionRequestInstructions =
-        ObjectBuilder.buildListOfActionRequests();
+    List<ActionRequest> actionRequests = ObjectBuilder.buildListOfActionRequests();
 
-    printFileService.send("test.csv", actionRequestInstructions);
+    printFileService.send("test.csv", actionRequests);
 
     verify(publisher).publish(any());
     verify(apiFuture).get();

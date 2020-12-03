@@ -31,20 +31,12 @@ service:
 crons:
   distributionScheduler:
     name: action-distribution-scheduler
-    cron: "* * * * *"
+    cron: "*/5 * * * *"
     target: "distribute"
   planJobExecutor:
     name: action-plan-executor
-    cron: "* * * * *"
+    cron: "*/15 * * * *"
     target: "actionplans/execute"
-  recordDeleter:
-    name: action-export-old-record-deleter
-    cron: "0 3 * * *"
-    target: "delete-old-data"
-  exportScheduler:
-    name: action-export-scheduler
-    cron: "*/30 * * * *"
-    target: "export"
 
 resources:
   application:
@@ -74,11 +66,6 @@ rollingUpdate:
 
 managedRabbitMQ:
   enabled: false
-
-report:
-  cron: "0 * * * * *"
-
-planExecutionDelayMillis: 1000
 
 dns:
   enabled: false
