@@ -1,9 +1,9 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ .Values.crons.distributionScheduler.name }}
+  name: {{ .Values.crons.letterProcessor.name }}
 spec:
-  schedule: "{{ .Values.crons.distributionScheduler.cron }}"
+  schedule: "{{ .Values.crons.letterProcessor.cron }}"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
@@ -12,7 +12,7 @@ spec:
       template:
         spec:
           containers:
-            - name: {{ .Values.crons.distributionScheduler.name }}
+            - name: {{ .Values.crons.letterProcessor.name }}
               image: radial/busyboxplus:curl
               env:
                 - name: SECURITY_USER_NAME
@@ -26,7 +26,7 @@ spec:
                       name: security-credentials
                       key: security-password
                 - name: TARGET
-                  value: {{ .Values.crons.distributionScheduler.target }}
+                  value: {{ .Values.crons.letterProcessor.target }}
               args:
                 - /bin/sh
                 - -c

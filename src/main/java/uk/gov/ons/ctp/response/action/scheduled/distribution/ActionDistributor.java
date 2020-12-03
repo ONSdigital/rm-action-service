@@ -26,6 +26,10 @@ public class ActionDistributor {
   private static final Set<ActionState> ACTION_STATES_TO_GET =
       Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
+  public static final String NOTIFY = "Notify";
+
+  public static final String PRINTER = "Printer";
+
   private ActionRepository actionRepo;
   private ActionTypeRepository actionTypeRepo;
 
@@ -49,6 +53,32 @@ public class ActionDistributor {
   public void distribute() {
     List<ActionType> actionTypes = actionTypeRepo.findAll();
     actionTypes.forEach(this::processActionType);
+  }
+
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
+  public void processEmails() {
+    List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
+    for (ActionType actionType : actionTypes) {
+      Stream<Action> stream =
+          actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
+      List<Action> allActions = stream.collect(Collectors.toList());
+      if (!allActions.isEmpty()) {
+        actionProcessingService.processEmails(actionType, allActions);
+      }
+    }
+  }
+
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
+  public void processLetters() {
+    List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
+    for (ActionType actionType : actionTypes) {
+      Stream<Action> stream =
+          actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
+      List<Action> allActions = stream.collect(Collectors.toList());
+      if (!allActions.isEmpty()) {
+        actionProcessingService.processLetters(actionType, allActions);
+      }
+    }
   }
 
   private void processActionType(final ActionType actionType) {
