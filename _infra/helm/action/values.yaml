@@ -47,12 +47,20 @@ crons:
     target: "export"
 
 resources:
-  requests:
-    memory: "250Mi"
-    cpu: "100m"
-  limits:
-    cpu: "750m"
-    memory: "1000Mi"
+  application:
+    requests:
+      memory: "250Mi"
+      cpu: "100m"
+    limits:
+      memory: "1500Mi"
+      cpu: "1000m"
+  proxy:
+    requests:
+      memory: "25Mi"
+      cpu: "10m"
+    limits:
+      memory: "64Mi"
+      cpu: "100m"
 
 autoscaling: false
 scaleAt:
