@@ -1,6 +1,5 @@
 package uk.gov.ons.ctp.response.action.message;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
@@ -28,7 +27,6 @@ public class CaseNotificationReceiver {
 
   @Autowired private ObjectMapper objectMapper;
 
-  private static final String ACTION_OUTBOUND_EXCHANGE = "action-outbound-exchange";
   private static final String ACTION_ROUTING_KEY = "Action.CaseNotificationHandled.binding";
 
   @ServiceActivator(
@@ -36,23 +34,8 @@ public class CaseNotificationReceiver {
       adviceChain = "caseNotificationRetryAdvice")
   public void acceptNotification(final CaseNotification caseNotification) throws CTPException {
 
-    try {
-      log.with("case_id", caseNotification.getCaseId())
-          .info("Receiving case notification for case id");
-      caseNotificationService.acceptNotification(caseNotification);
-    } finally {
-      try {
-        rabbitTemplate.convertAndSend(
-            ACTION_OUTBOUND_EXCHANGE,
-            ACTION_ROUTING_KEY,
-            objectMapper.writeValueAsString(caseNotification));
-        log.with("exchange", ACTION_OUTBOUND_EXCHANGE)
-            .with("case_id", caseNotification.getCaseId())
-            .with("case_notification", caseNotification)
-            .debug("Just wrote rabbit message to rabbit");
-      } catch (JsonProcessingException e) {
-        log.error("Can't send message", e);
-      }
-    }
+    log.with("case_id", caseNotification.getCaseId())
+        .info("Receiving case notification for case id");
+    caseNotificationService.acceptNotification(caseNotification);
   }
 }

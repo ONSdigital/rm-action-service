@@ -15,8 +15,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.printfile.Contact;
 import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 
@@ -30,12 +30,11 @@ public class PrintFileService {
 
   @Autowired private UploadObjectGCS uploadObjectGCS;
 
-  public boolean send(
-      String printFilename, List<ActionRequestInstruction> actionRequestInstructions) {
+  public boolean send(String printFilename, List<ActionRequest> actionRequests) {
     boolean success = false;
     String dataFilename = FilenameUtils.removeExtension(printFilename).concat(".json");
 
-    List<PrintFileEntry> printFile = convertToPrintFile(actionRequestInstructions);
+    List<PrintFileEntry> printFile = convertToPrintFile(actionRequests);
     try {
       log.debug("creating json representation of print file");
       String json = createJsonRepresentation(printFile);
@@ -78,24 +77,23 @@ public class PrintFileService {
     return mapper.writeValueAsString(printFile);
   }
 
-  protected List<PrintFileEntry> convertToPrintFile(
-      List<ActionRequestInstruction> actionRequestInstructions) {
+  protected List<PrintFileEntry> convertToPrintFile(List<ActionRequest> actionRequests) {
     List<PrintFileEntry> printFileEntries = new ArrayList<>();
 
-    for (ActionRequestInstruction actionRequestInstruction : actionRequestInstructions) {
+    for (ActionRequest actionRequest : actionRequests) {
       PrintFileEntry entry = new PrintFileEntry();
 
-      entry.setCaseGroupStatus(actionRequestInstruction.getCaseGroupStatus());
-      entry.setIac(actionRequestInstruction.getIac());
-      entry.setEnrolmentStatus(actionRequestInstruction.getEnrolmentStatus());
-      entry.setRegion(actionRequestInstruction.getRegion());
-      entry.setRespondentStatus(actionRequestInstruction.getRespondentStatus());
-      entry.setSampleUnitRef(actionRequestInstruction.getSampleUnitRef());
-      if (actionRequestInstruction.getContact() != null) {
+      entry.setCaseGroupStatus(actionRequest.getCaseGroupStatus());
+      entry.setIac(actionRequest.getIac());
+      entry.setEnrolmentStatus(actionRequest.getEnrolmentStatus());
+      entry.setRegion(actionRequest.getRegion());
+      entry.setRespondentStatus(actionRequest.getRespondentStatus());
+      entry.setSampleUnitRef(actionRequest.getSampleUnitRef());
+      if (actionRequest.getContact() != null) {
         Contact contact = new Contact();
-        contact.setEmailAddress(actionRequestInstruction.getContact().getEmailAddress());
-        contact.setForename(actionRequestInstruction.getContact().getForename());
-        contact.setSurname(actionRequestInstruction.getContact().getSurname());
+        contact.setEmailAddress(actionRequest.getContact().getEmailAddress());
+        contact.setForename(actionRequest.getContact().getForename());
+        contact.setSurname(actionRequest.getContact().getSurname());
         entry.setContact(contact);
       }
       printFileEntries.add(entry);
