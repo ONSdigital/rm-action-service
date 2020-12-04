@@ -70,7 +70,7 @@ public class ActionDistributor {
 
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processLetters() {
-    List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
+    List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
     for (ActionType actionType : actionTypes) {
       Stream<Action> stream =
           actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
