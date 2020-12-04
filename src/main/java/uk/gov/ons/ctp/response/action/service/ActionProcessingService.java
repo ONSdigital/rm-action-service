@@ -28,13 +28,11 @@ public class ActionProcessingService {
 
   public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
-  public static final String CANCELLATION_REASON = "Action cancelled by Response Management";
   public static final String ACTIVE = "ACTIVE";
   public static final String CREATED = "CREATED";
   public static final String ENABLED = "ENABLED";
-  public static final String NOTIFY = "Notify";
-  public static final String PRINTER = "Printer";
   public static final String PENDING = "PENDING";
+  private static final String NOTIFY = "Notify";
 
   @Autowired private ActionCaseRepository actionCaseRepo;
 
@@ -54,28 +52,10 @@ public class ActionProcessingService {
     new SampleUnitRef()
   };
 
-  public void processActions(ActionType actionType, List<Action> allActions) {
+  public void processLetters(ActionType actionType, List<Action> allActions) {
     if (actionType == null) {
       throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
     }
-    String handler = actionType.getHandler();
-    if (handler == null) {
-      log.with("name", actionType.getName())
-          .with("handler", actionType.getHandler())
-          .error("no action type handler provided");
-    } else if (handler.equals(NOTIFY)) {
-      processEmails(actionType, allActions);
-    } else if (actionType.getHandler().equals(PRINTER)) {
-      processLetters(actionType, allActions);
-    } else {
-      log.with("handler", actionType.getHandler())
-          .with("name", actionType.getName())
-          .with("actions", allActions.size())
-          .error("unsupported action type handler");
-    }
-  }
-
-  public void processLetters(ActionType actionType, List<Action> allActions) {
     // action requests are decorated actions
     log.with("name", actionType.getName())
         .with("actions", allActions.size())
@@ -94,10 +74,15 @@ public class ActionProcessingService {
       }
     }
     log.with("entries", printerActions.size()).debug("about to create print files");
-    notificationFileCreator.export(getActionEvent(actionType), printerActions);
+    if (!printerActions.isEmpty()) {
+      notificationFileCreator.export(getActionEvent(actionType), printerActions);
+    }
   }
 
   public void processEmails(ActionType actionType, List<Action> allActions) {
+    if (actionType == null) {
+      throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
+    }
     log.with("actions", allActions.size()).debug("processing emails");
     for (Action action : allActions) {
       if (isCancelled(action)) {
@@ -252,9 +237,9 @@ public class ActionProcessingService {
    */
   private boolean valid(final Action action) {
     final ActionType actionType = action.getActionType();
-    boolean valid = actionType != null && actionType.getResponseRequired() != null;
+    boolean valid = actionType.getResponseRequired() != null;
     if (!valid) {
-      log.with("action_type", actionType).error("ActionType is not valid for action");
+      log.error("ActionType is not valid for action");
     }
     return valid;
   }

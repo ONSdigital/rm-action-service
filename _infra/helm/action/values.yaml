@@ -34,10 +34,14 @@ service:
   port: 8080
 
 crons:
-  distributionScheduler:
-    name: action-distribution-scheduler
+  emailProcessor:
+    name: action-email-processor
     cron: "*/5 * * * *"
-    target: "distribute"
+    target: "process/emails"
+  letterProcessor:
+    name: action-letter-processor
+    cron: "0 */1 * * *"
+    target: "process/letters"
   planJobExecutor:
     name: action-plan-executor
     cron: "*/15 * * * *"

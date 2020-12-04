@@ -140,7 +140,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(contextActionType, contextActions);
+    businessActionProcessingService.processLetters(contextActionType, contextActions);
 
     // Then
     verify(notificationFileCreator, times(1)).export(any(), any());
@@ -163,7 +163,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(notifyAction.getActionType(), actions);
+    businessActionProcessingService.processEmails(notifyAction.getActionType(), actions);
 
     // Then
     verify(actionStateService, times(1))
@@ -182,7 +182,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(null, actions);
+    businessActionProcessingService.processLetters(null, actions);
 
     // Then
     verify(actionStateService, never())
@@ -200,7 +200,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // Given
-    businessActionProcessingService.processActions(action.getActionType(), actions);
+    businessActionProcessingService.processLetters(action.getActionType(), actions);
 
     // Then
     verify(actionStateService, never())
@@ -229,7 +229,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(action.getActionType(), actions);
+    businessActionProcessingService.processLetters(action.getActionType(), actions);
 
     // Then
     verify(actionStateService, times(1))
@@ -248,7 +248,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(action.getActionType(), actions);
+    businessActionProcessingService.processLetters(action.getActionType(), actions);
 
     // Then
     verify(actionStateService, times(1))
@@ -271,7 +271,7 @@ public class ActionProcessingServiceTest {
     when(actionCaseRepo.findById(any())).thenReturn(actionCase);
 
     // When
-    businessActionProcessingService.processActions(action.getActionType(), actions);
+    businessActionProcessingService.processLetters(action.getActionType(), actions);
 
     // Then
     verify(actionStateService, times(1))
