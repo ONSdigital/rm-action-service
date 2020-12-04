@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.ons.ctp.response.action.scheduled.distribution.ActionDistributor;
+import uk.gov.ons.ctp.response.action.scheduled.distribution.ActionProcessor;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
 /** The REST endpoint controller for ActionDistributor. */
@@ -15,10 +15,10 @@ import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 public class ActionProcessorEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessorEndpoint.class);
 
-  private final ActionDistributor actionDistributor;
+  private final ActionProcessor actionProcessor;
 
-  public ActionProcessorEndpoint(ActionDistributor actionDistributor) {
-    this.actionDistributor = actionDistributor;
+  public ActionProcessorEndpoint(ActionProcessor actionProcessor) {
+    this.actionProcessor = actionProcessor;
   }
 
   /**
@@ -31,7 +31,7 @@ public class ActionProcessorEndpoint {
   public final ResponseEntity<String> emails() throws CTPException {
     try {
       log.info("About to begin distribution");
-      actionDistributor.processEmails();
+      actionProcessor.processEmails();
       log.info("Completed distribution");
       return ResponseEntity.ok().body("Completed distribution");
     } catch (RuntimeException e) {
@@ -52,7 +52,7 @@ public class ActionProcessorEndpoint {
   public final ResponseEntity<String> processLetters() throws CTPException {
     try {
       log.info("About to begin distribution");
-      actionDistributor.processLetters();
+      actionProcessor.processLetters();
       log.info("Completed distribution");
       return ResponseEntity.ok().body("Completed distribution");
     } catch (RuntimeException e) {

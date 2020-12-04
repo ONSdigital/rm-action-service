@@ -16,11 +16,11 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 import uk.gov.ons.ctp.response.action.service.ActionProcessingService;
 
-/** This is the service class that distributes actions to downstream services */
+/** This is the service class that processes actions */
 @Component
-public class ActionDistributor {
+public class ActionProcessor {
 
-  private static final Logger log = LoggerFactory.getLogger(ActionDistributor.class);
+  private static final Logger log = LoggerFactory.getLogger(ActionProcessor.class);
 
   private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
   private static final Set<ActionState> ACTION_STATES_TO_GET =
@@ -35,7 +35,7 @@ public class ActionDistributor {
 
   private ActionProcessingService actionProcessingService;
 
-  public ActionDistributor(
+  public ActionProcessor(
       ActionRepository actionRepo,
       ActionTypeRepository actionTypeRepo,
       ActionProcessingService actionProcessingService) {
@@ -44,21 +44,11 @@ public class ActionDistributor {
     this.actionProcessingService = actionProcessingService;
   }
 
-  /**
-   * Once an action plan has executed it will have created all the require actions for that event.
-   * This job will then process the actions and either send emails or produce a print file for the
-   * letters.
-   */
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
-  public void distribute() {
-    List<ActionType> actionTypes = actionTypeRepo.findAll();
-    actionTypes.forEach(this::processActionType);
-  }
-
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processEmails() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
     for (ActionType actionType : actionTypes) {
+      log.with("type", actionType.getName()).trace("Processing actionType");
       Stream<Action> stream =
           actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
       List<Action> allActions = stream.collect(Collectors.toList());
@@ -72,21 +62,13 @@ public class ActionDistributor {
   public void processLetters() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
     for (ActionType actionType : actionTypes) {
+      log.with("type", actionType.getName()).trace("Processing actionType");
       Stream<Action> stream =
           actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
       List<Action> allActions = stream.collect(Collectors.toList());
       if (!allActions.isEmpty()) {
         actionProcessingService.processLetters(actionType, allActions);
       }
-    }
-  }
-
-  private void processActionType(final ActionType actionType) {
-    log.with("type", actionType.getName()).trace("Processing actionType");
-    Stream<Action> stream = actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
-    List<Action> allActions = stream.collect(Collectors.toList());
-    if (!allActions.isEmpty()) {
-      actionProcessingService.processActions(actionType, allActions);
     }
   }
 }

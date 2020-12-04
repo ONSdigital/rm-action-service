@@ -32,7 +32,7 @@ import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ActionDistributorTest {
+public class ActionProcessorTest {
 
   private static final String BSNOT = "BSNOT";
 
@@ -54,7 +54,7 @@ public class ActionDistributorTest {
 
   @Mock private ActionCaseRepository actionCaseRepo;
 
-  @InjectMocks private ActionDistributor actionDistributor;
+  @InjectMocks private ActionProcessor actionProcessor;
 
   /** Initialises Mockito and loads Class Fixtures */
   @Before
@@ -75,38 +75,49 @@ public class ActionDistributorTest {
   @Test
   public void testHappyPathBCase() throws Exception {
     // Given setUp
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    ActionType actionType = actionTypes.get(2);
+    when(actionTypeRepo.findByHandler(actionType.getHandler()))
+        .thenReturn(Collections.singletonList(actionType));
 
     // When
-    actionDistributor.distribute();
+    actionProcessor.processLetters();
 
     // Then
     verify(businessActionProcessingService, times(1))
-        .processActions(eq(actionTypes.get(2)), any(List.class));
+        .processLetters(eq(actionType), any(List.class));
   }
 
   @Test
   public void testProcessActionRequestsThrowsCTPException() throws Exception {
+
+    ActionType actionType = actionTypes.get(2);
+
     // Given
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(actionTypeRepo.findByHandler(actionType.getHandler()))
+        .thenReturn(Collections.singletonList(actionType));
+
     doThrow(CTPException.class)
         .when(businessActionProcessingService)
-        .processActions(actionTypes.get(2), actions);
+        .processLetters(actionType, actions);
 
     // When
-    actionDistributor.distribute();
+    actionProcessor.processLetters();
   }
 
   @Test
   public void testNoCaseWithSampleUnitTypeB() throws Exception {
+
+    ActionType actionType = actionTypes.get(2);
+
     // Given setUp
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(actionTypeRepo.findByHandler(actionType.getHandler()))
+        .thenReturn(Collections.singletonList(actionType));
 
     // When
-    actionDistributor.distribute();
+    actionProcessor.processLetters();
 
     // Then
     verify(businessActionProcessingService, times(1))
-        .processActions(eq(actionTypes.get(2)), any(List.class));
+        .processLetters(eq(actionType), any(List.class));
   }
 }
