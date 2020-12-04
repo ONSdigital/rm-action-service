@@ -30,9 +30,9 @@ public class ActionProcessorEndpoint {
   @RequestMapping(value = "/emails", method = RequestMethod.GET)
   public final ResponseEntity<String> emails() throws CTPException {
     try {
-      log.info("About to begin distribution");
+      log.info("About to begin processing emails");
       actionProcessor.processEmails();
-      log.info("Completed distribution");
+      log.info("Completed processing emails");
       return ResponseEntity.ok().body("Completed distribution");
     } catch (RuntimeException e) {
       log.error(
@@ -51,9 +51,9 @@ public class ActionProcessorEndpoint {
   @RequestMapping(value = "/letters", method = RequestMethod.GET)
   public final ResponseEntity<String> processLetters() throws CTPException {
     try {
-      log.info("About to begin distribution");
+      log.info("About to begin processing letters");
       actionProcessor.processLetters();
-      log.info("Completed distribution");
+      log.info("Completed processing letters");
       return ResponseEntity.ok().body("Completed distribution");
     } catch (RuntimeException e) {
       log.error(
