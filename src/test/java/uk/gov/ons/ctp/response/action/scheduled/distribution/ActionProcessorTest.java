@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -23,6 +24,7 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
@@ -54,6 +56,8 @@ public class ActionProcessorTest {
 
   @Mock private ActionCaseRepository actionCaseRepo;
 
+  @Mock private ActionRuleRepository actionRuleRepo;
+
   @InjectMocks private ActionProcessor actionProcessor;
 
   /** Initialises Mockito and loads Class Fixtures */
@@ -65,8 +69,12 @@ public class ActionProcessorTest {
     MockitoAnnotations.initMocks(this);
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
 
+    List<Integer> actionRules = new ArrayList<>();
+    actionRules.add(1);
     for (ActionType actionType : actionTypes) {
-      when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
+      when(actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(eq(actionType), any()))
+          .thenReturn(actionRules);
+      when(actionRepo.findByActionTypeAndActionRuleFKAndStateIn(eq(actionType), any(), any()))
           .thenReturn(businessEnrolmentActions);
     }
   }
