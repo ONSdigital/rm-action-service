@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -23,6 +24,7 @@ import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRuleRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionEvent;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
@@ -32,7 +34,7 @@ import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ActionDistributorTest {
+public class ActionProcessorTest {
 
   private static final String BSNOT = "BSNOT";
 
@@ -54,7 +56,9 @@ public class ActionDistributorTest {
 
   @Mock private ActionCaseRepository actionCaseRepo;
 
-  @InjectMocks private ActionDistributor actionDistributor;
+  @Mock private ActionRuleRepository actionRuleRepo;
+
+  @InjectMocks private ActionProcessor actionProcessor;
 
   /** Initialises Mockito and loads Class Fixtures */
   @Before
@@ -65,8 +69,12 @@ public class ActionDistributorTest {
     MockitoAnnotations.initMocks(this);
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
 
+    List<Integer> actionRules = new ArrayList<>();
+    actionRules.add(1);
     for (ActionType actionType : actionTypes) {
-      when(actionRepo.findByActionTypeAndStateIn(eq(actionType), any()))
+      when(actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(eq(actionType), any()))
+          .thenReturn(actionRules);
+      when(actionRepo.findByActionTypeAndActionRuleFKAndStateIn(eq(actionType), any(), any()))
           .thenReturn(businessEnrolmentActions);
     }
   }
@@ -75,38 +83,49 @@ public class ActionDistributorTest {
   @Test
   public void testHappyPathBCase() throws Exception {
     // Given setUp
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    ActionType actionType = actionTypes.get(2);
+    when(actionTypeRepo.findByHandler(actionType.getHandler()))
+        .thenReturn(Collections.singletonList(actionType));
 
     // When
-    actionDistributor.distribute();
+    actionProcessor.processLetters();
 
     // Then
     verify(businessActionProcessingService, times(1))
-        .processActions(eq(actionTypes.get(2)), any(List.class));
+        .processLetters(eq(actionType), any(List.class));
   }
 
   @Test
   public void testProcessActionRequestsThrowsCTPException() throws Exception {
+
+    ActionType actionType = actionTypes.get(2);
+
     // Given
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(actionTypeRepo.findByHandler(actionType.getHandler()))
+        .thenReturn(Collections.singletonList(actionType));
+
     doThrow(CTPException.class)
         .when(businessActionProcessingService)
-        .processActions(actionTypes.get(2), actions);
+        .processLetters(actionType, actions);
 
     // When
-    actionDistributor.distribute();
+    actionProcessor.processLetters();
   }
 
   @Test
   public void testNoCaseWithSampleUnitTypeB() throws Exception {
+
+    ActionType actionType = actionTypes.get(2);
+
     // Given setUp
-    when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(actionTypeRepo.findByHandler(actionType.getHandler()))
+        .thenReturn(Collections.singletonList(actionType));
 
     // When
-    actionDistributor.distribute();
+    actionProcessor.processLetters();
 
     // Then
     verify(businessActionProcessingService, times(1))
-        .processActions(eq(actionTypes.get(2)), any(List.class));
+        .processLetters(eq(actionType), any(List.class));
   }
 }
