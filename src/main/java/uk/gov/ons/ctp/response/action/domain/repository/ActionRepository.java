@@ -48,7 +48,8 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
       ActionType actionType, Integer actionRuleFk, Set<ActionState> states);
 
   /**
-   * Return all the action rules ids which have the required action type and are in the required state
+   * Return all the action rules ids which have the required action type and are in the required
+   * state
    *
    * <p>This is usually "Printer" or "Notify" and "Submitted" state
    *
