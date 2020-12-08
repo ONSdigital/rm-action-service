@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +39,7 @@ public class ActionProcessorTest {
 
   private List<ActionType> actionTypes;
   private List<Action> actions;
-  private Stream<Action> businessEnrolmentActions;
+  private List<Action> businessEnrolmentActions;
 
   @Mock private AppConfig appConfig;
 
@@ -65,7 +64,7 @@ public class ActionProcessorTest {
   public void setUp() throws Exception {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     actions = FixtureHelper.loadClassFixtures(Action[].class);
-    businessEnrolmentActions = actions.subList(4, 6).stream();
+    businessEnrolmentActions = actions.subList(4, 6);
     MockitoAnnotations.initMocks(this);
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
 
