@@ -11,7 +11,7 @@ import uk.gov.ons.ctp.response.action.domain.repository.ActionTypeRepository;
 /** Implementation */
 @Service
 public class ActionTypeService {
-  private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
+  private static final int TRANSACTION_TIMEOUT_SECONDS = 30;
 
   @Autowired private ActionTypeRepository actionTypeRepo;
 
