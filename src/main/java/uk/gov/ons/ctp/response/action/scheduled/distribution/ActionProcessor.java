@@ -45,52 +45,54 @@ public class ActionProcessor {
     this.actionProcessingService = actionProcessingService;
   }
 
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processEmails() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
     if (actionTypes.isEmpty()) {
       log.warn("no action types to process");
     }
     for (ActionType actionType : actionTypes) {
-      log.with("type", actionType.getName()).debug("Processing actionType");
+      log.with("type", actionType.getName()).info("processing actionType");
       List<Integer> actionRules =
-          actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
-              actionType, ACTION_STATES_TO_GET);
+        getActionRules(actionType);
       for (Integer actionRule : actionRules) {
-        log.with("actionRule", actionRule).debug("processing action rule");
+        log.with("actionRule", actionRule).info("processing action rule");
         processEmailsForActionRule(actionType, actionRule);
       }
     }
+  }
+
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
+  protected List<Integer> getActionRules(ActionType actionType) {
+    return actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
+      actionType, ACTION_STATES_TO_GET);
   }
 
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
   protected void processEmailsForActionRule(ActionType actionType, Integer actionRuleFK) {
     log.with("actionRule", actionRuleFK)
         .with("actionType", actionType.getName())
-        .debug("process emails for action rule");
+        .info("process emails for action rule");
     Stream<Action> stream =
         actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
             actionType, actionRuleFK, ACTION_STATES_TO_GET);
     List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      log.with("actions", allActions.size()).debug("found actions to process");
+      log.with("actions", allActions.size()).info("found actions to process");
       actionProcessingService.processEmails(actionType, allActions);
     }
   }
 
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processLetters() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
     if (actionTypes.isEmpty()) {
       log.warn("no action types to process");
     }
     for (ActionType actionType : actionTypes) {
-      log.with("type", actionType.getName()).debug("Processing actionType");
+      log.with("type", actionType.getName()).info("processing actionType");
       List<Integer> actionRules =
-          actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
-              actionType, ACTION_STATES_TO_GET);
+        getActionRules(actionType);
       for (Integer actionRule : actionRules) {
-        log.with("actionRule", actionRule).debug("processing action rule");
+        log.with("actionRule", actionRule).info("processing action rule");
         processLettersForActionRule(actionType, actionRule);
       }
     }
@@ -100,13 +102,13 @@ public class ActionProcessor {
   protected void processLettersForActionRule(ActionType actionType, Integer actionRuleFK) {
     log.with("actionRule", actionRuleFK)
         .with("actionType", actionType.getName())
-        .debug("process letters for action rule");
+        .info("process letters for action rule");
     Stream<Action> stream =
         actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
             actionType, actionRuleFK, ACTION_STATES_TO_GET);
     List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      log.with("actions", allActions.size()).debug("found actions to process");
+      log.with("actions", allActions.size()).info("found actions to process");
       actionProcessingService.processLetters(actionType, allActions);
     }
   }
