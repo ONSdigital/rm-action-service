@@ -35,7 +35,7 @@ crons:
     target: "process/emails"
   letterProcessor:
     name: action-letter-processor
-    cron: "0 */1 * * *"
+    cron: "*/5 * * * *"
     target: "process/letters"
   planJobExecutor:
     name: action-plan-executor

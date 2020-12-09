@@ -45,7 +45,6 @@ public class ActionService {
   private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
-  private static final int EXTENDED_TRANSACTION_TIMEOUT = 3600;
   private static final String SYSTEM = "SYSTEM";
 
   private ActionRepository actionRepo;
@@ -298,7 +297,7 @@ public class ActionService {
 
   @Transactional(timeout = TRANSACTION_TIMEOUT)
   public List<Action> getSubmittedActions(final ActionType actionType, Integer actionRuleFK) {
-    return actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
+    return actionRepo.findFirst10000ByActionTypeAndActionRuleFKAndStateIn(
         actionType, actionRuleFK, ACTION_STATES_TO_GET);
   }
 }
