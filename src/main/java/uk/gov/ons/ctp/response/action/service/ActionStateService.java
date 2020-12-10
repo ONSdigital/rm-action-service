@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.service;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,18 +34,35 @@ public class ActionStateService {
    */
   public void transitionAction(final Action action, final ActionDTO.ActionEvent event)
       throws CTPException {
+    transitionState(event, action);
+    actionRepo.saveAndFlush(action);
+  }
+
+  public void loadAndTransitionActions(
+      final List<UUID> actionIds, final ActionDTO.ActionEvent event) throws CTPException {
+    List<Action> actions = actionRepo.findByIdIn(actionIds);
+    for (Action action : actions) {
+      transitionState(event, action);
+    }
+    actionRepo.save(actions);
+    actionRepo.flush();
+  }
+
+  public void transitionActions(final List<Action> actions, final ActionDTO.ActionEvent event)
+      throws CTPException {
+    for (Action action : actions) {
+      transitionState(event, action);
+    }
+    actionRepo.save(actions);
+    actionRepo.flush();
+  }
+
+  private void transitionState(ActionDTO.ActionEvent event, Action action) throws CTPException {
     ActionDTO.ActionState nextState =
         actionSvcStateTransitionManager.transition(action.getState(), event);
     LOG.with("action id", action.getId()).with("state", nextState).debug("transition state");
     action.setState(nextState);
     action.setSituation(null);
     action.setUpdatedDateTime(DateTimeUtil.nowUTC());
-    actionRepo.saveAndFlush(action);
-  }
-
-  public void transitionAction(final UUID actionId, final ActionDTO.ActionEvent event)
-      throws CTPException {
-    Action action = actionRepo.findById(actionId);
-    this.transitionAction(action, event);
   }
 }
