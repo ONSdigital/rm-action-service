@@ -40,7 +40,7 @@ public class ActionStateService {
 
   public void loadAndTransitionActions(
       final List<UUID> actionIds, final ActionDTO.ActionEvent event) throws CTPException {
-    List<Action> actions = actionRepo.findAllById(actionIds);
+    List<Action> actions = actionRepo.findByIdIn(actionIds);
     for (Action action : actions) {
       transitionState(event, action);
     }
