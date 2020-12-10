@@ -25,6 +25,8 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    */
   Action findById(UUID actionId);
 
+  List<Action> findAllById(List<UUID> ids);
+
   /**
    * Return all actions for the specified case id.
    *
