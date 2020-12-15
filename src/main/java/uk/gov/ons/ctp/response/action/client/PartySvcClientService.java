@@ -76,7 +76,7 @@ public class PartySvcClientService {
     log.with("sample_unit_type", sampleUnitType)
         .with("party_id", partyId.toString())
         .with("survey_id", surveyId)
-        .trace("Retrieving party by survey");
+        .info("Retrieving party by survey");
 
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     queryParams.put("survey_id", Collections.singletonList(surveyId));

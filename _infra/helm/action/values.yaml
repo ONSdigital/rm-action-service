@@ -1,5 +1,10 @@
 env: minikube
 
+replicas: 1
+rollingUpdate:
+  maxSurge: 1
+  maxUnavailable: 1
+
 image:
   devRepo: eu.gcr.io/ons-rasrmbs-management
   name: eu.gcr.io/ons-rasrmbs-management
@@ -29,48 +34,34 @@ service:
   port: 8080
 
 crons:
-  emailProcessor:
-    name: action-email-processor
-    cron: "*/5 * * * *"
-    target: "process/emails"
-  letterProcessor:
-    name: action-letter-processor
-    cron: "*/5 * * * *"
-    target: "process/letters"
+  distributionScheduler:
+    name: action-distribution-scheduler
+    cron: "* * * * *"
+    target: "distribute"
   planJobExecutor:
     name: action-plan-executor
-    cron: "*/15 * * * *"
+    cron: "* * * * *"
     target: "actionplans/execute"
+  recordDeleter:
+    name: action-export-old-record-deleter
+    cron: "0 3 * * *"
+    target: "delete-old-data"
+  exportScheduler:
+    name: action-export-scheduler
+    cron: "*/30 * * * *"
+    target: "export"
 
 resources:
-  application:
-    requests:
-      memory: "250Mi"
-      cpu: "100m"
-    limits:
-      memory: "1500Mi"
-      cpu: "1000m"
-  proxy:
-    requests:
-      memory: "25Mi"
-      cpu: "10m"
-    limits:
-      memory: "64Mi"
-      cpu: "100m"
-
-autoscaling: false
-scaleAt:
-  # These are expressed as a percentage of resources.requests, not resources.limits
-  memoryPercentage: 200
-  cpuPercentage: 500
-replicas: 1
-maxReplicas: 1
-rollingUpdate:
-  maxSurge: 1
-  maxUnavailable: 1
+  requests:
+    memory: "256Mi"
 
 managedRabbitMQ:
   enabled: false
+
+report:
+  cron: "0 * * * * *"
+
+planExecutionDelayMillis: 1000
 
 dns:
   enabled: false

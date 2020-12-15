@@ -6,23 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
-import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
-import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
-import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
-import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseGroupDTO;
-import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.lib.party.representation.Association;
 import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO.SampleUnitType;
-import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
 @Component
+@Qualifier("business")
 public class BusinessActionRequestContextFactory implements ActionRequestContextFactory {
   private static final Logger log =
       LoggerFactory.getLogger(BusinessActionRequestContextFactory.class);
@@ -30,39 +23,19 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
       "Only sample unit type B supported, sampleUnitType=%s not supported";
 
   private final PartySvcClientService partySvcClientService;
-  private final ActionPlanRepository actionPlanRepo;
-  private final CaseSvcClientService caseSvcClientService;
-  private final CollectionExerciseClientService collectionExerciseClientService;
-  private final SurveySvcClientService surveySvcClientService;
+
+  private final DefaultActionRequestContextFactory defaultFactory;
 
   public BusinessActionRequestContextFactory(
       PartySvcClientService partySvcClientService,
-      ActionPlanRepository actionPlanRepo,
-      CaseSvcClientService caseSvcClientService,
-      CollectionExerciseClientService collectionExerciseClientService,
-      SurveySvcClientService surveySvcClientService) {
+      DefaultActionRequestContextFactory defaultFactory) {
     this.partySvcClientService = partySvcClientService;
-    this.actionPlanRepo = actionPlanRepo;
-    this.caseSvcClientService = caseSvcClientService;
-    this.collectionExerciseClientService = collectionExerciseClientService;
-    this.surveySvcClientService = surveySvcClientService;
+    this.defaultFactory = defaultFactory;
   }
 
   @Override
   public ActionRequestContext getActionRequestDecoratorContext(Action action) {
-    ActionRequestContext context = new ActionRequestContext();
-
-    context.setAction(action);
-    context.setActionPlan(getActionPlan(action));
-
-    CaseDetailsDTO caseDetails = getCase(action);
-    context.setCaseDetails(caseDetails);
-    context.setSampleUnitType(SampleUnitType.valueOf(caseDetails.getSampleUnitType()));
-
-    CollectionExerciseDTO collectionExercise = getCollectionExercise(caseDetails);
-    context.setCollectionExercise(collectionExercise);
-    context.setSurvey(getSurvey(collectionExercise));
-
+    ActionRequestContext context = defaultFactory.getActionRequestDecoratorContext(action);
     if (context.getSampleUnitType().equals(SampleUnitType.B)) {
       setParties(context);
     } else {
@@ -100,29 +73,5 @@ public class BusinessActionRequestContextFactory implements ActionRequestContext
         .map(
             id -> partySvcClientService.getParty(SampleUnitType.BI.toString(), UUID.fromString(id)))
         .collect(Collectors.toList());
-  }
-
-  private ActionPlan getActionPlan(Action action) {
-    ActionPlan actionPlan =
-        (action.getActionPlanFK() == null)
-            ? null
-            : actionPlanRepo.findOne(action.getActionPlanFK());
-    return actionPlan;
-  }
-
-  private CaseDetailsDTO getCase(Action action) {
-    return caseSvcClientService.getCaseWithIACandCaseEvents(action.getCaseId());
-  }
-
-  private CollectionExerciseDTO getCollectionExercise(CaseDetailsDTO caseDetails) {
-    final CaseGroupDTO caseGroupDTO = caseDetails.getCaseGroup();
-
-    final UUID collectionExerciseId = caseGroupDTO.getCollectionExerciseId();
-
-    return collectionExerciseClientService.getCollectionExercise(collectionExerciseId);
-  }
-
-  private SurveyDTO getSurvey(CollectionExerciseDTO collectionExercise) {
-    return surveySvcClientService.requestDetailsForSurvey(collectionExercise.getSurveyId());
   }
 }

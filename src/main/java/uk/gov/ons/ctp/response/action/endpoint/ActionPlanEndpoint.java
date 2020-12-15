@@ -156,7 +156,7 @@ public class ActionPlanEndpoint {
   }
 
   /**
-   * This method creates and executes all action plan jobs. I
+   * This method creates and executes all action plan jobs.
    *
    * <p>Note: This can only be run by one instance of action at a time. If multiple instances have
    * this invoked at the same time, duplicate actions will be created.

@@ -63,8 +63,6 @@ spec:
               secretKeyRef:
                 name: db-config
                 key: db-port
-          resources:
-            {{- toYaml .Values.resources.proxy | nindent 12 }}
         {{- end }}
         - name: {{ .Chart.Name }}
           {{- if eq .Values.image.tag "latest"}}
@@ -168,6 +166,8 @@ spec:
             value: "{{ .Values.container.port }}"
           - name: SECURITY_BASIC_ENABLED
             value: "false"
+          - name: REPORT_SETTINGS_CRON_EXPRESSION
+            value: "{{ .Values.report.cron }}"
           - name: SPRING_JPA_DATABASE_PLATFORM
             {{- if .Values.database.sqlProxyEnabled }}
             value: "org.hibernate.dialect.PostgreSQL94Dialect"
@@ -303,4 +303,4 @@ spec:
           - name: LIQUIBASE_PASSWORD
             value: "$(DB_PASSWORD)"
           resources:
-            {{- toYaml .Values.resources.application | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}

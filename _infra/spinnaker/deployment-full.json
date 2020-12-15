@@ -1,0 +1,22 @@
+{
+  "schema": "v2",
+  "application": "action",
+  "name": "deployment",
+  "template": {
+    "artifactAccount": "front50ArtifactCredentials",
+    "reference": "spinnaker://fullDeploymentTemplate",
+    "type": "front50/pipelineTemplate"
+  },
+  "variables": {
+    "service": "action",
+    "defaultVersion": "1.2.1",
+    "devDeploymentCluster": "dev",
+    "devDeploymentNamespace": "dev"
+  },
+  "exclude": [],
+  "triggers": [],
+  "parameters": [],
+  "notifications": [],
+  "description": "",
+  "stages": []
+}

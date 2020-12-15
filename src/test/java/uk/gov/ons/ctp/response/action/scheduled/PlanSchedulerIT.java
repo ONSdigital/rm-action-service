@@ -5,18 +5,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -29,7 +25,8 @@ import java.util.UUID;
 import javax.transaction.Transactional;
 import javax.xml.bind.JAXBContext;
 import org.junit.*;
-import org.mockito.Mock;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -43,6 +40,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 import uk.gov.ons.ctp.response.action.domain.repository.*;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionPlanPostRequestDTO;
@@ -97,13 +95,11 @@ public class PlanSchedulerIT {
 
   @Autowired private ActionRuleRepository actionRuleRepository;
 
+  @MockBean private ActionRequestRepository actionRequestRepository;
+
   @MockBean private PubSub pubSub;
 
-  @MockBean private Publisher publisher;
-
-  @MockBean private Storage storage;
-
-  @Mock private ApiFuture<String> apiFuture;
+  @MockBean Publisher publisher;
 
   @Qualifier("customObjectMapper")
   @Autowired
@@ -115,34 +111,22 @@ public class PlanSchedulerIT {
 
   @Before
   @Transactional
-  public void setup() throws Exception {
-    admin.purgeQueue("Case.LifecycleEvents", true);
+  public void setup() {
+    admin.purgeQueue("Case.LifecycleEvents", false);
+    admin.purgeQueue("Action.Printer", false);
     wireMockRule.resetAll();
     mapzer = new Mapzer(resourceLoader);
     UnirestInitialiser.initialise(objectMapper);
-    clearQueuesAndDeleteDatabase();
-    when(pubSub.printfilePublisher()).thenReturn(publisher);
-    when(publisher.publish(any())).thenReturn(apiFuture);
-    when(apiFuture.get()).thenReturn("test-publish");
-  }
-
-  @After
-  @Transactional
-  public void tearDown() {
-    clearQueuesAndDeleteDatabase();
-  }
-
-  private void clearQueuesAndDeleteDatabase() {
-    admin.purgeQueue("Case.LifecycleEvents", false);
     JpaRepository<?, ?>[] repositories = {
       actionCaseRepository,
       actionRepository,
       actionRuleRepository,
       actionPlanJobRepository,
-      actionPlanRepository
+      actionPlanRepository,
+      actionRequestRepository
     };
     for (JpaRepository<?, ?> repo : repositories) {
-      repo.deleteAll();
+      repo.deleteAllInBatch();
       repo.flush();
     }
   }
@@ -219,8 +203,8 @@ public class PlanSchedulerIT {
 
   private void checkForPrinterAction(int times) throws InterruptedException {
     Thread.sleep(1000);
-    verify(publisher, times(times)).publish(any());
-    verify(storage, times(times)).create(any(BlobInfo.class), any(byte[].class));
+    Mockito.verify(actionRequestRepository, times(times))
+        .save(Matchers.any(ActionRequestInstruction.class));
   }
 
   private void mockCaseDetailsMock(
@@ -261,7 +245,6 @@ public class PlanSchedulerIT {
     collectionExerciseDTO.setScheduledEndDateTime(Date.from(endDate.toInstant()));
     collectionExerciseDTO.setSurveyId(surveyId.toString());
     collectionExerciseDTO.setExerciseRef("test-ref");
-    collectionExerciseDTO.setSurveyRef("test-survey");
 
     wireMockRule.stubFor(
         get(urlPathEqualTo(
@@ -272,12 +255,13 @@ public class PlanSchedulerIT {
                     .withBody(objectMapper.writeValueAsString(collectionExerciseDTO))));
   }
 
-  private void mockGetPartyWithAssociationsFilteredBySurvey(
-      String sampleUnitType, UUID partyId, UUID caseId) throws JsonProcessingException {
+  private void mockGetPartyWithAssociationsFilteredBySurvey(String sampleUnitType, UUID partyId)
+      throws JsonProcessingException {
     PartyDTO partyDTO = new PartyDTO();
     partyDTO.setId(partyId.toString());
     List<Association> associationList = new ArrayList<>();
-    associationList.add(new Association(caseId.toString(), new ArrayList<Enrolment>(), "BI"));
+    associationList.add(
+        new Association("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5", new ArrayList<Enrolment>(), "BI"));
 
     partyDTO.setAssociations(associationList);
     partyDTO.setAttributes(new Attributes());
@@ -314,7 +298,6 @@ public class PlanSchedulerIT {
     SurveyDTO surveyDetailsDTO = new SurveyDTO();
     surveyDetailsDTO.setId(surveyId.toString());
     surveyDetailsDTO.setId("095a824e-a57d-44a0-bfeb-ae8d2bf62221");
-    surveyDetailsDTO.setSurveyRef("test-survey");
 
     wireMockRule.stubFor(
         get(urlPathMatching("/surveys/(.*)"))
@@ -360,14 +343,8 @@ public class PlanSchedulerIT {
     UUID caseId = UUID.fromString("7d84ffcd-4a5d-4427-a712-581437ebd6c2");
     String sampleUnitType = "B";
 
-    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
     mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
-    mockSurveyDetails(surveyId);
-    mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId, caseId);
-    mockGetCaseEvent();
-
-    // let the cases arrive on the queue
-    Thread.sleep(1000);
+    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
 
     //// When PlanScheduler and ActionDistributor runs
     HttpResponse<String> response =
@@ -377,21 +354,13 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
-    HttpResponse<String> emailResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/emails")
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
-    assertThat(emailResponse.getStatus(), is(200));
-    assertThat(emailResponse.getBody(), is("Completed distribution"));
-
-    HttpResponse<String> letterResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/letters")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(letterResponse.getStatus(), is(200));
-    assertThat(letterResponse.getBody(), is("Completed distribution"));
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
     checkForPrinterAction(0);
@@ -400,88 +369,23 @@ public class PlanSchedulerIT {
   @Test
   public void testNoActionsCreatedWhenActionPlanHasEnded() throws Exception {
     //// Given
-    ActionPlanDTO actionPlan = createActionPlan();
-    UUID surveyId = UUID.randomUUID();
-    UUID partyId = UUID.randomUUID();
-    UUID caseId = UUID.randomUUID();
+    final ActionPlanDTO actionPlan = createActionPlan();
 
-    UUID collectionExerciseId = UUID.fromString("7245ce02-139f-44d1-9d4e-f03ebdfcf0b1");
+    final UUID partyId = UUID.fromString("cca5e7fc-9062-476d-94c5-5c46efd1ef54");
+    final UUID surveyId = UUID.fromString("e0af7bd1-5ddf-4861-93a9-27d3eec31799");
+
+    UUID collectionExcerciseId = UUID.fromString("7245ce02-139f-44d1-9d4e-f03ebdfcf0b1");
     OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
     OffsetDateTime endDate = OffsetDateTime.now().minusDays(1);
-    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
+    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExcerciseId);
 
     OffsetDateTime triggerDateTime = OffsetDateTime.now().minusDays(2);
     createActionRule(actionPlan, triggerDateTime);
 
+    UUID caseId = UUID.fromString("61bcd60e-d91f-49db-a572-a2033b044baa");
     String sampleUnitType = "B";
 
-    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
-    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
-    mockSurveyDetails(surveyId);
-    mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId, caseId);
-    mockGetCaseEvent();
-
-    // let the cases arrive on the queue
-    Thread.sleep(1000);
-
-    //// When the action plan is execture
-    HttpResponse<String> response =
-        Unirest.get("http://localhost:" + this.port + "/actionplans/execute")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(response.getStatus(), is(200));
-
-    HttpResponse<String> emailResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/emails")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(emailResponse.getStatus(), is(200));
-    assertThat(emailResponse.getBody(), is("Completed distribution"));
-
-    HttpResponse<String> letterResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/letters")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(letterResponse.getStatus(), is(200));
-    assertThat(letterResponse.getBody(), is("Completed distribution"));
-
-    //// Then
-    Thread.sleep(1000);
-    checkForPrinterAction(0);
-  }
-
-  @Test
-  public void testActiveActionPlanJobAndActionPlanCreatesAction() throws Exception {
-    //// Given
-    ActionPlanDTO actionPlan = createActionPlan();
-
-    UUID surveyId = UUID.randomUUID();
-    UUID partyId = UUID.randomUUID();
-    UUID respondentPartyId = UUID.randomUUID();
-    UUID collectionExerciseId = UUID.randomUUID();
-    UUID caseId = UUID.randomUUID();
-
-    OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
-    OffsetDateTime endDate = OffsetDateTime.now().plusDays(2);
-    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
-
-    OffsetDateTime triggerDateTime = OffsetDateTime.now().minusHours(12);
-    createActionRule(actionPlan, triggerDateTime);
-
-    String sampleUnitType = "B";
-
-    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
-    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
-    mockSurveyDetails(surveyId);
-    mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId, caseId);
-    mockGetCaseEvent();
-    mockGetRespondentParties(caseId, respondentPartyId);
-
-    // let the cases arrive on the queue
-    Thread.sleep(1000);
+    createActionCase(collectionExcerciseId, actionPlan, partyId, caseId, sampleUnitType);
 
     //// When PlanScheduler and ActionDistributor runs
     HttpResponse<String> response =
@@ -490,23 +394,76 @@ public class PlanSchedulerIT {
             .header("accept", "application/json")
             .asString();
     assertThat(response.getStatus(), is(200));
-    assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
 
-    HttpResponse<String> emailResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/emails")
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
-    assertThat(emailResponse.getStatus(), is(200));
-    assertThat(emailResponse.getBody(), is("Completed distribution"));
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
-    HttpResponse<String> letterResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/letters")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(letterResponse.getStatus(), is(200));
-    assertThat(letterResponse.getBody(), is("Completed distribution"));
+    //// Then
+    checkForPrinterAction(0);
+  }
+
+  @Test
+  public void testActiveActionPlanJobAndActionPlanCreatesAction() throws Exception {
+    //// Given
+    ActionPlanDTO actionPlan = createActionPlan();
+
+    UUID surveyId = UUID.fromString("2e679bf1-18c9-4945-86f0-126d6c9aae4d");
+    UUID partyId = UUID.fromString("905810f0-777f-48a1-ad79-3ef230551da1");
+    UUID respondentPartyId = UUID.fromString("0c93d1ec-a2ca-4e1d-bbeb-6f4702d2e97a");
+    UUID collectionExerciseId = UUID.fromString("eea05d8a-f7ae-41de-ad9d-060acd024d38");
+    UUID caseId = UUID.fromString("b12aa9e7-4e6d-44aa-b7b5-4b507bbcf6c5");
+
+    OffsetDateTime startDate = OffsetDateTime.now().minusDays(3);
+    OffsetDateTime endDate = OffsetDateTime.now().plusDays(2);
+    mockGetCollectionExercise(startDate, endDate, surveyId, collectionExerciseId);
+
+    OffsetDateTime triggerDateTime = OffsetDateTime.now().minusHours(12);
+    ActionRuleDTO actionRule = createActionRule(actionPlan, triggerDateTime);
+
+    String sampleUnitType = "B";
+
+    createActionCase(collectionExerciseId, actionPlan, partyId, caseId, sampleUnitType);
+    mockCaseDetailsMock(collectionExerciseId, actionPlan.getId(), partyId, caseId);
+    mockSurveyDetails(surveyId);
+    mockGetPartyWithAssociationsFilteredBySurvey(sampleUnitType, partyId);
+    mockGetCaseEvent();
+    mockGetRespondentParties(caseId, respondentPartyId);
+
+    //// When PlanScheduler and ActionDistributor runs
+    final int threadPort = this.port;
+    Thread thread =
+        new Thread(
+            () -> {
+              //// When PlanScheduler and ActionDistributor runs
+              try {
+                for (int i = 0; i < 20; i++) {
+                  HttpResponse<String> distributeResponse =
+                      Unirest.get("http://localhost:" + threadPort + "/distribute")
+                          .basicAuth("admin", "secret")
+                          .header("accept", "application/json")
+                          .asString();
+                  assertThat(distributeResponse.getStatus(), is(200));
+                  assertThat(distributeResponse.getBody(), is("Completed distribution"));
+
+                  HttpResponse<String> response =
+                      Unirest.get("http://localhost:" + threadPort + "/actionplans/execute")
+                          .basicAuth("admin", "secret")
+                          .header("accept", "application/json")
+                          .asString();
+                  assertThat(response.getStatus(), is(200));
+                  assertThat(
+                      response.getBody(), is("Completed creating and executing action plan jobs"));
+                }
+              } catch (Exception e) {
+                log.error("exception in thread", e);
+              }
+            });
+    thread.start();
 
     //// Then
     checkForPrinterAction(1);

@@ -1,0 +1,23 @@
+{
+  "schema": "v2",
+  "application": "action",
+  "name": "deploy dev",
+  "template": {
+    "artifactAccount": "front50ArtifactCredentials",
+    "reference": "spinnaker://deployBaseline",
+    "type": "front50/pipelineTemplate"
+  },
+  "variables": {
+    "namespace": "dev",
+    "configNamespace": "dev",
+    "environment": "dev",
+    "service": "action",
+    "bucket": "ras-rm-configuration"
+  },
+  "exclude": [],
+  "triggers": [],
+  "parameters": [],
+  "notifications": [],
+  "description": "",
+  "stages": []
+}
