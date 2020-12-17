@@ -112,18 +112,14 @@ public class NotificationFileCreator {
     boolean success = printFileService.send(filename, actionRequests);
     if (success) {
       log.info("print file request successful, transitioning actions");
-      final List<UUID> actionIds = new ArrayList<>();
       for (ActionRequest actionRequest : actionRequests) {
         String actionId = actionRequest.getActionId();
-        actionIds.add(UUID.fromString(actionId));
+        try {
+          actionStateService.transitionAction(UUID.fromString(actionId), actionEvent);
+        } catch (CTPException ctpExeption) {
+          throw new IllegalStateException(ctpExeption);
+        }
       }
-
-      try {
-        actionStateService.loadAndTransitionActions(actionIds, actionEvent);
-      } catch (CTPException ctpExeption) {
-        throw new IllegalStateException(ctpExeption);
-      }
-
     } else {
       log.warn("print file request not successful, not transitioning actions");
     }
