@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
@@ -50,24 +49,12 @@ public class ActionProcessor {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
     for (ActionType actionType : actionTypes) {
       log.with("type", actionType.getName()).trace("Processing actionType");
-      List<Integer> actionRules =
-          actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
-              actionType, ACTION_STATES_TO_GET);
-      for (Integer actionRule : actionRules) {
-        log.with("actionRule", actionRule).debug("processing action rule");
-        processEmailsForActionRule(actionType, actionRule);
+      Stream<Action> stream =
+          actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
+      List<Action> allActions = stream.collect(Collectors.toList());
+      if (!allActions.isEmpty()) {
+        actionProcessingService.processEmails(actionType, allActions);
       }
-    }
-  }
-
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
-  protected void processEmailsForActionRule(ActionType actionType, Integer actionRuleFK) {
-    Stream<Action> stream =
-        actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
-            actionType, actionRuleFK, ACTION_STATES_TO_GET);
-    List<Action> allActions = stream.collect(Collectors.toList());
-    if (!allActions.isEmpty()) {
-      actionProcessingService.processEmails(actionType, allActions);
     }
   }
 
@@ -76,24 +63,12 @@ public class ActionProcessor {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
     for (ActionType actionType : actionTypes) {
       log.with("type", actionType.getName()).trace("Processing actionType");
-      List<Integer> actionRules =
-          actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
-              actionType, ACTION_STATES_TO_GET);
-      for (Integer actionRule : actionRules) {
-        log.with("actionRule", actionRule).debug("processing action rule");
-        processLettersForActionRule(actionType, actionRule);
+      Stream<Action> stream =
+          actionRepo.findByActionTypeAndStateIn(actionType, ACTION_STATES_TO_GET);
+      List<Action> allActions = stream.collect(Collectors.toList());
+      if (!allActions.isEmpty()) {
+        actionProcessingService.processLetters(actionType, allActions);
       }
-    }
-  }
-
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
-  protected void processLettersForActionRule(ActionType actionType, Integer actionRuleFK) {
-    Stream<Action> stream =
-        actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
-            actionType, actionRuleFK, ACTION_STATES_TO_GET);
-    List<Action> allActions = stream.collect(Collectors.toList());
-    if (!allActions.isEmpty()) {
-      actionProcessingService.processLetters(actionType, allActions);
     }
   }
 }

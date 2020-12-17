@@ -6,11 +6,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO.ActionState;
 
 /** JPA Data Repository. */
@@ -43,21 +41,4 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    * @return Action returns an action is
    */
   boolean existsByCaseIdAndActionRuleFK(UUID caseId, Integer actionRuleFK);
-
-  Stream<Action> findByActionTypeAndActionRuleFKAndStateIn(
-      ActionType actionType, Integer actionRuleFk, Set<ActionState> states);
-
-  /**
-   * Return all the action rules ids which have the required action type and are in the required
-   * state
-   *
-   * <p>This is usually "Printer" or "Notify" and "Submitted" state
-   *
-   * @param actionType the action type
-   * @param states the states
-   * @return the distinct
-   */
-  @Query("SELECT DISTINCT a.actionRuleFK FROM Action a WHERE a.actionType =?1 AND a.state IN ?2")
-  List<Integer> findDistinctActionRuleFKByActionTypeAndStateIn(
-      ActionType actionType, Set<ActionDTO.ActionState> states);
 }
