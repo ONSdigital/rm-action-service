@@ -18,9 +18,5 @@ version: 1.5.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application.
-<<<<<<< HEAD
-appVersion: 12.1.8
-=======
-appVersion: 12.0.4
->>>>>>> parent of 4fbc5ffe (Action simplification and final action exporter integration  (#191))
+appVersion: 12.2.0
 
