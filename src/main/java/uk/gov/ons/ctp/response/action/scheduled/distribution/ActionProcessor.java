@@ -48,9 +48,6 @@ public class ActionProcessor {
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processEmails() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
-    if (actionTypes.isEmpty()) {
-      log.warn("no action types to process");
-    }
     for (ActionType actionType : actionTypes) {
       log.with("type", actionType.getName()).debug("Processing actionType");
       List<Integer> actionRules =
@@ -81,9 +78,6 @@ public class ActionProcessor {
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processLetters() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
-    if (actionTypes.isEmpty()) {
-      log.warn("no action types to process");
-    }
     for (ActionType actionType : actionTypes) {
       log.with("type", actionType.getName()).debug("Processing actionType");
       List<Integer> actionRules =
