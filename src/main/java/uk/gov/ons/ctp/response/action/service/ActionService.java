@@ -4,14 +4,12 @@ import static uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil.nowUTC;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import com.google.common.collect.Sets;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -45,7 +43,6 @@ public class ActionService {
   private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
   private static final int TRANSACTION_TIMEOUT = 30;
-  private static final int EXTENDED_TRANSACTION_TIMEOUT = 3600;
   private static final String SYSTEM = "SYSTEM";
 
   private ActionRepository actionRepo;
@@ -55,8 +52,6 @@ public class ActionService {
   private ActionRuleRepository actionRuleRepo;
   private ActionTypeRepository actionTypeRepo;
   public static final String ACTION_NOT_FOUND = "Action not found for id %s";
-  private static final Set<ActionState> ACTION_STATES_TO_GET =
-      Sets.immutableEnumSet(ActionState.SUBMITTED, ActionState.CANCEL_SUBMITTED);
 
   private StateTransitionManager<ActionState, ActionDTO.ActionEvent>
       actionSvcStateTransitionManager;
@@ -288,17 +283,5 @@ public class ActionService {
     ActionPlanJob createdJob = actionPlanJobRepository.save(actionPlanJob);
     log.with("action_plan_job", createdJob).debug("Created action plan job");
     return createdJob;
-  }
-
-  @Transactional(timeout = TRANSACTION_TIMEOUT)
-  public List<Integer> getActionRules(ActionType actionType) {
-    return actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
-        actionType, ACTION_STATES_TO_GET);
-  }
-
-  @Transactional(timeout = TRANSACTION_TIMEOUT)
-  public List<Action> getSubmittedActions(final ActionType actionType, Integer actionRuleFK) {
-    return actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
-        actionType, actionRuleFK, ACTION_STATES_TO_GET);
   }
 }

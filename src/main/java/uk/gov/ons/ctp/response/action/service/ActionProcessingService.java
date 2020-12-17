@@ -25,6 +25,7 @@ import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 @Service
 public class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
+
   public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
   public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
   public static final String ACTIVE = "ACTIVE";
@@ -32,7 +33,6 @@ public class ActionProcessingService {
   public static final String ENABLED = "ENABLED";
   public static final String PENDING = "PENDING";
   private static final String NOTIFY = "Notify";
-  private static final int TRANSACTION_TIMEOUT_SECONDS = 3600;
 
   @Autowired private ActionCaseRepository actionCaseRepo;
 
@@ -52,7 +52,6 @@ public class ActionProcessingService {
     new SampleUnitRef()
   };
 
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
   public void processLetters(ActionType actionType, List<Action> allActions) {
     if (actionType == null) {
       throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
@@ -80,7 +79,6 @@ public class ActionProcessingService {
     }
   }
 
-  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
   public void processEmails(ActionType actionType, List<Action> allActions) {
     if (actionType == null) {
       throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
