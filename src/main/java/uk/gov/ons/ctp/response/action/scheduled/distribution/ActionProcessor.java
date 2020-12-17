@@ -5,6 +5,8 @@ import com.godaddy.logging.LoggerFactory;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,50 +45,52 @@ public class ActionProcessor {
     this.actionProcessingService = actionProcessingService;
   }
 
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processEmails() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
     if (actionTypes.isEmpty()) {
       log.warn("no action types to process");
     }
     for (ActionType actionType : actionTypes) {
-      log.with("type", actionType.getName()).info("processing actionType");
-      List<Integer> actionRules = getActionRules(actionType);
+      log.with("type", actionType.getName()).debug("Processing actionType");
+      List<Integer> actionRules =
+          actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
+              actionType, ACTION_STATES_TO_GET);
       for (Integer actionRule : actionRules) {
-        log.with("actionRule", actionRule).info("processing action rule");
+        log.with("actionRule", actionRule).debug("processing action rule");
         processEmailsForActionRule(actionType, actionRule);
       }
     }
-  }
-
-  protected List<Integer> getActionRules(ActionType actionType) {
-    return actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
-        actionType, ACTION_STATES_TO_GET);
   }
 
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
   protected void processEmailsForActionRule(ActionType actionType, Integer actionRuleFK) {
     log.with("actionRule", actionRuleFK)
         .with("actionType", actionType.getName())
-        .info("process emails for action rule");
-    List<Action> allActions =
+        .debug("process emails for action rule");
+    Stream<Action> stream =
         actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
             actionType, actionRuleFK, ACTION_STATES_TO_GET);
+    List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      log.with("actions", allActions.size()).info("found actions to process");
+      log.with("actions", allActions.size()).debug("found actions to process");
       actionProcessingService.processEmails(actionType, allActions);
     }
   }
 
+  @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS)
   public void processLetters() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
     if (actionTypes.isEmpty()) {
       log.warn("no action types to process");
     }
     for (ActionType actionType : actionTypes) {
-      log.with("type", actionType.getName()).info("processing actionType");
-      List<Integer> actionRules = getActionRules(actionType);
+      log.with("type", actionType.getName()).debug("Processing actionType");
+      List<Integer> actionRules =
+          actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
+              actionType, ACTION_STATES_TO_GET);
       for (Integer actionRule : actionRules) {
-        log.with("actionRule", actionRule).info("processing action rule");
+        log.with("actionRule", actionRule).debug("processing action rule");
         processLettersForActionRule(actionType, actionRule);
       }
     }
@@ -96,12 +100,13 @@ public class ActionProcessor {
   protected void processLettersForActionRule(ActionType actionType, Integer actionRuleFK) {
     log.with("actionRule", actionRuleFK)
         .with("actionType", actionType.getName())
-        .info("process letters for action rule");
-    List<Action> allActions =
+        .debug("process letters for action rule");
+    Stream<Action> stream =
         actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
             actionType, actionRuleFK, ACTION_STATES_TO_GET);
+    List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      log.with("actions", allActions.size()).info("found actions to process");
+      log.with("actions", allActions.size()).debug("found actions to process");
       actionProcessingService.processLetters(actionType, allActions);
     }
   }
