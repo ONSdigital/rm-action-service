@@ -6,24 +6,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
-import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
-import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
+import uk.gov.ons.ctp.response.action.message.ActionInstructionPublisher;
+import uk.gov.ons.ctp.response.action.message.instruction.ActionCancel;
 import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
 import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.service.decorator.*;
+import uk.gov.ons.ctp.response.action.service.decorator.ActionRequestDecorator;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContext;
 import uk.gov.ons.ctp.response.action.service.decorator.context.ActionRequestContextFactory;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
+import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
+import uk.gov.ons.ctp.response.lib.common.time.DateTimeUtil;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
-@Service
-public class ActionProcessingService {
+public abstract class ActionProcessingService {
   private static final Logger log = LoggerFactory.getLogger(ActionProcessingService.class);
 
   public static final String ACTION_TYPE_NOT_DEFINED = "ActionType is not defined for action";
@@ -33,124 +35,66 @@ public class ActionProcessingService {
   public static final String CREATED = "CREATED";
   public static final String ENABLED = "ENABLED";
   public static final String NOTIFY = "Notify";
-  public static final String PRINTER = "Printer";
   public static final String PENDING = "PENDING";
 
-  @Autowired private ActionCaseRepository actionCaseRepo;
+  @Autowired private ActionRepository actionRepo;
+
+  @Autowired private ActionInstructionPublisher actionInstructionPublisher;
 
   @Autowired private NotifyService notifyService;
 
-  @Autowired private NotificationFileCreator notificationFileCreator;
+  @Autowired
+  private StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
+      actionSvcStateTransitionManager;
 
-  @Autowired private ActionStateService actionStateService;
+  private ActionRequestDecorator[] decorators;
 
-  @Autowired private ActionRequestContextFactory decoratorContextFactory;
+  public abstract ActionRequestContextFactory getActionRequestDecoratorContextFactory();
 
-  private static final ActionRequestDecorator[] DECORATORS = {
-    new ActionAndActionPlan(),
-    new CaseAndCaseEvent(),
-    new CollectionExerciseAndSurvey(),
-    new PartyAndContact(),
-    new SampleUnitRef()
-  };
+  public ActionProcessingService(ActionRequestDecorator[] decorators) {
+    this.decorators = decorators;
+  }
 
-  public void processActions(ActionType actionType, List<Action> allActions) {
-    if (actionType == null) {
+  /** Distributes requests for a single action */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void processActionRequests(final UUID actionId) {
+    Action action = actionRepo.findById(actionId);
+    log.with("actionId", action.getId()).info("Processing actionRequest");
+
+    final ActionType actionType = action.getActionType();
+    if (!valid(actionType)) {
+      log.with("action", action).error("ActionType is not defined for action");
       throw new IllegalStateException(ACTION_TYPE_NOT_DEFINED);
     }
-    String handler = actionType.getHandler();
-    if (handler == null) {
-      log.with("name", actionType.getName())
-          .with("handler", actionType.getHandler())
-          .error("no action type handler provided");
-    } else if (handler.equals(NOTIFY)) {
-      processEmails(actionType, allActions);
-    } else if (actionType.getHandler().equals(PRINTER)) {
-      processLetters(actionType, allActions);
-    } else {
-      log.with("handler", actionType.getHandler())
-          .with("name", actionType.getName())
-          .with("actions", allActions.size())
-          .error("unsupported action type handler");
-    }
-  }
 
-  public void processLetters(ActionType actionType, List<Action> allActions) {
-    // action requests are decorated actions
-    log.with("name", actionType.getName())
-        .with("actions", allActions.size())
-        .debug("processing letters");
-    List<ActionRequest> printerActions = new ArrayList<>();
-    for (Action action : allActions) {
-      if (isCancelled(action)) {
-        processActionCancel(action);
-      } else if (!checkCaseExists(action)) {
-        cancelAction(action);
-      } else if (valid(action)) {
-        List<ActionRequest> actionRequests = prepareActionRequests(action);
-        printerActions.addAll(actionRequests);
-      } else {
-        log.with("id", action.getId()).warn("skipping action");
-      }
-    }
-    log.with("entries", printerActions.size()).debug("about to create print files");
-    notificationFileCreator.export(getActionEvent(actionType), printerActions);
-  }
+    List<ActionRequest> actionRequests = prepareActionRequests(action);
 
-  public void processEmails(ActionType actionType, List<Action> allActions) {
-    log.with("actions", allActions.size()).debug("processing emails");
-    for (Action action : allActions) {
-      if (isCancelled(action)) {
-        processActionCancel(action);
-      } else if (!checkCaseExists(action)) {
-        cancelAction(action);
-      } else if (valid(action)) {
-        // send to pub sub
-        List<ActionRequest> actionRequests = prepareActionRequests(action);
-        try {
-          for (ActionRequest actionRequest : actionRequests) {
+    ActionDTO.ActionEvent event =
+        actionType.getResponseRequired()
+            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
+            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
+    transitionAction(action, event);
+
+    actionRequests.forEach(
+        actionRequest -> {
+          if (actionRequest.isPubsub()) {
+            log.with("actionId", actionId.toString())
+                .info("Pubsub message will be forwarded to notify cloudfunction");
             notifyService.processNotification(actionRequest);
+          } else {
+            actionInstructionPublisher.sendActionInstruction(
+                actionType.getHandler(), actionRequest);
           }
-          // if successful transition action
-          transitionAction(action, actionType);
-        } catch (RuntimeException e) {
-          // action will not be transition now and therefore will be picked up in the next run
-          // so we don't need to do anything with the exception apart from log it.
-          log.with("action id", action.getId()).error("Error sending email", e);
-        }
-      } else {
-        log.with("id", action.getId()).warn("skipping action");
-      }
-    }
+        });
   }
 
-  private boolean isCancelled(final Action action) {
-    return action.getState() == ActionDTO.ActionState.CANCEL_SUBMITTED;
-  }
-
-  private boolean checkCaseExists(final Action action) {
-    ActionCase actionCase = actionCaseRepo.findById(action.getCaseId());
-    if (actionCase == null) {
-      log.with("action", action).debug("Case no longer exists for action");
-    }
-    return actionCase != null;
-  }
-
-  /**
-   * This method will take an action and collect all the additional information relating to that
-   * action from other services, such as party, collection exercise. It uses a decorator pattern to
-   * do this.
-   *
-   * @param action the action to add information too
-   * @return the action request which holds all the additional information.
-   */
-  protected List<ActionRequest> prepareActionRequests(Action action) {
-    final ActionRequestContext context =
-        decoratorContextFactory.getActionRequestDecoratorContext(action);
+  private List<ActionRequest> prepareActionRequests(Action action) {
+    final ActionRequestContextFactory factory = getActionRequestDecoratorContextFactory();
+    final ActionRequestContext context = factory.getActionRequestDecoratorContext(action);
 
     // If action is sampleUnitType B and handler type NOTIFY
     // then create an action request per respondent
-    log.with("actionId", action.getId()).info("Setting action request array for processing");
+    log.with("actionId", action.getId()).info("Setting action rquest array for processing");
     ArrayList<ActionRequest> actionRequests = new ArrayList<>();
     if (isBusinessNotification(context)) {
       context
@@ -161,8 +105,11 @@ public class ActionProcessingService {
                     .info("Creating Action request for pubsub notify");
                 context.setChildParties(Collections.singletonList(p));
                 ActionRequest actionRequest = prepareActionRequest(context);
+                actionRequest.setIsPubsub(true);
                 actionRequests.add(actionRequest);
-                log.with("actionId", action.getId()).info("Pubsub notify action added to the list");
+                log.with("isPubsub", actionRequest.isPubsub())
+                    .with("actionId", action.getId())
+                    .info("Pubsub notify action added to the list");
               });
     } else {
       ActionRequest actionRequest = prepareActionRequest(context);
@@ -181,36 +128,43 @@ public class ActionProcessingService {
 
   private ActionRequest prepareActionRequest(ActionRequestContext context) {
     ActionRequest actionRequest = new ActionRequest();
-    Arrays.stream(this.DECORATORS).forEach(d -> d.decorateActionRequest(actionRequest, context));
+    Arrays.stream(this.decorators).forEach(d -> d.decorateActionRequest(actionRequest, context));
     return actionRequest;
   }
 
   /** Deal with a single action cancel - the transaction boundary is here */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processActionCancel(final Action action) {
+  public void processActionCancel(final UUID actionId) {
+    Action action = actionRepo.findById(actionId);
 
     log.with("action_id", action.getId())
         .with("case_id", action.getCaseId())
         .with("action_plan_pk", action.getActionPlanFK())
         .info("processing action cancel");
 
-    try {
-      actionStateService.transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
-    } catch (CTPException ctpExeption) {
-      throw new IllegalStateException(ctpExeption);
-    }
+    transitionAction(action, ActionDTO.ActionEvent.CANCELLATION_DISTRIBUTED);
+
+    actionInstructionPublisher.sendActionInstruction(
+        action.getActionType().getHandler(), prepareActionCancel(action));
   }
 
-  private void cancelAction(final Action action) {
+  /**
+   * Take an action and using it, fetch further info from Case service in a number of rest calls, in
+   * order to create the ActionRequest
+   *
+   * @param action It all starts wih the Action
+   * @return The ActionRequest created from the Action and the other info from CaseSvc
+   */
+  private ActionCancel prepareActionCancel(final Action action) {
     log.with("action_id", action.getId())
         .with("case_id", action.getCaseId())
         .with("action_plan_pk", action.getActionPlanFK())
-        .info("cancelling action");
-    try {
-      actionStateService.transitionAction(action, ActionDTO.ActionEvent.REQUEST_CANCELLED);
-    } catch (CTPException ctpExeption) {
-      throw new IllegalStateException(ctpExeption);
-    }
+        .debug("Building ActionCancel to publish to downstream handler");
+    final ActionCancel actionCancel = new ActionCancel();
+    actionCancel.setActionId(action.getId().toString());
+    actionCancel.setResponseRequired(true);
+    actionCancel.setReason(CANCELLATION_REASON);
+    return actionCancel;
   }
 
   /**
@@ -218,44 +172,31 @@ public class ActionProcessingService {
    * previous situation (in the scenario where the action has prev. failed)
    *
    * @param action the action to change and persist
-   * @param actionType the action type
+   * @param event the event to transition the action with
    * @throws CTPException if action state transition error
    */
-  private void transitionAction(final Action action, final ActionType actionType) {
-
-    ActionDTO.ActionEvent event = getActionEvent(actionType);
+  private void transitionAction(final Action action, final ActionDTO.ActionEvent event) {
+    ActionDTO.ActionState nextState = null;
 
     try {
-      actionStateService.transitionAction(action, event);
+      nextState = actionSvcStateTransitionManager.transition(action.getState(), event);
     } catch (CTPException ctpExeption) {
       throw new IllegalStateException(ctpExeption);
     }
-  }
 
-  private ActionDTO.ActionEvent getActionEvent(ActionType actionType) {
-    Boolean responseRequired = actionType.getResponseRequired();
-    if (responseRequired == null) {
-      responseRequired = Boolean.FALSE;
-    }
-    ActionDTO.ActionEvent event =
-        responseRequired
-            ? ActionDTO.ActionEvent.REQUEST_DISTRIBUTED
-            : ActionDTO.ActionEvent.REQUEST_COMPLETED;
-    return event;
+    action.setState(nextState);
+    action.setSituation(null);
+    action.setUpdatedDateTime(DateTimeUtil.nowUTC());
+    actionRepo.saveAndFlush(action);
   }
 
   /**
    * To validate an ActionType
    *
-   * @param action the action to validate
+   * @param actionType the ActionType to validate
    * @return true if valid
    */
-  private boolean valid(final Action action) {
-    final ActionType actionType = action.getActionType();
-    boolean valid = actionType != null && actionType.getResponseRequired() != null;
-    if (!valid) {
-      log.with("action_type", actionType).error("ActionType is not valid for action");
-    }
-    return valid;
+  private boolean valid(final ActionType actionType) {
+    return (actionType != null) && (actionType.getResponseRequired() != null);
   }
 }

@@ -1,14 +1,18 @@
 package uk.gov.ons.ctp.response.action.scheduled.distribution;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,9 +21,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
+import uk.gov.ons.ctp.response.action.config.DataGrid;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionType;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionRepository;
@@ -39,6 +46,9 @@ public class ActionDistributorTest {
   private List<ActionType> actionTypes;
   private List<Action> actions;
   private Stream<Action> businessEnrolmentActions;
+  private ActionCase bActionCase;
+  private ActionCase fActionCase;
+  private RLock lock;
 
   @Mock private AppConfig appConfig;
 
@@ -50,7 +60,8 @@ public class ActionDistributorTest {
 
   @Mock private StateTransitionManager<ActionState, ActionEvent> actionSvcStateTransitionManager;
 
-  @Mock private ActionProcessingService businessActionProcessingService;
+  @Mock(name = "businessActionProcessingService")
+  private ActionProcessingService businessActionProcessingService;
 
   @Mock private ActionCaseRepository actionCaseRepo;
 
@@ -62,7 +73,22 @@ public class ActionDistributorTest {
     actionTypes = FixtureHelper.loadClassFixtures(ActionType[].class);
     actions = FixtureHelper.loadClassFixtures(Action[].class);
     businessEnrolmentActions = actions.subList(4, 6).stream();
+    bActionCase = new ActionCase();
+    bActionCase.setSampleUnitType("B");
+    fActionCase = new ActionCase();
+    fActionCase.setSampleUnitType("F");
+
     MockitoAnnotations.initMocks(this);
+    DataGrid dataGrid = new DataGrid();
+    dataGrid.setLockTimeToLiveSeconds(30);
+    dataGrid.setLockTimeToWaitSeconds(600);
+    when(appConfig.getDataGrid()).thenReturn(dataGrid);
+
+    lock = mock(RLock.class);
+    when(redissonClient.getFairLock(any())).thenReturn(lock);
+    when(lock.tryLock(anyInt(), eq(TimeUnit.SECONDS))).thenReturn(true);
+    when(actionCaseRepo.findById(any())).thenReturn(bActionCase);
+
     when(actionTypeRepo.findAll()).thenReturn(actionTypes);
 
     for (ActionType actionType : actionTypes) {
@@ -81,17 +107,15 @@ public class ActionDistributorTest {
     actionDistributor.distribute();
 
     // Then
-    verify(businessActionProcessingService, times(1))
-        .processActions(eq(actionTypes.get(2)), any(List.class));
+    verify(businessActionProcessingService, times(1)).processActionRequests(any());
+    verify(businessActionProcessingService, times(1)).processActionCancel(any());
   }
 
   @Test
   public void testProcessActionRequestsThrowsCTPException() throws Exception {
     // Given
     when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
-    doThrow(CTPException.class)
-        .when(businessActionProcessingService)
-        .processActions(actionTypes.get(2), actions);
+    doThrow(CTPException.class).when(businessActionProcessingService).processActionRequests(any());
 
     // When
     actionDistributor.distribute();
@@ -101,12 +125,13 @@ public class ActionDistributorTest {
   public void testNoCaseWithSampleUnitTypeB() throws Exception {
     // Given setUp
     when(actionTypeRepo.findAll()).thenReturn(Collections.singletonList(actionTypes.get(2)));
+    when(actionCaseRepo.findById(any())).thenReturn(null);
 
     // When
     actionDistributor.distribute();
 
     // Then
-    verify(businessActionProcessingService, times(1))
-        .processActions(eq(actionTypes.get(2)), any(List.class));
+    verify(businessActionProcessingService, never()).processActionRequests(any());
+    verify(businessActionProcessingService, never()).processActionCancel(any());
   }
 }
