@@ -44,7 +44,7 @@ public interface ActionRepository extends JpaRepository<Action, BigInteger> {
    */
   boolean existsByCaseIdAndActionRuleFK(UUID caseId, Integer actionRuleFK);
 
-  List<Action> findFirst10000ByActionTypeAndActionRuleFKAndStateIn(
+  List<Action> findByActionTypeAndActionRuleFKAndStateIn(
       ActionType actionType, Integer actionRuleFk, Set<ActionState> states);
 
   /**
