@@ -377,21 +377,13 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
-    HttpResponse<String> emailResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/emails")
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
-    assertThat(emailResponse.getStatus(), is(200));
-    assertThat(emailResponse.getBody(), is("Completed distribution"));
-
-    HttpResponse<String> letterResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/letters")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(letterResponse.getStatus(), is(200));
-    assertThat(letterResponse.getBody(), is("Completed distribution"));
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
     checkForPrinterAction(0);
@@ -432,21 +424,13 @@ public class PlanSchedulerIT {
             .asString();
     assertThat(response.getStatus(), is(200));
 
-    HttpResponse<String> emailResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/emails")
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
-    assertThat(emailResponse.getStatus(), is(200));
-    assertThat(emailResponse.getBody(), is("Completed distribution"));
-
-    HttpResponse<String> letterResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/letters")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(letterResponse.getStatus(), is(200));
-    assertThat(letterResponse.getBody(), is("Completed distribution"));
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
     Thread.sleep(1000);
@@ -492,21 +476,13 @@ public class PlanSchedulerIT {
     assertThat(response.getStatus(), is(200));
     assertThat(response.getBody(), is("Completed creating and executing action plan jobs"));
 
-    HttpResponse<String> emailResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/emails")
+    HttpResponse<String> distributeResponse =
+        Unirest.get("http://localhost:" + this.port + "/distribute")
             .basicAuth("admin", "secret")
             .header("accept", "application/json")
             .asString();
-    assertThat(emailResponse.getStatus(), is(200));
-    assertThat(emailResponse.getBody(), is("Completed distribution"));
-
-    HttpResponse<String> letterResponse =
-        Unirest.get("http://localhost:" + this.port + "/process/letters")
-            .basicAuth("admin", "secret")
-            .header("accept", "application/json")
-            .asString();
-    assertThat(letterResponse.getStatus(), is(200));
-    assertThat(letterResponse.getBody(), is("Completed distribution"));
+    assertThat(distributeResponse.getStatus(), is(200));
+    assertThat(distributeResponse.getBody(), is("Completed distribution"));
 
     //// Then
     checkForPrinterAction(1);
