@@ -49,7 +49,7 @@ public class ActionProcessor {
   public void processEmails() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(NOTIFY);
     for (ActionType actionType : actionTypes) {
-      log.with("type", actionType.getName()).debug("Processing actionType");
+      log.with("type", actionType.getName()).trace("Processing actionType");
       List<Integer> actionRules =
           actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
               actionType, ACTION_STATES_TO_GET);
@@ -62,15 +62,11 @@ public class ActionProcessor {
 
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
   protected void processEmailsForActionRule(ActionType actionType, Integer actionRuleFK) {
-    log.with("actionRule", actionRuleFK)
-        .with("actionType", actionType.getName())
-        .debug("process emails for action rule");
     Stream<Action> stream =
         actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
             actionType, actionRuleFK, ACTION_STATES_TO_GET);
     List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      log.with("actions", allActions.size()).debug("found actions to process");
       actionProcessingService.processEmails(actionType, allActions);
     }
   }
@@ -79,7 +75,7 @@ public class ActionProcessor {
   public void processLetters() {
     List<ActionType> actionTypes = actionTypeRepo.findByHandler(PRINTER);
     for (ActionType actionType : actionTypes) {
-      log.with("type", actionType.getName()).debug("Processing actionType");
+      log.with("type", actionType.getName()).trace("Processing actionType");
       List<Integer> actionRules =
           actionRepo.findDistinctActionRuleFKByActionTypeAndStateIn(
               actionType, ACTION_STATES_TO_GET);
@@ -92,15 +88,11 @@ public class ActionProcessor {
 
   @Transactional(timeout = TRANSACTION_TIMEOUT_SECONDS, propagation = Propagation.REQUIRES_NEW)
   protected void processLettersForActionRule(ActionType actionType, Integer actionRuleFK) {
-    log.with("actionRule", actionRuleFK)
-        .with("actionType", actionType.getName())
-        .debug("process letters for action rule");
     Stream<Action> stream =
         actionRepo.findByActionTypeAndActionRuleFKAndStateIn(
             actionType, actionRuleFK, ACTION_STATES_TO_GET);
     List<Action> allActions = stream.collect(Collectors.toList());
     if (!allActions.isEmpty()) {
-      log.with("actions", allActions.size()).debug("found actions to process");
       actionProcessingService.processLetters(actionType, allActions);
     }
   }
