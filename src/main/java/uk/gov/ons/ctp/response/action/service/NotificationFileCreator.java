@@ -117,7 +117,6 @@ public class NotificationFileCreator {
         String actionId = actionRequest.getActionId();
         actionIds.add(UUID.fromString(actionId));
       }
-
       try {
         actionStateService.loadAndTransitionActions(actionIds, actionEvent);
       } catch (CTPException ctpExeption) {

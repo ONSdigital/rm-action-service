@@ -52,6 +52,9 @@ public class ActionCase implements Serializable {
   @Column(name = "actionplanid")
   private UUID actionPlanId;
 
+  @Column(name = "active_enrolment")
+  private boolean activeEnrolment;
+
   @Column(name = "actionplanstartdate")
   private Timestamp actionPlanStartDate;
 
@@ -66,4 +69,13 @@ public class ActionCase implements Serializable {
 
   @Column(name = "sampleunittype")
   private String sampleUnitType;
+
+  @Column(name = "sample_unit_ref")
+  private String sampleUnitRef;
+
+  @Column(name = "status")
+  private String status;
+
+  @Column(name = "iac")
+  private String iac;
 }

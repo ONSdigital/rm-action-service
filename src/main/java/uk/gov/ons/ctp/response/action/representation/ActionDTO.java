@@ -50,6 +50,8 @@ public class ActionDTO {
 
   private UUID actionPlanId;
 
+  private boolean activeEnrolment;
+
   private UUID actionRuleId;
 
   @NotNull private String actionTypeName;

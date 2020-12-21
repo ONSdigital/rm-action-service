@@ -31,15 +31,15 @@ service:
 crons:
   emailProcessor:
     name: action-email-processor
-    cron: "*/5 * * * *"
+    cron: "0 0 5 31 2 ?"
     target: "process/emails"
   letterProcessor:
     name: action-letter-processor
-    cron: "*/5 * * * *"
+    cron: "0 0 5 31 2 ?"
     target: "process/letters"
   planJobExecutor:
     name: action-plan-executor
-    cron: "*/15 * * * *"
+    cron: "0 0 5 31 2 ?"
     target: "actionplans/execute"
 
 resources:

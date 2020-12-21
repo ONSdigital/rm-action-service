@@ -33,4 +33,9 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
    * @return boolean for if cases exist for given action plan
    */
   boolean existsByActionPlanFK(Integer actionPlanKey);
+
+  List<ActionCase> findByCollectionExerciseIdAndActiveEnrolment(
+      UUID collectionExerciseId, boolean activeEnrolment);
+
+  List<ActionCase> findByIdIn(List<UUID> caseId);
 }
