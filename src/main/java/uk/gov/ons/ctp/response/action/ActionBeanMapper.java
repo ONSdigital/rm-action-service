@@ -9,10 +9,8 @@ import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.domain.model.Action;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlanJob;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPlanJobDTO;
-import uk.gov.ons.ctp.response.action.representation.ActionPostRequestDTO;
+import uk.gov.ons.ctp.response.action.domain.model.ActionTemplate;
+import uk.gov.ons.ctp.response.action.representation.*;
 
 /** The bean mapper to go from Entity objects to Presentation objects. */
 @Component
@@ -50,5 +48,7 @@ public class ActionBeanMapper extends ConfigurableMapper {
         .field("actionTypeName", "actionType.name")
         .byDefault()
         .register();
+
+    factory.classMap(ActionTemplate.class, ActionTemplateDTO.class).byDefault().register();
   }
 }

@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 22-1
+      author: Amit Sinha
+      changes:
+        - sqlFile:
+            comment: active Enrolment addition
+            path: active-enrolment-addition.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
