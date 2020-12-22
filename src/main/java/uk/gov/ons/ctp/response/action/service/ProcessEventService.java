@@ -46,7 +46,7 @@ public class ProcessEventService {
   private final CollectionExerciseClientService collectionExerciseClientService;
   private final SurveySvcClientService surveySvcClientService;
   private final PartySvcClientService partySvcClientService;
-  private final ProcessLetterService printFileService;
+  private final NotifyLetterService printFileService;
   private final NotifyEmailService emailService;
   private final ActionTemplateRepository actionTemplateRepository;
 
@@ -57,7 +57,7 @@ public class ProcessEventService {
       SurveySvcClientService surveySvcClientService,
       PartySvcClientService partySvcClientService,
       ActionEventRepository actionEventRepository,
-      ProcessLetterService printFileService,
+      NotifyLetterService printFileService,
       NotifyEmailService emailService,
       ActionTemplateRepository actionTemplateRepository) {
     this.actionCaseRepository = actionCaseRepository;
@@ -460,7 +460,7 @@ public class ProcessEventService {
           .warn("Processing Email Event FAILED.");
       isSuccess = false;
     }
-    if (actionEvent != null) {
+    if (actionEvent == null) {
       createCaseActionEvent(
           actionCaseId,
           templateType,

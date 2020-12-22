@@ -26,7 +26,7 @@ public class ProcessEventServiceTest {
   @Mock private CollectionExerciseClientService collectionExerciseClientService;
   @Mock private SurveySvcClientService surveySvcClientService;
   @Mock private PartySvcClientService partySvcClientService;
-  @Mock private ProcessLetterService printFileService;
+  @Mock private NotifyLetterService printFileService;
   @Mock private NotifyEmailService emailService;
   @Mock private ActionTemplateRepository actionTemplateRepository;
 

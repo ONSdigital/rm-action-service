@@ -33,6 +33,7 @@ INSERT INTO action.action_template
     ('BSNUE', 'Business Survey Nudge Email', 'nudge', 'EMAIL', NULL);
 
 CREATE TABLE action.action_event (
+    id SERIAL PRIMARY KEY,
     case_id uuid NOT NULL,
     type varchar (40) NOT NULL,
     collection_exercise_id uuid NOT NULL,

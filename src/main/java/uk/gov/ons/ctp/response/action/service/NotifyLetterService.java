@@ -23,7 +23,7 @@ import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 
 @Log4j
 @Service
-public class ProcessLetterService {
+public class NotifyLetterService {
   @Autowired private PubSub pubSub;
 
   @Autowired private AppConfig appConfig;

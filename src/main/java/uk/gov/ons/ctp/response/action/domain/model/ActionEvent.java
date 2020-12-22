@@ -1,6 +1,7 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.*;
@@ -28,6 +29,10 @@ public class ActionEvent implements Serializable {
   private static final long serialVersionUID = 7890373271889255844L;
 
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id")
+  private BigInteger id;
+
   @Column(name = "case_id")
   @NotNull
   private UUID caseId;
