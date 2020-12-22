@@ -1,7 +1,7 @@
 databaseChangeLog:
 
   - changeSet:
-      id: 23-1
+      id: 24-1
       author: Amit Sinha
       changes:
         - sqlFile:

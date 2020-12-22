@@ -10,12 +10,6 @@ alter column actionplanstartdate DROP NOT NULL;
 alter table action.case
 alter column actionplanenddate DROP NOT NULL;
 
-alter table action.case
-add column active_enrolment boolean,
-add column sample_unit_ref varchar(20),
-add column status varchar(20),
-add column iac varchar(20);
-
 CREATE TABLE action.action_template (
     type varchar (40) UNIQUE NOT NULL,
     description varchar(350) NOT NULL,
