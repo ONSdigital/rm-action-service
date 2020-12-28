@@ -13,7 +13,7 @@ import uk.gov.ons.ctp.response.action.representation.events.Event;
 import uk.gov.ons.ctp.response.action.service.ProcessEventService;
 
 @RestController
-@RequestMapping(value = "/process-event", produces = "application/json")
+@RequestMapping(produces = "application/json")
 public class ActionEventEndpoint {
   private static final Logger log = LoggerFactory.getLogger(ActionEventEndpoint.class);
   private final ProcessEventService processEventService;
@@ -23,12 +23,24 @@ public class ActionEventEndpoint {
     this.processEventService = processEventService;
   }
 
-  @RequestMapping(method = RequestMethod.POST, consumes = "application/json")
+  @RequestMapping(
+      value = "/process-event",
+      method = RequestMethod.POST,
+      consumes = "application/json")
   public ResponseEntity processEvents(@RequestBody @Valid Event event) {
     log.with("collectionExercise", event.getCollectionExerciseID())
         .with("EventTag", event.getTag())
         .info("Processing Event");
     processEventService.processEvents(event.getCollectionExerciseID(), event.getTag().toString());
+    return ResponseEntity.accepted().body(null);
+  }
+
+  @RequestMapping(
+      value = "/retry-event",
+      method = RequestMethod.POST)
+  public ResponseEntity retryFailedEvents() {
+    log.info("Initiating retry schedule for failed events if any.");
+    processEventService.retryFailedEvent();
     return ResponseEntity.accepted().body(null);
   }
 }

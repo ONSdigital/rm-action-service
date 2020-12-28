@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import uk.gov.ons.ctp.response.action.client.CaseSvcClientService;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
@@ -49,6 +50,7 @@ public class ProcessEventService {
   private final NotifyLetterService printFileService;
   private final NotifyEmailService emailService;
   private final ActionTemplateRepository actionTemplateRepository;
+  private final CaseSvcClientService caseSvcClientService;
 
   public ProcessEventService(
       ActionCaseRepository actionCaseRepository,
@@ -59,7 +61,8 @@ public class ProcessEventService {
       ActionEventRepository actionEventRepository,
       NotifyLetterService printFileService,
       NotifyEmailService emailService,
-      ActionTemplateRepository actionTemplateRepository) {
+      ActionTemplateRepository actionTemplateRepository,
+      CaseSvcClientService caseSvcClientService) {
     this.actionCaseRepository = actionCaseRepository;
     this.actionTemplateService = actionTemplateService;
     this.collectionExerciseClientService = collectionExerciseClientService;
@@ -69,6 +72,7 @@ public class ProcessEventService {
     this.printFileService = printFileService;
     this.emailService = emailService;
     this.actionTemplateRepository = actionTemplateRepository;
+    this.caseSvcClientService = caseSvcClientService;
   }
 
   /**
@@ -264,6 +268,8 @@ public class ProcessEventService {
         .info("Getting print file entry");
     ActionCaseParty actionCaseParty = setParties(actionCase, survey);
     String iac = actionCase.getIac();
+    String sampleUnitRef = actionCase.getSampleUnitRef();
+    String status = actionCase.getStatus();
     PartyDTO businessParty = actionCaseParty.getParentParty();
     Contact contact = new Contact();
     String respondentStatus = new String();
@@ -287,9 +293,9 @@ public class ProcessEventService {
         actionCase.getId(),
         actionTemplate.getType(),
         actionTemplate.getHandler(),
-        actionCase.getSampleUnitRef(),
+        sampleUnitRef,
         iac,
-        actionCase.getStatus(),
+        status,
         getEnrolmentStatus(actionCaseParty.getParentParty()),
         respondentStatus,
         contact,
@@ -433,7 +439,7 @@ public class ProcessEventService {
         actionCaseParty
             .getChildParties()
             .parallelStream()
-            .filter(respondentParty -> isActive(respondentParty))
+            // .filter(respondentParty -> isActive(respondentParty))
             .forEach(
                 respondentParty ->
                     processEmail(

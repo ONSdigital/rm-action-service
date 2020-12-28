@@ -1,7 +1,10 @@
 package uk.gov.ons.ctp.response.action.service;
 
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -11,12 +14,13 @@ import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
-import uk.gov.ons.ctp.response.action.domain.model.ActionTemplate;
+import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
+import uk.gov.ons.ctp.response.action.domain.model.ActionEvent;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionEventRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTemplateRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionTemplateDTO;
-import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
+import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessEventServiceTest {
@@ -31,35 +35,267 @@ public class ProcessEventServiceTest {
   @Mock private ActionTemplateRepository actionTemplateRepository;
 
   @InjectMocks private ProcessEventService processEventService;
-  UUID collectionExerciseId = UUID.randomUUID();
-  UUID surveyId = UUID.randomUUID();
 
-  @Before
-  public void setUp() throws Exception {
-    CollectionExerciseDTO collectionExerciseDTO = new CollectionExerciseDTO();
-    collectionExerciseDTO.setId(collectionExerciseId);
-    collectionExerciseDTO.setSurveyId(surveyId.toString());
-    collectionExerciseDTO.setSurveyRef("1234");
-    collectionExerciseDTO.setUserDescription("Test");
-    ActionTemplate template = new ActionTemplate();
-    template.setType("BSNE");
-    template.setDescription("test");
-    template.setHandler(ActionTemplateDTO.Handler.EMAIL);
-
-    Mockito.when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
-        .thenReturn(collectionExerciseDTO);
-    // Mockito.when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(collectionExerciseId, true)).thenReturn();
-
-  }
+  private ProcessEventServiceTestData testData = new ProcessEventServiceTestData();
 
   @Test
   public void noEmailOrLetterToBeProcessed() {
+    UUID collectionExerciseId = UUID.randomUUID();
+    UUID surveyId = UUID.randomUUID();
+    Mockito.when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
+        .thenReturn(
+            testData.setupCollectionExerciseDTO(
+                collectionExerciseId, surveyId, "400000005", "test"));
+    Mockito.when(surveySvcClientService.requestDetailsForSurvey(any()))
+        .thenReturn(testData.setupSurveyDTO(surveyId, "test", "400000005", "test"));
     processEventService.processEvents(collectionExerciseId, "go_live");
-    Mockito.verify(partySvcClientService, Mockito.never())
+    verify(partySvcClientService, never())
         .getPartyWithAssociationsFilteredBySurvey(
-            Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
-    Mockito.verify(emailService, Mockito.never()).processEmail(Mockito.anyObject());
-    Mockito.verify(printFileService, Mockito.never())
-        .processPrintFile(Mockito.anyObject(), Mockito.anyObject());
+            anyObject(), anyObject(), anyObject(), anyObject());
+    verify(emailService, never()).processEmail(anyObject());
+    verify(printFileService, never()).processPrintFile(anyObject(), anyObject());
+  }
+
+  @Test
+  public void onlyEmailToBeProcessed() {
+    // Given
+    UUID collectionExerciseId = UUID.randomUUID();
+    UUID surveyId = UUID.randomUUID();
+    UUID caseId = UUID.randomUUID();
+    UUID partyId = UUID.randomUUID();
+    UUID sampleUnitId = UUID.randomUUID();
+    UUID respondentId = UUID.randomUUID();
+    when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
+        .thenReturn(
+            testData.setupCollectionExerciseDTO(
+                collectionExerciseId, surveyId, "400000005", "test"));
+    when(surveySvcClientService.requestDetailsForSurvey(any()))
+        .thenReturn(testData.setupSurveyDTO(surveyId, "test", "400000005", "test"));
+    List<ActionCase> actionCases = new ArrayList<>();
+    actionCases.add(
+        testData.setupActionCase(
+            caseId,
+            true,
+            collectionExerciseId,
+            partyId,
+            SampleUnitDTO.SampleUnitType.B.toString(),
+            sampleUnitId,
+            "400000005",
+            "oiauen"));
+    when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
+            collectionExerciseId, true))
+        .thenReturn(actionCases);
+
+    when(actionTemplateService.mapEventTagToTemplate("go_live", true))
+        .thenReturn(
+            testData.setupActionTemplate("BSNE", ActionTemplateDTO.Handler.EMAIL, "go_live"));
+
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupBusinessParty(
+                "1", "YY", "test", "test@test.com", respondentId.toString()));
+
+    when(partySvcClientService.getParty(anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupRespondentParty(
+                "test", "test", "test@test.com", respondentId.toString()));
+
+    // When
+    processEventService.processEvents(collectionExerciseId, "go_live");
+
+    // Then
+    verify(partySvcClientService, atMost(2))
+        .getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject());
+    verify(printFileService, never()).processPrintFile(anyObject(), anyObject());
+    verify(emailService, atLeastOnce()).processEmail(anyObject());
+  }
+
+  @Test
+  public void onlyLetterToBeProcessed() {
+    // Given
+    UUID collectionExerciseId = UUID.randomUUID();
+    UUID surveyId = UUID.randomUUID();
+    UUID caseId = UUID.randomUUID();
+    UUID partyId = UUID.randomUUID();
+    UUID sampleUnitId = UUID.randomUUID();
+    UUID respondentId = UUID.randomUUID();
+    when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
+        .thenReturn(
+            testData.setupCollectionExerciseDTO(
+                collectionExerciseId, surveyId, "400000005", "test"));
+    when(surveySvcClientService.requestDetailsForSurvey(any()))
+        .thenReturn(testData.setupSurveyDTO(surveyId, "test", "400000005", "test"));
+    List<ActionCase> actionCases = new ArrayList<>();
+    actionCases.add(
+        testData.setupActionCase(
+            caseId,
+            false,
+            collectionExerciseId,
+            partyId,
+            SampleUnitDTO.SampleUnitType.B.toString(),
+            sampleUnitId,
+            "400000005",
+            "oiauen"));
+    when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
+            collectionExerciseId, false))
+        .thenReturn(actionCases);
+
+    when(actionTemplateService.mapEventTagToTemplate("mps", false))
+        .thenReturn(testData.setupActionTemplate("BSNE", ActionTemplateDTO.Handler.EMAIL, "mps"));
+
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupBusinessParty(
+                "1", "YY", "test", "test@test.com", respondentId.toString()));
+
+    when(partySvcClientService.getParty(anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupRespondentParty(
+                "test", "test", "test@test.com", respondentId.toString()));
+
+    // When
+    processEventService.processEvents(collectionExerciseId, "mps");
+
+    // Then
+    verify(partySvcClientService, atMost(2))
+        .getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject());
+    verify(printFileService, atLeastOnce()).processPrintFile(anyObject(), anyObject());
+    verify(emailService, never()).processEmail(anyObject());
+  }
+
+  @Test
+  public void failedLetterToBeProcessed() {
+    // Given
+    UUID collectionExerciseId = UUID.randomUUID();
+    UUID surveyId = UUID.randomUUID();
+    UUID caseId = UUID.randomUUID();
+    UUID partyId = UUID.randomUUID();
+    UUID sampleUnitId = UUID.randomUUID();
+    UUID respondentId = UUID.randomUUID();
+    List<ActionEvent> actionEvents = new ArrayList<>();
+    actionEvents.add(
+        testData.setActionEvent(
+            caseId,
+            surveyId,
+            collectionExerciseId,
+            ActionEvent.ActionEventStatus.FAILED,
+            ActionTemplateDTO.Handler.LETTER,
+            "BSNE"));
+    when(actionEventRepository.findByStatus(ActionEvent.ActionEventStatus.FAILED))
+        .thenReturn(actionEvents);
+    when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
+        .thenReturn(
+            testData.setupCollectionExerciseDTO(
+                collectionExerciseId, surveyId, "400000005", "test"));
+    when(surveySvcClientService.requestDetailsForSurvey(any()))
+        .thenReturn(testData.setupSurveyDTO(surveyId, "test", "400000005", "test"));
+    List<ActionCase> actionCases = new ArrayList<>();
+    actionCases.add(
+        testData.setupActionCase(
+            caseId,
+            false,
+            collectionExerciseId,
+            partyId,
+            SampleUnitDTO.SampleUnitType.B.toString(),
+            sampleUnitId,
+            "400000005",
+            "oiauen"));
+    when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
+            collectionExerciseId, false))
+        .thenReturn(actionCases);
+    when(actionTemplateRepository.findByType(anyObject()))
+        .thenReturn(testData.setupActionTemplate("BSNE", ActionTemplateDTO.Handler.EMAIL, "mps"));
+
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupBusinessParty(
+                "1", "YY", "test", "test@test.com", respondentId.toString()));
+
+    when(partySvcClientService.getParty(anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupRespondentParty(
+                "test", "test", "test@test.com", respondentId.toString()));
+
+    // When
+    processEventService.retryFailedEvent();
+
+    // Then
+    verify(partySvcClientService, atMost(2))
+        .getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject());
+    verify(printFileService, atLeastOnce()).processPrintFile(anyObject(), anyObject());
+    verify(emailService, never()).processEmail(anyObject());
+  }
+
+  @Test
+  public void failedEmailToBeProcessed() {
+    // Given
+    UUID collectionExerciseId = UUID.randomUUID();
+    UUID surveyId = UUID.randomUUID();
+    UUID caseId = UUID.randomUUID();
+    UUID partyId = UUID.randomUUID();
+    UUID sampleUnitId = UUID.randomUUID();
+    UUID respondentId = UUID.randomUUID();
+    List<ActionEvent> actionEvents = new ArrayList<>();
+    actionEvents.add(
+        testData.setActionEvent(
+            caseId,
+            surveyId,
+            collectionExerciseId,
+            ActionEvent.ActionEventStatus.FAILED,
+            ActionTemplateDTO.Handler.EMAIL,
+            "BSNE"));
+    when(actionEventRepository.findByStatus(ActionEvent.ActionEventStatus.FAILED))
+        .thenReturn(actionEvents);
+    when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
+        .thenReturn(
+            testData.setupCollectionExerciseDTO(
+                collectionExerciseId, surveyId, "400000005", "test"));
+    when(surveySvcClientService.requestDetailsForSurvey(any()))
+        .thenReturn(testData.setupSurveyDTO(surveyId, "test", "400000005", "test"));
+    List<ActionCase> actionCases = new ArrayList<>();
+    actionCases.add(
+        testData.setupActionCase(
+            caseId,
+            true,
+            collectionExerciseId,
+            partyId,
+            SampleUnitDTO.SampleUnitType.B.toString(),
+            sampleUnitId,
+            "400000005",
+            "oiauen"));
+    when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
+            collectionExerciseId, true))
+        .thenReturn(actionCases);
+
+    when(actionTemplateService.mapEventTagToTemplate("go_live", true))
+        .thenReturn(
+            testData.setupActionTemplate("BSNE", ActionTemplateDTO.Handler.EMAIL, "go_live"));
+
+    when(partySvcClientService.getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupBusinessParty(
+                "1", "YY", "test", "test@test.com", respondentId.toString()));
+
+    when(partySvcClientService.getParty(anyObject(), anyObject()))
+        .thenReturn(
+            testData.setupRespondentParty(
+                "test", "test", "test@test.com", respondentId.toString()));
+
+    // When
+    processEventService.processEvents(collectionExerciseId, "go_live");
+
+    // Then
+    verify(partySvcClientService, atMost(2))
+        .getPartyWithAssociationsFilteredBySurvey(
+            anyObject(), anyObject(), anyObject(), anyObject());
+    verify(printFileService, never()).processPrintFile(anyObject(), anyObject());
+    verify(emailService, atLeastOnce()).processEmail(anyObject());
   }
 }
