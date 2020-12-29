@@ -31,11 +31,11 @@ service:
 crons:
   distributionScheduler:
     name: action-distribution-scheduler
-    cron: "0 0 0 * * ? 2030"
+    cron: "0 0 1 12 *"
     target: "distribute"
   planJobExecutor:
     name: action-plan-executor
-    cron: "0 0 0 * * ? 2030"
+    cron: "0 0 1 12 *"
     target: "actionplans/execute"
   recordDeleter:
     name: action-export-old-record-deleter
@@ -43,8 +43,12 @@ crons:
     target: "delete-old-data"
   exportScheduler:
     name: action-export-scheduler
-    cron: "0 0 0 * * ? 2030"
+    cron: "0 0 1 12 *"
     target: "export"
+  retryEventScheduler:
+    name: action-event-retry-scheduler
+    cron: "0 * * * *"
+    target: "retry-event"
 
 resources:
   application:
