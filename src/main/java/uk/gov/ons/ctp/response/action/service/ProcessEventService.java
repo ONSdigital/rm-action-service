@@ -29,6 +29,7 @@ import uk.gov.ons.ctp.response.action.representation.ActionTemplateDTO;
 import uk.gov.ons.ctp.response.action.representation.events.ActionCaseParty;
 import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Classifiers;
 import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Personalisation;
+import uk.gov.ons.ctp.response.lib.casesvc.representation.CaseDetailsDTO;
 import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.lib.party.representation.Association;
 import uk.gov.ons.ctp.response.lib.party.representation.Attributes;
@@ -270,6 +271,15 @@ public class ProcessEventService {
     String iac = actionCase.getIac();
     String sampleUnitRef = actionCase.getSampleUnitRef();
     String status = actionCase.getStatus();
+    // This is only for legacy cases which is still to be processed.
+    if (actionCase.getIac() == null
+        && actionCase.getSampleUnitRef() == null
+        && actionCase.getStatus() == null) {
+      CaseDetailsDTO caseDetailsDTO = getCaseDetails(actionCase);
+      status = caseDetailsDTO.getCaseGroup().getCaseGroupStatus().toString();
+      iac = caseDetailsDTO.getIac();
+      sampleUnitRef = caseDetailsDTO.getCaseGroup().getSampleUnitRef();
+    }
     PartyDTO businessParty = actionCaseParty.getParentParty();
     Contact contact = new Contact();
     String respondentStatus = new String();
@@ -300,6 +310,10 @@ public class ProcessEventService {
         respondentStatus,
         contact,
         businessParty.getAttributes().getRegion());
+  }
+
+  private CaseDetailsDTO getCaseDetails(ActionCase actionCase) {
+    return caseSvcClientService.getCaseWithIACandCaseEvents(actionCase.getId());
   }
 
   /** Retry method to process failed action events. */
@@ -609,9 +623,16 @@ public class ProcessEventService {
         .with("case", actionCase.getId())
         .with("handler", actionTemplate.getHandler())
         .info("Collecting email data.");
+    String sampleUnitRef = actionCase.getSampleUnitRef();
+    // This is only to handle legacy cases
+    if (sampleUnitRef == null) {
+      CaseDetailsDTO caseDetailsDTO = getCaseDetails(actionCase);
+      sampleUnitRef = caseDetailsDTO.getCaseGroup().getSampleUnitRef();
+    }
     Classifiers classifiers = getClassifiers(businessParty, survey, actionTemplate);
     Personalisation personalisation =
-        getPersonalisation(businessParty, respondentParty, survey, actionCase, collectionExercise);
+        getPersonalisation(
+            businessParty, respondentParty, survey, sampleUnitRef, collectionExercise);
     NotifyModel payload =
         new NotifyModel(
             NotifyModel.Notify.builder()
@@ -632,7 +653,7 @@ public class ProcessEventService {
    * @param businessParty
    * @param respondentParty
    * @param survey
-   * @param actionCase
+   * @param sampleUnitRef
    * @param collectionExercise
    * @return
    */
@@ -640,7 +661,7 @@ public class ProcessEventService {
       PartyDTO businessParty,
       PartyDTO respondentParty,
       SurveyDTO survey,
-      ActionCase actionCase,
+      String sampleUnitRef,
       CollectionExerciseDTO collectionExercise) {
     log.info("collecting personalisation for email");
     DateFormat dateFormat =
@@ -649,7 +670,7 @@ public class ProcessEventService {
         Personalisation.builder()
             .firstname(respondentParty.getAttributes().getFirstName())
             .lastname(respondentParty.getAttributes().getLastName())
-            .reportingUnitReference(actionCase.getSampleUnitRef())
+            .reportingUnitReference(sampleUnitRef)
             .returnByDate(dateFormat.format(collectionExercise.getScheduledReturnDateTime()))
             .tradingSyle(generateTradingStyle(businessParty.getAttributes()))
             .ruName(businessParty.getName())

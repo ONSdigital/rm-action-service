@@ -30,47 +30,6 @@ public class NotifyLetterService {
 
   @Autowired private UploadObjectGCS uploadObjectGCS;
 
-  public boolean send(String printFilename, List<ActionRequest> actionRequests) {
-    boolean success = false;
-    String dataFilename = FilenameUtils.removeExtension(printFilename).concat(".json");
-
-    List<PrintFileEntry> printFile = convertToPrintFile(actionRequests);
-    try {
-      log.debug("creating json representation of print file");
-      String json = createJsonRepresentation(printFile);
-      ByteString data = ByteString.copyFromUtf8(json);
-
-      String bucket = appConfig.getGcp().getBucket().getName();
-      log.info("about to uploaded to bucket " + bucket);
-      boolean uploaded = uploadObjectGCS.uploadObject(dataFilename, bucket, data.toByteArray());
-
-      Publisher publisher = pubSub.printfilePublisher();
-      try {
-        if (uploaded) {
-          ByteString pubsubData = ByteString.copyFromUtf8(dataFilename);
-
-          PubsubMessage pubsubMessage =
-              PubsubMessage.newBuilder()
-                  .setData(pubsubData)
-                  .putAttributes("printFilename", printFilename)
-                  .build();
-
-          ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-          String messageId = messageIdFuture.get();
-          log.info("print file pubsub successfully sent with messageId:" + messageId);
-          success = true;
-        }
-      } finally {
-        publisher.shutdown();
-      }
-    } catch (JsonProcessingException e) {
-      log.error("unable to convert to json", e);
-    } catch (InterruptedException | ExecutionException | IOException e) {
-      log.error("pub/sub error", e);
-    }
-    return success;
-  }
-
   public boolean processPrintFile(String printFilename, List<LetterEntry> printFile) {
     boolean success = false;
     String dataFilename = FilenameUtils.removeExtension(printFilename).concat(".json");
@@ -108,12 +67,6 @@ public class NotifyLetterService {
       log.error("pub/sub error", e);
     }
     return success;
-  }
-
-  private String createJsonRepresentation(List<PrintFileEntry> printFile)
-      throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.writeValueAsString(printFile);
   }
 
   private String createJson(List<LetterEntry> printFile) throws JsonProcessingException {

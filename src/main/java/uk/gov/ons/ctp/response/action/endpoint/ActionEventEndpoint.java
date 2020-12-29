@@ -35,9 +35,7 @@ public class ActionEventEndpoint {
     return ResponseEntity.accepted().body(null);
   }
 
-  @RequestMapping(
-      value = "/retry-event",
-      method = RequestMethod.POST)
+  @RequestMapping(value = "/retry-event", method = RequestMethod.POST)
   public ResponseEntity retryFailedEvents() {
     log.info("Initiating retry schedule for failed events if any.");
     processEventService.retryFailedEvent();

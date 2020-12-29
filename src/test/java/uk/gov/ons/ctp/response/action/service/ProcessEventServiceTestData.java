@@ -7,6 +7,7 @@ import java.util.UUID;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionEvent;
 import uk.gov.ons.ctp.response.action.domain.model.ActionTemplate;
+import uk.gov.ons.ctp.response.action.printfile.LetterEntry;
 import uk.gov.ons.ctp.response.action.representation.ActionTemplateDTO.Handler;
 import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.lib.party.representation.Association;
@@ -120,5 +121,24 @@ public class ProcessEventServiceTestData {
         .handler(handler)
         .type(type)
         .build();
+  }
+
+  public static List<LetterEntry> buildListOfLetterEntries() {
+    List<LetterEntry> result = new ArrayList<>();
+    for (int i = 1; i < 51; i++) {
+      result.add(buildLetterEntries());
+    }
+    return result;
+  }
+
+  private static LetterEntry buildLetterEntries() {
+    LetterEntry result = new LetterEntry();
+    result.setIac("testIac");
+    result.setCaseGroupStatus("testCaseGroupStatus");
+    result.setEnrolmentStatus("testEnrolmentStatus");
+    result.setRespondentStatus("testRespondentStatus");
+    result.setRegion("testRegion");
+    result.setSampleUnitRef("testSampleUnitRef");
+    return result;
   }
 }
