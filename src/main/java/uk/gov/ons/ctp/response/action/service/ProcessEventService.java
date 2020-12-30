@@ -105,12 +105,7 @@ public class ProcessEventService {
       ActionTemplate actionTemplate = actionTemplateService.mapEventTagToTemplate(eventTag, true);
       if (actionTemplate != null) {
         log.with("email cases", email_cases.size()).info("Processing email cases");
-        email_cases
-            .parallelStream()
-            .filter(c -> isActionable(c, actionTemplate))
-            .forEach(
-                c ->
-                    processEmailCase(c, collectionExercise, survey, actionTemplate, null, instant));
+        processEmailCases(instant, collectionExercise, survey, email_cases, actionTemplate);
       } else {
         log.with("activeEnrolment", true)
             .with("event", eventTag)
@@ -140,6 +135,19 @@ public class ProcessEventService {
           .with("event", eventTag)
           .info("No Letters to process");
     }
+  }
+
+  private void processEmailCases(Instant instant,
+                                 CollectionExerciseDTO collectionExercise,
+                                 SurveyDTO survey,
+                                 List<ActionCase> email_cases,
+                                 ActionTemplate actionTemplate) {
+    email_cases
+        .parallelStream()
+        .filter(c -> isActionable(c, actionTemplate))
+        .forEach(
+            c ->
+                processEmailCase(c, collectionExercise, survey, actionTemplate, null, instant));
   }
 
   /**
@@ -183,7 +191,7 @@ public class ProcessEventService {
     log.info("filename: " + filename + ", uploading file");
     log.with("actionType", actionTemplate.getType()).info("Processing Print File");
     boolean isSuccess = printFileService.processPrintFile(filename, letterEntries);
-    log.with("process file status?", isSuccess)
+    log.with("file processed?", isSuccess)
         .with("actionType", actionTemplate.getType())
         .info("Recording case action event");
     if (isNotRetry) {

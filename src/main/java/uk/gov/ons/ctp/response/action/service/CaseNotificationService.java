@@ -87,6 +87,7 @@ public class CaseNotificationService {
   }
 
   private ActionCase createActionCase(CaseNotification notification) throws NullPointerException {
+    // To Do - remove this code once action plan is deprecated
     if (notification.getActionPlanId() != null) {
       UUID actionPlanId = UUID.fromString(notification.getActionPlanId());
       ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
@@ -164,6 +165,7 @@ public class CaseNotificationService {
       throw new IllegalStateException(
           String.format(ACTION_CASE_NOT_FOUND, actionCaseId.toString()));
     }
+    // To Do - remove this code once action plan is deprecated
     if (actionPlanId != null) {
       ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
       if (actionPlan == null) {
