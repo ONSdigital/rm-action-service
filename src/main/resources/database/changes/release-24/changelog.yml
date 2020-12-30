@@ -6,7 +6,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             comment: This provides additional tables i.e. action_template and action_event and removes constraints from case table.
-            path: action-template-and-action-event-addition.sql
+            path: action-event-template-addition.sql
             relativeToChangelogFile: true
             splitStatements: false
 

@@ -6,7 +6,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             comment: active Enrolment addition
-            path: action-template-and-action-event-addition.sql
+            path: active-enrolment-addition.sql
             relativeToChangelogFile: true
             splitStatements: false
 

@@ -137,17 +137,17 @@ public class ProcessEventService {
     }
   }
 
-  private void processEmailCases(Instant instant,
-                                 CollectionExerciseDTO collectionExercise,
-                                 SurveyDTO survey,
-                                 List<ActionCase> email_cases,
-                                 ActionTemplate actionTemplate) {
+  private void processEmailCases(
+      Instant instant,
+      CollectionExerciseDTO collectionExercise,
+      SurveyDTO survey,
+      List<ActionCase> email_cases,
+      ActionTemplate actionTemplate) {
     email_cases
         .parallelStream()
         .filter(c -> isActionable(c, actionTemplate))
         .forEach(
-            c ->
-                processEmailCase(c, collectionExercise, survey, actionTemplate, null, instant));
+            c -> processEmailCase(c, collectionExercise, survey, actionTemplate, null, instant));
   }
 
   /**
