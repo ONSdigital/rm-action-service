@@ -22,6 +22,7 @@ import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 
 @Log4j
 @Service
+@Deprecated
 public class PrintFileService {
 
   @Autowired private PubSub pubSub;

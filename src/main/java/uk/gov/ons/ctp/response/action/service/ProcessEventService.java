@@ -97,15 +97,15 @@ public class ProcessEventService {
     CollectionExerciseDTO collectionExercise = getCollectionExercise(collectionExerciseId);
     SurveyDTO survey = getSurvey(collectionExercise.getSurveyId());
     log.debug("Getting Email cases against collectionExerciseId and event active enrolment");
-    List<ActionCase> email_cases =
+    List<ActionCase> emailCases =
         actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
             collectionExerciseId, true);
-    if (email_cases.size() > 0) {
+    if (!emailCases.isEmpty()) {
       log.with("collectionExerciseId", collectionExercise).info("Processing email cases.");
       ActionTemplate actionTemplate = actionTemplateService.mapEventTagToTemplate(eventTag, true);
       if (actionTemplate != null) {
-        log.with("email cases", email_cases.size()).info("Processing email cases");
-        processEmailCases(instant, collectionExercise, survey, email_cases, actionTemplate);
+        log.with("email cases", emailCases.size()).info("Processing email cases");
+        processEmailCases(instant, collectionExercise, survey, emailCases, actionTemplate);
       } else {
         log.with("activeEnrolment", true)
             .with("event", eventTag)
@@ -117,14 +117,14 @@ public class ProcessEventService {
           .info("No Emails to process");
     }
     log.debug("Getting Email cases against collectionExerciseId and event active enrolment");
-    List<ActionCase> letter_cases =
+    List<ActionCase> letterCases =
         actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
             collectionExerciseId, false);
-    if (letter_cases.size() > 0) {
+    if (!letterCases.isEmpty()) {
       ActionTemplate actionTemplate = actionTemplateService.mapEventTagToTemplate(eventTag, false);
       if (actionTemplate != null) {
-        log.with("Letter cases", letter_cases.size()).info("Processing letter cases");
-        processLetterCases(letter_cases, actionTemplate, survey, collectionExercise, instant, true);
+        log.with("Letter cases", letterCases.size()).info("Processing letter cases");
+        processLetterCases(letterCases, actionTemplate, survey, collectionExercise, instant, true);
       } else {
         log.with("activeEnrolment", false)
             .with("event", eventTag)

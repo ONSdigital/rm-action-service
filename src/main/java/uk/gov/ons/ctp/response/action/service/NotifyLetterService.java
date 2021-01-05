@@ -73,28 +73,4 @@ public class NotifyLetterService {
     ObjectMapper mapper = new ObjectMapper();
     return mapper.writeValueAsString(printFile);
   }
-
-  protected List<PrintFileEntry> convertToPrintFile(List<ActionRequest> actionRequests) {
-    List<PrintFileEntry> printFileEntries = new ArrayList<>();
-
-    for (ActionRequest actionRequest : actionRequests) {
-      PrintFileEntry entry = new PrintFileEntry();
-
-      entry.setCaseGroupStatus(actionRequest.getCaseGroupStatus());
-      entry.setIac(actionRequest.getIac());
-      entry.setEnrolmentStatus(actionRequest.getEnrolmentStatus());
-      entry.setRegion(actionRequest.getRegion());
-      entry.setRespondentStatus(actionRequest.getRespondentStatus());
-      entry.setSampleUnitRef(actionRequest.getSampleUnitRef());
-      if (actionRequest.getContact() != null) {
-        Contact contact = new Contact();
-        contact.setEmailAddress(actionRequest.getContact().getEmailAddress());
-        contact.setForename(actionRequest.getContact().getForename());
-        contact.setSurname(actionRequest.getContact().getSurname());
-        entry.setContact(contact);
-      }
-      printFileEntries.add(entry);
-    }
-    return printFileEntries;
-  }
 }
