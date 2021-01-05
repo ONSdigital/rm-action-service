@@ -7,7 +7,6 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.log4j.Log4j;
@@ -16,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
-import uk.gov.ons.ctp.response.action.message.instruction.ActionRequest;
-import uk.gov.ons.ctp.response.action.printfile.Contact;
 import uk.gov.ons.ctp.response.action.printfile.LetterEntry;
-import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
 
 @Log4j
 @Service
