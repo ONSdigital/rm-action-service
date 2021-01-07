@@ -7,7 +7,6 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.log4j.Log4j;
@@ -15,31 +14,24 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.domain.model.ActionRequestInstruction;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
-import uk.gov.ons.ctp.response.action.printfile.Contact;
-import uk.gov.ons.ctp.response.action.printfile.PrintFileEntry;
+import uk.gov.ons.ctp.response.action.printfile.LetterEntry;
 
 @Log4j
 @Service
-@Deprecated
-public class PrintFileService {
-
+public class NotifyLetterService {
   @Autowired private PubSub pubSub;
 
   @Autowired private AppConfig appConfig;
 
   @Autowired private UploadObjectGCS uploadObjectGCS;
 
-  public boolean send(
-      String printFilename, List<ActionRequestInstruction> actionRequestInstructions) {
+  public boolean processPrintFile(String printFilename, List<LetterEntry> printFile) {
     boolean success = false;
     String dataFilename = FilenameUtils.removeExtension(printFilename).concat(".json");
-
-    List<PrintFileEntry> printFile = convertToPrintFile(actionRequestInstructions);
     try {
       log.debug("creating json representation of print file");
-      String json = createJsonRepresentation(printFile);
+      String json = createJson(printFile);
       ByteString data = ByteString.copyFromUtf8(json);
 
       String bucket = appConfig.getGcp().getBucket().getName();
@@ -73,34 +65,8 @@ public class PrintFileService {
     return success;
   }
 
-  private String createJsonRepresentation(List<PrintFileEntry> printFile)
-      throws JsonProcessingException {
+  private String createJson(List<LetterEntry> printFile) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     return mapper.writeValueAsString(printFile);
-  }
-
-  protected List<PrintFileEntry> convertToPrintFile(
-      List<ActionRequestInstruction> actionRequestInstructions) {
-    List<PrintFileEntry> printFileEntries = new ArrayList<>();
-
-    for (ActionRequestInstruction actionRequestInstruction : actionRequestInstructions) {
-      PrintFileEntry entry = new PrintFileEntry();
-
-      entry.setCaseGroupStatus(actionRequestInstruction.getCaseGroupStatus());
-      entry.setIac(actionRequestInstruction.getIac());
-      entry.setEnrolmentStatus(actionRequestInstruction.getEnrolmentStatus());
-      entry.setRegion(actionRequestInstruction.getRegion());
-      entry.setRespondentStatus(actionRequestInstruction.getRespondentStatus());
-      entry.setSampleUnitRef(actionRequestInstruction.getSampleUnitRef());
-      if (actionRequestInstruction.getContact() != null) {
-        Contact contact = new Contact();
-        contact.setEmailAddress(actionRequestInstruction.getContact().getEmailAddress());
-        contact.setForename(actionRequestInstruction.getContact().getForename());
-        contact.setSurname(actionRequestInstruction.getContact().getSurname());
-        entry.setContact(contact);
-      }
-      printFileEntries.add(entry);
-    }
-    return printFileEntries;
   }
 }

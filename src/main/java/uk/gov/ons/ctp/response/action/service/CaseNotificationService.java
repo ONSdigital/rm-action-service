@@ -56,6 +56,10 @@ public class CaseNotificationService {
   public void acceptNotification(final CaseNotification notification) throws CTPException {
 
     UUID caseId = UUID.fromString(notification.getCaseId());
+    UUID actionPlanId =
+        notification.getActionPlanId() != null
+            ? UUID.fromString(notification.getActionPlanId())
+            : null;
 
     switch (notification.getNotificationType()) {
       case REPLACED:
@@ -65,7 +69,7 @@ public class CaseNotificationService {
         break;
 
       case ACTIONPLAN_CHANGED:
-        updateActionCase(caseId, UUID.fromString(notification.getActionPlanId()));
+        updateActionCase(caseId, actionPlanId, notification);
         break;
 
       case DISABLED:
@@ -82,38 +86,65 @@ public class CaseNotificationService {
     actionCaseRepo.flush();
   }
 
-  private ActionCase createActionCase(CaseNotification notification) {
-    UUID actionPlanId = UUID.fromString(notification.getActionPlanId());
-    ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
-    if (actionPlan == null) {
-      throw new IllegalStateException(
-          String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
-    }
-    UUID caseId = UUID.fromString(notification.getCaseId());
-    UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
-    UUID partyId =
-        notification.getPartyId() == null ? null : UUID.fromString(notification.getPartyId());
-    UUID sampleUnitId =
-        notification.getSampleUnitId() == null
-            ? null
-            : UUID.fromString(notification.getSampleUnitId());
+  private ActionCase createActionCase(CaseNotification notification) throws NullPointerException {
+    // To Do - remove this code once action plan is deprecated
+    if (notification.getActionPlanId() != null) {
+      UUID actionPlanId = UUID.fromString(notification.getActionPlanId());
+      ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+      if (actionPlan == null) {
+        throw new IllegalStateException(
+            String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
+      }
+      UUID caseId = UUID.fromString(notification.getCaseId());
+      UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
+      UUID partyId =
+          notification.getPartyId() == null ? null : UUID.fromString(notification.getPartyId());
+      UUID sampleUnitId =
+          notification.getSampleUnitId() == null
+              ? null
+              : UUID.fromString(notification.getSampleUnitId());
 
-    CollectionExerciseDTO collectionExercise =
-        collectionSvcClientService.getCollectionExercise(collectionExerciseId);
-    Timestamp startDateTime =
-        new Timestamp(collectionExercise.getScheduledStartDateTime().getTime());
-    Timestamp endDateTime = new Timestamp(collectionExercise.getScheduledEndDateTime().getTime());
-    return ActionCase.builder()
-        .id(caseId)
-        .sampleUnitId(sampleUnitId)
-        .actionPlanId(actionPlanId)
-        .actionPlanFK(actionPlan.getActionPlanPK())
-        .collectionExerciseId(collectionExerciseId)
-        .actionPlanStartDate(startDateTime)
-        .actionPlanEndDate(endDateTime)
-        .partyId(partyId)
-        .sampleUnitType(notification.getSampleUnitType())
-        .build();
+      CollectionExerciseDTO collectionExercise =
+          collectionSvcClientService.getCollectionExercise(collectionExerciseId);
+      Timestamp startDateTime =
+          new Timestamp(collectionExercise.getScheduledStartDateTime().getTime());
+      Timestamp endDateTime = new Timestamp(collectionExercise.getScheduledEndDateTime().getTime());
+      return ActionCase.builder()
+          .id(caseId)
+          .sampleUnitId(sampleUnitId)
+          .actionPlanId(actionPlanId)
+          .activeEnrolment(notification.isActiveEnrolment())
+          .actionPlanFK(actionPlan.getActionPlanPK())
+          .collectionExerciseId(collectionExerciseId)
+          .actionPlanStartDate(startDateTime)
+          .actionPlanEndDate(endDateTime)
+          .partyId(partyId)
+          .sampleUnitType(notification.getSampleUnitType())
+          .build();
+    } else {
+      UUID caseId = UUID.fromString(notification.getCaseId());
+      UUID collectionExerciseId = UUID.fromString(notification.getExerciseId());
+      UUID partyId =
+          notification.getPartyId() == null ? null : UUID.fromString(notification.getPartyId());
+      UUID sampleUnitId =
+          notification.getSampleUnitId() == null
+              ? null
+              : UUID.fromString(notification.getSampleUnitId());
+
+      // CollectionExerciseDTO collectionExercise =
+      // collectionSvcClientService.getCollectionExercise(collectionExerciseId);
+      return ActionCase.builder()
+          .id(caseId)
+          .sampleUnitId(sampleUnitId)
+          .activeEnrolment(notification.isActiveEnrolment())
+          .collectionExerciseId(collectionExerciseId)
+          .partyId(partyId)
+          .sampleUnitType(notification.getSampleUnitType())
+          .sampleUnitRef(notification.getSampleUnitRef())
+          .status(notification.getStatus())
+          .iac(notification.getIac())
+          .build();
+    }
   }
 
   private void saveActionCase(ActionCase actionCase) {
@@ -126,24 +157,32 @@ public class CaseNotificationService {
     actionCaseRepo.save(actionCase);
   }
 
-  private void updateActionCase(UUID actionCaseId, UUID actionPlanId) {
+  private void updateActionCase(
+      UUID actionCaseId, UUID actionPlanId, CaseNotification notification) {
     ActionCase existingCase = actionCaseRepo.findById(actionCaseId);
     if (existingCase == null) {
       log.with("case_id", actionCaseId.toString()).error("No case found to update");
       throw new IllegalStateException(
           String.format(ACTION_CASE_NOT_FOUND, actionCaseId.toString()));
     }
-    ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
-    if (actionPlan == null) {
-      log.with("action_plan_id", actionPlanId.toString()).error("No action plan found");
-      throw new IllegalStateException(
-          String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
+    // To Do - remove this code once action plan is deprecated
+    if (actionPlanId != null) {
+      ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
+      if (actionPlan == null) {
+        log.with("action_plan_id", actionPlanId.toString()).error("No action plan found");
+        throw new IllegalStateException(
+            String.format(ACTION_PLAN_NOT_FOUND, actionPlanId.toString()));
+      }
+      existingCase.setActionPlanFK(actionPlan.getActionPlanPK());
+      existingCase.setActionPlanId(actionPlanId);
+      log.with("case_id", actionCaseId.toString())
+          .with("action_plan_id", actionPlanId.toString())
+          .debug("Updating case action plan");
+    } else {
+      existingCase.setStatus(notification.getStatus());
+      existingCase.setActiveEnrolment(notification.isActiveEnrolment());
+      existingCase.setIac(notification.getIac());
     }
-    existingCase.setActionPlanFK(actionPlan.getActionPlanPK());
-    existingCase.setActionPlanId(actionPlanId);
-    log.with("case_id", actionCaseId.toString())
-        .with("action_plan_id", actionPlanId.toString())
-        .debug("Updating case action plan");
     actionCaseRepo.save(existingCase);
   }
 

@@ -19,6 +19,7 @@ import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Classifiers;
 import uk.gov.ons.ctp.response.action.service.NotifyModel.Notify.Personalisation;
 
 @Service
+@Deprecated
 public class NotifyService {
 
   public static Logger log = LoggerFactory.getLogger(NotifyService.class);
