@@ -77,4 +77,4 @@ databaseChangeLog:
 
 # this should only be deployed to prod once we are ready to turn on the actionsvc deprecated to true
 - include:
-      file: database/changes/release-24/changelog.yml
+      file: database/changes/release-25/changelog.yml
