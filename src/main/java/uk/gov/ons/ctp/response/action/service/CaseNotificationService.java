@@ -175,9 +175,11 @@ public class CaseNotificationService {
       }
       existingCase.setActionPlanFK(actionPlan.getActionPlanPK());
       existingCase.setActionPlanId(actionPlanId);
+      existingCase.setActiveEnrolment(notification.isActiveEnrolment());
       log.with("case_id", actionCaseId.toString())
           .with("action_plan_id", actionPlanId.toString())
-          .debug("Updating case action plan");
+          .with("activeEnrolment", notification.isActiveEnrolment())
+          .info("Updating case action plan");
     } else {
       existingCase.setStatus(notification.getStatus());
       existingCase.setActiveEnrolment(notification.isActiveEnrolment());
