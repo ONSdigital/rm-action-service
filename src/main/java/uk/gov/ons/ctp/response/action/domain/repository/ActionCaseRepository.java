@@ -3,6 +3,8 @@ package uk.gov.ons.ctp.response.action.domain.repository;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 
@@ -38,4 +40,9 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
       UUID collectionExerciseId, boolean activeEnrolment);
 
   List<ActionCase> findByIdIn(List<UUID> caseId);
+
+  @Query(
+    "SELECT count (*) FROM Case c " +
+      "AND c.collectionExerciseId = :collectionExerciseId")
+  Long findByCollectionExerciseId(@Param("collectionExerciseId") UUID collectionExerciseId);
 }
