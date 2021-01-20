@@ -2,6 +2,7 @@ package uk.gov.ons.ctp.response.action.endpoint;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.util.Optional;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +14,6 @@ import uk.gov.ons.ctp.response.action.representation.events.Event;
 import uk.gov.ons.ctp.response.action.service.ProcessEventService;
 import uk.gov.ons.ctp.response.action.service.ProcessPartialEventService;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping(produces = "application/json")
 public class ActionEventEndpoint {
@@ -23,8 +22,9 @@ public class ActionEventEndpoint {
   private final ProcessPartialEventService processPartialEventService;
 
   @Autowired
-  public ActionEventEndpoint(ProcessEventService processEventService,
-                             ProcessPartialEventService processPartialEventService) {
+  public ActionEventEndpoint(
+      ProcessEventService processEventService,
+      ProcessPartialEventService processPartialEventService) {
     this.processEventService = processEventService;
     this.processPartialEventService = processPartialEventService;
   }
@@ -37,7 +37,8 @@ public class ActionEventEndpoint {
     log.with("collectionExercise", event.getCollectionExerciseID())
         .with("EventTag", event.getTag())
         .info("Processing Event");
-    processEventService.processEvents(event.getCollectionExerciseID(), event.getTag().toString(), Optional.empty());
+    processEventService.processEvents(
+        event.getCollectionExerciseID(), event.getTag().toString(), Optional.empty());
     return ResponseEntity.accepted().body(null);
   }
 

@@ -68,19 +68,19 @@ public class CaseSvcClientService {
   }
 
   @Retryable(
-    value = {RestClientException.class},
-    maxAttemptsExpression = "#{${retries.maxAttempts}}",
-    backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
+      value = {RestClientException.class},
+      maxAttemptsExpression = "#{${retries.maxAttempts}}",
+      backoff = @Backoff(delayExpression = "#{${retries.backoff}}"))
   public Long getNumberOfCases(final UUID collectionExerciseId) {
     final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
     final UriComponents uriComponents =
-      restUtility.createUriComponents(
-        appConfig.getCaseSvc().getNumberOfCasesPath(), null, collectionExerciseId);
+        restUtility.createUriComponents(
+            appConfig.getCaseSvc().getNumberOfCasesPath(), null, collectionExerciseId);
 
     final HttpEntity<?> httpEntity = restUtility.createHttpEntity(null);
 
     final ResponseEntity<String> responseEntity =
-      restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
+        restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, httpEntity, String.class);
 
     Long result = null;
     if (responseEntity != null && responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -88,7 +88,8 @@ public class CaseSvcClientService {
       try {
         result = objectMapper.readValue(responseBody, Long.class);
       } catch (final IOException e) {
-        log.with("Collection Exercise", collectionExerciseId).error("Unable to read no. of cases response", e);
+        log.with("Collection Exercise", collectionExerciseId)
+            .error("Unable to read no. of cases response", e);
       }
     }
     return result;

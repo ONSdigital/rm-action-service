@@ -1,16 +1,15 @@
 package uk.gov.ons.ctp.response.action.domain.model;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.sourceforge.cobertura.CoverageIgnore;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.util.UUID;
 
 @CoverageIgnore
 @Entity

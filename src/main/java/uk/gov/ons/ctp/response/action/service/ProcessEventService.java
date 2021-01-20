@@ -2,6 +2,14 @@ package uk.gov.ons.ctp.response.action.service;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -32,15 +40,6 @@ import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 import uk.gov.ons.ctp.response.lib.sample.representation.SampleUnitDTO;
 import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
-
 @Service
 public class ProcessEventService {
   private static final Logger log = LoggerFactory.getLogger(ProcessEventService.class);
@@ -58,16 +57,17 @@ public class ProcessEventService {
   private final ActionEventPartialEntryRepository actionEventPartialEntryRepository;
 
   public ProcessEventService(
-    ActionCaseRepository actionCaseRepository,
-    ActionTemplateService actionTemplateService,
-    CollectionExerciseClientService collectionExerciseClientService,
-    SurveySvcClientService surveySvcClientService,
-    PartySvcClientService partySvcClientService,
-    ActionEventRepository actionEventRepository,
-    NotifyLetterService printFileService,
-    NotifyEmailService emailService,
-    ActionTemplateRepository actionTemplateRepository,
-    CaseSvcClientService caseSvcClientService, ActionEventPartialEntryRepository actionEventPartialEntryRepository) {
+      ActionCaseRepository actionCaseRepository,
+      ActionTemplateService actionTemplateService,
+      CollectionExerciseClientService collectionExerciseClientService,
+      SurveySvcClientService surveySvcClientService,
+      PartySvcClientService partySvcClientService,
+      ActionEventRepository actionEventRepository,
+      NotifyLetterService printFileService,
+      NotifyEmailService emailService,
+      ActionTemplateRepository actionTemplateRepository,
+      CaseSvcClientService caseSvcClientService,
+      ActionEventPartialEntryRepository actionEventPartialEntryRepository) {
     this.actionCaseRepository = actionCaseRepository;
     this.actionTemplateService = actionTemplateService;
     this.collectionExerciseClientService = collectionExerciseClientService;
@@ -94,9 +94,8 @@ public class ProcessEventService {
    * @param eventTag - is passed by collectionexercisesvc scheduler as a part of the event process.
    */
   @Async
-  public void processEvents(UUID collectionExerciseId,
-                            String eventTag,
-                            Optional<ActionEventPartialEntry> partialEntry) {
+  public void processEvents(
+      UUID collectionExerciseId, String eventTag, Optional<ActionEventPartialEntry> partialEntry) {
     log.with("collectionExerciseId", collectionExerciseId)
         .with("event_tag", eventTag)
         .info("Started processing");
@@ -145,34 +144,38 @@ public class ProcessEventService {
     partialProcessCheckPoint(collectionExerciseId, eventTag, partialEntry, instant);
   }
 
-  private void partialProcessCheckPoint(UUID collectionExerciseId,
-                                        String eventTag,
-                                        Optional<ActionEventPartialEntry> partialEntry,
-                                        Instant instant) {
-    Long numberOfActionCases = actionCaseRepository.findByCollectionExerciseId(collectionExerciseId);
+  private void partialProcessCheckPoint(
+      UUID collectionExerciseId,
+      String eventTag,
+      Optional<ActionEventPartialEntry> partialEntry,
+      Instant instant) {
+    Long numberOfActionCases =
+        actionCaseRepository.findByCollectionExerciseId(collectionExerciseId);
     Long numberOfCases = caseSvcClientService.getNumberOfCases(collectionExerciseId);
     Long numberOfCasesToBeProcessed = numberOfCases - numberOfActionCases;
     boolean isPresent = partialEntry.isPresent();
 
-    if(isPresent) {
+    if (isPresent) {
       ActionEventPartialEntry actionEventPartialEntry = partialEntry.get();
       actionEventPartialEntry.setLastProcessedTimestamp(Timestamp.from(instant));
       actionEventPartialEntry.setProcessedCases(numberOfActionCases);
       actionEventPartialEntry.setPendingCases(numberOfCasesToBeProcessed);
-      if (numberOfCasesToBeProcessed == 0){
-        actionEventPartialEntry.setStatus(ActionEventPartialEntry.ActionEventPartialProcessStatus.COMPLETED);
+      if (numberOfCasesToBeProcessed == 0) {
+        actionEventPartialEntry.setStatus(
+            ActionEventPartialEntry.ActionEventPartialProcessStatus.COMPLETED);
       }
       actionEventPartialEntryRepository.save(actionEventPartialEntry);
     } else {
       if (numberOfCases - numberOfActionCases > 0) {
-        ActionEventPartialEntry actionEventPartialEntry = ActionEventPartialEntry.builder()
-          .collectionExerciseId(collectionExerciseId)
-          .eventTag(eventTag)
-          .status(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL)
-          .pendingCases(numberOfCasesToBeProcessed)
-          .processedCases(numberOfActionCases)
-          .lastProcessedTimestamp(Timestamp.from(instant))
-          .build();
+        ActionEventPartialEntry actionEventPartialEntry =
+            ActionEventPartialEntry.builder()
+                .collectionExerciseId(collectionExerciseId)
+                .eventTag(eventTag)
+                .status(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL)
+                .pendingCases(numberOfCasesToBeProcessed)
+                .processedCases(numberOfActionCases)
+                .lastProcessedTimestamp(Timestamp.from(instant))
+                .build();
         actionEventPartialEntryRepository.save(actionEventPartialEntry);
       }
     }
