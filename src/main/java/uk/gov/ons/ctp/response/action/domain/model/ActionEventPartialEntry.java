@@ -35,7 +35,7 @@ public class ActionEventPartialEntry {
   @Column(name = "collection_exercise_id")
   private UUID collectionExerciseId;
 
-  @Column(name = "event_tag_mapping")
+  @Column(name = "event_tag")
   @NotNull
   private String eventTag;
 

@@ -169,11 +169,11 @@ public class ProcessEventService {
           .collectionExerciseId(collectionExerciseId)
           .eventTag(eventTag)
           .status(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL)
-          .pendingCases(numberOfCases - numberOfActionCases)
+          .pendingCases(numberOfCasesToBeProcessed)
           .processedCases(numberOfActionCases)
           .lastProcessedTimestamp(Timestamp.from(instant))
           .build();
-
+        actionEventPartialEntryRepository.save(actionEventPartialEntry);
       }
     }
   }

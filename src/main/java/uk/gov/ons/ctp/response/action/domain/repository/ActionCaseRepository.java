@@ -42,7 +42,7 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
   List<ActionCase> findByIdIn(List<UUID> caseId);
 
   @Query(
-    "SELECT count (*) FROM Case c " +
-      "AND c.collectionExerciseId = :collectionExerciseId")
+    "SELECT count (*) FROM ActionCase c " +
+      "WHERE c.collectionExerciseId = :collectionExerciseId")
   Long findByCollectionExerciseId(@Param("collectionExerciseId") UUID collectionExerciseId);
 }

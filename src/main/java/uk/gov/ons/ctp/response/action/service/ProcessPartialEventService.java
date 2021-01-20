@@ -21,7 +21,7 @@ public class ProcessPartialEventService {
   @Async
   public void processPartialEvents() {
     List<ActionEventPartialEntry> partialEventEntries = actionEventPartialEntryRepository
-      .findByStaus(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL);
+      .findByStatus(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL);
     partialEventEntries.parallelStream().forEach(p -> processEventService.processEvents(p.getCollectionExerciseId(),
       p.getEventTag(), Optional.of(p)));
   }
