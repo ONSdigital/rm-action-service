@@ -11,7 +11,8 @@ import uk.gov.ons.ctp.response.action.representation.ActionTemplateDTO.Handler;
 @Repository
 @Transactional(readOnly = true)
 public interface ActionEventRepository extends JpaRepository<ActionEvent, Integer> {
-  ActionEvent findByCaseIdAndTypeAndHandler(UUID caseId, String type, Handler handler);
+  ActionEvent findByCaseIdAndTypeAndHandlerAndTag(
+      UUID caseId, String type, Handler handler, String tag);
 
   List<ActionEvent> findByStatus(ActionEvent.ActionEventStatus status);
 }

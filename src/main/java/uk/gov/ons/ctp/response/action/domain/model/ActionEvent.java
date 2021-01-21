@@ -59,4 +59,7 @@ public class ActionEvent implements Serializable {
 
   @Column(name = "processed_timestamp")
   private Timestamp processedTimestamp;
+
+  @Column(name = "event_tag")
+  private String tag;
 }
