@@ -111,7 +111,8 @@ public class ProcessEventService {
       ActionTemplate actionTemplate = actionTemplateService.mapEventTagToTemplate(eventTag, true);
       if (actionTemplate != null) {
         log.with("email cases", emailCases.size()).info("Processing email cases");
-        processEmailCases(instant, collectionExercise, survey, emailCases, actionTemplate, eventTag);
+        processEmailCases(
+            instant, collectionExercise, survey, emailCases, actionTemplate, eventTag);
       } else {
         log.with("activeEnrolment", true)
             .with("event", eventTag)
@@ -130,7 +131,8 @@ public class ProcessEventService {
       ActionTemplate actionTemplate = actionTemplateService.mapEventTagToTemplate(eventTag, false);
       if (actionTemplate != null) {
         log.with("Letter cases", letterCases.size()).info("Processing letter cases");
-        processLetterCases(letterCases, actionTemplate, survey, collectionExercise, instant, true, eventTag);
+        processLetterCases(
+            letterCases, actionTemplate, survey, collectionExercise, instant, true, eventTag);
       } else {
         log.with("activeEnrolment", false)
             .with("event", eventTag)
@@ -195,7 +197,9 @@ public class ProcessEventService {
         .parallelStream()
         .filter(c -> isActionable(c, actionTemplate, eventTag))
         .forEach(
-            c -> processEmailCase(c, collectionExercise, survey, actionTemplate, null, instant, eventTag));
+            c ->
+                processEmailCase(
+                    c, collectionExercise, survey, actionTemplate, null, instant, eventTag));
   }
 
   /**
@@ -443,7 +447,13 @@ public class ProcessEventService {
             // process letter cases.
             boolean isSuccess =
                 processLetterCases(
-                    actionCases, template, survey, collectionExercise, instant, false, actionEvent.getTag());
+                    actionCases,
+                    template,
+                    survey,
+                    collectionExercise,
+                    instant,
+                    false,
+                    actionEvent.getTag());
             if (isSuccess) {
               // update all action event to processed
               groupedCollexFailedLetterCases
@@ -477,7 +487,8 @@ public class ProcessEventService {
                   getCollectionExercise(c.getCollectionExerciseId());
               SurveyDTO survey = getSurvey(c.getSurveyId().toString());
               ActionTemplate actionTemplate = actionTemplateRepository.findByType(c.getType());
-              processEmailCase(actionCase, collectionExercise, survey, actionTemplate, c, instant, c.getTag());
+              processEmailCase(
+                  actionCase, collectionExercise, survey, actionTemplate, c, instant, c.getTag());
             });
   }
 
@@ -550,8 +561,7 @@ public class ProcessEventService {
           collectionExercise.getId(),
           survey.getId(),
           instant,
-          eventTag
-          );
+          eventTag);
     } else {
       updateCaseActionEvent(actionEvent, instant);
     }
@@ -653,7 +663,8 @@ public class ProcessEventService {
    * @param actionTemplate
    * @return
    */
-  private boolean isActionable(ActionCase actionCase, ActionTemplate actionTemplate, String eventTag) {
+  private boolean isActionable(
+      ActionCase actionCase, ActionTemplate actionTemplate, String eventTag) {
     ActionEvent actionEvent =
         actionEventRepository.findByCaseIdAndTypeAndHandlerAndTag(
             actionCase.getId(), actionTemplate.getType(), actionTemplate.getHandler(), eventTag);
