@@ -150,33 +150,36 @@ public class ProcessEventService {
       Optional<ActionEventPartialEntry> partialEntry,
       Instant instant) {
     Long numberOfActionCases =
-        actionCaseRepository.findByCollectionExerciseId(collectionExerciseId);
+        actionCaseRepository.countByCollectionExerciseId(collectionExerciseId);
     Long numberOfCases = caseSvcClientService.getNumberOfCases(collectionExerciseId);
-    Long numberOfCasesToBeProcessed = numberOfCases - numberOfActionCases;
     boolean isPresent = partialEntry.isPresent();
-
-    if (isPresent) {
-      ActionEventPartialEntry actionEventPartialEntry = partialEntry.get();
-      actionEventPartialEntry.setLastProcessedTimestamp(Timestamp.from(instant));
-      actionEventPartialEntry.setProcessedCases(numberOfActionCases);
-      actionEventPartialEntry.setPendingCases(numberOfCasesToBeProcessed);
-      if (numberOfCasesToBeProcessed == 0) {
-        actionEventPartialEntry.setStatus(
-            ActionEventPartialEntry.ActionEventPartialProcessStatus.COMPLETED);
-      }
-      actionEventPartialEntryRepository.save(actionEventPartialEntry);
+    if (numberOfCases == null) {
+      log.error("System Error! Case service did not return case count.");
     } else {
-      if (numberOfCases - numberOfActionCases > 0) {
-        ActionEventPartialEntry actionEventPartialEntry =
-            ActionEventPartialEntry.builder()
-                .collectionExerciseId(collectionExerciseId)
-                .eventTag(eventTag)
-                .status(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL)
-                .pendingCases(numberOfCasesToBeProcessed)
-                .processedCases(numberOfActionCases)
-                .lastProcessedTimestamp(Timestamp.from(instant))
-                .build();
+      Long numberOfCasesToBeProcessed = numberOfCases - numberOfActionCases;
+      if (isPresent) {
+        ActionEventPartialEntry actionEventPartialEntry = partialEntry.get();
+        actionEventPartialEntry.setLastProcessedTimestamp(Timestamp.from(instant));
+        actionEventPartialEntry.setProcessedCases(numberOfActionCases);
+        actionEventPartialEntry.setPendingCases(numberOfCasesToBeProcessed);
+        if (numberOfCasesToBeProcessed == 0) {
+          actionEventPartialEntry.setStatus(
+              ActionEventPartialEntry.ActionEventPartialProcessStatus.COMPLETED);
+        }
         actionEventPartialEntryRepository.save(actionEventPartialEntry);
+      } else {
+        if (numberOfCases - numberOfActionCases > 0) {
+          ActionEventPartialEntry actionEventPartialEntry =
+              ActionEventPartialEntry.builder()
+                  .collectionExerciseId(collectionExerciseId)
+                  .eventTag(eventTag)
+                  .status(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL)
+                  .pendingCases(numberOfCasesToBeProcessed)
+                  .processedCases(numberOfActionCases)
+                  .lastProcessedTimestamp(Timestamp.from(instant))
+                  .build();
+          actionEventPartialEntryRepository.save(actionEventPartialEntry);
+        }
       }
     }
   }
@@ -264,7 +267,7 @@ public class ProcessEventService {
    * @param status
    * @param instant
    */
-  public void createCaseActionEvent(
+  private void createCaseActionEvent(
       UUID caseId,
       String type,
       ActionTemplateDTO.Handler handler,
@@ -300,7 +303,7 @@ public class ProcessEventService {
    * @param existingEvent
    * @param instant
    */
-  public void updateCaseActionEvent(ActionEvent existingEvent, Instant instant) {
+  private void updateCaseActionEvent(ActionEvent existingEvent, Instant instant) {
     log.with("caseId", existingEvent.getCaseId()).info("Updating action event to processed.");
     existingEvent.setStatus(ActionEvent.ActionEventStatus.PROCESSED);
     existingEvent.setProcessedTimestamp(Timestamp.from(instant));
@@ -364,7 +367,7 @@ public class ProcessEventService {
         businessParty.getAttributes().getRegion());
   }
 
-  public CaseDetailsDTO getCaseDetails(ActionCase actionCase) {
+  private CaseDetailsDTO getCaseDetails(ActionCase actionCase) {
     return caseSvcClientService.getCaseWithIACandCaseEvents(actionCase.getId());
   }
 
@@ -482,7 +485,7 @@ public class ProcessEventService {
    * @param survey
    * @param actionTemplate
    */
-  public void processEmailCase(
+  private void processEmailCase(
       ActionCase actionCase,
       CollectionExerciseDTO collectionExercise,
       SurveyDTO survey,
@@ -557,7 +560,7 @@ public class ProcessEventService {
    * @param actionCase
    * @return
    */
-  public boolean isBusinessNotification(ActionCase actionCase) {
+  private boolean isBusinessNotification(ActionCase actionCase) {
     return actionCase.getSampleUnitType().equals(SampleUnitDTO.SampleUnitType.B.name());
   }
 
@@ -590,7 +593,7 @@ public class ProcessEventService {
    * @param survey
    * @return
    */
-  public ActionCaseParty setParties(ActionCase actionCase, SurveyDTO survey) {
+  private ActionCaseParty setParties(ActionCase actionCase, SurveyDTO survey) {
     log.with("caseId", actionCase.getId())
         .with("surveyId", survey.getId())
         .info("Getting Event Party data");
@@ -642,7 +645,7 @@ public class ProcessEventService {
    * @param actionTemplate
    * @return
    */
-  public boolean isActionable(ActionCase actionCase, ActionTemplate actionTemplate) {
+  private boolean isActionable(ActionCase actionCase, ActionTemplate actionTemplate) {
     ActionEvent actionEvent =
         actionEventRepository.findByCaseIdAndTypeAndHandler(
             actionCase.getId(), actionTemplate.getType(), actionTemplate.getHandler());
@@ -709,7 +712,7 @@ public class ProcessEventService {
    * @param collectionExercise
    * @return
    */
-  public Personalisation getPersonalisation(
+  private Personalisation getPersonalisation(
       PartyDTO businessParty,
       PartyDTO respondentParty,
       SurveyDTO survey,
@@ -741,7 +744,7 @@ public class ProcessEventService {
    * @param actionTemplate
    * @return
    */
-  public Classifiers getClassifiers(
+  private Classifiers getClassifiers(
       PartyDTO businessParty, SurveyDTO survey, ActionTemplate actionTemplate) {
     log.info("collecting classifiers for email");
     Classifiers classifiers =
