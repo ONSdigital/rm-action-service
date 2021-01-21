@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +54,7 @@ public class ProcessEventServiceTest {
                 collectionExerciseId, surveyId, "400000005", "test"));
     Mockito.when(surveySvcClientService.requestDetailsForSurvey(any()))
         .thenReturn(testData.setupSurveyDTO(surveyId, "test", "400000005", "test"));
-    processEventService.processEvents(collectionExerciseId, "go_live");
+    processEventService.processEvents(collectionExerciseId, "go_live", Optional.empty());
     verify(partySvcClientService, never())
         .getPartyWithAssociationsFilteredBySurvey(
             anyObject(), anyObject(), anyObject(), anyObject());
@@ -107,7 +108,7 @@ public class ProcessEventServiceTest {
                 "test", "test", "test@test.com", respondentId.toString()));
 
     // When
-    processEventService.processEvents(collectionExerciseId, "go_live");
+    processEventService.processEvents(collectionExerciseId, "go_live", Optional.empty());
 
     // Then
     verify(partySvcClientService, atMost(2))
@@ -162,7 +163,7 @@ public class ProcessEventServiceTest {
                 "test", "test", "test@test.com", respondentId.toString()));
 
     // When
-    processEventService.processEvents(collectionExerciseId, "mps");
+    processEventService.processEvents(collectionExerciseId, "mps", Optional.empty());
 
     // Then
     verify(partySvcClientService, atMost(2))
@@ -294,7 +295,7 @@ public class ProcessEventServiceTest {
                 "test", "test", "test@test.com", respondentId.toString()));
 
     // When
-    processEventService.processEvents(collectionExerciseId, "go_live");
+    processEventService.processEvents(collectionExerciseId, "go_live", Optional.empty());
 
     // Then
     verify(partySvcClientService, atMost(2))
@@ -357,7 +358,7 @@ public class ProcessEventServiceTest {
     when(caseSvcClientService.getCaseWithIACandCaseEvents(anyObject())).thenReturn(caseDetailsDTO);
 
     // When
-    processEventService.processEvents(collectionExerciseId, "mps");
+    processEventService.processEvents(collectionExerciseId, "mps", Optional.empty());
 
     // Then
     verify(partySvcClientService, atMost(2))
@@ -435,7 +436,7 @@ public class ProcessEventServiceTest {
                 "test", "test", "test@test.com", respondentId.toString()));
 
     // When
-    processEventService.processEvents(collectionExerciseId, "reminder");
+    processEventService.processEvents(collectionExerciseId, "reminder", Optional.empty());
 
     // Then
     verify(partySvcClientService, atMost(4))

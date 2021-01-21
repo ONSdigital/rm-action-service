@@ -97,6 +97,7 @@ case-svc:
   address-by-uprn-get-path: /addresses/{uprn}
   case-type-by-id-path: /casetypes/{casetypeid}
   generate-new-iac-for-case-post-path: /cases/{caseid}/iac
+  number-of-cases-path: /casegroups/cases/{collectionExerciseId}
   connection-config:
     scheme: http
     host: localhost

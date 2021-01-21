@@ -19,8 +19,10 @@ import uk.gov.ons.ctp.response.action.client.PartySvcClientService;
 import uk.gov.ons.ctp.response.action.client.SurveySvcClientService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionEvent;
+import uk.gov.ons.ctp.response.action.domain.model.ActionEventPartialEntry;
 import uk.gov.ons.ctp.response.action.domain.model.ActionTemplate;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionEventPartialEntryRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionEventRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTemplateRepository;
 import uk.gov.ons.ctp.response.action.printfile.Contact;
@@ -52,6 +54,7 @@ public class ProcessEventService {
   private final NotifyEmailService emailService;
   private final ActionTemplateRepository actionTemplateRepository;
   private final CaseSvcClientService caseSvcClientService;
+  private final ActionEventPartialEntryRepository actionEventPartialEntryRepository;
 
   public ProcessEventService(
       ActionCaseRepository actionCaseRepository,
@@ -63,7 +66,8 @@ public class ProcessEventService {
       NotifyLetterService printFileService,
       NotifyEmailService emailService,
       ActionTemplateRepository actionTemplateRepository,
-      CaseSvcClientService caseSvcClientService) {
+      CaseSvcClientService caseSvcClientService,
+      ActionEventPartialEntryRepository actionEventPartialEntryRepository) {
     this.actionCaseRepository = actionCaseRepository;
     this.actionTemplateService = actionTemplateService;
     this.collectionExerciseClientService = collectionExerciseClientService;
@@ -74,6 +78,7 @@ public class ProcessEventService {
     this.emailService = emailService;
     this.actionTemplateRepository = actionTemplateRepository;
     this.caseSvcClientService = caseSvcClientService;
+    this.actionEventPartialEntryRepository = actionEventPartialEntryRepository;
   }
 
   /**
@@ -89,7 +94,8 @@ public class ProcessEventService {
    * @param eventTag - is passed by collectionexercisesvc scheduler as a part of the event process.
    */
   @Async
-  public void processEvents(UUID collectionExerciseId, String eventTag) {
+  public void processEvents(
+      UUID collectionExerciseId, String eventTag, Optional<ActionEventPartialEntry> partialEntry) {
     log.with("collectionExerciseId", collectionExerciseId)
         .with("event_tag", eventTag)
         .info("Started processing");
@@ -134,6 +140,47 @@ public class ProcessEventService {
       log.with("collectionExercise", collectionExercise)
           .with("event", eventTag)
           .info("No Letters to process");
+    }
+    partialProcessCheckPoint(collectionExerciseId, eventTag, partialEntry, instant);
+  }
+
+  private void partialProcessCheckPoint(
+      UUID collectionExerciseId,
+      String eventTag,
+      Optional<ActionEventPartialEntry> partialEntry,
+      Instant instant) {
+    Long numberOfActionCases =
+        actionCaseRepository.countByCollectionExerciseId(collectionExerciseId);
+    Long numberOfCases = caseSvcClientService.getNumberOfCases(collectionExerciseId);
+    boolean isPresent = partialEntry.isPresent();
+    if (numberOfCases == null) {
+      log.error("System Error! Case service did not return case count.");
+    } else {
+      Long numberOfCasesToBeProcessed = numberOfCases - numberOfActionCases;
+      if (isPresent) {
+        ActionEventPartialEntry actionEventPartialEntry = partialEntry.get();
+        actionEventPartialEntry.setLastProcessedTimestamp(Timestamp.from(instant));
+        actionEventPartialEntry.setProcessedCases(numberOfActionCases);
+        actionEventPartialEntry.setPendingCases(numberOfCasesToBeProcessed);
+        if (numberOfCasesToBeProcessed == 0) {
+          actionEventPartialEntry.setStatus(
+              ActionEventPartialEntry.ActionEventPartialProcessStatus.COMPLETED);
+        }
+        actionEventPartialEntryRepository.save(actionEventPartialEntry);
+      } else {
+        if (numberOfCases - numberOfActionCases > 0) {
+          ActionEventPartialEntry actionEventPartialEntry =
+              ActionEventPartialEntry.builder()
+                  .collectionExerciseId(collectionExerciseId)
+                  .eventTag(eventTag)
+                  .status(ActionEventPartialEntry.ActionEventPartialProcessStatus.PARTIAL)
+                  .pendingCases(numberOfCasesToBeProcessed)
+                  .processedCases(numberOfActionCases)
+                  .lastProcessedTimestamp(Timestamp.from(instant))
+                  .build();
+          actionEventPartialEntryRepository.save(actionEventPartialEntry);
+        }
+      }
     }
   }
 
@@ -438,7 +485,7 @@ public class ProcessEventService {
    * @param survey
    * @param actionTemplate
    */
-  public void processEmailCase(
+  private void processEmailCase(
       ActionCase actionCase,
       CollectionExerciseDTO collectionExercise,
       SurveyDTO survey,

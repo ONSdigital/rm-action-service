@@ -38,4 +38,6 @@ public interface ActionCaseRepository extends JpaRepository<ActionCase, Integer>
       UUID collectionExerciseId, boolean activeEnrolment);
 
   List<ActionCase> findByIdIn(List<UUID> caseId);
+
+  Long countByCollectionExerciseId(UUID collectionExerciseId);
 }

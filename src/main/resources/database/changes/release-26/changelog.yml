@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 26-1
+      author: Amit Sinha
+      changes:
+        - sqlFile:
+            comment: This includes a new table action_partial_event_process_entry and updates the id type for action_event.
+            path: partial-event-processed-entry-table-addition.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
