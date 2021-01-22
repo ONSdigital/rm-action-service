@@ -668,10 +668,10 @@ public class ProcessEventService {
     ActionEvent actionEvent =
         actionEventRepository.findByCaseIdAndTypeAndHandlerAndTagAndStatus(
             actionCase.getId(),
-          actionTemplate.getType(),
-          actionTemplate.getHandler(),
-          eventTag,
-          ActionEvent.ActionEventStatus.PROCESSED);
+            actionTemplate.getType(),
+            actionTemplate.getHandler(),
+            eventTag,
+            ActionEvent.ActionEventStatus.PROCESSED);
     if (actionEvent == null) {
       log.with("actionCase", actionCase.getId())
           .with("handler", actionTemplate.getHandler())

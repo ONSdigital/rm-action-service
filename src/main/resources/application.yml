@@ -16,10 +16,10 @@ logging:
   profile: DEV
 
 liquibase:
-  user: postgres
-  password: postgres
+  user: actionsvc
+  password: actionsvc
   default-schema: action
-  url: jdbc:postgresql://localhost:5432/ras
+  url: jdbc:postgresql://localhost:6432/postgres
   changeLog: classpath:/database/changelog-master.yml
 
 security:
@@ -56,9 +56,9 @@ spring:
     name: ONS ActionService
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ras
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:6432/postgres
+    username: actionsvc
+    password: actionsvc
     driverClassName: org.postgresql.Driver
     continue-on-error: true
     tomcat:
@@ -78,7 +78,7 @@ spring:
   # all about redis
 data-grid:
   # where is redis
-  address: localhost:6379
+  address: localhost:7379
   # when we create a list of actions being distib, how long should the list remain in redis after app death
   list-time-to-live-seconds: 10
   # when we try and create a list of ids being distrib how long should we wait to get the lock
