@@ -16,10 +16,10 @@ logging:
   profile: DEV
 
 liquibase:
-  user: actionsvc
-  password: actionsvc
+  user: postgres
+  password: postgres
   default-schema: action
-  url: jdbc:postgresql://localhost:6432/postgres
+  url: jdbc:postgresql://localhost:5432/ras
   changeLog: classpath:/database/changelog-master.yml
 
 security:
@@ -56,9 +56,9 @@ spring:
     name: ONS ActionService
 
   datasource:
-    url: jdbc:postgresql://localhost:6432/postgres
-    username: actionsvc
-    password: actionsvc
+    url: jdbc:postgresql://localhost:5432/ras
+    username: postgres
+    password: postgres
     driverClassName: org.postgresql.Driver
     continue-on-error: true
     tomcat:
@@ -75,10 +75,10 @@ spring:
         ddl-auto: update
         default_schema: action
 
- # all about redis
+  # all about redis
 data-grid:
   # where is redis
-  address: localhost:7379
+  address: localhost:6379
   # when we create a list of actions being distib, how long should the list remain in redis after app death
   list-time-to-live-seconds: 10
   # when we try and create a list of ids being distrib how long should we wait to get the lock
@@ -88,7 +88,7 @@ data-grid:
 
   report-lock-time-to-live-seconds: 300
 
- # calling the case svc endpoints
+  # calling the case svc endpoints
 case-svc:
   case-group-path: /casegroups/{caseGroupId}
   case-by-case-get-path: /cases/{caseid}
@@ -113,7 +113,7 @@ case-svc:
     # time to read response
     read-timeout-milli-seconds: 5000
 
- # calling the collectionexercise svc endpoints
+  # calling the collectionexercise svc endpoints
 collection-exercise-svc:
   collection-by-collection-exercise-get-path: /collectionexercises/{id}
   connection-config:
@@ -127,7 +127,7 @@ collection-exercise-svc:
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
- # calling the party svc endpoint
+  # calling the party svc endpoint
 party-svc:
   party-by-sample-unit-type-and-id-path: /party-api/v1/parties/type/{sampleUnitType}/id/{partyId}
   connection-config:
@@ -141,7 +141,7 @@ party-svc:
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
- # calling the survey svc endpoints
+  # calling the survey svc endpoints
 survey-svc:
   request-survey-path: /surveys/{surveyId}
   connection-config:
@@ -155,13 +155,13 @@ survey-svc:
     connect-timeout-milli-seconds: 5000
     read-timeout-milli-seconds: 5000
 
- # queue related
+  # queue related
 redelivery-policy:
   maxRedeliveries: -1
   initialRedeliveryDelay: 1000
   redeliveryDelay: 1000
 
- # queue service related
+  # queue service related
 rabbitmq:
   username: guest
   password: guest
