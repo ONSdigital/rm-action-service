@@ -213,8 +213,7 @@ public class ProcessEventServiceTest {
     when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
             collectionExerciseId, false))
         .thenReturn(actionCases);
-    when(actionCaseRepository.findByIdIn(anyObject()))
-      .thenReturn(actionCases);
+    when(actionCaseRepository.findByIdIn(anyObject())).thenReturn(actionCases);
     when(actionTemplateRepository.findByType(anyObject()))
         .thenReturn(testData.setupActionTemplate("BSNE", ActionTemplateDTO.Handler.EMAIL, "mps"));
 
