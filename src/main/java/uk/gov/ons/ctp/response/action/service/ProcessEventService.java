@@ -102,6 +102,7 @@ public class ProcessEventService {
     Instant instant = Instant.now();
     CollectionExerciseDTO collectionExercise = getCollectionExercise(collectionExerciseId);
     SurveyDTO survey = getSurvey(collectionExercise.getSurveyId());
+    partialProcessCheckPoint(collectionExerciseId, eventTag, partialEntry, instant);
     log.debug("Getting Email cases against collectionExerciseId and event active enrolment");
     List<ActionCase> emailCases =
         actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
@@ -143,7 +144,6 @@ public class ProcessEventService {
           .with("event", eventTag)
           .info("No Letters to process");
     }
-    partialProcessCheckPoint(collectionExerciseId, eventTag, partialEntry, instant);
   }
 
   private void partialProcessCheckPoint(
@@ -230,6 +230,14 @@ public class ProcessEventService {
     log.with("no. of cases", letter_cases.size())
         .with("actionType", actionTemplate.getType())
         .info("Finished populating letter data for letter cases.");
+    if (letterEntries.size() == 0) {
+      log.with("no. of cases", letter_cases.size())
+          .with("actionType", actionTemplate.getType())
+          .with("collection exercise", collectionExercise.getId())
+          .info(
+              "No actionable cases found against the action type for collection exercise. Hence nothing to do");
+      return false;
+    }
     String fileNamePrefix =
         FilenamePrefix.getPrefix(actionTemplate.getPrefix())
             + "_"
