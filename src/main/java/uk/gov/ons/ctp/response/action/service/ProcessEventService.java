@@ -230,6 +230,13 @@ public class ProcessEventService {
     log.with("no. of cases", letter_cases.size())
         .with("actionType", actionTemplate.getType())
         .info("Finished populating letter data for letter cases.");
+    if (letterEntries.size() == 0) {
+      log.with("no. of cases", letter_cases.size())
+        .with("actionType", actionTemplate.getType())
+        .with("collection exercise", collectionExercise.getId())
+        .info("No actionable cases found against the action type for collection exercise. Hence nothing to do");
+      return false;
+    }
     String fileNamePrefix =
         FilenamePrefix.getPrefix(actionTemplate.getPrefix())
             + "_"
