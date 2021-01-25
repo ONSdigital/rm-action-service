@@ -102,6 +102,7 @@ public class ProcessEventService {
     Instant instant = Instant.now();
     CollectionExerciseDTO collectionExercise = getCollectionExercise(collectionExerciseId);
     SurveyDTO survey = getSurvey(collectionExercise.getSurveyId());
+    partialProcessCheckPoint(collectionExerciseId, eventTag, partialEntry, instant);
     log.debug("Getting Email cases against collectionExerciseId and event active enrolment");
     List<ActionCase> emailCases =
         actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
@@ -143,7 +144,6 @@ public class ProcessEventService {
           .with("event", eventTag)
           .info("No Letters to process");
     }
-    partialProcessCheckPoint(collectionExerciseId, eventTag, partialEntry, instant);
   }
 
   private void partialProcessCheckPoint(
