@@ -433,15 +433,15 @@ public class ProcessEventService {
                   .parallelStream()
                   .collect(Collectors.groupingBy(ActionEvent::getCollectionExerciseId));
           // for each distinct collection exercise process letters
-          for (UUID collextionExerciseId : groupedByEventTypeAndCollexFailedLetterCases.keySet()) {
-            log.with(eventsFailed).with(collextionExerciseId).info("Processing Failed Event");
+          for (UUID collectionExerciseId : groupedByEventTypeAndCollexFailedLetterCases.keySet()) {
+            log.with(eventsFailed).with(collectionExerciseId).info("Processing Failed Event");
             List<ActionEvent> groupedCollexFailedLetterCases =
-                groupedByEventTypeAndCollexFailedLetterCases.get(collextionExerciseId);
+                groupedByEventTypeAndCollexFailedLetterCases.get(collectionExerciseId);
             // Get Action Event
             ActionEvent actionEvent = groupedCollexFailedLetterCases.get(0);
             // Get Collection Exercise dto
             CollectionExerciseDTO collectionExercise =
-                getCollectionExercise(actionEvent.getCollectionExerciseId());
+                getCollectionExercise(collectionExerciseId);
             // Get survey dto
             SurveyDTO survey = getSurvey(actionEvent.getSurveyId().toString());
             // group all associated failed cases against the collection exercise id
@@ -450,8 +450,15 @@ public class ProcessEventService {
                     .parallelStream()
                     .map(ActionEvent::getCollectionExerciseId)
                     .collect(Collectors.toList());
+            log
+              .with("number of cases", cases.size())
+              .with("collectionExerciseId", collectionExerciseId)
+              .info("Mapped failed cases against collection exercise id");
             // Get all action cases against the ids
             List<ActionCase> actionCases = actionCaseRepository.findByIdIn(cases);
+            log.with("action cases",actionCases.size())
+              .with("collectionExerciseId", collectionExerciseId)
+              .info("Found failed action cases to be processed");
             // process letter cases.
             boolean isSuccess =
                 processLetterCases(
