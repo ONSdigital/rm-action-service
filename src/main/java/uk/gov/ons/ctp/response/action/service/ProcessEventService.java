@@ -440,8 +440,7 @@ public class ProcessEventService {
             // Get Action Event
             ActionEvent actionEvent = groupedCollexFailedLetterCases.get(0);
             // Get Collection Exercise dto
-            CollectionExerciseDTO collectionExercise =
-                getCollectionExercise(collectionExerciseId);
+            CollectionExerciseDTO collectionExercise = getCollectionExercise(collectionExerciseId);
             // Get survey dto
             SurveyDTO survey = getSurvey(actionEvent.getSurveyId().toString());
             // group all associated failed cases against the collection exercise id
@@ -450,15 +449,14 @@ public class ProcessEventService {
                     .parallelStream()
                     .map(ActionEvent::getCaseId)
                     .collect(Collectors.toList());
-            log
-              .with("number of cases", cases.size())
-              .with("collectionExerciseId", collectionExerciseId)
-              .info("Mapped failed cases against collection exercise id");
+            log.with("number of cases", cases.size())
+                .with("collectionExerciseId", collectionExerciseId)
+                .info("Mapped failed cases against collection exercise id");
             // Get all action cases against the ids
             List<ActionCase> actionCases = actionCaseRepository.findByIdIn(cases);
-            log.with("action cases",actionCases.size())
-              .with("collectionExerciseId", collectionExerciseId)
-              .info("Found failed action cases to be processed");
+            log.with("action cases", actionCases.size())
+                .with("collectionExerciseId", collectionExerciseId)
+                .info("Found failed action cases to be processed");
             // process letter cases.
             boolean isSuccess =
                 processLetterCases(
