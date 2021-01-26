@@ -448,7 +448,7 @@ public class ProcessEventService {
             List<UUID> cases =
                 groupedCollexFailedLetterCases
                     .parallelStream()
-                    .map(a -> a.getCaseId())
+                    .map(ActionEvent::getCaseId)
                     .collect(Collectors.toList());
             log
               .with("number of cases", cases.size())
