@@ -418,6 +418,7 @@ public class ProcessEventService {
               .parallelStream()
               .filter(e -> e.getHandler() == ActionTemplateDTO.Handler.LETTER)
               .collect(Collectors.toList());
+      log.with("failed letter cases", failedCases.size()).info("Failed letter cases found.");
       if (failedLetterCases.size() > 0) {
         // Group all failed letter cases with action event type
         Map<String, List<ActionEvent>> groupedByEventTypeFailedLetterCases =
