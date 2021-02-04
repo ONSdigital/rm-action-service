@@ -117,7 +117,7 @@ public class ProcessEventService {
       } else {
         log.with("activeEnrolment", true)
             .with("event", eventTag)
-            .error("No Template registered against the event and active enrolment");
+            .info("No Template registered against the event and active enrolment");
       }
     } else {
       log.with("collectionExercise", collectionExercise)
@@ -137,7 +137,7 @@ public class ProcessEventService {
       } else {
         log.with("activeEnrolment", false)
             .with("event", eventTag)
-            .error("No Template registered against the event and active enrolment");
+            .info("No Template registered against the event and active enrolment");
       }
     } else {
       log.with("collectionExercise", collectionExercise)
