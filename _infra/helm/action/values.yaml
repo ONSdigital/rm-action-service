@@ -45,6 +45,14 @@ crons:
     name: action-export-scheduler
     cron: "*/30 * * * *"
     target: "export"
+  retryEventScheduler:
+    name: action-event-retry-scheduler
+    cron: "0 * * * *"
+    target: "retry-event"
+  partialEventScheduler:
+    name: action-event-partial-retry-scheduler
+    cron: "0 */2 * * *"
+    target: "process-partial-event"
 
 resources:
   application:

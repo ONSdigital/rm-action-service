@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 25-1
+      author: Amit Sinha
+      changes:
+        - sqlFile:
+            comment: This updates active_enrolment column in case table with the associated actionplan for all existing data.
+            path: migration-script-update-active-enrolment.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+

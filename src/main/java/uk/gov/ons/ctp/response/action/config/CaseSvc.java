@@ -16,4 +16,5 @@ public class CaseSvc {
   private String addressByUprnGetPath;
   private String caseTypeByIdPath;
   private String generateNewIacForCasePostPath;
+  private String numberOfCasesPath;
 }
