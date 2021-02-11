@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 27-1
+      author: Amit Sinha
+      changes:
+        - sqlFile:
+            comment: Adding event_tag column to action_event table.
+            path: action-event-update.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+

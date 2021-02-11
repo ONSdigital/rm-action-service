@@ -12,7 +12,7 @@
     <properties>
         <springboot.version>1.5.6.RELEASE</springboot.version>
         <springcloud.version>Dalston.SR1</springcloud.version>
-        <java.version>1.8</java.version>
+        <java.version>11</java.version>
         <orika.version>1.5.1</orika.version>
         <surefire.version>2.20</surefire.version>
         <godaddylogging.version>1.2.5</godaddylogging.version>
@@ -174,7 +174,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.22</version>
+            <version>1.18.2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
