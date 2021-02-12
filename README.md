@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/ONSdigital/rm-action-service/branch/master/graph/badge.svg)](https://codecov.io/gh/ONSdigital/rm-action-service)
 
 # Action Service
-The Action service is a RESTful web service implemented using Spring Boot. 
+The Action service is a RESTful web service implemented using Spring Boot.  Test
 
 An action represents an operation that is required for a case. For example, posting out a paper form or arranging a field visit. They are loose-form and can represent a number of different tasks that need to happen, both manual and automatic. These are distributed to consuming services via RabbitMQ and will be picked up if they match the action's requested handler. Common handlers include Action Exporter and Notify Gateway.
 
