@@ -94,4 +94,4 @@ dns:
   wellKnownPort: 8080
 
 messaging:
-  consumingThreads: 100
+  consumingThreads: 10
