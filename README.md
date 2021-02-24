@@ -5,7 +5,7 @@
 # Action Service
 The Action service is a RESTful web service implemented using Spring Boot. 
 
-An action represents an operation that is required for a case. For example, posting out a paper form or arranging a field visit. They are loose-form and can represent a number of different tasks that need to happen, both manual and automatic. These are distributed to consuming services via RabbitMQ and will be picked up if they match the action's requested handler. Common handlers include Action Exporter and Notify Gateway.
+An action represents an operation that is required for a case. For example, posting out a paper form or arranging a field visit. They are loose-form and can represent a number of different tasks that need to happen, both manual and automatic. These are distributed to consuming services via RabbitMQ and will be picked up if they match the action's requested handler. 
 
 The Action service doesn't "understand" what a certain Action represents - the consuming services will do and will update the Action service when the action's state has been changed. Sometimes the consuming service will need more fine-grained information on the state than this service provides; for example, a Hotel Visit action for the Fieldwork Management Tool will be `ACTIVE` as soon as FWMT accepts it, but the FWMT will have sub-states such as "Visit assigned" or "Someone on-site". These are stored in the Action service as the Situation.
 
