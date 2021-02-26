@@ -93,3 +93,5 @@ dns:
   enabled: false
   wellKnownPort: 8080
 
+messaging:
+  consumingThreads: 10

@@ -304,5 +304,7 @@ spec:
             value: "$(DB_USERNAME)"
           - name: LIQUIBASE_PASSWORD
             value: "$(DB_PASSWORD)"
+          - name: MESSAGING_CONSUMING_THREADS
+            value: "{{ .Values.messaging.consumingThreads }}"
           resources:
             {{- toYaml .Values.resources.application | nindent 12 }}
