@@ -1,11 +1,11 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3a24e234068a4a1396ff5f3ff9ab64d9)](https://www.codacy.com/app/sdcplatform/rm-action-service?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ONSdigital/rm-action-service&amp;utm_campaign=Badge_Grade) [![Docker Pulls](https://img.shields.io/docker/pulls/sdcplatform/actionsvc.svg)]()
-[![Build Status](https://travis-ci.org/ONSdigital/rm-action-service.svg?branch=master)](https://travis-ci.org/ONSdigital/rm-action-service)
-[![codecov](https://codecov.io/gh/ONSdigital/rm-action-service/branch/master/graph/badge.svg)](https://codecov.io/gh/ONSdigital/rm-action-service)
+[![Build Status](https://travis-ci.org/ONSdigital/rm-action-service.svg?branch=main)](https://travis-ci.org/ONSdigital/rm-action-service)
+[![codecov](https://codecov.io/gh/ONSdigital/rm-action-service/branch/main/graph/badge.svg)](https://codecov.io/gh/ONSdigital/rm-action-service)
 
 # Action Service
 The Action service is a RESTful web service implemented using Spring Boot. 
 
-An action represents an operation that is required for a case. For example, posting out a paper form or arranging a field visit. They are loose-form and can represent a number of different tasks that need to happen, both manual and automatic. These are distributed to consuming services via RabbitMQ and will be picked up if they match the action's requested handler. Common handlers include Action Exporter and Notify Gateway.
+An action represents an operation that is required for a case. For example, posting out a paper form or arranging a field visit. They are loose-form and can represent a number of different tasks that need to happen, both manual and automatic. These are distributed to consuming services via RabbitMQ and will be picked up if they match the action's requested handler. 
 
 The Action service doesn't "understand" what a certain Action represents - the consuming services will do and will update the Action service when the action's state has been changed. Sometimes the consuming service will need more fine-grained information on the state than this service provides; for example, a Hotel Visit action for the Fieldwork Management Tool will be `ACTIVE` as soon as FWMT accepts it, but the FWMT will have sub-states such as "Visit assigned" or "Someone on-site". These are stored in the Action service as the Situation.
 
