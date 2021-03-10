@@ -26,12 +26,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
 import uk.gov.ons.ctp.response.lib.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.response.lib.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
 import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManagerFactory;
 
 /** The main entry point into the Action Service SpringBoot Application. */
@@ -140,18 +137,6 @@ public class ActionSvcApplication {
   public RestUtility surveyClient() {
     final RestUtility restUtility = new RestUtility(appConfig.getSurveySvc().getConnectionConfig());
     return restUtility;
-  }
-
-  /**
-   * Bean to allow application to make controlled state transitions of Actions
-   *
-   * @return the state transition manager specifically for Actions
-   */
-  @Bean
-  public StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
-      actionSvcStateTransitionManager() {
-    return actionSvcStateTransitionManagerFactory.getStateTransitionManager(
-        ActionSvcStateTransitionManagerFactory.ACTION_ENTITY);
   }
 
   /**
