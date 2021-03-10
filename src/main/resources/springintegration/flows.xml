@@ -10,5 +10,7 @@
 
     <import resource="case-notifications-inbound-flow.xml"/>
 
+    <import resource="generic-action-outbound-flow.xml"/>
+
 </beans>
 

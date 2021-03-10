@@ -29,7 +29,6 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.lib.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.response.lib.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManagerFactory;
 
 /** The main entry point into the Action Service SpringBoot Application. */
 @CoverageIgnore
@@ -46,8 +45,6 @@ import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManagerFactory;
 public class ActionSvcApplication {
 
   @Autowired private AppConfig appConfig;
-
-  @Autowired private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
 
   /**
    * This method is the entry point to the Spring Boot application.
