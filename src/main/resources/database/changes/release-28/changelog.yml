@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 28-1
+      author: Amit Sinha
+      changes:
+        - sqlFile:
+            comment: Remove all the unused tables as a part of action refactoring.
+            path: action-refactor-drop-unwanted-tables-columns.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
