@@ -43,6 +43,11 @@ import uk.gov.ons.ctp.response.lib.survey.representation.SurveyDTO;
 @Service
 public class ProcessEventService {
   private static final Logger log = LoggerFactory.getLogger(ProcessEventService.class);
+  public static final String DATE_FORMAT_IN_REMINDER_EMAIL = "dd/MM/yyyy";
+  public static final String ACTIVE = "ACTIVE";
+  public static final String CREATED = "CREATED";
+  public static final String ENABLED = "ENABLED";
+  public static final String PENDING = "PENDING";
 
   private final ActionTemplateService actionTemplateService;
   private final ActionCaseRepository actionCaseRepository;
@@ -362,8 +367,7 @@ public class ProcessEventService {
       contact.setForename(attributes.getFirstName());
       contact.setSurname(attributes.getLastName());
       respondentStatus = parseRespondentStatuses(respondentParties);
-      List<PartyDTO> createdRespondentParties =
-          filterListByStatus(respondentParties, ActionProcessingService.CREATED);
+      List<PartyDTO> createdRespondentParties = filterListByStatus(respondentParties, CREATED);
       if (createdRespondentParties != null && createdRespondentParties.size() > 0) {
         iac = "";
       }
@@ -756,8 +760,7 @@ public class ProcessEventService {
       String sampleUnitRef,
       CollectionExerciseDTO collectionExercise) {
     log.info("collecting personalisation for email");
-    DateFormat dateFormat =
-        new SimpleDateFormat(ActionProcessingService.DATE_FORMAT_IN_REMINDER_EMAIL);
+    DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_IN_REMINDER_EMAIL);
     Personalisation personalisation =
         Personalisation.builder()
             .firstname(respondentParty.getAttributes().getFirstName())
@@ -816,10 +819,10 @@ public class ProcessEventService {
       }
     }
     String enrolmentStatus = null;
-    if (enrolmentStatuses.contains(ActionProcessingService.ENABLED)) {
-      enrolmentStatus = ActionProcessingService.ENABLED;
-    } else if (enrolmentStatuses.contains(ActionProcessingService.PENDING)) {
-      enrolmentStatus = ActionProcessingService.PENDING;
+    if (enrolmentStatuses.contains(ENABLED)) {
+      enrolmentStatus = ENABLED;
+    } else if (enrolmentStatuses.contains(PENDING)) {
+      enrolmentStatus = PENDING;
     }
     return enrolmentStatus;
   }
@@ -828,15 +831,13 @@ public class ProcessEventService {
     log.info("Getting respondent status");
     String respondentStatus = null;
     if (childParties != null) {
-      List<PartyDTO> activeParties =
-          filterListByStatus(childParties, ActionProcessingService.ACTIVE);
+      List<PartyDTO> activeParties = filterListByStatus(childParties, ACTIVE);
       if (activeParties.size() > 0) {
-        respondentStatus = ActionProcessingService.ACTIVE;
+        respondentStatus = ACTIVE;
       } else {
-        List<PartyDTO> createdParties =
-            filterListByStatus(childParties, ActionProcessingService.CREATED);
+        List<PartyDTO> createdParties = filterListByStatus(childParties, CREATED);
         if (createdParties.size() > 0) {
-          respondentStatus = ActionProcessingService.CREATED;
+          respondentStatus = CREATED;
         }
       }
     }

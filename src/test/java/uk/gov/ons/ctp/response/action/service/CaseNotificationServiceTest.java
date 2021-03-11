@@ -15,7 +15,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
+import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
+import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
@@ -26,17 +28,21 @@ import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
 public class CaseNotificationServiceTest {
 
   private static final String DUMMY_UUID = "7bc5d41b-0549-40b3-ba76-42f6d4cf3991";
-
   @Mock private ActionCaseRepository actionCaseRepo;
+  @Mock private ActionPlanRepository actionPlanRepo;
   @Mock private CollectionExerciseClientService collectionSvcClientServiceImpl;
 
   @InjectMocks private CaseNotificationService caseNotificationService;
+
+  private ActionPlan actionPlan;
   private ActionCase actionCase;
   private CaseNotification caseNotification;
   private List<CollectionExerciseDTO> collectionExercises;
 
   @Before
   public void setUp() throws Exception {
+    actionPlan = new ActionPlan();
+    actionPlan.setActionPlanPK(1);
     actionCase = new ActionCase();
     collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
   }
@@ -44,7 +50,6 @@ public class CaseNotificationServiceTest {
   private CaseNotification createCaseNotification(
       NotificationType notificationType, Boolean activeEnrolment) {
     final CaseNotification caseNotification = new CaseNotification();
-    caseNotification.setActionPlanId(DUMMY_UUID);
     caseNotification.setCaseId(DUMMY_UUID);
     caseNotification.setNotificationType(notificationType);
     caseNotification.setExerciseId(DUMMY_UUID);
@@ -60,6 +65,7 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentTrue() throws Exception {
 
     // Given
+    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
     when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
         .thenReturn(collectionExercises.get(0));
 
@@ -81,6 +87,7 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentFalse() throws Exception {
 
     // Given
+    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
     when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
         .thenReturn(collectionExercises.get(0));
 
@@ -101,12 +108,12 @@ public class CaseNotificationServiceTest {
   @Test
   public void testAcceptNotificationActiveEnrolmentWillDefaultedToFalse() throws Exception {
 
-    // Given
-
     // When
-    caseNotification = createCaseNotification(NotificationType.ACTIVATED, null);
+    when(actionPlanRepo.findById(any())).thenReturn(null);
+    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
+        .thenReturn(collectionExercises.get(0));
+    caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
     caseNotificationService.acceptNotification(caseNotification);
-
     // Then throws an IllegalStateException
     // Then
     final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);

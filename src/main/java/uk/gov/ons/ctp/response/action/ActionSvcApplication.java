@@ -6,9 +6,6 @@ import com.google.cloud.storage.StorageOptions;
 import java.time.Clock;
 import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
-import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
@@ -60,21 +57,6 @@ public class ActionSvcApplication {
     if (appConfig.getLogging().isUseJson()) {
       LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
     }
-  }
-
-  /**
-   * Bean used to create and configure Redisson Client
-   *
-   * @return the Redisson client
-   */
-  @Bean
-  public RedissonClient redissonClient() {
-    final Config config = new Config();
-    config
-        .useSingleServer()
-        .setAddress(appConfig.getDataGrid().getAddress())
-        .setPassword(appConfig.getDataGrid().getPassword());
-    return Redisson.create(config);
   }
 
   /**
