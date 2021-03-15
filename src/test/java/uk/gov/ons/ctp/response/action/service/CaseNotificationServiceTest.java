@@ -1,12 +1,8 @@
 package uk.gov.ons.ctp.response.action.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,11 +28,8 @@ import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
 public class CaseNotificationServiceTest {
 
   private static final String DUMMY_UUID = "7bc5d41b-0549-40b3-ba76-42f6d4cf3991";
-
   @Mock private ActionCaseRepository actionCaseRepo;
   @Mock private ActionPlanRepository actionPlanRepo;
-
-  @Mock private ActionService actionService;
   @Mock private CollectionExerciseClientService collectionSvcClientServiceImpl;
 
   @InjectMocks private CaseNotificationService caseNotificationService;
@@ -54,19 +47,22 @@ public class CaseNotificationServiceTest {
     collectionExercises = FixtureHelper.loadClassFixtures(CollectionExerciseDTO[].class);
   }
 
-  private CaseNotification createCaseNotification(NotificationType notificationType) {
+  private CaseNotification createCaseNotification(
+      NotificationType notificationType, Boolean activeEnrolment) {
     final CaseNotification caseNotification = new CaseNotification();
-    caseNotification.setActionPlanId(DUMMY_UUID);
     caseNotification.setCaseId(DUMMY_UUID);
     caseNotification.setNotificationType(notificationType);
     caseNotification.setExerciseId(DUMMY_UUID);
     caseNotification.setPartyId(DUMMY_UUID);
     caseNotification.setSampleUnitId(DUMMY_UUID);
+    if (activeEnrolment != null) {
+      caseNotification.setActiveEnrolment(activeEnrolment);
+    }
     return caseNotification;
   }
 
   @Test
-  public void testAcceptNotification() throws Exception {
+  public void testAcceptNotificationActiveEnrolmentTrue() throws Exception {
 
     // Given
     when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
@@ -74,7 +70,7 @@ public class CaseNotificationServiceTest {
         .thenReturn(collectionExercises.get(0));
 
     // When
-    caseNotification = createCaseNotification(NotificationType.ACTIVATED);
+    caseNotification = createCaseNotification(NotificationType.ACTIVATED, true);
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then
@@ -83,81 +79,102 @@ public class CaseNotificationServiceTest {
     final List<ActionCase> caze = actionCase.getAllValues();
 
     verify(actionCaseRepo, times(1)).flush();
-    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getActionPlanId());
-    assertNotNull(caze.get(0).getActionPlanStartDate());
-    assertNotNull(caze.get(0).getActionPlanEndDate());
+    assertTrue(caze.get(0).isActiveEnrolment());
     assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void testAcceptNotificationNoActionPlan() throws Exception {
+  @Test
+  public void testAcceptNotificationActiveEnrolmentFalse() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(null);
+    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
+    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
+        .thenReturn(collectionExercises.get(0));
 
     // When
-    caseNotification = createCaseNotification(NotificationType.ACTIVATED);
+    caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
     caseNotificationService.acceptNotification(caseNotification);
 
+    // Then
+    final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
+    verify(actionCaseRepo, times(1)).save(actionCase.capture());
+    final List<ActionCase> caze = actionCase.getAllValues();
+
+    verify(actionCaseRepo, times(1)).flush();
+    assertFalse(caze.get(0).isActiveEnrolment());
+    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
+  }
+
+  @Test
+  public void testAcceptNotificationActiveEnrolmentWillDefaultedToFalse() throws Exception {
+
+    // When
+    when(actionPlanRepo.findById(any())).thenReturn(null);
+    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
+        .thenReturn(collectionExercises.get(0));
+    caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
+    caseNotificationService.acceptNotification(caseNotification);
     // Then throws an IllegalStateException
+    // Then
+    final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
+    verify(actionCaseRepo, times(1)).save(actionCase.capture());
+    final List<ActionCase> caze = actionCase.getAllValues();
+
+    verify(actionCaseRepo, times(1)).flush();
+    assertFalse(caze.get(0).isActiveEnrolment());
+    assertEquals(UUID.fromString(DUMMY_UUID), caze.get(0).getId());
   }
 
   @Test(expected = IllegalStateException.class)
   public void testAcceptNotificationActionCaseAlreadyExists() throws Exception {
 
     // Given a action case for DUMMY_UUID already exists
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
     when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
         .thenReturn(collectionExercises.get(0));
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(actionCase);
 
     // When
-    caseNotification = createCaseNotification(NotificationType.ACTIVATED);
+    caseNotification = createCaseNotification(NotificationType.ACTIVATED, true);
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then throws an IllegalStateException
   }
 
   @Test
-  public void testAcceptNotificationUpdatesActionPlan() throws Exception {
+  public void testAcceptNotificationUpdatesActiveEnrolment() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
+    actionCase.setId(UUID.fromString(DUMMY_UUID));
+    actionCase.setActiveEnrolment(false);
+    actionCase.setSampleUnitType(DUMMY_UUID);
+    actionCase.setIac("40012578");
+    actionCase.setSampleUnitRef(DUMMY_UUID);
+    actionCase.setSampleUnitId(UUID.fromString(DUMMY_UUID));
+    actionCase.setPartyId(UUID.fromString(DUMMY_UUID));
+
+    actionCase.setActiveEnrolment(false);
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(actionCase);
 
     // When
-    caseNotification = createCaseNotification(NotificationType.ACTIONPLAN_CHANGED);
+    caseNotification = createCaseNotification(NotificationType.ACTIONPLAN_CHANGED, true);
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then
     final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
     verify(actionCaseRepo, times(1)).save(actionCase.capture());
     verify(actionCaseRepo, times(1)).flush();
+    final List<ActionCase> caze = actionCase.getAllValues();
+    assertTrue(caze.get(0).isActiveEnrolment());
   }
 
   @Test(expected = IllegalStateException.class)
   public void testAcceptNotificationUpdatesActionPlanNoExistingCase() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(null);
 
     // When
-    caseNotification = createCaseNotification(NotificationType.ACTIONPLAN_CHANGED);
-    caseNotificationService.acceptNotification(caseNotification);
-
-    // Then throws IllegalStateException
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testAcceptNotificationUpdatesActionPlanNoPlan() throws Exception {
-
-    // Given
-    when(actionPlanRepo.findById(any())).thenReturn(null);
-    when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(actionCase);
-
-    // When
-    caseNotification = createCaseNotification(NotificationType.ACTIONPLAN_CHANGED);
+    caseNotification = createCaseNotification(NotificationType.ACTIONPLAN_CHANGED, true);
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then throws IllegalStateException
@@ -167,15 +184,13 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationDelete() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(actionCase);
 
     // When
-    caseNotification = createCaseNotification(NotificationType.DEACTIVATED);
+    caseNotification = createCaseNotification(NotificationType.DEACTIVATED, true);
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then
-    verify(actionService, times(1)).cancelActions(UUID.fromString(DUMMY_UUID));
 
     final ArgumentCaptor<ActionCase> actionCase = ArgumentCaptor.forClass(ActionCase.class);
     verify(actionCaseRepo, times(1)).delete(actionCase.capture());
@@ -189,7 +204,7 @@ public class CaseNotificationServiceTest {
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(null);
 
     // When
-    caseNotification = createCaseNotification(NotificationType.DEACTIVATED);
+    caseNotification = createCaseNotification(NotificationType.DEACTIVATED, true);
     caseNotificationService.acceptNotification(caseNotification);
 
     // Then no case is deleted

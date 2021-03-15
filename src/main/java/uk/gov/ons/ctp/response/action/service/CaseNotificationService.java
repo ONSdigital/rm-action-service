@@ -34,18 +34,14 @@ public class CaseNotificationService {
   private final ActionCaseRepository actionCaseRepo;
   private final ActionPlanRepository actionPlanRepo;
 
-  private final ActionService actionService;
-
   private final CollectionExerciseClientService collectionSvcClientService;
 
   public CaseNotificationService(
       ActionCaseRepository actionCaseRepo,
       ActionPlanRepository actionPlanRepo,
-      ActionService actionService,
       CollectionExerciseClientService collectionSvcClientService) {
     this.actionCaseRepo = actionCaseRepo;
     this.actionPlanRepo = actionPlanRepo;
-    this.actionService = actionService;
     this.collectionSvcClientService = collectionSvcClientService;
   }
 
@@ -74,7 +70,6 @@ public class CaseNotificationService {
 
       case DISABLED:
       case DEACTIVATED:
-        actionService.cancelActions(caseId);
         deleteActionCase(caseId);
         break;
 
@@ -87,7 +82,7 @@ public class CaseNotificationService {
   }
 
   private ActionCase createActionCase(CaseNotification notification) throws NullPointerException {
-    // To Do - remove this code once action plan is deprecated
+    // Can't remove action plan due to legacy actions
     if (notification.getActionPlanId() != null) {
       UUID actionPlanId = UUID.fromString(notification.getActionPlanId());
       ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
@@ -130,9 +125,6 @@ public class CaseNotificationService {
           notification.getSampleUnitId() == null
               ? null
               : UUID.fromString(notification.getSampleUnitId());
-
-      // CollectionExerciseDTO collectionExercise =
-      // collectionSvcClientService.getCollectionExercise(collectionExerciseId);
       return ActionCase.builder()
           .id(caseId)
           .sampleUnitId(sampleUnitId)
@@ -165,7 +157,7 @@ public class CaseNotificationService {
       throw new IllegalStateException(
           String.format(ACTION_CASE_NOT_FOUND, actionCaseId.toString()));
     }
-    // To Do - remove this code once action plan is deprecated
+    // Can't remove action plan due to legacy actions
     if (actionPlanId != null) {
       ActionPlan actionPlan = actionPlanRepo.findById(actionPlanId);
       if (actionPlan == null) {

@@ -6,9 +6,6 @@ import com.google.cloud.storage.StorageOptions;
 import java.time.Clock;
 import javax.annotation.PostConstruct;
 import net.sourceforge.cobertura.CoverageIgnore;
-import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
@@ -26,13 +23,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.representation.ActionDTO;
-import uk.gov.ons.ctp.response.action.state.ActionSvcStateTransitionManagerFactory;
 import uk.gov.ons.ctp.response.lib.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.response.lib.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManager;
-import uk.gov.ons.ctp.response.lib.common.state.StateTransitionManagerFactory;
 
 /** The main entry point into the Action Service SpringBoot Application. */
 @CoverageIgnore
@@ -50,8 +43,6 @@ public class ActionSvcApplication {
 
   @Autowired private AppConfig appConfig;
 
-  @Autowired private StateTransitionManagerFactory actionSvcStateTransitionManagerFactory;
-
   /**
    * This method is the entry point to the Spring Boot application.
    *
@@ -66,21 +57,6 @@ public class ActionSvcApplication {
     if (appConfig.getLogging().isUseJson()) {
       LoggingConfigs.setCurrent(LoggingConfigs.getCurrent().useJson());
     }
-  }
-
-  /**
-   * Bean used to create and configure Redisson Client
-   *
-   * @return the Redisson client
-   */
-  @Bean
-  public RedissonClient redissonClient() {
-    final Config config = new Config();
-    config
-        .useSingleServer()
-        .setAddress(appConfig.getDataGrid().getAddress())
-        .setPassword(appConfig.getDataGrid().getPassword());
-    return Redisson.create(config);
   }
 
   /**
@@ -140,18 +116,6 @@ public class ActionSvcApplication {
   public RestUtility surveyClient() {
     final RestUtility restUtility = new RestUtility(appConfig.getSurveySvc().getConnectionConfig());
     return restUtility;
-  }
-
-  /**
-   * Bean to allow application to make controlled state transitions of Actions
-   *
-   * @return the state transition manager specifically for Actions
-   */
-  @Bean
-  public StateTransitionManager<ActionDTO.ActionState, ActionDTO.ActionEvent>
-      actionSvcStateTransitionManager() {
-    return actionSvcStateTransitionManagerFactory.getStateTransitionManager(
-        ActionSvcStateTransitionManagerFactory.ACTION_ENTITY);
   }
 
   /**

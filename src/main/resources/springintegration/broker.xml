@@ -7,11 +7,11 @@
   http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit-1.6.xsd">
 
 	<rabbit:connection-factory id="connectionFactory"
-	                           host="${rabbitmq.host}"
-	                           username="${rabbitmq.username}"
+							   host="${rabbitmq.host}"
+							   username="${rabbitmq.username}"
 							   virtual-host="${rabbitmq.virtualhost}"
 							   port="${rabbitmq.port}"
-	                           password="${rabbitmq.password}" />
+							   password="${rabbitmq.password}" />
 
 	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
 	<rabbit:admin id="amqpAdmin" connection-factory="connectionFactory"/>
