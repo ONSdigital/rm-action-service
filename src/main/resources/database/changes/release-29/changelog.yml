@@ -6,7 +6,7 @@ databaseChangeLog:
       changes:
         - sqlFile:
             comment: Rename columns for database consistency
-            path: action-refactor-drop-unwanted-tables-columns.sql
+            path: rename-columns.sql
             relativeToChangelogFile: true
             splitStatements: false
 
