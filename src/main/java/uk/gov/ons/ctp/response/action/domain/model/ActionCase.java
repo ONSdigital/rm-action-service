@@ -33,33 +33,33 @@ public class ActionCase implements Serializable {
         @Parameter(name = "sequence_name", value = "action.casepkseq"),
         @Parameter(name = "increment_size", value = "1")
       })
-  @Column(name = "casepk")
+  @Column(name = "case_pk")
   private Integer casePK;
 
   private UUID id;
 
-  @Column(name = "sampleunit_id")
+  @Column(name = "sample_unit_id")
   private UUID sampleUnitId;
 
-  @Column(name = "actionplanfk")
+  @Column(name = "action_plan_fk")
   private Integer actionPlanFK;
 
-  @Column(name = "actionplanid")
+  @Column(name = "action_plan_id")
   private UUID actionPlanId;
 
   @Column(name = "active_enrolment")
   private boolean activeEnrolment;
 
-  @Column(name = "actionplanstartdate")
+  @Column(name = "action_plan_start_date")
   private Timestamp actionPlanStartDate;
 
-  @Column(name = "actionplanenddate")
+  @Column(name = "action_plan_end_date")
   private Timestamp actionPlanEndDate;
 
-  @Column(name = "collectionexerciseid")
+  @Column(name = "collection_exercise_id")
   private UUID collectionExerciseId;
 
-  @Column(name = "partyid")
+  @Column(name = "party_id")
   private UUID partyId;
 
   @Column(name = "sampleunittype")

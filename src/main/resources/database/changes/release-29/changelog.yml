@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 29-1
+      author: Warren Bailey
+      changes:
+        - sqlFile:
+            comment: Rename columns for database consistency
+            path: action-refactor-drop-unwanted-tables-columns.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
