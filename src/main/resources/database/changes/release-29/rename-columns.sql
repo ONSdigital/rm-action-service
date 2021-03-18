@@ -8,5 +8,5 @@ ALTER TABLE action.case RENAME COLUMN collectionexerciseid TO collection_exercis
 ALTER TABLE action.case RENAME COLUMN partyid TO party_id;
 ALTER TABLE action.case RENAME COLUMN sampleunittype TO sample_unit_type;
 ALTER TABLE action.actionplan RENAME COLUMN actionplanpk TO action_plan_pk;
-ALTER TABLE action.actionplan RENAME COLUMN createdby TO createdby;
+ALTER TABLE action.actionplan RENAME COLUMN createdby TO created_by;
 ALTER TABLE action.actionplan RENAME COLUMN lastrundatetime TO last_run_date_time;
