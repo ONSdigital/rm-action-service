@@ -15,21 +15,6 @@ logging:
     org.springframework: WARN
   profile: DEV
 
-liquibase:
-  user: postgres
-  password: postgres
-  default-schema: action
-  url: jdbc:postgresql://localhost:5432/ras
-  changeLog: classpath:/database/changelog-master.yml
-
-security:
-  basic:
-    enabled: false
-    realm: sdc
-  user:
-    name: admin
-    password: secret
-
 management:
   security:
     roles: SUPERUSER
@@ -40,15 +25,17 @@ management:
 
 server:
   port: 8151
-  servlet-path: /
-
-endpoints:
-  info:
-    enabled: true
-    sensitive: false
-  enabled: true
+  servlet:
+    path: /
 
 spring:
+  liquibase:
+    user: postgres
+    password: postgres
+    default-schema: action
+    url: jdbc:postgresql://localhost:5432/ras
+    changeLog: classpath:/database/changelog-master.yml
+
   output:
     ansi:
       enabled: never
@@ -74,6 +61,11 @@ spring:
       hibernate:
         ddl-auto: update
         default_schema: action
+
+  security:
+    user:
+      name: admin
+      password: secret
 
   # all about redis
 data-grid:

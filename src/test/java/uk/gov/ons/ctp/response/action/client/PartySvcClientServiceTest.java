@@ -1,10 +1,10 @@
 package uk.gov.ons.ctp.response.action.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -33,8 +33,6 @@ import uk.gov.ons.ctp.response.lib.party.representation.PartyDTO;
 @RunWith(MockitoJUnitRunner.class)
 public class PartySvcClientServiceTest {
 
-  private UUID partyId;
-
   @InjectMocks private PartySvcClientService client;
 
   @Mock private RestUtility restUtility;
@@ -48,7 +46,7 @@ public class PartySvcClientServiceTest {
   @Before
   public void setup() throws Exception {
 
-    partyId = UUID.randomUUID();
+    UUID partyId = UUID.randomUUID();
 
     // Load test data
     List<PartyDTO> partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
