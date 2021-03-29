@@ -65,9 +65,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentTrue() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
 
     // When
     caseNotification = createCaseNotification(NotificationType.ACTIVATED, true);
@@ -87,9 +84,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentFalse() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
 
     // When
     caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
@@ -109,9 +103,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentWillDefaultedToFalse() throws Exception {
 
     // When
-    when(actionPlanRepo.findById(any())).thenReturn(null);
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
     caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
     caseNotificationService.acceptNotification(caseNotification);
     // Then throws an IllegalStateException
@@ -129,8 +120,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActionCaseAlreadyExists() throws Exception {
 
     // Given a action case for DUMMY_UUID already exists
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(actionCase);
 
     // When
