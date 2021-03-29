@@ -30,7 +30,7 @@ public class ActionTemplateService {
     if (template == null) {
       log.with("tag", tag)
           .with("active enrolment", isActiveEnrolment)
-          .warn("Could not map evnet tag to template");
+          .warn("Could not map event tag to template");
     }
     log.with("tag", tag).with("active enrolment", isActiveEnrolment).debug("Template Found");
     return template;

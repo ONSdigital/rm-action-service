@@ -45,9 +45,6 @@ public class PartySvcClientServiceTest {
 
   @Before
   public void setup() throws Exception {
-
-    UUID partyId = UUID.randomUUID();
-
     // Load test data
     List<PartyDTO> partys = FixtureHelper.loadClassFixtures(PartyDTO[].class);
     businessParty = partys.get(0);
@@ -67,8 +64,7 @@ public class PartySvcClientServiceTest {
             .build();
 
     HttpEntity httpEntity = new HttpEntity(null, null);
-    given(restUtility.createUriComponents(any(String.class), any(), any(), any()))
-        .willReturn(uriComponents);
+    given(restUtility.createUriComponents(any(), any(), any(), any())).willReturn(uriComponents);
     given(restUtility.createHttpEntity(isNull())).willReturn(httpEntity);
 
     ResponseEntity<PartyDTO> responseEntity = new ResponseEntity(businessParty, HttpStatus.OK);
