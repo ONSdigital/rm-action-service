@@ -172,7 +172,6 @@ messaging:
   consumingThreads: 1
   maxAttempts: 3
   prefetchCount: 10
-  txSize: 1
 
 report-settings:
   cron-expression: "0 * * * * *"
