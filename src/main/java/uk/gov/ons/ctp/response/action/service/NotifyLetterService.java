@@ -2,8 +2,6 @@ package uk.gov.ons.ctp.response.action.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
@@ -11,6 +9,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
 import uk.gov.ons.ctp.response.action.printfile.LetterEntry;
 
+@Slf4j
 @Service
 public class NotifyLetterService {
 
@@ -26,8 +26,6 @@ public class NotifyLetterService {
   @Autowired private AppConfig appConfig;
 
   @Autowired private UploadObjectGCS uploadObjectGCS;
-
-  private static final Logger log = LoggerFactory.getLogger(NotifyLetterService.class);
 
   public boolean processPrintFile(String printFilename, List<LetterEntry> printFile) {
     boolean success = false;

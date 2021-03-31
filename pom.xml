@@ -10,7 +10,7 @@
     <description>ActionService</description>
 
     <properties>
-        <springboot.version>2.3.9.RELEASE</springboot.version>
+        <springboot.version>2.4.4</springboot.version>
         <java.version>11</java.version>
         <orika.version>1.5.1</orika.version>
         <surefire.version>2.20</surefire.version>
@@ -334,13 +334,6 @@ https://dev.to/scottshipp/how-to-fix-a-mockito-cannot-mock-this-class-exception-
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.16.22</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
