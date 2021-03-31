@@ -15,7 +15,6 @@
         <orika.version>1.5.1</orika.version>
         <surefire.version>2.20</surefire.version>
         <godaddylogging.version>1.2.5</godaddylogging.version>
-        <commonbom.version>10.49.1</commonbom.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -164,7 +163,7 @@ https://dev.to/scottshipp/how-to-fix-a-mockito-cannot-mock-this-class-exception-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.2</version>
+            <version>1.18.18</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
