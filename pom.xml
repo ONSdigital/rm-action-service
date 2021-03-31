@@ -11,7 +11,6 @@
 
     <properties>
         <springboot.version>2.1.18.RELEASE</springboot.version>
-        <springcloud.version>Dalston.SR1</springcloud.version>
         <java.version>11</java.version>
         <orika.version>1.5.1</orika.version>
         <surefire.version>2.20</surefire.version>
@@ -27,14 +26,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${springboot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${springcloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -128,11 +119,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-spring-service-connector</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit</artifactId>
         </dependency>
@@ -141,12 +127,6 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
             <version>4.2.3.RELEASE</version>
-        </dependency>
-
-        <!-- If you intend to deploy the app on Cloud Foundry, add the following -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-cloudfoundry-connector</artifactId>
         </dependency>
 
         <!-- SPRING END -->
@@ -336,17 +316,6 @@ https://dev.to/scottshipp/how-to-fix-a-mockito-cannot-mock-this-class-exception-
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <version>2.19.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
         </dependency>
     </dependencies>
 
