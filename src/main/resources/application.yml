@@ -29,6 +29,10 @@ server:
     path: /
 
 spring:
+  main:
+    # Added as part of upgrade to 2.1 to quiet a an error where the 'restExceptionHandler' bean is defined twice.
+    allow-bean-definition-overriding: true
+
   liquibase:
     user: postgres
     password: postgres
