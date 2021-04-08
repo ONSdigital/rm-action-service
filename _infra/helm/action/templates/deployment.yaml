@@ -81,7 +81,7 @@ spec:
               containerPort: {{ .Values.container.port }}
           readinessProbe:
             httpGet:
-              path: /info
+              path: /actuator/info
               port: {{ .Values.container.port }}
             periodSeconds: 5
             failureThreshold: 3
@@ -89,7 +89,7 @@ spec:
             timeoutSeconds: 5
           livenessProbe:
             httpGet:
-              path: /info
+              path: /actuator/info
               port: {{ .Values.container.port }}
             initialDelaySeconds: 300
             periodSeconds: 20
@@ -186,7 +186,7 @@ spec:
             value: "$(DB_USERNAME)"
           - name: SPRING_DATASOURCE_PASSWORD
             value: "$(DB_PASSWORD)"
-          - name: LIQUIBASE_URL
+          - name: SPRING_LIQUIBASE_URL
             value: "$(SPRING_DATASOURCE_URL)"
           - name: CASE_SVC_CONNECTION_CONFIG_HOST
             {{- if .Values.dns.enabled }}
@@ -280,9 +280,9 @@ spec:
             value: "{{ .Values.gcp.bucket.name }}"
           - name: GCP_BUCKET_PREFIX
             value: "{{ .Values.gcp.bucket.prefix }}"
-          - name: LIQUIBASE_USER
+          - name: SPRING_LIQUIBASE_USER
             value: "$(DB_USERNAME)"
-          - name: LIQUIBASE_PASSWORD
+          - name: SPRING_LIQUIBASE_PASSWORD
             value: "$(DB_PASSWORD)"
           - name: MESSAGING_CONSUMING_THREADS
             value: "{{ .Values.messaging.consumingThreads }}"

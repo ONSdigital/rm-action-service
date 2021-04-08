@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.domain.model.ActionTemplate;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionTemplateRepository;
 import uk.gov.ons.ctp.response.action.representation.ActionTemplateDTO;

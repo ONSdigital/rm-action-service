@@ -198,8 +198,7 @@ public class ProcessEventService {
       List<ActionCase> email_cases,
       ActionTemplate actionTemplate,
       String eventTag) {
-    email_cases
-        .parallelStream()
+    email_cases.parallelStream()
         .filter(c -> isActionable(c, actionTemplate, eventTag))
         .forEach(
             c ->
@@ -227,8 +226,7 @@ public class ProcessEventService {
         .with("actionType", actionTemplate.getType())
         .info("Populating letter data for letter cases.");
     List<LetterEntry> letterEntries =
-        letter_cases
-            .parallelStream()
+        letter_cases.parallelStream()
             .filter(c -> isActionable(c, actionTemplate, eventTag))
             .map(c -> getPrintFileEntry(c, actionTemplate, survey))
             .collect(Collectors.toList());
@@ -261,8 +259,7 @@ public class ProcessEventService {
         .with("actionType", actionTemplate.getType())
         .info("Recording case action event");
     if (isNotRetry) {
-      letterEntries
-          .parallelStream()
+      letterEntries.parallelStream()
           .forEach(
               letterEntry ->
                   createCaseActionEvent(
@@ -405,8 +402,7 @@ public class ProcessEventService {
       // Filter all failed email cases.
       log.info("Getting all failed email cases.");
       List<ActionEvent> failedEmailCases =
-          failedCases
-              .parallelStream()
+          failedCases.parallelStream()
               .filter(e -> e.getHandler() == ActionTemplateDTO.Handler.EMAIL)
               .collect(Collectors.toList());
       // Process all failed email cases.
@@ -418,8 +414,7 @@ public class ProcessEventService {
       }
       // Filter all failed letter cases.
       List<ActionEvent> failedLetterCases =
-          failedCases
-              .parallelStream()
+          failedCases.parallelStream()
               .filter(e -> e.getHandler() == ActionTemplateDTO.Handler.LETTER)
               .collect(Collectors.toList());
       log.with("failed letter cases", failedCases.size()).info("Failed letter cases found.");
@@ -433,9 +428,7 @@ public class ProcessEventService {
           ActionTemplate template = actionTemplateRepository.findByType(eventsFailed);
           // group action event against that event with collection exercise id.
           Map<UUID, List<ActionEvent>> groupedByEventTypeAndCollexFailedLetterCases =
-              groupedByEventTypeFailedLetterCases
-                  .get(eventsFailed)
-                  .parallelStream()
+              groupedByEventTypeFailedLetterCases.get(eventsFailed).parallelStream()
                   .collect(Collectors.groupingBy(ActionEvent::getCollectionExerciseId));
           // for each distinct collection exercise process letters
           for (UUID collectionExerciseId : groupedByEventTypeAndCollexFailedLetterCases.keySet()) {
@@ -450,8 +443,7 @@ public class ProcessEventService {
             SurveyDTO survey = getSurvey(actionEvent.getSurveyId().toString());
             // group all associated failed cases against the collection exercise id
             List<UUID> cases =
-                groupedCollexFailedLetterCases
-                    .parallelStream()
+                groupedCollexFailedLetterCases.parallelStream()
                     .map(ActionEvent::getCaseId)
                     .collect(Collectors.toList());
             log.with("number of cases", cases.size())
@@ -474,8 +466,7 @@ public class ProcessEventService {
                     actionEvent.getTag());
             if (isSuccess) {
               // update all action event to processed
-              groupedCollexFailedLetterCases
-                  .parallelStream()
+              groupedCollexFailedLetterCases.parallelStream()
                   .forEach(ae -> updateCaseActionEvent(ae, instant));
             }
           }
@@ -489,8 +480,7 @@ public class ProcessEventService {
   }
 
   private void processFailedEmailCases(List<ActionEvent> failedEmailCases, Instant instant) {
-    failedEmailCases
-        .parallelStream()
+    failedEmailCases.parallelStream()
         .forEach(
             c -> {
               log.with(c.getCaseId())
@@ -540,9 +530,7 @@ public class ProcessEventService {
       ActionCaseParty actionCaseParty = setParties(actionCase, survey);
       if (isBusinessNotification(actionCase)) {
         log.with("caseId", actionCase).info("Processing Email for isBusinessNotification true");
-        actionCaseParty
-            .getChildParties()
-            .parallelStream()
+        actionCaseParty.getChildParties().parallelStream()
             // .filter(respondentParty -> isActive(respondentParty))
             .forEach(
                 respondentParty ->
@@ -660,13 +648,10 @@ public class ProcessEventService {
   private List<PartyDTO> getRespondentParties(PartyDTO businessParty) {
     log.info("getting respondent party");
     final List<String> respondentPartyIds =
-        businessParty
-            .getAssociations()
-            .stream()
+        businessParty.getAssociations().stream()
             .map(Association::getPartyId)
             .collect(Collectors.toList());
-    return respondentPartyIds
-        .stream()
+    return respondentPartyIds.stream()
         .map(
             id ->
                 partySvcClientService.getParty(

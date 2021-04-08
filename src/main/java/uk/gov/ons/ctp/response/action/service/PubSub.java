@@ -3,12 +3,12 @@ package uk.gov.ons.ctp.response.action.service;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.TopicName;
 import java.io.IOException;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
 
-@Log4j
+@Slf4j
 @Component
 public class PubSub {
 

@@ -15,21 +15,6 @@ logging:
     org.springframework: WARN
   profile: DEV
 
-liquibase:
-  user: postgres
-  password: postgres
-  default-schema: action
-  url: jdbc:postgresql://localhost:5432/ras
-  changeLog: classpath:/database/changelog-master.yml
-
-security:
-  basic:
-    enabled: false
-    realm: sdc
-  user:
-    name: admin
-    password: secret
-
 management:
   security:
     roles: SUPERUSER
@@ -40,15 +25,21 @@ management:
 
 server:
   port: 8151
-  servlet-path: /
-
-endpoints:
-  info:
-    enabled: true
-    sensitive: false
-  enabled: true
+  servlet:
+    path: /
 
 spring:
+  main:
+    # Added as part of upgrade to 2.1 to quiet a an error where the 'restExceptionHandler' bean is defined twice.
+    allow-bean-definition-overriding: true
+
+  liquibase:
+    user: postgres
+    password: postgres
+    default-schema: action
+    url: jdbc:postgresql://localhost:5432/ras
+    changeLog: classpath:/database/changelog-master.yml
+
   output:
     ansi:
       enabled: never
@@ -74,6 +65,15 @@ spring:
       hibernate:
         ddl-auto: update
         default_schema: action
+
+    # Used to suppress warning that appeared after upgrade to spring 2.0. It defaults to true and we weren't setting
+    # it so nothing changed.  Spring boot shows warnings if you don't explicitly set it.
+    open-in-view: true
+
+  security:
+    user:
+      name: admin
+      password: secret
 
   # all about redis
 data-grid:
@@ -176,7 +176,6 @@ messaging:
   consumingThreads: 1
   maxAttempts: 3
   prefetchCount: 10
-  txSize: 1
 
 report-settings:
   cron-expression: "0 * * * * *"

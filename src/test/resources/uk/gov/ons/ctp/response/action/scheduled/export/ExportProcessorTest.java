@@ -1,7 +1,7 @@
 package uk.gov.ons.ctp.response.action.scheduled.export;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMarchers.*;
 import static org.mockito.Mockito.verify;
 
 import java.util.*;

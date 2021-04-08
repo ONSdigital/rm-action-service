@@ -6,17 +6,14 @@
     <version>UNVERSIONED</version>
     <packaging>jar</packaging>
 
-    <name>CTP : ActionService</name>
-    <description>CTP : ActionService</description>
+    <name>ActionService</name>
+    <description>ActionService</description>
 
     <properties>
-        <springboot.version>1.5.6.RELEASE</springboot.version>
-        <springcloud.version>Dalston.SR1</springcloud.version>
+        <springboot.version>2.4.4</springboot.version>
         <java.version>11</java.version>
         <orika.version>1.5.1</orika.version>
-        <surefire.version>2.20</surefire.version>
         <godaddylogging.version>1.2.5</godaddylogging.version>
-        <commonbom.version>10.49.1</commonbom.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
@@ -27,14 +24,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${springboot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${springcloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -74,6 +63,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
         <dependency>
@@ -128,11 +122,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-spring-service-connector</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit</artifactId>
         </dependency>
@@ -143,15 +132,19 @@
             <version>4.2.3.RELEASE</version>
         </dependency>
 
-        <!-- If you intend to deploy the app on Cloud Foundry, add the following -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-cloudfoundry-connector</artifactId>
-        </dependency>
-
         <!-- SPRING END -->
 
         <!-- Third party libraries -->
+
+        <!-- Added because of mockito errors. It's explained more here
+https://dev.to/scottshipp/how-to-fix-a-mockito-cannot-mock-this-class-exception-in-a-spring-boot-app-457e -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.22.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-pubsub</artifactId>
@@ -174,7 +167,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.2</version>
+            <version>1.18.18</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -184,7 +177,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.9.6</version>
+            <version>2.12.2</version>
         </dependency>
 
         <dependency>
@@ -209,8 +202,6 @@
             <artifactId>orika-eclipse-tools</artifactId>
             <version>${orika.version}</version>
         </dependency>
-
-
 
         <dependency>
             <groupId>com.vladmihalcea</groupId>
@@ -327,17 +318,6 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <version>2.19.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -351,13 +331,6 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.16.22</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -368,7 +341,7 @@
             <plugin>
                 <groupId>com.coveo</groupId>
                 <artifactId>fmt-maven-plugin</artifactId>
-                <version>2.5.0</version>
+                <version>2.10</version>
                 <executions>
                     <execution>
                         <goals>
@@ -380,7 +353,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.17</version>
+                <version>3.1.2</version>
             </plugin>
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>

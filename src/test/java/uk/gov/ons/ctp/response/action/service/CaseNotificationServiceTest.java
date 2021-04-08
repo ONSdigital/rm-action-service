@@ -1,7 +1,7 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.ons.ctp.response.action.client.CollectionExerciseClientService;
 import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
@@ -65,9 +65,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentTrue() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
 
     // When
     caseNotification = createCaseNotification(NotificationType.ACTIVATED, true);
@@ -87,9 +84,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentFalse() throws Exception {
 
     // Given
-    when(actionPlanRepo.findById(any())).thenReturn(actionPlan);
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
 
     // When
     caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
@@ -109,9 +103,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActiveEnrolmentWillDefaultedToFalse() throws Exception {
 
     // When
-    when(actionPlanRepo.findById(any())).thenReturn(null);
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
     caseNotification = createCaseNotification(NotificationType.ACTIVATED, false);
     caseNotificationService.acceptNotification(caseNotification);
     // Then throws an IllegalStateException
@@ -129,8 +120,6 @@ public class CaseNotificationServiceTest {
   public void testAcceptNotificationActionCaseAlreadyExists() throws Exception {
 
     // Given a action case for DUMMY_UUID already exists
-    when(collectionSvcClientServiceImpl.getCollectionExercise(UUID.fromString(DUMMY_UUID)))
-        .thenReturn(collectionExercises.get(0));
     when(actionCaseRepo.findById(UUID.fromString(DUMMY_UUID))).thenReturn(actionCase);
 
     // When

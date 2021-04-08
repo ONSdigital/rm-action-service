@@ -9,7 +9,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,10 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.action.message.UploadObjectGCS;
 import uk.gov.ons.ctp.response.action.printfile.LetterEntry;
 
-@Log4j
+@Slf4j
 @Service
 public class NotifyLetterService {
+
   @Autowired private PubSub pubSub;
 
   @Autowired private AppConfig appConfig;
