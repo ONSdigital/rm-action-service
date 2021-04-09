@@ -36,7 +36,7 @@ spring:
   liquibase:
     user: postgres
     password: postgres
-    default-schema: action
+    liquibase-schema: action
     url: jdbc:postgresql://localhost:5432/ras
     changeLog: classpath:/database/changelog-master.yml
 
@@ -57,6 +57,7 @@ spring:
       max-active: 10
       max-idle: 5
       min-idle: 3
+    initialization-mode: always
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
