@@ -36,7 +36,7 @@ spring:
   liquibase:
     user: postgres
     password: postgres
-    default-schema: action
+    liquibase-schema: action
     url: jdbc:postgresql://localhost:5432/ras
     changeLog: classpath:/database/changelog-master.yml
 
