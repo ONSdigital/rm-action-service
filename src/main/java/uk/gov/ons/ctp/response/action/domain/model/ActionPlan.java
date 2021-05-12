@@ -40,7 +40,7 @@ public class ActionPlan implements Serializable {
         @Parameter(name = "increment_size", value = "1"),
         @Parameter(name = "sequence_name", value = "action.actionplanseq"),
       })
-  @Column(name = "actionplanpk")
+  @Column(name = "action_plan_pk")
   private Integer actionPlanPK;
 
   private UUID id;
@@ -49,10 +49,10 @@ public class ActionPlan implements Serializable {
 
   private String description;
 
-  @Column(name = "createdby")
+  @Column(name = "created_by")
   private String createdBy;
 
-  @Column(name = "lastrundatetime")
+  @Column(name = "last_run_date_time")
   private Timestamp lastRunDateTime;
 
   @Type(type = "jsonb")
