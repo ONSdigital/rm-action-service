@@ -12,12 +12,3 @@ ALTER TABLE action.actionplan
 RENAME COLUMN actionplanpk TO action_plan_pk
 RENAME COLUMN createdby TO created_by
 RENAME COLUMN lastrundatetime TO last_run_date_time;
-
-ALTER TABLE action.databasechangeloglock
-RENAME COLUMN lockgranted TO lock_granted
-RENAME COLUMN lockedby TO locked_by;
-
-ALTER TABLE action.databasechangelog
-RENAME COLUMN dateexecuted TO date_executed
-RENAME COLUMN orderexecuted TO order_executed
-RENAME COLUMN exectype TO exec_type;
