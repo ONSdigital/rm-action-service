@@ -38,7 +38,7 @@ public class ActionCase implements Serializable {
 
   private UUID id;
 
-  @Column(name = "sampleunit_id")
+  @Column(name = "sample_unit_id")
   private UUID sampleUnitId;
 
   @Column(name = "action_plan_fk")
