@@ -189,6 +189,7 @@ gcp:
   project: ras-rm-sandbox
   notifyTopic: ras-rm-notify-test
   printFileTopic: ras-rm-print-file
+  caseNotificationSubscription: ras-rm-case-notification-subscription
   bucket:
     name: ras-rm-print-file
     prefix: ""

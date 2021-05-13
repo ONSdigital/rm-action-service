@@ -1,58 +1,62 @@
 package uk.gov.ons.ctp.response.action.message;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
-import net.sourceforge.cobertura.CoverageIgnore;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
+import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.pubsub.v1.Subscriber;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PubsubMessage;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.integration.annotation.MessageEndpoint;
-import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import uk.gov.ons.ctp.response.action.representation.CaseNotification;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
-import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
+import uk.gov.ons.ctp.response.action.service.PubSub;
 import uk.gov.ons.ctp.response.lib.common.error.CTPException;
 
-/** Message end point for Case notification life cycle messages, please see flows.xml. */
-@CoverageIgnore
-@MessageEndpoint
+@Slf4j
+@Component
 public class CaseNotificationReceiver {
-  private static final Logger log = LoggerFactory.getLogger(CaseNotificationReceiver.class);
-
+  @Autowired private PubSub pubSub;
+  @Autowired private ObjectMapper objectMapper;
   @Autowired private CaseNotificationService caseNotificationService;
 
-  @Qualifier("genericRabbitTemplate")
-  @Autowired
-  private RabbitTemplate rabbitTemplate;
+  private static ProjectSubscriptionName getPubSubSubscription(
+      String project, String subscriptionId) {
+    log.info(
+        "creating pubsub subscription for case notification "
+            + subscriptionId
+            + " in project "
+            + project);
+    ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(project, subscriptionId);
+    return subscriptionName;
+  }
 
-  @Autowired private ObjectMapper objectMapper;
-
-  private static final String ACTION_OUTBOUND_EXCHANGE = "action-outbound-exchange";
-  private static final String ACTION_ROUTING_KEY = "Action.CaseNotificationHandled.binding";
-
-  @ServiceActivator(
-      inputChannel = "caseNotificationTransformed",
-      adviceChain = "caseNotificationRetryAdvice")
-  public void acceptNotification(final CaseNotification caseNotification) throws CTPException {
-
-    try {
-      log.with("case_id", caseNotification.getCaseId())
-          .info("Receiving case notification for case id");
-      caseNotificationService.acceptNotification(caseNotification);
-    } finally {
-      try {
-        rabbitTemplate.convertAndSend(
-            ACTION_OUTBOUND_EXCHANGE,
-            ACTION_ROUTING_KEY,
-            objectMapper.writeValueAsString(caseNotification));
-        log.with("exchange", ACTION_OUTBOUND_EXCHANGE)
-            .with("case_id", caseNotification.getCaseId())
-            .with("case_notification", caseNotification)
-            .debug("Just wrote rabbit message to rabbit");
-      } catch (JsonProcessingException e) {
-        log.error("Can't send message", e);
-      }
-    }
+  @EventListener(ApplicationReadyEvent.class)
+  public void caseNotificationSubscription() throws IOException {
+    // Instantiate an asynchronous message receiver.
+    MessageReceiver receiver =
+        (PubsubMessage message, AckReplyConsumer consumer) -> {
+          // Handle incoming message, then ack the received message.
+          log.info("Id: " + message.getMessageId());
+          log.info("Data: " + message.getData().toStringUtf8());
+          try {
+            CaseNotification caseNotificationReceiver =
+                objectMapper.readValue(message.getData().toStringUtf8(), CaseNotification.class);
+            caseNotificationService.acceptNotification(caseNotificationReceiver);
+            consumer.ack();
+          } catch (final IOException | CTPException e) {
+            log.error("Something went wrong");
+          }
+        };
+    Subscriber subscriber = pubSub.getActionCaseNotificationSubscriber(receiver);
+    // Start the subscriber.
+    subscriber.startAsync().awaitRunning();
+    log.info(
+        "Listening for messages on "
+            + pubSub.getActionCaseNotificationSubscriptionName().toString());
   }
 }

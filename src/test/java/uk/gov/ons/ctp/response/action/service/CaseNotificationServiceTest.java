@@ -18,7 +18,7 @@ import uk.gov.ons.ctp.response.action.domain.model.ActionCase;
 import uk.gov.ons.ctp.response.action.domain.model.ActionPlan;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionCaseRepository;
 import uk.gov.ons.ctp.response.action.domain.repository.ActionPlanRepository;
-import uk.gov.ons.ctp.response.lib.casesvc.message.notification.CaseNotification;
+import uk.gov.ons.ctp.response.action.representation.CaseNotification;
 import uk.gov.ons.ctp.response.lib.casesvc.message.notification.NotificationType;
 import uk.gov.ons.ctp.response.lib.collection.exercise.representation.CollectionExerciseDTO;
 import uk.gov.ons.ctp.response.lib.common.FixtureHelper;
