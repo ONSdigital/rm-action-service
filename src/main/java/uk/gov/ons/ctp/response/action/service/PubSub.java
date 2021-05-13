@@ -55,9 +55,9 @@ public class PubSub {
     // to receive message. It defaults to 1. `setExecutorProvider` configures an executor for the
     // subscriber to process messages. Here, the subscriber is configured to open 2 streams for
     // receiving messages, each stream creates a new executor with 4 threads to help process the
-    // message callbacks. In total 10x4=40 threads are used for message processing.
+    // message callbacks. In total 2x4=8 threads are used for message processing.
     return Subscriber.newBuilder(getActionCaseNotificationSubscriptionName(), receiver)
-        .setParallelPullCount(10)
+        .setParallelPullCount(2)
         .setExecutorProvider(executorProvider)
         .build();
   }
