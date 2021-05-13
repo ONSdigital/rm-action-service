@@ -8,12 +8,10 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.TopicName;
 import java.io.IOException;
-import jodd.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.message.PubSubEmulator;
 
 @Slf4j
 @Component
@@ -53,14 +51,14 @@ public class PubSub {
     Subscriber subscriber = null;
     ExecutorProvider executorProvider =
         InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(4).build();
-      // `setParallelPullCount` determines how many StreamingPull streams the subscriber will open
-      // to receive message. It defaults to 1. `setExecutorProvider` configures an executor for the
-      // subscriber to process messages. Here, the subscriber is configured to open 2 streams for
-      // receiving messages, each stream creates a new executor with 4 threads to help process the
-      // message callbacks. In total 10x4=40 threads are used for message processing.
-      return Subscriber.newBuilder(getActionCaseNotificationSubscriptionName(), receiver)
-          .setParallelPullCount(10)
-          .setExecutorProvider(executorProvider)
-          .build();
+    // `setParallelPullCount` determines how many StreamingPull streams the subscriber will open
+    // to receive message. It defaults to 1. `setExecutorProvider` configures an executor for the
+    // subscriber to process messages. Here, the subscriber is configured to open 2 streams for
+    // receiving messages, each stream creates a new executor with 4 threads to help process the
+    // message callbacks. In total 10x4=40 threads are used for message processing.
+    return Subscriber.newBuilder(getActionCaseNotificationSubscriptionName(), receiver)
+        .setParallelPullCount(10)
+        .setExecutorProvider(executorProvider)
+        .build();
   }
 }
