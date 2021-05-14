@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.ctp.response.action.config.AppConfig;
-import uk.gov.ons.ctp.response.action.utils.PubSubEmulator;
+import uk.gov.ons.ctp.response.action.utility.PubSubEmulator;
 
 @Slf4j
 @Component

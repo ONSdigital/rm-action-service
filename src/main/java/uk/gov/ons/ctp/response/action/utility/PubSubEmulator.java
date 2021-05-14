@@ -1,4 +1,4 @@
-package uk.gov.ons.ctp.response.action.utils;
+package uk.gov.ons.ctp.response.action.utility;
 
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;

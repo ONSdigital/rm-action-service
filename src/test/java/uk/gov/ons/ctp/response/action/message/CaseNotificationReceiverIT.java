@@ -21,7 +21,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import uk.gov.ons.ctp.response.action.representation.CaseNotification;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
-import uk.gov.ons.ctp.response.action.utils.PubSubEmulator;
+import uk.gov.ons.ctp.response.action.utility.PubSubEmulator;
 
 @ContextConfiguration
 @ActiveProfiles("test")
