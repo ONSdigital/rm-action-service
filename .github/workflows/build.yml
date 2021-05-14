@@ -41,10 +41,10 @@ jobs:
         uses: google-github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.GCR_KEY }}
-          # Configure docker to use the gcloud command-line tool as a credential helper
-          - name: Configure GCR
-            run: |
-              gcloud auth configure-docker
+        # Configure docker to use the gcloud command-line tool as a credential helper
+        - name: Configure GCR
+          run: |
+            gcloud auth configure-docker
 
       - name: pr docker tag
         if: github.ref != 'refs/heads/main'
@@ -76,7 +76,7 @@ jobs:
       - name: template helm
         run: |
           helm template $CHART_DIRECTORY
-
+    
       - name: package helm
         run: |
           echo HELM_VERSION=$(grep -E "version:\s+" $CHART_DIRECTORY/Chart.yaml | cut -d" " -f2 | sed -r 's/"//g') >> $GITHUB_ENV
@@ -88,7 +88,7 @@ jobs:
         run: |
           mv $IMAGE-${{ env.HELM_VERSION }}.tgz $IMAGE-latest.tgz
           gsutil cp $IMAGE-*.tgz gs://$ARTIFACT_BUCKET/$IMAGE/
-
+      
       - name: Set current tag
         if: github.ref != 'refs/heads/main'
         id: vars
@@ -128,7 +128,7 @@ jobs:
             git add $CHART_DIRECTORY/Chart.yaml
             git commit -m "$COMMIT_MSG"
 
-            git push
+            git push 
           else
             echo "git version and appVersion do not not match"
             echo "Using current appVersion: $APP_VERSION"
