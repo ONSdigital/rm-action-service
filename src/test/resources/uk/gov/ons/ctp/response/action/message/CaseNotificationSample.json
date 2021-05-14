@@ -1,0 +1,13 @@
+{
+  "sampleUnitId":"acbd6c2b-01f2-4d73-9838-3e0e1823bbe7",
+  "caseId": "1e55d076-d67a-466d-a0a5-fef78134f336",
+  "actionPlanId": null,
+  "activeEnrolment": false,
+  "exerciseId": "df105cf1-d6c9-4c2a-87ff-26a2e4fcbf1c",
+  "partyId": "944f1602-b1fa-4b90-bc92-ceb2ce0391e0",
+  "sampleUnitType": "B",
+  "notificationType": "ACTIVATED",
+  "sampleUnitRef": "49900000008",
+  "status": "NOTSTARTED",
+  "iac": "pxb7wc5kmjwv"
+}
