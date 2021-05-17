@@ -3,8 +3,10 @@ services:
  postgres:
   container_name: postgres-action-it
   image: eu.gcr.io/ons-rasrmbs-management/postgres
-  env_file:
-    - test.env # configure postgres
+  environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    - POSTGRES_DB=postgres
   ports:
     - "16432:5432"
  pubsub-emulator:
