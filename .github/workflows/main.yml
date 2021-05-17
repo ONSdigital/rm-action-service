@@ -59,15 +59,9 @@ jobs:
           gcloud auth configure-docker
       - name: Run Tests
         run: |
+          export LD_LIBRARY_PATH=/usr/local/lib
           mvn fmt:check
           mvn clean verify
-      - uses: google-github-actions/setup-gcloud@master
-        with:
-          version: '270.0.0'
-          service_account_key: ${{ secrets.GCR_KEY }}
-        # Configure docker to use the gcloud command-line tool as a credential helper
-      - run: |
-          gcloud auth configure-docker
         # Build the Docker image
       - name: Build Docker Image
         if: github.ref != 'refs/heads/main'
@@ -144,14 +138,6 @@ jobs:
         shell: bash
         run: |
           echo ::set-output name=version::$(grep -E "appVersion:\s+" $CHART_DIRECTORY/Chart.yaml | cut -d" " -f2 | sed -r 's/"//g')
-
-      - uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow # selectable (default: repo,message)
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: failure()
 
       - name: Build Release Image
         if: github.ref == 'refs/heads/main'
