@@ -1,52 +1,46 @@
-logging:
-  useJson: false
-  level:
-    uk.gov.ons.ctp: DEBUG
-    org.springframework: WARN
-  profile: DEV
-
-liquibase:
-  url: jdbc:postgresql://localhost:16432/postgres
-  user: postgres
-  password: postgres
-
 spring:
+  main:
+    # Added as part of upgrade to 2.1 to quiet a an error where the 'restExceptionHandler' bean is defined twice.
+    allow-bean-definition-overriding: true
+
+  liquibase:
+    user: postgres
+    password: postgres
+    liquibase-schema: action
+    url: jdbc:postgresql://localhost:16432/postgres
+
+  output:
+    ansi:
+      enabled: never
+  application:
+    name: ONS ActionService
+
   datasource:
     url: jdbc:postgresql://localhost:16432/postgres
     username: postgres
     password: postgres
+    driverClassName: org.postgresql.Driver
+    continue-on-error: true
+    tomcat:
+      initial-size: 5
+      max-active: 10
+      max-idle: 5
+      min-idle: 3
+    initialization-mode: always
 
-data-grid:
-  # where is redis
-  address: localhost:17379
-  # when we create a list of actions being distib, how long should the list remain in redis after app death
-  list-time-to-live-seconds: 10
-  # when we try and create a list of ids being distrib how long should we wait to get the lock
-  list-time-to-wait-seconds: 10
-  #  after app death how long should the lock on all lists remain
-  lock-time-to-live-seconds: 10
-  report-lock-time-to-live-seconds: 300
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    properties:
+      hibernate:
+        ddl-auto: update
+        default_schema: action
 
-rabbitmq:
-  host: localhost
-  port: 35672
+    # Used to suppress warning that appeared after upgrade to spring 2.0. It defaults to true and we weren't setting
+    # it so nothing changed.  Spring boot shows warnings if you don't explicitly set it.
+    open-in-view: true
 
-case-svc:
-  connection-config:
-    port: 18002
-
-sample-svc:
-  connection-config:
-    port: 18002
-
-collection-exercise-svc:
-  connection-config:
-    port: 18002
-
-survey-svc:
-  connection-config:
-    port: 18002
-
-party-svc:
-  connection-config:
-    port: 18002
+  security:
+    user:
+      name: admin
+      password: secret

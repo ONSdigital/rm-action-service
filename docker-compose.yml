@@ -2,9 +2,11 @@ version: '2'
 services:
  postgres:
   container_name: postgres-action-it
-  image: sdcplatform/ras-rm-docker-postgres
+  image: eu.gcr.io/ons-rasrmbs-management/postgres
+  env_file:
+    - test.env # configure postgres
   ports:
-   - "16432:5432"
+    - "16432:5432"
  pubsub-emulator:
    container_name: pubsub-emulator-it
    image: eu.gcr.io/ons-rasrmbs-management/pubsub-emulator
