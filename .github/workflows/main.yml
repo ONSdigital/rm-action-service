@@ -49,6 +49,14 @@ jobs:
           PR=$(echo "$GITHUB_REF" | awk -F / '{print $3}')
           echo "$PR"
           echo ::set-output name=pr_number::pr-"$PR"
+      - name: gcloud setup
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_KEY }}
+        # Configure docker to use the gcloud command-line tool as a credential helper
+      - name: Configure GCR
+        run: |
+          gcloud auth configure-docker
       - name: Run Tests
         run: |
           mvn fmt:check
