@@ -56,12 +56,13 @@ public class CaseNotificationReceiver {
             log.with(e)
                 .error(
                     "Something went wrong while processing message received from PubSub for case notification");
+            consumer.nack();
           }
         };
     Subscriber subscriber = pubSub.getActionCaseNotificationSubscriber(receiver);
     // Start the subscriber.
     subscriber.startAsync().awaitRunning();
     log.with(pubSub.getActionCaseNotificationSubscriptionName().toString())
-        .info("Listening for action case notification messages on port");
+        .info("Listening for action case notification messages on PubSub-subscription id");
   }
 }
