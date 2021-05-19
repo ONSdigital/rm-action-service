@@ -56,6 +56,26 @@ public class CaseNotificationReceiverIT {
     Mockito.verify(caseNotificationService, Mockito.times(1)).acceptNotification(caseNotification);
   }
 
+  @Test
+  public void testCaseNotificationReceiverIsReceivingMultipleMessageFromPubSub() throws Exception {
+    String json = readFileAsString(file);
+    pubSubEmulator.publishMessage(json);
+    Thread.sleep(2000);
+    pubSubEmulator.publishMessage(json);
+    Thread.sleep(2000);
+    ObjectMapper objectMapper = new ObjectMapper();
+    CaseNotification caseNotification = objectMapper.readValue(json, CaseNotification.class);
+    Mockito.verify(caseNotificationService, Mockito.times(2)).acceptNotification(caseNotification);
+  }
+
+  @Test
+  public void testCaseNotificationReceiverIsReceivingNoMessageFromPubSub() throws Exception {
+    String json = readFileAsString(file);
+    ObjectMapper objectMapper = new ObjectMapper();
+    CaseNotification caseNotification = objectMapper.readValue(json, CaseNotification.class);
+    Mockito.verify(caseNotificationService, Mockito.times(0)).acceptNotification(caseNotification);
+  }
+
   private static String readFileAsString(String file) throws Exception {
     return new String(Files.readAllBytes(Paths.get(file)));
   }
