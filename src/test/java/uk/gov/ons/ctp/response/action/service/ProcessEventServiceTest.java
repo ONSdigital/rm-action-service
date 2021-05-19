@@ -210,9 +210,6 @@ public class ProcessEventServiceTest {
             sampleUnitId,
             "400000005",
             "oiauen"));
-    when(actionCaseRepository.findByCollectionExerciseIdAndActiveEnrolment(
-            collectionExerciseId, false))
-        .thenReturn(actionCases);
     when(actionCaseRepository.findByIdIn(anyObject())).thenReturn(actionCases);
     when(actionTemplateRepository.findByType(anyObject()))
         .thenReturn(testData.setupActionTemplate("BSNE", ActionTemplateDTO.Handler.EMAIL, "mps"));
@@ -257,8 +254,6 @@ public class ProcessEventServiceTest {
             ActionEvent.ActionEventStatus.FAILED,
             ActionTemplateDTO.Handler.EMAIL,
             "BSNE"));
-    when(actionEventRepository.findByStatus(ActionEvent.ActionEventStatus.FAILED))
-        .thenReturn(actionEvents);
     when(collectionExerciseClientService.getCollectionExercise(collectionExerciseId))
         .thenReturn(
             testData.setupCollectionExerciseDTO(

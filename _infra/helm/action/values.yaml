@@ -19,6 +19,7 @@ gcp:
   project: ras-rm-sandbox
   notifyTopic: ras-rm-notify-test
   printFileTopic: print-file-jobs
+  caseNotificationSubscription: ras-rm-case-notification-subscription
   bucket:
     name: "ras-rm-print-file"
     prefix: ""

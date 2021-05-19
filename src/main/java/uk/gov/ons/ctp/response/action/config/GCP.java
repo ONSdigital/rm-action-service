@@ -8,4 +8,5 @@ public class GCP {
   String printFileTopic;
   String notifyTopic;
   Bucket bucket;
+  String caseNotificationSubscription;
 }
