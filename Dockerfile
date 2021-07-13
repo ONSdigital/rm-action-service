@@ -1,8 +1,6 @@
-FROM openjdk:11-jre-slim
+FROM maven:3.6.3-jdk-11-slim
 
 RUN apt-get update
-COPY target/actionsvc.jar /opt/actionsvc.jar
-
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar /opt/actionsvc.jar" ]
+RUN apt-get install docker-compose
 
 
