@@ -414,7 +414,7 @@ https://dev.to/scottshipp/how-to-fix-a-mockito-cannot-mock-this-class-exception-
                             <goal>down</goal>
                         </goals>
                         <configuration>
-                            <composeFile>${project.basedir}/docker-compose.yml</composeFile>
+                            <composeFile>docker-compose.yml</composeFile>
                         </configuration>
                     </execution>
                     <execution>
