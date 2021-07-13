@@ -1,4 +1,6 @@
 steps:
+  - name: 'docker/compose:1.19.0'
+    args: [ 'down', '-d' ]
   - name: maven:3-jdk-11
     entrypoint: mvn
     args: ['install']
