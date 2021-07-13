@@ -1,7 +1,12 @@
 steps:
   - name: maven:3-jdk-11
     entrypoint: mvn
-    args: ['verify']
+    args: ['test -DskipITs']
+
+  - name: docker-compose
+    entrypoint: mvn
+    args: [ 'verify' ]
+
 
   - name: gcr.io/cloud-builders/curl
     entrypoint: bash
