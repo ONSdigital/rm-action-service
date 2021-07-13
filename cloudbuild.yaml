@@ -1,5 +1,5 @@
 steps:
-  - name: maven:3-jdk-11 docker:compose
+  - name: maven:3-jdk-11, docker:compose
     entrypoint: mvn
     args: ['install']
 
