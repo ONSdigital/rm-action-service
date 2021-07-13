@@ -1,7 +1,6 @@
 steps:
-  - name: maven:3-jdk-11
-    entrypoint: mvn
-    args: [ 'verify' ]
+  - name: 'gcr.io/cloud-builders/mvn'
+    args: [ 'install' ]
 
 
   - name: gcr.io/cloud-builders/curl
