@@ -1,9 +1,7 @@
 steps:
   - name: maven:3-jdk-11
     entrypoint: mvn
-    args: ['fmt:check', 'clean verify']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'gcr.io/my-project-id/myimage', '.' ]
+    args: ['fmt:check', 'clean install']
 
   - name: gcr.io/cloud-builders/curl
     entrypoint: bash
