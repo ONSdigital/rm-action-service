@@ -1,8 +1,5 @@
 steps:
   - name: maven:3-jdk-11
-    entrypoint: mvn
-    args: ['test -DskipITs']
-
   - name: docker-compose
     entrypoint: mvn
     args: [ 'verify' ]
