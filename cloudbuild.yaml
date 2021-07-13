@@ -1,7 +1,7 @@
 steps:
-  - name: maven:3-jdk-11, docker:compose
+  - name: maven:3-jdk-11
     entrypoint: mvn
-    args: ['install']
+    args: ['verify']
 
   - name: gcr.io/cloud-builders/curl
     entrypoint: bash
