@@ -1,4 +1,13 @@
 steps:
   - name: maven:3-jdk-11
     entrypoint: mvn
-    args: ['fmt:check']
+    args: ['fmt:check', 'clean verify']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-t', 'gcr.io/my-project-id/myimage', '.' ]
+
+  - name: gcr.io/cloud-builders/curl
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        echo "{\"body\": \"Preview this revision: $(cat /workspace/url.txt)\"}" > /workspace/api_payload.txt
