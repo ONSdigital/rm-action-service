@@ -1,7 +1,7 @@
 steps:
   - name: maven:3-jdk-11
     entrypoint: mvn
-    args: ['clean install']
+    args: ['install']
 
   - name: gcr.io/cloud-builders/curl
     entrypoint: bash
