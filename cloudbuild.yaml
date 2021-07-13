@@ -1,6 +1,6 @@
 steps:
-  - name: maven:3-jdk-11
   - name: docker-compose
+  - name: maven:3-jdk-11
     entrypoint: mvn
     args: [ 'verify' ]
 
