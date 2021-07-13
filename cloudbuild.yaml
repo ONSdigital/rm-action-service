@@ -1,7 +1,7 @@
 steps:
   - name: maven:3-jdk-11
     entrypoint: mvn
-    args: ['fmt:check', 'clean install']
+    args: ['fmt:check', 'verify']
 
   - name: gcr.io/cloud-builders/curl
     entrypoint: bash
