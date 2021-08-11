@@ -18,6 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import uk.gov.ons.ctp.response.action.representation.CaseNotification;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
@@ -29,6 +30,7 @@ import uk.gov.ons.ctp.response.action.utility.PubSubEmulator;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestPropertySource(locations = "classpath:/application-test.yml")
 public class CaseNotificationReceiverIT {
   private PubSubEmulator pubSubEmulator = new PubSubEmulator();
   private String file =

@@ -5,6 +5,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import java.time.Clock;
 import javax.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,10 +13,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
+import org.springframework.cloud.gcp.pubsub.integration.inbound.PubSubInboundChannelAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -35,6 +40,7 @@ import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
 @EnableAsync
 @EnableCaching
 @EnableScheduling
+@Slf4j
 public class ActionSvcApplication {
 
   @Autowired private AppConfig appConfig;
@@ -150,5 +156,22 @@ public class ActionSvcApplication {
   @Bean
   public Storage storage() {
     return StorageOptions.getDefaultInstance().getService();
+  }
+
+  @Bean
+  public PubSubInboundChannelAdapter messageChannelAdapter(
+      @Qualifier("actionCaseNotificationChannel") MessageChannel inputChannel,
+      PubSubTemplate pubSubTemplate) {
+    String subscriptionName = appConfig.getGcp().getCaseNotificationSubscription();
+    log.info("Application Returning emulator Subscriber::" + subscriptionName);
+    PubSubInboundChannelAdapter adapter =
+        new PubSubInboundChannelAdapter(pubSubTemplate, subscriptionName);
+    adapter.setOutputChannel(inputChannel);
+    return adapter;
+  }
+
+  @Bean
+  public MessageChannel actionCaseNotificationChannel() {
+    return new DirectChannel();
   }
 }

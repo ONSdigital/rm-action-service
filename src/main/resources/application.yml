@@ -48,8 +48,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/ras
-    username: actionsvc
-    password: actionsvc
+    username: postgres
+    password: postgres
     driverClassName: org.postgresql.Driver
     continue-on-error: true
     tomcat:
@@ -75,6 +75,10 @@ spring:
     user:
       name: admin
       password: secret
+
+  cloud:
+    gcp:
+      project-id: ras-rm-dev
 
   # all about redis
 data-grid:
@@ -186,10 +190,10 @@ retries:
   backoff: 5000
 
 gcp:
-  project: ras-rm-sandbox
+  project: ras-rm-dev
   notifyTopic: ras-rm-notify-test
   printFileTopic: ras-rm-print-file
-  caseNotificationSubscription: ras-rm-case-notification-subscription
+  caseNotificationSubscription: action-case-notification-sinhaa
   bucket:
     name: ras-rm-print-file
     prefix: ""
