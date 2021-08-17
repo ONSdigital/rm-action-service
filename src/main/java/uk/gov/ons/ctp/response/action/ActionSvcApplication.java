@@ -15,12 +15,16 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
 import org.springframework.cloud.gcp.pubsub.integration.inbound.PubSubInboundChannelAdapter;
+import org.springframework.cloud.gcp.pubsub.integration.outbound.PubSubMessageHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHandler;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -158,20 +162,48 @@ public class ActionSvcApplication {
     return StorageOptions.getDefaultInstance().getService();
   }
 
+  /** Bean used to create PubSub action case notification subscription inbound adaptor */
   @Bean
-  public PubSubInboundChannelAdapter messageChannelAdapter(
+  public PubSubInboundChannelAdapter actionCaseNotificationAdapter(
       @Qualifier("actionCaseNotificationChannel") MessageChannel inputChannel,
       PubSubTemplate pubSubTemplate) {
     String subscriptionName = appConfig.getGcp().getCaseNotificationSubscription();
-    log.info("Application Returning emulator Subscriber::" + subscriptionName);
+    log.info("Application started with pubsub subscription id {}", subscriptionName);
     PubSubInboundChannelAdapter adapter =
         new PubSubInboundChannelAdapter(pubSubTemplate, subscriptionName);
     adapter.setOutputChannel(inputChannel);
     return adapter;
   }
 
+  /** Bean used to create PubSub action case notification channel */
   @Bean
   public MessageChannel actionCaseNotificationChannel() {
     return new DirectChannel();
+  }
+
+  /** Bean used to create PubSub print file channel */
+  @Bean
+  @ServiceActivator(inputChannel = "printFileChannel")
+  public MessageHandler printFileMessageSender(PubSubTemplate pubsubTemplate) {
+    return new PubSubMessageHandler(pubsubTemplate, appConfig.getGcp().getPrintFileTopic());
+  }
+
+  /** Bean used to publish PubSub print file message */
+  @MessagingGateway(defaultRequestChannel = "printFileChannel")
+  public interface PubSubOutboundPrintFileGateway {
+    void sendToPubSub(String text);
+  }
+
+  /** Bean used to create PubSub email channel */
+  @Bean
+  @ServiceActivator(inputChannel = "notifyEmailChannel")
+  public MessageHandler emailMessageSender(PubSubTemplate pubsubTemplate) {
+    return new PubSubMessageHandler(pubsubTemplate, appConfig.getGcp().getPrintFileTopic());
+  }
+
+  /** Bean used to publish PubSub email message */
+  @MessagingGateway(defaultRequestChannel = "notifyEmailChannel")
+  public interface PubSubOutboundEmailGateway {
+    void sendToPubSub(String text);
   }
 }
