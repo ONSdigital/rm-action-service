@@ -21,11 +21,12 @@ public class NotifyEmailService {
 
   public void processEmail(NotifyModel notifyPayload) {
 
-    log.debug("Sending notification to pubsub");
+    log.info("Sending email notification to PubSub");
 
     try {
       String message = objectMapper.writeValueAsString(notifyPayload);
       pubEmailPublisher.sendToPubSub(message);
+      log.info("Email notification sent to PubSub successfully. ");
     } catch (JsonProcessingException e) {
       log.error("Error converting an actionRequest to JSON", e);
       throw new RuntimeException(e);

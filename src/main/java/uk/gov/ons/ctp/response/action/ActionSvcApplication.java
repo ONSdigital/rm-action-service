@@ -3,8 +3,6 @@ package uk.gov.ons.ctp.response.action;
 import com.godaddy.logging.LoggingConfigs;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import java.time.Clock;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.cobertura.CoverageIgnore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +35,9 @@ import uk.gov.ons.ctp.response.action.config.AppConfig;
 import uk.gov.ons.ctp.response.lib.common.error.RestExceptionHandler;
 import uk.gov.ons.ctp.response.lib.common.jackson.CustomObjectMapper;
 import uk.gov.ons.ctp.response.lib.common.rest.RestUtility;
+
+import javax.annotation.PostConstruct;
+import java.time.Clock;
 
 /** The main entry point into the Action Service SpringBoot Application. */
 @CoverageIgnore
