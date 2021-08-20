@@ -288,7 +288,7 @@ spec:
             value: "{{ .Values.messaging.consumingThreads }}"
           - name: GCP_CASENOTIFICATIONSUBSCRIPTION
             value: "{{ .Values.gcp.caseNotificationSubscription }}"
-          - name: SPRING_CLOUD_GCP_PROJECT-ID
+          - name: SPRING_CLOUD_GCP_PROJECTID
             value: "{{ .Values.gcp.project }}"
           resources:
             {{- toYaml .Values.resources.application | nindent 12 }}
