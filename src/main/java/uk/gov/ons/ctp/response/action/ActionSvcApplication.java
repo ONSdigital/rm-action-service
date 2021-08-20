@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
+import org.springframework.cloud.gcp.pubsub.integration.AckMode;
 import org.springframework.cloud.gcp.pubsub.integration.inbound.PubSubInboundChannelAdapter;
 import org.springframework.cloud.gcp.pubsub.integration.inbound.PubSubMessageSource;
 import org.springframework.cloud.gcp.pubsub.integration.outbound.PubSubMessageHandler;
@@ -188,6 +189,7 @@ public class ActionSvcApplication {
         new PubSubMessageSource(
             pubSubTemplate, appConfig.getGcp().getCaseNotificationSubscription());
     messageSource.setBlockOnPull(true);
+    messageSource.setAckMode(AckMode.MANUAL);
     return messageSource;
   }
 
