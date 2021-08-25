@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.*;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.Mockito;
@@ -18,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import uk.gov.ons.ctp.response.action.representation.CaseNotification;
 import uk.gov.ons.ctp.response.action.service.CaseNotificationService;
@@ -29,16 +29,13 @@ import uk.gov.ons.ctp.response.action.utility.PubSubEmulator;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestPropertySource(locations = "classpath:/application-test.yml")
 public class CaseNotificationReceiverIT {
   private PubSubEmulator pubSubEmulator = new PubSubEmulator();
   private String file =
       "src/test/resources/uk/gov/ons/ctp/response/action/message/CaseNotificationSample.json";
 
   @MockBean private CaseNotificationService caseNotificationService;
-
-  @ClassRule
-  public static final EnvironmentVariables environmentVariables =
-      new EnvironmentVariables().set("PUBSUB_EMULATOR_HOST", "127.0.0.1:18681");
 
   @ClassRule
   public static WireMockRule wireMockRule =

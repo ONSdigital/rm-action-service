@@ -40,7 +40,22 @@ spring:
     # it so nothing changed.  Spring boot shows warnings if you don't explicitly set it.
     open-in-view: true
 
+  cloud:
+    gcp:
+      project-id: test
+      pubsub:
+        emulator-host: localhost:18681
+
   security:
     user:
       name: admin
       password: secret
+
+gcp:
+  project: ras-rm-dev
+  notifyTopic: test_topic
+  printFileTopic: ras-rm-print-file
+  caseNotificationSubscription: test_subscription
+  bucket:
+    name: ras-rm-print-file
+    prefix: ""

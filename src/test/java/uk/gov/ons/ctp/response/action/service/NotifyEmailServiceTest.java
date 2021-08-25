@@ -1,9 +1,6 @@
 package uk.gov.ons.ctp.response.action.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.pubsub.v1.Publisher;
-import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,15 +9,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import uk.gov.ons.ctp.response.action.ActionSvcApplication;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NotifyEmailServiceTest {
 
   @InjectMocks private NotifyEmailService notifyEmailService;
 
-  @Mock private PubSub pubSub;
-
-  @Mock private Publisher publisher;
+  @Mock private ActionSvcApplication.PubSubOutboundEmailGateway publisher;
 
   @Spy private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -64,8 +60,6 @@ public class NotifyEmailServiceTest {
             .respondentPeriod(null)
             .build();
 
-    Mockito.when(pubSub.notifyPublisher()).thenReturn(publisher);
-    Mockito.when(publisher.publish(Mockito.any(PubsubMessage.class))).thenReturn(ApiFuture);
     notifyEmailService.processEmail(
         new NotifyModel(
             NotifyModel.Notify.builder()
@@ -74,8 +68,6 @@ public class NotifyEmailServiceTest {
                 .emailAddress(null)
                 .build()));
 
-    ByteString data = ByteString.copyFromUtf8(emailJson);
-    PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
-    Mockito.verify(publisher).publish(pubsubMessage);
+    Mockito.verify(publisher).sendToPubSub(emailJson);
   }
 }
