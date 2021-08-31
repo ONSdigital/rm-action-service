@@ -194,7 +194,7 @@ public class ActionSvcApplication {
   /** Bean used to publish PubSub print file message */
   @MessagingGateway(defaultRequestChannel = "printFileChannel")
   public interface PubSubOutboundPrintFileGateway {
-    void sendToPubSub(String text, @Header("custom-header") String header);
+    void sendToPubSub(String text, @Header("printFilename") String header);
   }
 
   /** Bean used to create PubSub email channel */
