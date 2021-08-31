@@ -39,7 +39,7 @@ public class NotifyLetterServiceTest {
     notifyLetterService.processPrintFile(
         "test.csv", ProcessEventServiceTestData.buildListOfLetterEntries());
 
-    verify(publisher).sendToPubSub(any());
+    verify(publisher).sendToPubSub(anyString(), anyString());
     verify(uploadObjectGCS).uploadObject(anyString(), anyString(), any());
   }
 }

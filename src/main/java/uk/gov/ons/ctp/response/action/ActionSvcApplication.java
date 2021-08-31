@@ -16,20 +16,17 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.gcp.pubsub.core.PubSubTemplate;
 import org.springframework.cloud.gcp.pubsub.integration.AckMode;
 import org.springframework.cloud.gcp.pubsub.integration.inbound.PubSubInboundChannelAdapter;
-import org.springframework.cloud.gcp.pubsub.integration.inbound.PubSubMessageSource;
 import org.springframework.cloud.gcp.pubsub.integration.outbound.PubSubMessageHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.MessagingGateway;
-import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.core.MessageSource;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -177,26 +174,14 @@ public class ActionSvcApplication {
     PubSubInboundChannelAdapter adapter =
         new PubSubInboundChannelAdapter(pubSubTemplate, subscriptionName);
     adapter.setOutputChannel(inputChannel);
+    adapter.setAckMode(AckMode.MANUAL);
     return adapter;
-  }
-
-  @Bean
-  @InboundChannelAdapter(
-      channel = "actionCaseNotificationChannel",
-      poller = @Poller(fixedDelay = "100"))
-  public MessageSource<Object> pubsubAdapter(PubSubTemplate pubSubTemplate) {
-    PubSubMessageSource messageSource =
-        new PubSubMessageSource(
-            pubSubTemplate, appConfig.getGcp().getCaseNotificationSubscription());
-    messageSource.setBlockOnPull(true);
-    messageSource.setAckMode(AckMode.MANUAL);
-    return messageSource;
   }
 
   /** Bean used to create PubSub action case notification channel */
   @Bean
   public MessageChannel actionCaseNotificationChannel() {
-    return new DirectChannel();
+    return new PublishSubscribeChannel();
   }
 
   /** Bean used to create PubSub print file channel */
@@ -209,7 +194,7 @@ public class ActionSvcApplication {
   /** Bean used to publish PubSub print file message */
   @MessagingGateway(defaultRequestChannel = "printFileChannel")
   public interface PubSubOutboundPrintFileGateway {
-    void sendToPubSub(String text);
+    void sendToPubSub(String text, @Header("printFilename") String header);
   }
 
   /** Bean used to create PubSub email channel */
