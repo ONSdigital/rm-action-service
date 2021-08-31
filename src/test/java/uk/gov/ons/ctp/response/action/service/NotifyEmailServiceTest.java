@@ -38,9 +38,9 @@ public class NotifyEmailServiceTest {
           + "\"return by date\":null,"
           + "\"RU name\":null,"
           + "\"trading style\":null,"
-          + "\"respondent period\":null,"
+          + "\"respondent period\":null"
+          + "},"
           + "\"reference\":null"
-          + "}"
           + "}}";
 
   @Test
