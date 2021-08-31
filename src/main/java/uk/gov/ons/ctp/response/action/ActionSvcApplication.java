@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.handler.annotation.Header;
@@ -181,7 +181,7 @@ public class ActionSvcApplication {
   /** Bean used to create PubSub action case notification channel */
   @Bean
   public MessageChannel actionCaseNotificationChannel() {
-    return new DirectChannel();
+    return new PublishSubscribeChannel();
   }
 
   /** Bean used to create PubSub print file channel */
