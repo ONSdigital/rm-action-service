@@ -26,6 +26,7 @@ import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -193,7 +194,7 @@ public class ActionSvcApplication {
   /** Bean used to publish PubSub print file message */
   @MessagingGateway(defaultRequestChannel = "printFileChannel")
   public interface PubSubOutboundPrintFileGateway {
-    void sendToPubSub(String text);
+    void sendToPubSub(String text, @Header("custom-header") String header);
   }
 
   /** Bean used to create PubSub email channel */
