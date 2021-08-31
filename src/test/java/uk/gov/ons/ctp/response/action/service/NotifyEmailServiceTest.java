@@ -66,6 +66,7 @@ public class NotifyEmailServiceTest {
                 .personalisation(personalisation)
                 .classifiers(classifiers)
                 .emailAddress(null)
+                .reference(null)
                 .build()));
 
     Mockito.verify(publisher).sendToPubSub(emailJson);
