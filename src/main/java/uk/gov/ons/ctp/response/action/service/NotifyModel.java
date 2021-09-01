@@ -27,6 +27,9 @@ public class NotifyModel {
 
     private Personalisation personalisation;
 
+    @JsonProperty("reference")
+    private String reference;
+
     @Getter
     @Setter
     @Builder
@@ -99,7 +102,8 @@ public class NotifyModel {
         private String region;
         private String surveyRef;
 
-        /* This is lifted directly from the old notify-gateway and comms-template.
+        /*
+         * This is lifted directly from the old notify-gateway and comms-template.
          */
         public Classifiers build() {
           if (NUDGE_EMAIL.equals(actionType)) {

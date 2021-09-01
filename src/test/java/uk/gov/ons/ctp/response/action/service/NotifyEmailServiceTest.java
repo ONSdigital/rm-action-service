@@ -39,7 +39,8 @@ public class NotifyEmailServiceTest {
           + "\"RU name\":null,"
           + "\"trading style\":null,"
           + "\"respondent period\":null"
-          + "}"
+          + "},"
+          + "\"reference\":null"
           + "}}";
 
   @Test
@@ -66,6 +67,7 @@ public class NotifyEmailServiceTest {
                 .personalisation(personalisation)
                 .classifiers(classifiers)
                 .emailAddress(null)
+                .reference(null)
                 .build()));
 
     Mockito.verify(publisher).sendToPubSub(emailJson);

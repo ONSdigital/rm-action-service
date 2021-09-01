@@ -328,6 +328,7 @@ public class ProcessEventService {
     existingEvent.setProcessedTimestamp(Timestamp.from(instant));
     actionEventRepository.save(existingEvent);
   }
+
   /**
    * Populates data for print file for case event
    *
@@ -720,6 +721,7 @@ public class ProcessEventService {
                 .personalisation(personalisation)
                 .classifiers(classifiers)
                 .emailAddress(respondentParty.getAttributes().getEmailAddress())
+                .reference(survey.getSurveyRef() + "-" + businessParty.getAttributes().getRuref())
                 .build());
     log.with("template", actionTemplate.getType())
         .with("case", actionCase.getId())
