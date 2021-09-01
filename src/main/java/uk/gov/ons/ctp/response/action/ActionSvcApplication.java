@@ -201,7 +201,7 @@ public class ActionSvcApplication {
   @Bean
   @ServiceActivator(inputChannel = "notifyEmailChannel")
   public MessageHandler emailMessageSender(PubSubTemplate pubsubTemplate) {
-    return new PubSubMessageHandler(pubsubTemplate, appConfig.getGcp().getPrintFileTopic());
+    return new PubSubMessageHandler(pubsubTemplate, appConfig.getGcp().getNotifyTopic());
   }
 
   /** Bean used to publish PubSub email message */
