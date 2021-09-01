@@ -35,7 +35,7 @@ public class NotifyLetterService {
       log.info("about to uploaded to bucket " + bucket);
       boolean uploaded = uploadObjectGCS.uploadObject(dataFilename, bucket, data.toByteArray());
       if (uploaded) {
-        printFilePublisher.sendToPubSub(json);
+        printFilePublisher.sendToPubSub(dataFilename, printFilename);
         log.info("print file pubsub successfully sent");
         success = true;
       }
