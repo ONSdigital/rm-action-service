@@ -162,14 +162,6 @@ redelivery-policy:
   initialRedeliveryDelay: 1000
   redeliveryDelay: 1000
 
-  # queue service related
-rabbitmq:
-  username: guest
-  password: guest
-  host: localhost
-  port: 5672
-  virtualhost: /
-
 messaging:
   backoffInitial: 5000
   backoffMultiplier: 3

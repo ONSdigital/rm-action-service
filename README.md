@@ -32,9 +32,6 @@ See [the OpenAPI docs](https://onsdigital.github.io/rm-action-service/) for API 
 ### Survey Service
 * GET /surveys/{surveyId}
 
-## Rabbit queues used
-* ActionInstruction
-
 ## Scheduled Tasks
 ### Action Distribution (default: 1s delay between invocations)
 * For each other action, if they're in the state `SUBMITTED`:
