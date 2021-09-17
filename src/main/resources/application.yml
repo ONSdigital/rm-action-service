@@ -19,9 +19,6 @@ management:
   security:
     roles: SUPERUSER
     enabled: true
-  health:
-    rabbit:
-      enabled: false
 
 server:
   port: 8151
@@ -165,14 +162,6 @@ redelivery-policy:
   maxRedeliveries: -1
   initialRedeliveryDelay: 1000
   redeliveryDelay: 1000
-
-  # queue service related
-rabbitmq:
-  username: guest
-  password: guest
-  host: localhost
-  port: 5672
-  virtualhost: /
 
 messaging:
   backoffInitial: 5000
