@@ -1,0 +1,12 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 30-1
+      author: David Morgan
+      changes:
+        - sqlFile:
+            comment: adding indexes to action.events as queries are very slow
+            path: index_action_schema.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
