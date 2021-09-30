@@ -721,7 +721,7 @@ public class ProcessEventService {
                 .personalisation(personalisation)
                 .classifiers(classifiers)
                 .emailAddress(respondentParty.getAttributes().getEmailAddress())
-                .reference(survey.getSurveyRef() + "-" + businessParty.getAttributes().getRuref())
+                .reference(survey.getSurveyRef() + "-" + sampleUnitRef)
                 .build());
     log.with("template", actionTemplate.getType())
         .with("case", actionCase.getId())
