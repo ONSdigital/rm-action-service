@@ -10,7 +10,7 @@
     <description>ActionService</description>
 
     <properties>
-        <springboot.version>2.4.4</springboot.version>
+        <springboot.version>2.4.11</springboot.version>
         <java.version>11</java.version>
         <orika.version>1.5.1</orika.version>
         <godaddylogging.version>1.2.5</godaddylogging.version>
