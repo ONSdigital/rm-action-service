@@ -383,7 +383,7 @@ https://dev.to/scottshipp/how-to-fix-a-mockito-cannot-mock-this-class-exception-
                 <version>${springboot.version}</version>
                 <configuration>
                     <executable>true</executable>
-                    <mainClass>uk.gov.ons.ctp.response.action.ActionSvcApplication</mainClass>
+                    <mainClass>uk.gov.ons.F.response.action.ActionSvcApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
