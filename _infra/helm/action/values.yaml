@@ -58,11 +58,11 @@ crons:
 resources:
   application:
     requests:
-      memory: "250Mi"
-      cpu: "100m"
+      memory: "400Mi"
+      cpu: "200m"
     limits:
-      memory: "1500Mi"
-      cpu: "1000m"
+      memory: "600Mi"
+      cpu: "500m"
   proxy:
     requests:
       memory: "25Mi"
